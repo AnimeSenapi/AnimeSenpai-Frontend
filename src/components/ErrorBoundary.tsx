@@ -45,12 +45,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       }
 
       return (
-        <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black flex items-center justify-center px-4">
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 flex items-center justify-center px-4">
           <div className="max-w-md w-full">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 text-center">
+            <div className="glass rounded-3xl p-8 text-center">
               {/* Error Icon */}
-              <div className="w-16 h-16 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <AlertCircle className="h-8 w-8 text-red-400" />
+              <div className="w-16 h-16 bg-error-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <AlertCircle className="h-8 w-8 text-error-400" />
               </div>
 
               {/* Error Message */}
@@ -63,8 +63,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
               {/* Error Details (only in development) */}
               {process.env.NODE_ENV === 'development' && this.state.error && (
-                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-left">
-                  <p className="text-red-400 text-xs font-mono break-all">
+                <div className="mb-6 p-4 bg-error-500/10 border border-error-500/20 rounded-xl text-left">
+                  <p className="text-error-400 text-xs font-mono break-all">
                     {this.state.error.message}
                   </p>
                 </div>
@@ -74,7 +74,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button
                   onClick={this.handleReset}
-                  className="flex-1 bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 text-white"
+                  className="flex-1 bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Try Again
@@ -92,7 +92,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               {/* Help Text */}
               <p className="mt-6 text-sm text-gray-400">
                 If this problem persists, please{' '}
-                <a href="mailto:support@animesenpai.app" className="text-cyan-400 hover:text-cyan-300 underline">
+                <a href="mailto:support@animesenpai.app" className="text-primary-400 hover:text-primary-400 underline">
                   contact support
                 </a>
               </p>

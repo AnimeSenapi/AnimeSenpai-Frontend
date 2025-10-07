@@ -31,12 +31,12 @@ export default function ForgotPasswordPage() {
   if (isSubmitted) {
     return (
       <RequireGuest>
-        <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black relative overflow-hidden">
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
         </div>
 
         <div className="container mx-auto px-4 py-20 relative z-10">
@@ -53,9 +53,9 @@ export default function ForgotPasswordPage() {
             </div>
 
             {/* Success Card */}
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center">
-              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle className="h-8 w-8 text-green-400" />
+            <div className="glass rounded-2xl p-8 text-center">
+              <div className="w-16 h-16 bg-success-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle className="h-8 w-8 text-success-400" />
               </div>
               
               <h1 className="text-2xl font-bold text-white mb-4">
@@ -63,14 +63,14 @@ export default function ForgotPasswordPage() {
               </h1>
               
               <p className="text-gray-300 mb-6">
-                We've sent a password reset link to <span className="text-cyan-400 font-medium">{email}</span>
+                We've sent a password reset link to <span className="text-primary-400 font-medium">{email}</span>
               </p>
               
               <p className="text-sm text-gray-400 mb-8">
                 Didn't receive the email? Check your spam folder or{' '}
                 <button 
                   onClick={() => setIsSubmitted(false)}
-                  className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                  className="text-primary-400 hover:text-primary-400 transition-colors"
                 >
                   try again
                 </button>
@@ -79,7 +79,7 @@ export default function ForgotPasswordPage() {
               <div className="space-y-3">
                 <Button
                   onClick={() => window.location.href = '/auth/signin'}
-                  className="w-full bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 shadow-lg shadow-cyan-500/25"
+                  className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 shadow-lg shadow-brand-primary-500/25"
                 >
                   Back to Sign In
                 </Button>
@@ -94,12 +94,12 @@ export default function ForgotPasswordPage() {
 
   return (
     <RequireGuest>
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
       <div className="container mx-auto px-4 py-20 relative z-10">
@@ -116,10 +116,10 @@ export default function ForgotPasswordPage() {
           </div>
 
           {/* Forgot Password Card */}
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
+          <div className="glass rounded-2xl p-8">
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Mail className="h-8 w-8 text-cyan-400" />
+              <div className="w-16 h-16 bg-primary-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Mail className="h-8 w-8 text-primary-400" />
               </div>
               <h1 className="text-2xl font-bold text-white mb-2">
                 Forgot Password?
@@ -131,7 +131,7 @@ export default function ForgotPasswordPage() {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
-                <div className="rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 px-3 py-2 text-sm">
+                <div className="rounded-lg border border-error-500/30 bg-error-500/10 text-red-300 px-3 py-2 text-sm">
                   {error}
                 </div>
               )}
@@ -149,7 +149,7 @@ export default function ForgotPasswordPage() {
                     id="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-transparent transition-all duration-200"
+                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary-400/50 focus:border-transparent transition-all duration-200"
                     placeholder="Enter your email"
                     required
                   />
@@ -160,7 +160,7 @@ export default function ForgotPasswordPage() {
               <Button
                 type="submit"
                 disabled={isLoading || !email}
-                className="w-full bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 shadow-lg shadow-cyan-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 shadow-lg shadow-brand-primary-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? 'Sending...' : 'Send Reset Link'}
               </Button>
@@ -171,7 +171,7 @@ export default function ForgotPasswordPage() {
                   Remember your password?{' '}
                   <Link 
                     href="/auth/signin"
-                    className="text-cyan-400 hover:text-cyan-300 transition-colors font-medium"
+                    className="text-primary-400 hover:text-primary-400 transition-colors font-medium"
                   >
                     Sign in
                   </Link>

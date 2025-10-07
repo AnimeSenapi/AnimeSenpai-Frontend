@@ -103,24 +103,24 @@ export default function UserProfilePage() {
 
   return (
     <RequireAuth>
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
       <main className="container pt-32 pb-20 relative z-10">
         {/* Profile Header */}
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 mb-8">
+        <div className="glass rounded-2xl p-8 mb-8">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
             {/* Avatar Section */}
             <div className="relative">
-              <div className="w-24 h-24 bg-gradient-to-br from-cyan-400 to-pink-400 rounded-full flex items-center justify-center ring-4 ring-white/20">
+              <div className="w-24 h-24 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full flex items-center justify-center ring-4 ring-white/20">
                 <span className="text-white font-bold text-2xl">{userData.name.charAt(0).toUpperCase()}</span>
               </div>
-              <button className="absolute -bottom-2 -right-2 w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center hover:bg-cyan-600 transition-colors">
+              <button className="absolute -bottom-2 -right-2 w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors">
                 <Camera className="h-4 w-4 text-white" />
               </button>
             </div>
@@ -178,9 +178,9 @@ export default function UserProfilePage() {
           {/* Left Column - Stats & Preferences */}
           <div className="lg:col-span-1 space-y-6">
             {/* Quick Stats */}
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+            <div className="glass rounded-2xl p-6">
               <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Star className="h-5 w-5 text-cyan-400" />
+                <Star className="h-5 w-5 text-primary-400" />
                 Quick Stats
               </h3>
               <div className="space-y-4">
@@ -200,14 +200,14 @@ export default function UserProfilePage() {
             </div>
 
             {/* Favorite Genres */}
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+            <div className="glass rounded-2xl p-6">
               <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Heart className="h-5 w-5 text-pink-400" />
+                <Heart className="h-5 w-5 text-secondary-400" />
                 Favorite Genres
               </h3>
               <div className="flex flex-wrap gap-2">
                 {userData.favoriteGenres.map((genre, index) => (
-                  <Badge key={index} variant="secondary" className="bg-pink-500/20 text-pink-300 border-pink-500/30">
+                  <Badge key={index} variant="secondary" className="bg-secondary-500/20 text-secondary-400 border-brand-secondary-500/30">
                     {genre}
                   </Badge>
                 ))}
@@ -215,18 +215,18 @@ export default function UserProfilePage() {
             </div>
 
             {/* Recent Activity */}
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+            <div className="glass rounded-2xl p-6">
               <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Clock className="h-5 w-5 text-cyan-400" />
+                <Clock className="h-5 w-5 text-primary-400" />
                 Recent Activity
               </h3>
               <div className="space-y-3">
                 {userData.recentActivity.map((activity, index) => (
                   <div key={index} className="flex items-center gap-3 text-sm">
-                    <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                      {activity.type === 'completed' && <CheckCircle className="h-4 w-4 text-green-400" />}
-                      {activity.type === 'started' && <Play className="h-4 w-4 text-cyan-400" />}
-                      {activity.type === 'favorited' && <Heart className="h-4 w-4 text-pink-400" />}
+                    <div className="w-8 h-8 rounded-full bg-primary-500/20 flex items-center justify-center">
+                      {activity.type === 'completed' && <CheckCircle className="h-4 w-4 text-success-400" />}
+                      {activity.type === 'started' && <Play className="h-4 w-4 text-primary-400" />}
+                      {activity.type === 'favorited' && <Heart className="h-4 w-4 text-secondary-400" />}
                     </div>
                     <div className="flex-grow">
                       <div className="text-white font-medium">{activity.anime}</div>
@@ -239,8 +239,8 @@ export default function UserProfilePage() {
                     </div>
                     {activity.rating && (
                       <div className="flex items-center gap-1">
-                        <Star className="h-3 w-3 text-yellow-400" />
-                        <span className="text-yellow-400 text-xs">{activity.rating}</span>
+                        <Star className="h-3 w-3 text-warning-400" />
+                        <span className="text-warning-400 text-xs">{activity.rating}</span>
                       </div>
                     )}
                   </div>
@@ -251,10 +251,10 @@ export default function UserProfilePage() {
 
           {/* Right Column - Recent Anime */}
           <div className="lg:col-span-2">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+            <div className="glass rounded-2xl p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Bookmark className="h-5 w-5 text-cyan-400" />
+                  <Bookmark className="h-5 w-5 text-primary-400" />
                   Recently Watched
                 </h3>
                 <Button

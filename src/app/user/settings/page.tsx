@@ -81,12 +81,12 @@ export default function UserSettingsPage() {
 
   return (
     <RequireAuth>
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
       <main className="container pt-32 pb-20 relative z-10">
@@ -102,8 +102,8 @@ export default function UserSettingsPage() {
               Back
             </Button>
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-cyan-500/20 rounded-full flex items-center justify-center">
-                <Settings className="h-6 w-6 text-cyan-400" />
+              <div className="w-12 h-12 bg-primary-500/20 rounded-full flex items-center justify-center">
+                <Settings className="h-6 w-6 text-primary-400" />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-white">Settings</h1>
@@ -116,7 +116,7 @@ export default function UserSettingsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Settings Navigation */}
           <div className="lg:col-span-1">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+            <div className="glass rounded-2xl p-6">
               <nav className="space-y-2">
                 {tabs.map((tab) => {
                   const Icon = tab.icon
@@ -126,7 +126,7 @@ export default function UserSettingsPage() {
                       onClick={() => setActiveTab(tab.id)}
                       className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                         activeTab === tab.id
-                          ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                          ? 'bg-primary-500/20 text-primary-400 border border-brand-primary-500/30'
                           : 'text-gray-300 hover:text-white hover:bg-white/10'
                       }`}
                     >
@@ -141,7 +141,7 @@ export default function UserSettingsPage() {
 
           {/* Settings Content */}
           <div className="lg:col-span-3">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
+            <div className="glass rounded-2xl p-8">
               {/* Profile Settings */}
               {activeTab === 'profile' && (
                 <div className="space-y-6">
@@ -149,7 +149,7 @@ export default function UserSettingsPage() {
                     <h2 className="text-2xl font-bold text-white">Profile Settings</h2>
                     <Button
                       onClick={() => setIsEditing(!isEditing)}
-                      className="bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600"
+                      className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600"
                     >
                       {isEditing ? 'Cancel' : 'Edit Profile'}
                     </Button>
@@ -163,7 +163,7 @@ export default function UserSettingsPage() {
                         value={settings.name}
                         onChange={(e) => setSettings({...settings, name: e.target.value})}
                         disabled={!isEditing}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 disabled:opacity-50"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary-400/50 disabled:opacity-50"
                       />
                     </div>
                     <div>
@@ -173,7 +173,7 @@ export default function UserSettingsPage() {
                         value={settings.email}
                         onChange={(e) => setSettings({...settings, email: e.target.value})}
                         disabled={!isEditing}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 disabled:opacity-50"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary-400/50 disabled:opacity-50"
                       />
                     </div>
                   </div>
@@ -185,7 +185,7 @@ export default function UserSettingsPage() {
                       onChange={(e) => setSettings({...settings, bio: e.target.value})}
                       disabled={!isEditing}
                       rows={4}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 disabled:opacity-50"
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary-400/50 disabled:opacity-50"
                     />
                   </div>
                 </div>
@@ -199,7 +199,7 @@ export default function UserSettingsPage() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
                       <div className="flex items-center gap-3">
-                        <Mail className="h-5 w-5 text-cyan-400" />
+                        <Mail className="h-5 w-5 text-primary-400" />
                         <div>
                           <div className="text-white font-medium">Email Notifications</div>
                           <div className="text-gray-400 text-sm">Receive updates via email</div>
@@ -213,7 +213,7 @@ export default function UserSettingsPage() {
 
                     <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
                       <div className="flex items-center gap-3">
-                        <Smartphone className="h-5 w-5 text-cyan-400" />
+                        <Smartphone className="h-5 w-5 text-primary-400" />
                         <div>
                           <div className="text-white font-medium">Push Notifications</div>
                           <div className="text-gray-400 text-sm">Get notified on your device</div>
@@ -227,7 +227,7 @@ export default function UserSettingsPage() {
 
                     <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
                       <div className="flex items-center gap-3">
-                        <Bell className="h-5 w-5 text-cyan-400" />
+                        <Bell className="h-5 w-5 text-primary-400" />
                         <div>
                           <div className="text-white font-medium">Weekly Digest</div>
                           <div className="text-gray-400 text-sm">Weekly summary of new content</div>
@@ -241,7 +241,7 @@ export default function UserSettingsPage() {
 
                     <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
                       <div className="flex items-center gap-3">
-                        <Monitor className="h-5 w-5 text-cyan-400" />
+                        <Monitor className="h-5 w-5 text-primary-400" />
                         <div>
                           <div className="text-white font-medium">New Episodes</div>
                           <div className="text-gray-400 text-sm">Notify when new episodes are available</div>
@@ -264,7 +264,7 @@ export default function UserSettingsPage() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
                       <div className="flex items-center gap-3">
-                        <Eye className="h-5 w-5 text-cyan-400" />
+                        <Eye className="h-5 w-5 text-primary-400" />
                         <div>
                           <div className="text-white font-medium">Show Watch History</div>
                           <div className="text-gray-400 text-sm">Allow others to see what you've watched</div>
@@ -278,7 +278,7 @@ export default function UserSettingsPage() {
 
                     <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
                       <div className="flex items-center gap-3">
-                        <Bell className="h-5 w-5 text-cyan-400" />
+                        <Bell className="h-5 w-5 text-primary-400" />
                         <div>
                           <div className="text-white font-medium">Show Favorites</div>
                           <div className="text-gray-400 text-sm">Display your favorite anime publicly</div>
@@ -292,7 +292,7 @@ export default function UserSettingsPage() {
 
                     <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
                       <div className="flex items-center gap-3">
-                        <Shield className="h-5 w-5 text-cyan-400" />
+                        <Shield className="h-5 w-5 text-primary-400" />
                         <div>
                           <div className="text-white font-medium">Allow Messages</div>
                           <div className="text-gray-400 text-sm">Let other users send you messages</div>
@@ -318,7 +318,7 @@ export default function UserSettingsPage() {
                       <select
                         value={settings.theme}
                         onChange={(e) => setSettings({...settings, theme: e.target.value})}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand-primary-400/50"
                       >
                         <option value="light">Light</option>
                         <option value="dark">Dark</option>
@@ -331,7 +331,7 @@ export default function UserSettingsPage() {
                       <select
                         value={settings.language}
                         onChange={(e) => setSettings({...settings, language: e.target.value})}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand-primary-400/50"
                       >
                         <option value="en">English</option>
                         <option value="es">Spanish</option>
@@ -352,7 +352,7 @@ export default function UserSettingsPage() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
                       <div className="flex items-center gap-3">
-                        <Monitor className="h-5 w-5 text-cyan-400" />
+                        <Monitor className="h-5 w-5 text-primary-400" />
                         <div>
                           <div className="text-white font-medium">Autoplay</div>
                           <div className="text-gray-400 text-sm">Automatically play next episode</div>
@@ -366,7 +366,7 @@ export default function UserSettingsPage() {
 
                     <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
                       <div className="flex items-center gap-3">
-                        <Volume2 className="h-5 w-5 text-cyan-400" />
+                        <Volume2 className="h-5 w-5 text-primary-400" />
                         <div>
                           <div className="text-white font-medium">Default Volume</div>
                           <div className="text-gray-400 text-sm">Set default volume level</div>
@@ -390,7 +390,7 @@ export default function UserSettingsPage() {
                 <div className="flex justify-end">
                   <Button
                     onClick={handleSave}
-                    className="bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 text-white font-semibold px-8 py-3 rounded-xl transition-all duration-200 shadow-lg shadow-cyan-500/25"
+                    className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold px-8 py-3 rounded-xl transition-all duration-200 shadow-lg shadow-brand-primary-500/25"
                   >
                     <Save className="h-4 w-4 mr-2" />
                     Save Settings

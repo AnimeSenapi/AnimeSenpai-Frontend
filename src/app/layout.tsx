@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { Navbar } from '../components/navbar/navbar'
 import { AuthProvider } from './lib/auth-context'
+import { ThemeProvider } from '../components/ThemeProvider'
 import { CookieConsent } from '../components/CookieConsent'
 import './globals.css'
 
@@ -20,11 +21,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className={inter.className}>
-        <AuthProvider>
-          <Navbar />
-          {children}
-          <CookieConsent />
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <Navbar />
+            {children}
+            <CookieConsent />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

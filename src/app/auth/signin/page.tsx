@@ -60,12 +60,12 @@ export default function SignInPage() {
 
   return (
     <RequireGuest>
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
         </div>
 
         <div className="relative z-10 min-h-screen flex items-center justify-center px-4">
@@ -82,9 +82,9 @@ export default function SignInPage() {
             </div>
 
             {/* Sign In Form */}
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
+            <div className="glass rounded-2xl p-8">
               <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-pink-400 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <span className="text-white font-bold text-2xl">AS</span>
                 </div>
                 <h1 className="text-2xl font-bold text-white mb-2">Welcome Back</h1>
@@ -92,11 +92,11 @@ export default function SignInPage() {
               </div>
 
               {error && (
-                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3">
-                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center mt-0.5">
-                    <span className="text-red-400 text-xs font-bold">!</span>
+                <div className="mb-6 p-4 bg-error-500/10 border border-error-500/20 rounded-xl flex items-start gap-3">
+                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-error-500/20 flex items-center justify-center mt-0.5">
+                    <span className="text-error-400 text-xs font-bold">!</span>
                   </div>
-                  <p className="text-red-400 text-sm flex-1">{error}</p>
+                  <p className="text-error-400 text-sm flex-1">{error}</p>
                 </div>
               )}
 
@@ -120,15 +120,15 @@ export default function SignInPage() {
                       }}
                       className={`w-full pl-10 pr-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
                         formErrors.email 
-                          ? 'border-red-500/50 focus:ring-red-400' 
-                          : 'border-white/10 focus:ring-cyan-400'
+                          ? 'border-error-500/50 focus:ring-error-400' 
+                          : 'border-white/10 focus:ring-brand-primary-400'
                       }`}
                       placeholder="Enter your email"
                       suppressHydrationWarning
                     />
                   </div>
                   {formErrors.email && (
-                    <p className="mt-1 text-sm text-red-400">{formErrors.email}</p>
+                    <p className="mt-1 text-sm text-error-400">{formErrors.email}</p>
                   )}
                 </div>
 
@@ -151,8 +151,8 @@ export default function SignInPage() {
                       }}
                       className={`w-full pl-10 pr-12 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
                         formErrors.password 
-                          ? 'border-red-500/50 focus:ring-red-400' 
-                          : 'border-white/10 focus:ring-cyan-400'
+                          ? 'border-error-500/50 focus:ring-error-400' 
+                          : 'border-white/10 focus:ring-brand-primary-400'
                       }`}
                       placeholder="Enter your password"
                       suppressHydrationWarning
@@ -166,7 +166,7 @@ export default function SignInPage() {
                     </button>
                   </div>
                   {formErrors.password && (
-                    <p className="mt-1 text-sm text-red-400">{formErrors.password}</p>
+                    <p className="mt-1 text-sm text-error-400">{formErrors.password}</p>
                   )}
                 </div>
 
@@ -187,7 +187,7 @@ export default function SignInPage() {
                   </div>
                   <Link 
                     href="/auth/forgot-password"
-                    className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+                    className="text-sm text-primary-400 hover:text-primary-400 transition-colors"
                   >
                     Forgot password?
                   </Link>
@@ -197,7 +197,7 @@ export default function SignInPage() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-cyan-400 to-pink-400 hover:from-cyan-500 hover:to-pink-500 text-white font-medium py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  className="w-full bg-gradient-to-r from-primary-400 to-secondary-400 hover:from-primary-500 hover:to-secondary-500 text-white font-medium py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
                   {isLoading ? 'Signing In...' : 'Sign In'}
                 </Button>
@@ -208,7 +208,7 @@ export default function SignInPage() {
                     Don&apos;t have an account?{' '}
                     <Link 
                       href="/auth/signup"
-                      className="text-cyan-400 hover:text-cyan-300 transition-colors font-medium"
+                      className="text-primary-400 hover:text-primary-400 transition-colors font-medium"
                     >
                       Sign up
                     </Link>

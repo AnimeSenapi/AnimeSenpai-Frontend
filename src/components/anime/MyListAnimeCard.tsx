@@ -27,36 +27,40 @@ export function MyListAnimeCard({
           icon: Heart,
           label: 'Favorite',
           color: 'pink',
-          bgColor: 'bg-pink-500/95',
-          borderColor: 'border-pink-400/20',
-          shadowColor: 'shadow-pink-500/25'
+          bgColor: 'bg-gray-800/90',
+          borderColor: 'border-secondary-500/30',
+          textColor: 'text-secondary-400',
+          iconColor: 'text-secondary-500'
         }
       case 'watching':
         return {
           icon: Play,
           label: 'Watching',
           color: 'cyan',
-          bgColor: 'bg-cyan-500/95',
-          borderColor: 'border-cyan-400/20',
-          shadowColor: 'shadow-cyan-500/25'
+          bgColor: 'bg-gray-800/90',
+          borderColor: 'border-primary-500/30',
+          textColor: 'text-primary-400',
+          iconColor: 'text-primary-500'
         }
       case 'completed':
         return {
           icon: CheckCircle,
           label: 'Completed',
           color: 'green',
-          bgColor: 'bg-green-500/95',
-          borderColor: 'border-green-400/20',
-          shadowColor: 'shadow-green-500/25'
+          bgColor: 'bg-gray-800/90',
+          borderColor: 'border-success-500/30',
+          textColor: 'text-success-400',
+          iconColor: 'text-success-500'
         }
       case 'plan-to-watch':
         return {
           icon: Star,
           label: 'Plan to Watch',
           color: 'purple',
-          bgColor: 'bg-purple-500/95',
-          borderColor: 'border-purple-400/20',
-          shadowColor: 'shadow-purple-500/25'
+          bgColor: 'bg-gray-800/90',
+          borderColor: 'border-planning-500/30',
+          textColor: 'text-planning-400',
+          iconColor: 'text-planning-500'
         }
     }
   }
@@ -67,7 +71,7 @@ export function MyListAnimeCard({
   if (variant === 'list') {
     return (
       <Link href={`/anime/${anime.slug}`} className={cn("block group", className)}>
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 transform hover:scale-[1.02]">
+        <div className="glass rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 transform hover:scale-[1.02]">
           <div className="flex items-center gap-6">
             {/* Image */}
             <div className="relative flex-shrink-0">
@@ -84,16 +88,16 @@ export function MyListAnimeCard({
                   </div>
                 )}
               </div>
-              {/* Status Badge */}
+              {/* Status Badge - Subtle Dark Style */}
               <div className="absolute -top-2 -right-2">
                 <div className={cn(
-                  "backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full flex items-center gap-1.5 shadow-lg border",
+                  "backdrop-blur-md text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5 border",
                   statusConfig.bgColor,
                   statusConfig.borderColor,
-                  statusConfig.shadowColor
+                  statusConfig.textColor
                 )}>
-                  <StatusIcon className="h-3 w-3" />
-                  <span className="font-medium text-xs">{statusConfig.label}</span>
+                  <StatusIcon className={cn("h-3 w-3", statusConfig.iconColor)} />
+                  <span className="font-medium">{statusConfig.label}</span>
                 </div>
               </div>
             </div>
@@ -102,7 +106,7 @@ export function MyListAnimeCard({
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h3 className="text-xl font-bold text-white mb-1 group-hover:text-cyan-300 transition-colors">
+                  <h3 className="text-xl font-bold text-white mb-1 group-hover:text-primary-400 transition-colors">
                     {anime.title}
                   </h3>
                   <div className="flex items-center gap-4 text-sm text-gray-400">
@@ -115,7 +119,7 @@ export function MyListAnimeCard({
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                    <Star className="h-4 w-4 text-warning-400 fill-warning-400" />
                     <span className="text-white font-semibold">{anime.rating}</span>
                   </div>
                   <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white hover:bg-white/10">
@@ -151,7 +155,7 @@ export function MyListAnimeCard({
                   </div>
                   <div className="w-full bg-gray-700 rounded-full h-1.5">
                     <div 
-                      className="bg-gradient-to-r from-cyan-500 to-pink-500 h-1.5 rounded-full transition-all duration-300"
+                      className="bg-gradient-to-r from-primary-500 to-secondary-500 h-1.5 rounded-full transition-all duration-300"
                       style={{ width: `${anime.episodes ? (5 / anime.episodes) * 100 : 0}%` }}
                     ></div>
                   </div>
@@ -185,15 +189,15 @@ export function MyListAnimeCard({
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           
-          {/* Status Badge */}
+          {/* Status Badge - Subtle Dark Style */}
           <div className="absolute top-3 right-3 z-10">
             <div className={cn(
-              "backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg border",
+              "backdrop-blur-md text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border shadow-sm",
               statusConfig.bgColor,
               statusConfig.borderColor,
-              statusConfig.shadowColor
+              statusConfig.textColor
             )}>
-              <StatusIcon className="h-3 w-3" />
+              <StatusIcon className={cn("h-3.5 w-3.5", statusConfig.iconColor)} />
               <span className="font-medium">{statusConfig.label}</span>
             </div>
           </div>
@@ -201,7 +205,7 @@ export function MyListAnimeCard({
           {/* Rating */}
           <div className="absolute top-3 left-3 z-10">
             <div className="bg-black/50 backdrop-blur-sm text-white text-sm px-2 py-1 rounded-lg flex items-center gap-1">
-              <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+              <Star className="h-3 w-3 text-warning-400 fill-warning-400" />
               <span className="font-semibold">{anime.rating}</span>
             </div>
           </div>
@@ -229,7 +233,7 @@ export function MyListAnimeCard({
 
         {/* Content */}
         <div className="mt-3">
-          <h3 className="text-white font-bold text-sm mb-1 group-hover:text-cyan-300 transition-colors line-clamp-2">
+          <h3 className="text-white font-bold text-sm mb-1 group-hover:text-primary-400 transition-colors line-clamp-2">
             {anime.title}
           </h3>
           <div className="flex items-center justify-between text-xs text-gray-400">

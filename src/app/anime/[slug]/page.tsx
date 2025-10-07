@@ -320,12 +320,12 @@ export default async function AnimePage({ params }: AnimePageProps) {
   const reviews: Array<{ id: string; user: string; rating: number; comment: string }> = [] // Would come from API
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
       <main className="container pt-32 pb-20 relative z-10">
@@ -341,7 +341,7 @@ export default async function AnimePage({ params }: AnimePageProps) {
             <div className="aspect-[2/3] bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl overflow-hidden relative group">
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
               <div className="absolute top-4 left-4">
-                <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30">
+                <Badge className="bg-primary-500/20 text-primary-400 border-brand-primary-500/30">
                   {status.charAt(0).toUpperCase() + status.slice(1)}
                 </Badge>
               </div>
@@ -351,7 +351,7 @@ export default async function AnimePage({ params }: AnimePageProps) {
                   <span>{year}</span>
                   <span>•</span>
                   <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 text-cyan-400 fill-current" />
+                    <Star className="h-4 w-4 text-primary-400 fill-current" />
                     <span>{rating}</span>
                   </div>
                 </div>
@@ -366,10 +366,10 @@ export default async function AnimePage({ params }: AnimePageProps) {
               <h1 className="text-4xl font-bold text-white mb-4">{title}</h1>
               <div className="flex items-center gap-4 mb-4">
                 <div className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-cyan-400 fill-current" />
+                  <Star className="h-5 w-5 text-primary-400 fill-current" />
                   <span className="text-2xl font-bold text-white">{rating}</span>
                 </div>
-                <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-lg px-3 py-1">
+                <Badge className="bg-primary-500/20 text-primary-400 border-brand-primary-500/30 text-lg px-3 py-1">
                   {status.charAt(0).toUpperCase() + status.slice(1)}
                 </Badge>
               </div>
@@ -377,7 +377,7 @@ export default async function AnimePage({ params }: AnimePageProps) {
 
             {/* Action Buttons */}
             <div className="flex items-center gap-3">
-              <Button className="bg-cyan-500 hover:bg-cyan-600 text-white">
+              <Button className="bg-primary-500 hover:bg-primary-600 text-white">
                 <Play className="h-4 w-4 mr-2" />
                 Watch Now
               </Button>
@@ -396,30 +396,30 @@ export default async function AnimePage({ params }: AnimePageProps) {
 
             {/* Anime Info */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-lg p-4">
+              <div className="glass rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="h-4 w-4 text-cyan-400" />
+                  <Calendar className="h-4 w-4 text-primary-400" />
                   <span className="text-sm text-gray-300">Year</span>
                 </div>
                 <span className="text-white font-semibold">{year}</span>
               </div>
-              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-lg p-4">
+              <div className="glass rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Clock className="h-4 w-4 text-cyan-400" />
+                  <Clock className="h-4 w-4 text-primary-400" />
                   <span className="text-sm text-gray-300">Episodes</span>
                 </div>
                 <span className="text-white font-semibold">{episodes}</span>
               </div>
-              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-lg p-4">
+              <div className="glass rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Clock className="h-4 w-4 text-cyan-400" />
+                  <Clock className="h-4 w-4 text-primary-400" />
                   <span className="text-sm text-gray-300">Duration</span>
                 </div>
                 <span className="text-white font-semibold">{duration}m</span>
               </div>
-              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-lg p-4">
+              <div className="glass rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Award className="h-4 w-4 text-cyan-400" />
+                  <Award className="h-4 w-4 text-primary-400" />
                   <span className="text-sm text-gray-300">Studio</span>
                 </div>
                 <span className="text-white font-semibold">{studio}</span>
@@ -431,7 +431,7 @@ export default async function AnimePage({ params }: AnimePageProps) {
               <h3 className="text-lg font-semibold text-white mb-3">Genres</h3>
               <div className="flex flex-wrap gap-2">
                 {tags.map((tagId: string, index: number) => {
-                  const tag = getTagById(tagId) || { name: tagId, color: 'bg-cyan-500/20 text-cyan-400' }
+                  const tag = getTagById(tagId) || { name: tagId, color: 'bg-primary-500/20 text-primary-400' }
                   return tag ? (
                     <Badge key={index} className={tag.color}>
                       {tag.name}
@@ -470,14 +470,14 @@ export default async function AnimePage({ params }: AnimePageProps) {
           <h2 className="text-2xl font-bold text-white mb-6">Reviews</h2>
           <div className="space-y-4">
             {reviews.map((review, index) => (
-              <div key={index} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-lg p-6">
+              <div key={index} className="glass rounded-lg p-6">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <div className="flex">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`h-4 w-4 ${i < review.rating ? 'text-cyan-400 fill-current' : 'text-gray-600'}`}
+                          className={`h-4 w-4 ${i < review.rating ? 'text-primary-400 fill-current' : 'text-gray-600'}`}
                         />
                       ))}
                     </div>

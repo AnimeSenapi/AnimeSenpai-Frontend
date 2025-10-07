@@ -19,17 +19,17 @@ interface AnimeCardProps {
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
-  new: { label: 'New', className: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30' },
-  hot: { label: 'Hot', className: 'bg-pink-500/20 text-pink-300 border-pink-500/30' },
-  trending: { label: 'Trending', className: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30' },
-  classic: { label: 'Classic', className: 'bg-pink-500/20 text-pink-300 border-pink-500/30' },
-  ongoing: { label: 'Ongoing', className: 'bg-green-500/20 text-green-300 border-green-500/30' },
-  completed: { label: 'Completed', className: 'bg-blue-500/20 text-blue-300 border-blue-500/30' },
-  upcoming: { label: 'Upcoming', className: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' },
+  new: { label: 'New', className: 'bg-gray-800/80 text-primary-400 border-primary-500/30' },
+  hot: { label: 'Hot', className: 'bg-gray-800/80 text-secondary-400 border-secondary-500/30' },
+  trending: { label: 'Trending', className: 'bg-gray-800/80 text-primary-400 border-primary-500/30' },
+  classic: { label: 'Classic', className: 'bg-gray-800/80 text-planning-400 border-planning-500/30' },
+  ongoing: { label: 'Ongoing', className: 'bg-gray-800/80 text-success-400 border-success-500/30' },
+  completed: { label: 'Completed', className: 'bg-gray-800/80 text-gray-400 border-gray-600/30' },
+  upcoming: { label: 'Upcoming', className: 'bg-gray-800/80 text-warning-400 border-warning-500/30' },
   // API status values
-  airing: { label: 'Airing', className: 'bg-green-500/20 text-green-300 border-green-500/30' },
-  finished: { label: 'Finished', className: 'bg-blue-500/20 text-blue-300 border-blue-500/30' },
-  'not-yet-aired': { label: 'Coming Soon', className: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' },
+  airing: { label: 'Airing', className: 'bg-gray-800/80 text-success-400 border-success-500/30' },
+  finished: { label: 'Finished', className: 'bg-gray-800/80 text-gray-400 border-gray-600/30' },
+  'not-yet-aired': { label: 'Coming Soon', className: 'bg-gray-800/80 text-warning-400 border-warning-500/30' },
 }
 
 export function AnimeCard({
@@ -56,20 +56,26 @@ export function AnimeCard({
   const renderFeatured = () => {
     // Handle genres from API (array of objects with { id, name, slug, color })
     const genreTags: Array<{ id?: string; name: string; slug: string; color?: string }> = animeGenres.length > 0 
-      ? animeGenres.slice(0, 3) // Show first 3 genres
-      : animeTags.filter((tagId: string) => {
+      ? animeGenres.slice(0, 3) as Array<{ id?: string; name: string; slug: string; color?: string }> // Show first 3 genres
+      : (animeTags.filter((tagId: string) => {
           const tag = getTagById(tagId)
           return tag?.category === 'genre'
-        })
+        }).slice(0, 3).map((tagId: string) => {
+          const tag = getTagById(tagId)!
+          return { name: tag.name, slug: tagId, color: tag.color }
+        }))
     
     return (
-      <div className="group relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden hover:bg-white/10 transition-all duration-300 hover:scale-[1.02]">
+      <div className="group relative glass rounded-xl overflow-hidden hover:bg-white/10 transition-all duration-300 hover:scale-[1.02]">
         <div className="aspect-[2/3] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center relative">
           {status && statusConfig[status] && (
-            <div className="absolute top-2 left-2">
-              <Badge className={cn("text-xs px-1.5 py-0.5", statusConfig[status].className)}>
+            <div className="absolute top-2 left-2 z-10">
+              <div className={cn(
+                "text-[10px] px-2 py-0.5 rounded font-semibold uppercase tracking-wide backdrop-blur-sm",
+                statusConfig[status].className
+              )}>
                 {statusConfig[status].label}
-              </Badge>
+              </div>
             </div>
           )}
           <div className="absolute top-2 right-2">
@@ -161,9 +167,12 @@ export function AnimeCard({
               <span className="text-xs text-gray-300">{rating}</span>
             </div>
             {status && statusConfig[status] && (
-              <Badge className={cn("text-xs px-1.5 py-0.5", statusConfig[status].className)}>
+              <div className={cn(
+                "text-[10px] px-2 py-0.5 rounded font-semibold uppercase tracking-wide backdrop-blur-sm inline-block",
+                statusConfig[status].className
+              )}>
                 {statusConfig[status].label}
-              </Badge>
+              </div>
             )}
             {episodes && (
               <span className="text-xs text-gray-400">{episodes} eps</span>
@@ -184,7 +193,7 @@ export function AnimeCard({
         })
     
     return (
-      <div className="group relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-lg overflow-hidden hover:bg-white/10 transition-all duration-300 hover:scale-[1.02]">
+      <div className="group relative glass rounded-lg overflow-hidden hover:bg-white/10 transition-all duration-300 hover:scale-[1.02]">
         <div className="aspect-[3/4] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center relative">
           {status && statusConfig[status] && (
             <div className="absolute top-1.5 left-1.5">

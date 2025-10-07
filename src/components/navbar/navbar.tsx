@@ -25,14 +25,12 @@ export function Navbar() {
 
   return (
     <nav className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-[95%] max-w-7xl">
-      <div className={`bg-white/5 backdrop-blur-xl border rounded-2xl px-8 py-4 overflow-visible transition-all duration-300 ${
-        isSearchFocused ? 'border-cyan-400/50 shadow-lg shadow-cyan-400/10' : 'border-white/10'
-      }`}>
+      <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl px-8 py-4 overflow-visible transition-all duration-300">
         <div className="flex items-center justify-between gap-6">
           {/* Logo Section */}
           <Link href="/dashboard">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-pink-400 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">AS</span>
             </div>
             <span className="text-white font-bold text-lg">AnimeSenpai</span>
@@ -57,16 +55,12 @@ export function Navbar() {
           </div>
 
           {/* Enhanced Search Bar with navbar variant */}
-          <div className={`transition-all duration-300 ${
-            isSearchFocused ? 'w-64' : 'w-56'
-          }`}>
+          <div className="w-56 transition-all duration-300">
             <SearchBar 
               placeholder="Search..."
               showDropdown={true}
               size="sm"
               variant="navbar"
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setIsSearchFocused(false)}
             />
           </div>
 

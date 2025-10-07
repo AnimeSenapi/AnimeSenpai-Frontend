@@ -1,15 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { MyListAnimeCard } from '../../components/anime/MyListAnimeCard'
 import { Button } from '../../components/ui/button'
-import { Anime } from '../../types/anime'
+import { Anime, AnimeListItem, UserListResponse } from '../../types/anime'
 import { useAuth } from '../lib/auth-context'
+import { apiGetUserList } from '../lib/api'
 import { Bookmark, Heart, Filter, SortAsc, Grid, List, Clock, Star, CheckCircle, Play, Plus, Lock } from 'lucide-react'
 
-// Sample my list data with different statuses
-const myListAnime: (Anime & { listStatus: 'favorite' | 'watching' | 'completed' | 'plan-to-watch' })[] = [
+// Legacy sample data - will be replaced with API data
+const myListAnimeFallback: (Anime & { listStatus: 'favorite' | 'watching' | 'completed' | 'plan-to-watch' })[] = [
   {
     id: '1',
     slug: 'attack-on-titan',
@@ -117,10 +118,55 @@ const myListAnime: (Anime & { listStatus: 'favorite' | 'watching' | 'completed' 
 ]
 
 export default function MyListPage() {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading: authLoading } = useAuth()
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  
+  const [isLoading, setIsLoading] = useState(false)
+  const [userList, setUserList] = useState<UserListResponse | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch user's anime list from backend
+  useEffect(() => {
+    const fetchUserList = async () => {
+      if (!isAuthenticated) return
+
+      setIsLoading(true)
+      setError(null)
+      try {
+        const data = await apiGetUserList()
+        setUserList(data)
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load your list'
+        
+        // If backend doesn't have mylist endpoints yet, show fallback data
+        if (errorMessage.includes('NOT_FOUND') || errorMessage.includes('404')) {
+          console.log('ℹ️ MyList backend not available yet - using fallback data')
+          setError(null)
+          // Use fallback data
+          setUserList({
+            items: [],
+            total: 0,
+            stats: { watching: 0, completed: 0, planToWatch: 0, onHold: 0, dropped: 0, favorites: 0 }
+          })
+        } else {
+          setError(errorMessage)
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchUserList()
+  }, [isAuthenticated])
+
+  // Convert AnimeListItem to display format
+  const myListAnime = userList?.items.map(item => ({
+    ...item.anime!,
+    listStatus: item.isFavorite ? 'favorite' as const : 
+                item.status === 'plan-to-watch' ? 'plan-to-watch' as const :
+                item.status as 'watching' | 'completed'
+  })) || myListAnimeFallback
+
   const favorites = myListAnime.filter(anime => anime.listStatus === 'favorite')
   const watching = myListAnime.filter(anime => anime.listStatus === 'watching')
   const completed = myListAnime.filter(anime => anime.listStatus === 'completed')
@@ -143,16 +189,47 @@ export default function MyListPage() {
   }
 
   const filteredAnime = getFilteredAnime()
+  
+  // Use stats from backend if available
+  const stats = userList?.stats || {
+    favorites: favorites.length,
+    watching: watching.length,
+    completed: completed.length,
+    planToWatch: planToWatch.length,
+    onHold: 0,
+    dropped: 0
+  }
 
   // Show loading state
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-pink-400 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
             <span className="text-white font-bold text-2xl">AS</span>
           </div>
-          <p className="text-gray-400">Loading...</p>
+          <p className="text-gray-400">Loading your list...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 flex items-center justify-center">
+        <div className="text-center max-w-md px-6">
+          <div className="w-16 h-16 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-red-400 text-2xl">⚠️</span>
+          </div>
+          <h2 className="text-xl font-semibold text-white mb-2">Unable to Load Your List</h2>
+          <p className="text-gray-400 mb-6">{error}</p>
+          <Button
+            onClick={() => window.location.reload()}
+            className="bg-primary-500 hover:bg-primary-600"
+          >
+            Try Again
+          </Button>
         </div>
       </div>
     )
@@ -161,22 +238,22 @@ export default function MyListPage() {
   // Show sign-in prompt for guests
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
         </div>
 
         <main className="container pt-32 pb-20 relative z-10">
           <div className="max-w-2xl mx-auto text-center">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-12">
-              <div className="w-20 h-20 bg-gradient-to-br from-cyan-500/20 to-pink-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Lock className="h-10 w-10 text-cyan-400" />
+            <div className="glass rounded-3xl p-12">
+              <div className="w-20 h-20 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Lock className="h-10 w-10 text-primary-400" />
               </div>
               
-              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-white via-cyan-200 to-pink-200 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-white via-primary-400 to-secondary-400 bg-clip-text text-transparent">
                 Sign In to View Your List
               </h1>
               
@@ -186,7 +263,7 @@ export default function MyListPage() {
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
                 <Link href="/auth/signin">
-                  <Button className="bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 text-white font-semibold px-8 py-6 text-lg rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg shadow-cyan-500/25">
+                  <Button className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold px-8 py-6 text-lg rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg shadow-brand-primary-500/25">
                     Sign In
                   </Button>
                 </Link>
@@ -202,15 +279,15 @@ export default function MyListPage() {
 
               <div className="grid grid-cols-3 gap-4 pt-8 border-t border-white/10">
                 <div className="text-center">
-                  <Bookmark className="h-8 w-8 text-cyan-400 mx-auto mb-2" />
+                  <Bookmark className="h-8 w-8 text-primary-400 mx-auto mb-2" />
                   <p className="text-sm text-gray-400">Track Favorites</p>
                 </div>
                 <div className="text-center">
-                  <Star className="h-8 w-8 text-pink-400 mx-auto mb-2" />
+                  <Star className="h-8 w-8 text-secondary-400 mx-auto mb-2" />
                   <p className="text-sm text-gray-400">Rate Anime</p>
                 </div>
                 <div className="text-center">
-                  <Clock className="h-8 w-8 text-purple-400 mx-auto mb-2" />
+                  <Clock className="h-8 w-8 text-planning-400 mx-auto mb-2" />
                   <p className="text-sm text-gray-400">Track Progress</p>
                 </div>
               </div>
@@ -222,12 +299,12 @@ export default function MyListPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
       <main className="container pt-32 pb-20 relative z-10">
@@ -235,7 +312,7 @@ export default function MyListPage() {
         <div className="mb-12">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-white via-cyan-200 to-pink-200 bg-clip-text text-transparent">
+              <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-white via-primary-400 to-secondary-400 bg-clip-text text-transparent">
                 My List
               </h1>
               <p className="text-xl text-gray-300">
@@ -244,39 +321,39 @@ export default function MyListPage() {
             </div>
             <div className="hidden md:flex items-center gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-white">{favorites.length}</div>
+                <div className="text-2xl font-bold text-white">{stats.favorites}</div>
                 <div className="text-sm text-gray-400">Favorites</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-white">{watching.length}</div>
+                <div className="text-2xl font-bold text-white">{stats.watching}</div>
                 <div className="text-sm text-gray-400">Watching</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-white">{completed.length}</div>
+                <div className="text-2xl font-bold text-white">{stats.completed}</div>
                 <div className="text-sm text-gray-400">Completed</div>
               </div>
             </div>
           </div>
           
           {/* Mobile Stats */}
-          <div className="md:hidden flex items-center justify-between bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 mb-6">
+          <div className="md:hidden flex items-center justify-between glass rounded-2xl p-4 mb-6">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-pink-400 rounded-full"></div>
-              <span className="text-sm text-gray-300">{favorites.length} Favorites</span>
+              <div className="w-3 h-3 bg-secondary-400 rounded-full"></div>
+              <span className="text-sm text-gray-300">{stats.favorites} Favorites</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-cyan-400 rounded-full"></div>
-              <span className="text-sm text-gray-300">{watching.length} Watching</span>
+              <div className="w-3 h-3 bg-primary-400 rounded-full"></div>
+              <span className="text-sm text-gray-300">{stats.watching} Watching</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-              <span className="text-sm text-gray-300">{completed.length} Completed</span>
+              <div className="w-3 h-3 bg-success-400 rounded-full"></div>
+              <span className="text-sm text-gray-300">{stats.completed} Completed</span>
             </div>
           </div>
         </div>
 
         {/* Category Filter */}
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 mb-8">
+        <div className="glass rounded-2xl p-4 mb-8">
           <div className="flex items-center gap-3 overflow-x-auto pb-2">
             <Button
               variant={selectedCategory === 'all' ? 'default' : 'outline'}
@@ -284,7 +361,7 @@ export default function MyListPage() {
               onClick={() => setSelectedCategory('all')}
               className={`whitespace-nowrap transition-all duration-200 ${
                 selectedCategory === 'all' 
-                  ? 'bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 shadow-lg shadow-cyan-500/25' 
+                  ? 'bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 shadow-lg shadow-brand-primary-500/25' 
                   : 'border-white/20 text-white hover:bg-white/10 hover:border-white/30'
               }`}
             >
@@ -297,7 +374,7 @@ export default function MyListPage() {
               onClick={() => setSelectedCategory('favorites')}
               className={`whitespace-nowrap transition-all duration-200 ${
                 selectedCategory === 'favorites' 
-                  ? 'bg-pink-500 hover:bg-pink-600 shadow-lg shadow-pink-500/25' 
+                  ? 'bg-secondary-500 hover:bg-secondary-600 shadow-lg shadow-brand-secondary-500/25' 
                   : 'border-white/20 text-white hover:bg-white/10 hover:border-white/30'
               }`}
             >
@@ -310,7 +387,7 @@ export default function MyListPage() {
               onClick={() => setSelectedCategory('watching')}
               className={`whitespace-nowrap transition-all duration-200 ${
                 selectedCategory === 'watching' 
-                  ? 'bg-cyan-500 hover:bg-cyan-600 shadow-lg shadow-cyan-500/25' 
+                  ? 'bg-primary-500 hover:bg-primary-600 shadow-lg shadow-brand-primary-500/25' 
                   : 'border-white/20 text-white hover:bg-white/10 hover:border-white/30'
               }`}
             >
@@ -323,7 +400,7 @@ export default function MyListPage() {
               onClick={() => setSelectedCategory('completed')}
               className={`whitespace-nowrap transition-all duration-200 ${
                 selectedCategory === 'completed' 
-                  ? 'bg-green-500 hover:bg-green-600 shadow-lg shadow-green-500/25' 
+                  ? 'bg-success-500 hover:bg-success-600 shadow-lg shadow-success-500/25' 
                   : 'border-white/20 text-white hover:bg-white/10 hover:border-white/30'
               }`}
             >
@@ -336,7 +413,7 @@ export default function MyListPage() {
               onClick={() => setSelectedCategory('plan-to-watch')}
               className={`whitespace-nowrap transition-all duration-200 ${
                 selectedCategory === 'plan-to-watch' 
-                  ? 'bg-purple-500 hover:bg-purple-600 shadow-lg shadow-purple-500/25' 
+                  ? 'bg-planning-500 hover:bg-planning-600 shadow-lg shadow-planning-500/25' 
                   : 'border-white/20 text-white hover:bg-white/10 hover:border-white/30'
               }`}
             >
@@ -358,14 +435,14 @@ export default function MyListPage() {
               Sort
             </Button>
           </div>
-          <div className="flex items-center gap-1 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-1">
+          <div className="flex items-center gap-1 glass rounded-xl p-1">
             <Button 
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               size="sm" 
               onClick={() => setViewMode('grid')}
               className={`transition-all duration-200 ${
                 viewMode === 'grid' 
-                  ? 'bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 shadow-lg shadow-cyan-500/25' 
+                  ? 'bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 shadow-lg shadow-brand-primary-500/25' 
                   : 'text-white hover:bg-white/10'
               }`}
             >
@@ -377,7 +454,7 @@ export default function MyListPage() {
               onClick={() => setViewMode('list')}
               className={`transition-all duration-200 ${
                 viewMode === 'list' 
-                  ? 'bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 shadow-lg shadow-cyan-500/25' 
+                  ? 'bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 shadow-lg shadow-brand-primary-500/25' 
                   : 'text-white hover:bg-white/10'
               }`}
             >
@@ -427,7 +504,7 @@ export default function MyListPage() {
                 : `Try selecting a different category or add some anime to your ${selectedCategory.replace('-', ' ')} list`
               }
             </p>
-            <Button className="bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 shadow-lg shadow-cyan-500/25 px-8 py-3 text-lg font-semibold">
+            <Button className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 shadow-lg shadow-brand-primary-500/25 px-8 py-3 text-lg font-semibold">
               <Plus className="h-5 w-5 mr-2" />
               Discover Anime
             </Button>

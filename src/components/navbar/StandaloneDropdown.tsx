@@ -63,9 +63,9 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
           <Button
             ref={buttonRef}
             variant="ghost"
-            className="relative h-9 w-9 rounded-full p-0 hover:bg-white/10 transition-all duration-200 focus:ring-2 focus:ring-cyan-400/50"
+            className="relative h-9 w-9 rounded-full p-0 hover:bg-white/10 transition-all duration-200 focus:ring-2 focus:ring-brand-primary-400/50"
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-pink-400 rounded-full flex items-center justify-center ring-2 ring-white/20 hover:ring-white/40 transition-all duration-200">
+            <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full flex items-center justify-center ring-2 ring-white/20 hover:ring-white/40 transition-all duration-200">
               <span className="text-white font-bold text-xs">{displayInitial}</span>
             </div>
           </Button>
@@ -79,7 +79,7 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
           onClick={() => setIsOpen(false)}
         >
           <div 
-            className="fixed w-56 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-[9999]"
+            className="fixed w-56 glass rounded-xl shadow-2xl z-[9999]"
             style={{
               top: `${position.top}px`,
               right: `${position.right}px`
@@ -135,7 +135,7 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
                   <span className="text-sm">Settings</span>
                 </button>
                 <button 
-                  className="w-full text-left text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg px-3 py-2.5 transition-all duration-200 flex items-center"
+                  className="w-full text-left text-error-400 hover:text-red-300 hover:bg-error-500/10 rounded-lg px-3 py-2.5 transition-all duration-200 flex items-center"
                   onClick={() => {
                     setIsOpen(false)
                     signout()

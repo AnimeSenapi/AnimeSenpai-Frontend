@@ -1,7 +1,18 @@
 // Lightweight client to talk to the backend tRPC HTTP endpoint
 // Uses the tRPC HTTP format: POST /api/trpc/<router.procedure>
 
-import type { Anime, AnimeListResponse, AuthUser, AuthResponse, SignupInput } from '../../types/anime'
+import type { 
+  Anime, 
+  AnimeListResponse, 
+  AuthUser, 
+  AuthResponse, 
+  SignupInput,
+  AnimeListItem,
+  UserListResponse,
+  ListStatus,
+  FeatureFlag,
+  FeatureAccess
+} from '../../types/anime'
 
 type TRPCErrorShape = {
   message: string
@@ -17,8 +28,9 @@ type TRPCErrorShape = {
 
 type TRPCResponse<T> = { result: { data: T } } | { error: TRPCErrorShape }
 
+// Backend runs on port 3001 by default (see backend README)
 const TRPC_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3004/api/trpc'
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3001/api/trpc'
 
 function getAuthHeaders(): Record<string, string> {
   const accessToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
@@ -260,8 +272,28 @@ export async function apiGetGenres() {
 }
 
 export async function apiSearchAnime(query: string): Promise<Anime[]> {
-  // For now, use getAll and filter client-side
-  // In production, add a dedicated search endpoint
+  try {
+    // Try server-side search first (if backend supports it)
+    const url = `${TRPC_URL}/anime.search?input=${encodeURIComponent(JSON.stringify({ query }))}`
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    })
+
+    if (response.ok) {
+      const data: TRPCResponse<Anime[]> = await response.json()
+      if ('error' in data) throw new Error('Search endpoint failed')
+      return data.result.data
+    }
+  } catch (error) {
+    // Fallback to client-side search if backend doesn't support it yet
+    console.log('ℹ️ Using client-side search (backend search not available)')
+  }
+
+  // Fallback: client-side search
   const allAnime = await apiGetAllAnime()
   const animeArray = Array.isArray(allAnime) ? allAnime : allAnime.anime
   const lowerQuery = query.toLowerCase()
@@ -270,6 +302,81 @@ export async function apiSearchAnime(query: string): Promise<Anime[]> {
     anime.description?.toLowerCase().includes(lowerQuery) ||
     anime.studio?.toLowerCase().includes(lowerQuery)
   )
+}
+
+// ===== MY LIST API =====
+
+export async function apiGetUserList(): Promise<UserListResponse> {
+  return trpcQuery<UserListResponse>('mylist.getUserList')
+}
+
+export async function apiAddToList(input: { 
+  animeId: string
+  status: ListStatus
+  isFavorite?: boolean 
+}): Promise<AnimeListItem> {
+  return trpcMutation<typeof input, AnimeListItem>('mylist.addToList', input)
+}
+
+export async function apiRemoveFromList(listItemId: string): Promise<{ success: boolean }> {
+  return trpcMutation<{ listItemId: string }, { success: boolean }>('mylist.removeFromList', { listItemId })
+}
+
+export async function apiUpdateListStatus(input: {
+  listItemId: string
+  status: ListStatus
+}): Promise<AnimeListItem> {
+  return trpcMutation<typeof input, AnimeListItem>('mylist.updateStatus', input)
+}
+
+export async function apiUpdateListProgress(input: {
+  listItemId: string
+  currentEpisode: number
+}): Promise<AnimeListItem> {
+  return trpcMutation<typeof input, AnimeListItem>('mylist.updateProgress', input)
+}
+
+export async function apiToggleFavorite(listItemId: string): Promise<AnimeListItem> {
+  return trpcMutation<{ listItemId: string }, AnimeListItem>('mylist.toggleFavorite', { listItemId })
+}
+
+export async function apiUpdateListRating(input: {
+  listItemId: string
+  rating: number // 1-10
+}): Promise<AnimeListItem> {
+  return trpcMutation<typeof input, AnimeListItem>('mylist.updateRating', input)
+}
+
+// ===== FEATURE FLAGS API (Beta Testing) =====
+
+export async function apiCheckFeature(feature: string): Promise<FeatureAccess> {
+  const url = `${TRPC_URL}/user.checkFeature?input=${encodeURIComponent(JSON.stringify({ feature }))}`
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+  })
+
+  if (!response.ok) {
+    return { feature, hasAccess: false, reason: 'Feature check failed' }
+  }
+
+  const data: TRPCResponse<FeatureAccess> = await response.json()
+  if ('error' in data) {
+    return { feature, hasAccess: false, reason: 'Not authenticated' }
+  }
+
+  return data.result.data
+}
+
+export async function apiGetAllFeatures(): Promise<FeatureFlag[]> {
+  try {
+    return await trpcQuery<FeatureFlag[]>('admin.getAllFeatures')
+  } catch {
+    return []
+  }
 }
 
 

@@ -326,7 +326,7 @@ export default function SearchPage() {
               placeholder="Search anime, studios, genres..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl px-12 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-200"
+              className="w-full glass rounded-2xl px-12 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-200"
             />
             {searchQuery && (
               <Button
@@ -371,7 +371,7 @@ export default function SearchPage() {
               </Button>
             )}
           </div>
-          <div className="flex items-center gap-1 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-1">
+          <div className="flex items-center gap-1 glass rounded-xl p-1">
             <Button 
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               size="sm" 
@@ -401,7 +401,7 @@ export default function SearchPage() {
 
         {/* Filters Panel */}
         {showFilters && (
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-8">
+          <div className="glass rounded-2xl p-6 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Genres */}
               <div>
@@ -518,7 +518,7 @@ export default function SearchPage() {
             {filteredAnime.map((anime) => (
               <SearchAnimeCard
                 key={anime.id}
-                anime={anime as Anime}
+                anime={anime}
                 variant="grid"
               />
             ))}

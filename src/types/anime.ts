@@ -52,6 +52,9 @@ export interface AuthUser {
   name?: string
   avatar?: string
   emailVerified?: boolean
+  role?: 'user' | 'tester' | 'admin' // Role-based access control
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface AuthResponse {
@@ -70,4 +73,54 @@ export interface SignupInput {
   dataProcessingConsent: boolean
   marketingConsent?: boolean
   confirmPassword?: string
+}
+
+// MyList Types (User Anime List)
+export type ListStatus = 'watching' | 'completed' | 'plan-to-watch' | 'on-hold' | 'dropped'
+
+export interface AnimeListItem {
+  id: string
+  userId: string
+  animeId: string
+  status: ListStatus
+  isFavorite: boolean
+  currentEpisode: number
+  rating?: number // User's rating (1-10)
+  notes?: string
+  startedAt?: string
+  completedAt?: string
+  updatedAt: string
+  createdAt: string
+  anime?: Anime // Populated anime data
+}
+
+export interface UserListResponse {
+  items: AnimeListItem[]
+  total: number
+  stats: {
+    watching: number
+    completed: number
+    planToWatch: number
+    onHold: number
+    dropped: number
+    favorites: number
+  }
+}
+
+// Feature Flags (Beta Testing)
+export interface FeatureFlag {
+  id: string
+  key: string
+  name: string
+  description?: string
+  enabled: boolean
+  roles: ('user' | 'tester' | 'admin')[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface FeatureAccess {
+  feature: string
+  hasAccess: boolean
+  reason?: string
 }

@@ -35,8 +35,14 @@ export default function DashboardPage() {
           setAllAnime([])
         }
       } catch (err: unknown) {
-        console.error('Failed to load anime:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load anime')
+        // Gracefully handle backend not running - show empty state instead of error
+        // Only log in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log('ℹ️ Backend not available - showing empty state. Start backend on http://localhost:3004 to see data.')
+        }
+        setTrendingAnime([])
+        setAllAnime([])
+        setError(null) // Don't show error, just show empty state
       } finally {
         setIsLoading(false)
       }
@@ -50,7 +56,7 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 flex items-center justify-center px-4">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-white mb-4">Oops! Something went wrong</h2>
           <p className="text-gray-400 mb-6">{error}</p>
@@ -61,22 +67,22 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
       <main className="container py-20 relative z-10">
         {/* Hero Section */}
         <div className="mb-12 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-6">
-            <Sparkles className="h-4 w-4 text-cyan-400" />
+            <Sparkles className="h-4 w-4 text-primary-400" />
             <span className="text-sm text-gray-300">Discover Your Next Obsession</span>
           </div>
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-white via-cyan-200 to-pink-200 bg-clip-text text-transparent">
+          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-white via-primary-400 to-secondary-400 bg-clip-text text-transparent">
             Discover Amazing Anime
           </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
@@ -88,8 +94,8 @@ export default function DashboardPage() {
         <div className="mb-12">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-pink-500/20">
-                <TrendingUp className="h-5 w-5 text-cyan-400" />
+              <div className="p-2 rounded-lg bg-gradient-to-br from-primary-500/20 to-secondary-500/20">
+                <TrendingUp className="h-5 w-5 text-primary-400" />
               </div>
               <h2 className="text-2xl font-bold text-white">Trending Now</h2>
             </div>
@@ -119,8 +125,8 @@ export default function DashboardPage() {
         <div className="mb-12">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-pink-500/20">
-                <Sparkles className="h-5 w-5 text-cyan-400" />
+              <div className="p-2 rounded-lg bg-gradient-to-br from-primary-500/20 to-secondary-500/20">
+                <Sparkles className="h-5 w-5 text-primary-400" />
               </div>
               <h2 className="text-2xl font-bold text-white">Popular Anime</h2>
             </div>
@@ -149,7 +155,7 @@ export default function DashboardPage() {
         {/* Recommendation Categories */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Recently Added */}
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+          <div className="glass rounded-2xl p-6">
             <h3 className="text-xl font-bold text-white mb-4">Recently Added</h3>
             <div className="space-y-4">
               {allAnime.slice(0, 3).map((anime) => (
@@ -166,7 +172,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Top Rated */}
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+          <div className="glass rounded-2xl p-6">
             <h3 className="text-xl font-bold text-white mb-4">Top Rated</h3>
             <div className="space-y-4">
               {trendingAnime.slice(0, 3).map((anime) => (

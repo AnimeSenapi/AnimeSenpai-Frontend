@@ -55,11 +55,11 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
         <div className="container mx-auto px-4 py-20 relative z-10">
           <div className="max-w-md mx-auto">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center">
-              <div className="animate-spin w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <div className="glass rounded-2xl p-8 text-center">
+              <div className="animate-spin w-8 h-8 border-2 border-brand-primary-400 border-t-transparent rounded-full mx-auto mb-4"></div>
               <h1 className="text-xl font-bold text-white mb-2">Verifying Email...</h1>
               <p className="text-gray-300">Please wait while we verify your email address.</p>
             </div>
@@ -71,7 +71,7 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
 
   if (isError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
         <div className="container mx-auto px-4 py-20 relative z-10">
           <div className="max-w-md mx-auto">
             {/* Back Button */}
@@ -85,9 +85,9 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
               </Link>
             </div>
 
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center">
-              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <AlertCircle className="h-8 w-8 text-red-400" />
+            <div className="glass rounded-2xl p-8 text-center">
+              <div className="w-16 h-16 bg-error-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <AlertCircle className="h-8 w-8 text-error-400" />
               </div>
               
               <h1 className="text-2xl font-bold text-white mb-4">
@@ -101,7 +101,7 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
               <div className="space-y-3">
                 <Button
                   onClick={() => window.location.href = '/auth/signin'}
-                  className="w-full bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 shadow-lg shadow-cyan-500/25"
+                  className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 shadow-lg shadow-brand-primary-500/25"
                 >
                   Back to Sign In
                 </Button>
@@ -122,12 +122,12 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
 
   return (
     <RequireGuest>
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
         <div className="container mx-auto px-4 py-20 relative z-10">
@@ -144,9 +144,9 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
             </div>
 
           {/* Success Card */}
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center">
-            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="h-8 w-8 text-green-400" />
+          <div className="glass rounded-2xl p-8 text-center">
+            <div className="w-16 h-16 bg-success-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="h-8 w-8 text-success-400" />
             </div>
             
             <h1 className="text-2xl font-bold text-white mb-4">
@@ -160,7 +160,7 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
             <div className="space-y-3">
               <Button
                 onClick={() => window.location.href = '/dashboard'}
-                className="w-full bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 shadow-lg shadow-cyan-500/25"
+                className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 shadow-lg shadow-brand-primary-500/25"
               >
                 Go to Dashboard
               </Button>

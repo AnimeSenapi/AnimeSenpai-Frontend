@@ -19,7 +19,7 @@ export function GuestAuth() {
       <Button
         variant="outline"
         size="sm"
-        className="border-white/20 text-white hover:bg-white/10 h-9 px-4"
+        className="btn-dark h-9 px-4"
         asChild
       >
         <Link href="/auth/signup">Sign Up</Link>

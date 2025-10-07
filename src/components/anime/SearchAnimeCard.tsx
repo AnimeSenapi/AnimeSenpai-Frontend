@@ -4,15 +4,12 @@ import Link from 'next/link'
 import { cn } from '../../app/lib/utils'
 import { Anime } from '../../types/anime'
 import { getTagById } from '../../types/tags'
-import { Star, Play, Bookmark, Heart, Clock, Calendar } from 'lucide-react'
+import { Star, Play, Bookmark, Heart, Clock, Calendar, CheckCircle } from 'lucide-react'
 import { Button } from '../ui/button'
 
 interface SearchAnimeCardProps {
   anime: Anime & { 
-    listStatus?: 'favorite' | 'watching' | 'completed' | 'plan-to-watch',
-    genres?: string[],
-    studios?: string[],
-    popularity?: number
+    listStatus?: 'favorite' | 'watching' | 'completed' | 'plan-to-watch'
   }
   variant?: 'grid' | 'list' | 'compact'
   className?: string
@@ -91,7 +88,7 @@ export function SearchAnimeCard({
   if (variant === 'list') {
     return (
       <Link href={`/anime/${anime.slug}`} className={cn("block group", className)}>
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 transform hover:scale-[1.02]">
+        <div className="glass rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 transform hover:scale-[1.02]">
           <div className="flex items-center gap-6">
             {/* Image */}
             <div className="relative flex-shrink-0">
@@ -138,7 +135,7 @@ export function SearchAnimeCard({
                           key={index}
                           className="text-xs px-2 py-1 bg-white/10 text-gray-300 rounded-full"
                         >
-                          {genre}
+                          {typeof genre === 'string' ? genre : genre.name}
                         </span>
                       ))}
                     </div>
@@ -146,7 +143,13 @@ export function SearchAnimeCard({
                 </div>
                 <div className="flex items-center gap-2">
                   {anime.listStatus && (
-                    <div className="text-xs px-2 py-1 rounded-full bg-white/10 text-gray-300">
+                    <div className={cn(
+                      "text-xs px-2.5 py-1 rounded-lg border backdrop-blur-sm",
+                      anime.listStatus === 'favorite' && 'bg-gray-800/80 border-secondary-500/30 text-secondary-400',
+                      anime.listStatus === 'watching' && 'bg-gray-800/80 border-primary-500/30 text-primary-400',
+                      anime.listStatus === 'completed' && 'bg-gray-800/80 border-success-500/30 text-success-400',
+                      anime.listStatus === 'plan-to-watch' && 'bg-gray-800/80 border-planning-500/30 text-planning-400'
+                    )}>
                       {anime.listStatus === 'favorite' && '❤️ Favorite'}
                       {anime.listStatus === 'watching' && '▶️ Watching'}
                       {anime.listStatus === 'completed' && '✅ Completed'}
@@ -196,33 +199,31 @@ export function SearchAnimeCard({
             </div>
           </div>
 
-          {/* Status Badge */}
+          {/* Status Badge - Subtle Dark Style */}
           {anime.listStatus && (
             <div className="absolute top-3 right-3 z-10">
               {anime.listStatus === 'favorite' && (
-                <div className="bg-pink-500/95 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                  <Heart className="h-3 w-3" />
-                  <span>Favorite</span>
+                <div className="bg-gray-800/80 backdrop-blur-md border border-secondary-500/30 text-secondary-400 text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5">
+                  <Heart className="h-3 w-3 text-secondary-500" />
+                  <span className="font-medium">Favorite</span>
                 </div>
               )}
               {anime.listStatus === 'watching' && (
-                <div className="bg-cyan-500/95 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                  <Play className="h-3 w-3" />
-                  <span>Watching</span>
+                <div className="bg-gray-800/80 backdrop-blur-md border border-primary-500/30 text-primary-400 text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5">
+                  <Play className="h-3 w-3 text-primary-500" />
+                  <span className="font-medium">Watching</span>
                 </div>
               )}
               {anime.listStatus === 'completed' && (
-                <div className="bg-green-500/95 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                  <div className="w-3 h-3 bg-white rounded-full flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                  </div>
-                  <span>Completed</span>
+                <div className="bg-gray-800/80 backdrop-blur-md border border-success-500/30 text-success-400 text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5">
+                  <CheckCircle className="h-3 w-3 text-success-500" />
+                  <span className="font-medium">Completed</span>
                 </div>
               )}
               {anime.listStatus === 'plan-to-watch' && (
-                <div className="bg-purple-500/95 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                  <Star className="h-3 w-3" />
-                  <span>Plan to Watch</span>
+                <div className="bg-gray-800/80 backdrop-blur-md border border-planning-500/30 text-planning-400 text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5">
+                  <Star className="h-3 w-3 text-planning-500" />
+                  <span className="font-medium">Plan to Watch</span>
                 </div>
               )}
             </div>

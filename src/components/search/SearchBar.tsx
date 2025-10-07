@@ -50,7 +50,9 @@ export function SearchBar({
         const trending = await apiGetTrending()
         setPopularAnime(trending.slice(0, 3))
       } catch (error) {
-        console.error('Failed to load popular anime:', error)
+        // Gracefully handle backend not running - just don't show popular anime
+        // Silent fail - no console spam
+        setPopularAnime([])
       }
     }
     loadPopularAnime()
@@ -69,7 +71,7 @@ export function SearchBar({
           const results = await apiSearchAnime(query)
           setFilteredSuggestions(results.slice(0, 5)) // Limit to 5 results
         } catch (error) {
-          console.error('Search failed:', error)
+          // Gracefully handle backend not running - silent fail
           setFilteredSuggestions([])
         }
         setIsSearching(false)
@@ -177,7 +179,7 @@ export function SearchBar({
       {/* Search Input */}
       <div className={`relative transition-all duration-300 ${isFocused && variant === 'navbar' ? 'scale-105' : ''}`}>
         <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 transition-colors duration-200 ${
-          isFocused ? 'text-cyan-400' : 'text-gray-400'
+          isFocused ? 'text-primary-400' : 'text-gray-400'
         }`} />
         
         <input
@@ -191,7 +193,7 @@ export function SearchBar({
           onKeyDown={handleKeyDown}
           className={`w-full bg-white/5 backdrop-blur-xl border text-white placeholder-gray-400 focus:outline-none transition-all duration-300 ${
             isFocused 
-              ? 'border-cyan-400/50 ring-2 ring-cyan-400/20 shadow-lg shadow-cyan-400/10' 
+              ? 'border-brand-primary-400/50 ring-2 ring-brand-primary-400/20 shadow-lg shadow-brand-primary-400/10' 
               : 'border-white/10 hover:border-white/20'
           } ${
             variant === 'navbar' ? 'rounded-xl' : 'rounded-2xl'
@@ -205,7 +207,7 @@ export function SearchBar({
         {/* Loading indicator or Clear button */}
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
           {isSearching && (
-            <div className="w-4 h-4 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-brand-primary-400/30 border-t-brand-primary-400 rounded-full animate-spin" />
           )}
           {searchQuery && !isSearching && (
             <button
@@ -228,96 +230,65 @@ export function SearchBar({
         )}
       </div>
 
-      {/* Dropdown */}
+      {/* Dropdown - Polished Design */}
       {isOpen && showDropdown && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-gradient-to-b from-gray-900/95 to-gray-950/95 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl shadow-black/50 z-50 max-h-96 overflow-hidden animate-in slide-in-from-top-2 duration-200">
+        <div className="absolute top-full left-0 right-0 mt-3 bg-[#0a0a0a] rounded-xl shadow-2xl shadow-black/80 z-50 max-h-96 overflow-hidden">
           <div className="overflow-y-auto max-h-96 custom-scrollbar">
             {searchQuery.trim() ? (
               // Search Results
               <div className="p-2">
                 {filteredSuggestions.length > 0 ? (
                   <>
-                    <div className="px-3 py-2 text-xs text-gray-400 font-medium flex items-center gap-2">
-                      <Sparkles className="h-3 w-3" />
-                      <span>Search Results</span>
-                      <span className="ml-auto text-cyan-400">{filteredSuggestions.length} found</span>
+                    <div className="px-4 py-2 text-[11px] text-gray-500 font-semibold uppercase tracking-wider">
+                      {filteredSuggestions.length} {filteredSuggestions.length === 1 ? 'Result' : 'Results'}
                     </div>
-                    {filteredSuggestions.map((anime, index) => (
-                      <div 
-                        key={anime.id} 
-                        onClick={() => selectSuggestion(anime)}
-                        className={`transition-all duration-150 ${
-                          selectedIndex === index 
-                            ? 'bg-cyan-500/20 ring-1 ring-cyan-400/50 rounded-xl' 
-                            : 'hover:bg-white/5 rounded-xl'
-                        }`}
-                      >
-                        <SearchAnimeCard anime={anime} variant="compact" />
-                      </div>
-                    ))}
-                    <div className="px-3 py-2 border-t border-white/10 mt-2">
+                    <div className="space-y-1 px-1">
+                      {filteredSuggestions.map((anime, index) => (
+                        <div 
+                          key={anime.id} 
+                          onClick={() => selectSuggestion(anime)}
+                          className={`transition-all duration-200 rounded-lg cursor-pointer ${
+                            selectedIndex === index 
+                              ? 'bg-gray-800/80 ring-1 ring-gray-700' 
+                              : 'hover:bg-gray-800/40'
+                          }`}
+                        >
+                          <SearchAnimeCard anime={anime} variant="compact" />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-gray-800/50">
                       <button
                         onClick={() => handleSearch(searchQuery)}
-                        className="w-full text-left px-3 py-2.5 text-sm text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 rounded-lg transition-all duration-200 flex items-center justify-between group"
+                        className="w-full px-4 py-2.5 text-xs font-medium text-primary-400 hover:text-primary-300 hover:bg-primary-500/10 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
                       >
-                        <span className="font-medium">View all results for "{searchQuery}"</span>
-                        <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                        <span>View All Results</span>
+                        <ArrowRight className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </>
                 ) : (
-                  <div className="px-3 py-8 text-center text-gray-400">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-white/5 rounded-full flex items-center justify-center">
-                      <Search className="h-8 w-8 opacity-50" />
-                    </div>
-                    <p className="text-sm font-medium mb-2">No results found</p>
-                    <p className="text-xs text-gray-500 mb-4">Try a different search term</p>
-                    <button
-                      onClick={() => handleSearch(searchQuery)}
-                      className="text-cyan-400 hover:text-cyan-300 text-sm font-medium inline-flex items-center gap-2 hover:gap-3 transition-all"
-                    >
-                      Search anyway <ArrowRight className="h-4 w-4" />
-                    </button>
+                  <div className="px-3 py-6 text-center text-gray-500">
+                    <Search className="h-6 w-6 mx-auto mb-2 opacity-30" />
+                    <p className="text-xs mb-1">No results found</p>
+                    <p className="text-[10px] text-gray-600">Try a different search</p>
                   </div>
                 )}
               </div>
             ) : (
             // Default suggestions
             <div className="p-2">
-              {/* Recent Searches */}
-              {recentSearches.length > 0 && (
-                <div className="mb-3">
-                  <div className="px-3 py-2 text-xs text-gray-400 font-medium flex items-center gap-2">
-                    <Clock className="h-3 w-3" />
-                    <span>Recent Searches</span>
-                  </div>
-                  <div className="space-y-1">
-                    {recentSearches.map((search, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleSearch(search)}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-all duration-150 flex items-center justify-between group"
-                      >
-                        <span>{search}</span>
-                        <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Trending Searches */}
               <div className="mb-3">
-                <div className="px-3 py-2 text-xs text-gray-400 font-medium flex items-center gap-2">
-                  <TrendingUp className="h-3 w-3" />
-                  <span>Trending Searches</span>
+                <div className="px-4 py-2 text-[11px] text-gray-500 font-semibold uppercase tracking-wider">
+                  Trending
                 </div>
-                <div className="flex flex-wrap gap-2 px-3">
+                <div className="flex flex-wrap gap-2 px-2">
                   {trendingSearches.map((search, index) => (
                     <button
                       key={index}
                       onClick={() => handleSearch(search)}
-                      className="px-3 py-1.5 text-xs font-medium text-gray-300 hover:text-white bg-white/5 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-400/50 rounded-full transition-all duration-200"
+                      className="px-3 py-1.5 text-xs font-medium text-gray-300 hover:text-white bg-gray-800/60 hover:bg-gray-700 rounded-lg transition-all duration-200"
                     >
                       {search}
                     </button>
@@ -326,39 +297,33 @@ export function SearchBar({
               </div>
 
               {/* Popular Anime */}
-              <div className="mb-2">
-                <div className="px-3 py-2 text-xs text-gray-400 font-medium flex items-center gap-2">
-                  <Star className="h-3 w-3" />
-                  <span>Popular Anime</span>
-                </div>
-                {popularAnime.length > 0 ? (
-                  popularAnime.map((anime, index) => (
-                    <div 
-                      key={anime.id} 
-                      onClick={() => selectSuggestion(anime)}
-                      className="hover:bg-white/5 rounded-xl transition-all duration-150 cursor-pointer"
-                    >
-                      <SearchAnimeCard anime={anime} variant="compact" />
-                    </div>
-                  ))
-                ) : (
-                  <div className="px-3 py-4 text-center text-gray-500 text-xs">
-                    Loading popular anime...
+              {popularAnime.length > 0 && (
+                <div className="mb-2">
+                  <div className="px-4 py-2 text-[11px] text-gray-500 font-semibold uppercase tracking-wider">
+                    Popular
                   </div>
-                )}
-              </div>
+                  <div className="space-y-1 px-1">
+                    {popularAnime.map((anime, index) => (
+                      <div 
+                        key={anime.id} 
+                        onClick={() => selectSuggestion(anime)}
+                        className="hover:bg-gray-800/40 rounded-lg transition-all duration-200 cursor-pointer"
+                      >
+                        <SearchAnimeCard anime={anime} variant="compact" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Go to Search Page */}
-              <div className="px-3 py-2 border-t border-white/10">
+              <div className="mt-2 pt-2 border-t border-gray-800/50">
                 <button
                   onClick={() => router.push('/search')}
-                  className="w-full text-left px-3 py-2.5 text-sm text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 rounded-lg transition-all duration-200 flex items-center justify-between group"
+                  className="w-full px-4 py-2.5 text-xs font-medium text-gray-400 hover:text-gray-300 hover:bg-gray-800/40 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
                 >
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4" />
-                    <span className="font-medium">Advanced Search</span>
-                  </div>
-                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  <span>Advanced Search</span>
+                  <Filter className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>

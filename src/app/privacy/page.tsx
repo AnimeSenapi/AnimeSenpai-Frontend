@@ -6,12 +6,12 @@ import { ArrowLeft, Shield, Eye, Database, Lock, Mail, Settings, AlertCircle } f
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
       <div className="container mx-auto px-4 py-20 relative z-10">
@@ -28,11 +28,11 @@ export default function PrivacyPage() {
           </div>
 
           {/* Privacy Content */}
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
+          <div className="glass rounded-2xl p-8">
             {/* Header */}
             <div className="text-center mb-12">
-              <div className="w-16 h-16 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Shield className="h-8 w-8 text-cyan-400" />
+              <div className="w-16 h-16 bg-primary-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Shield className="h-8 w-8 text-primary-400" />
               </div>
               <h1 className="text-4xl font-bold text-white mb-4">
                 Privacy Policy
@@ -46,7 +46,7 @@ export default function PrivacyPage() {
             <div className="prose prose-invert max-w-none space-y-8">
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                  <Eye className="h-6 w-6 text-cyan-400" />
+                  <Eye className="h-6 w-6 text-primary-400" />
                   1. Information We Collect
                 </h2>
                 <p className="text-gray-300 leading-relaxed mb-4">
@@ -74,7 +74,7 @@ export default function PrivacyPage() {
 
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                  <Database className="h-6 w-6 text-cyan-400" />
+                  <Database className="h-6 w-6 text-primary-400" />
                   2. How We Use Your Information
                 </h2>
                 <p className="text-gray-300 leading-relaxed mb-4">
@@ -93,14 +93,14 @@ export default function PrivacyPage() {
 
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                  <Lock className="h-6 w-6 text-cyan-400" />
+                  <Lock className="h-6 w-6 text-primary-400" />
                   3. Information Security
                 </h2>
                 <p className="text-gray-300 leading-relaxed mb-4">
                   We implement appropriate security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.
                 </p>
-                <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold text-green-400 mb-3">Security Measures:</h3>
+                <div className="bg-success-500/10 border border-success-500/20 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-success-400 mb-3">Security Measures:</h3>
                   <ul className="text-gray-300 space-y-2">
                     <li>• Encryption of data in transit and at rest</li>
                     <li>• Regular security audits and updates</li>
@@ -112,7 +112,7 @@ export default function PrivacyPage() {
 
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                  <Settings className="h-6 w-6 text-cyan-400" />
+                  <Settings className="h-6 w-6 text-primary-400" />
                   4. Your Rights and Choices
                 </h2>
                 <p className="text-gray-300 leading-relaxed mb-4">
@@ -129,7 +129,7 @@ export default function PrivacyPage() {
 
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                  <Mail className="h-6 w-6 text-cyan-400" />
+                  <Mail className="h-6 w-6 text-primary-400" />
                   5. Cookies and Tracking
                 </h2>
                 <p className="text-gray-300 leading-relaxed mb-4">
@@ -148,7 +148,7 @@ export default function PrivacyPage() {
 
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-                  <AlertCircle className="h-6 w-6 text-cyan-400" />
+                  <AlertCircle className="h-6 w-6 text-primary-400" />
                   6. Third-Party Services
                 </h2>
                 <p className="text-gray-300 leading-relaxed mb-4">
@@ -201,7 +201,7 @@ export default function PrivacyPage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
                   onClick={() => window.location.href = '/auth/signup'}
-                  className="bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 text-white font-semibold px-8 py-3 rounded-xl transition-all duration-200 shadow-lg shadow-cyan-500/25"
+                  className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold px-8 py-3 rounded-xl transition-all duration-200 shadow-lg shadow-brand-primary-500/25"
                 >
                   Back to Sign Up
                 </Button>

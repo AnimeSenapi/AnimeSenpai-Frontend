@@ -117,12 +117,12 @@ export default function SignUpPage() {
 
   return (
     <RequireGuest>
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
         </div>
 
         <div className="relative z-10 min-h-screen flex items-center justify-center px-4 py-8">
@@ -139,9 +139,9 @@ export default function SignUpPage() {
             </div>
 
             {/* Sign Up Form */}
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
+            <div className="glass rounded-2xl p-8">
               <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-pink-400 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <span className="text-white font-bold text-2xl">AS</span>
                 </div>
                 <h1 className="text-2xl font-bold text-white mb-2">Join AnimeSenpai</h1>
@@ -149,20 +149,20 @@ export default function SignUpPage() {
               </div>
 
               {error && (
-                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3">
-                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center mt-0.5">
-                    <span className="text-red-400 text-xs font-bold">!</span>
+                <div className="mb-6 p-4 bg-error-500/10 border border-error-500/20 rounded-xl flex items-start gap-3">
+                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-error-500/20 flex items-center justify-center mt-0.5">
+                    <span className="text-error-400 text-xs font-bold">!</span>
                   </div>
-                  <p className="text-red-400 text-sm flex-1">{error}</p>
+                  <p className="text-error-400 text-sm flex-1">{error}</p>
                 </div>
               )}
 
               {formErrors.terms && (
-                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3">
-                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center mt-0.5">
-                    <span className="text-red-400 text-xs font-bold">!</span>
+                <div className="mb-6 p-4 bg-error-500/10 border border-error-500/20 rounded-xl flex items-start gap-3">
+                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-error-500/20 flex items-center justify-center mt-0.5">
+                    <span className="text-error-400 text-xs font-bold">!</span>
                   </div>
-                  <p className="text-red-400 text-sm flex-1">{formErrors.terms}</p>
+                  <p className="text-error-400 text-sm flex-1">{formErrors.terms}</p>
                 </div>
               )}
 
@@ -182,15 +182,15 @@ export default function SignUpPage() {
                       onChange={handleInputChange}
                       className={`w-full pl-10 pr-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
                         formErrors.name 
-                          ? 'border-red-500/50 focus:ring-red-400' 
-                          : 'border-white/10 focus:ring-cyan-400'
+                          ? 'border-error-500/50 focus:ring-error-400' 
+                          : 'border-white/10 focus:ring-brand-primary-400'
                       }`}
                       placeholder="Enter your full name"
                       suppressHydrationWarning
                     />
                   </div>
                   {formErrors.name && (
-                    <p className="mt-1 text-sm text-red-400">{formErrors.name}</p>
+                    <p className="mt-1 text-sm text-error-400">{formErrors.name}</p>
                   )}
                 </div>
 
@@ -209,15 +209,15 @@ export default function SignUpPage() {
                       onChange={handleInputChange}
                       className={`w-full pl-10 pr-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
                         formErrors.email 
-                          ? 'border-red-500/50 focus:ring-red-400' 
-                          : 'border-white/10 focus:ring-cyan-400'
+                          ? 'border-error-500/50 focus:ring-error-400' 
+                          : 'border-white/10 focus:ring-brand-primary-400'
                       }`}
                       placeholder="Enter your email"
                       suppressHydrationWarning
                     />
                   </div>
                   {formErrors.email && (
-                    <p className="mt-1 text-sm text-red-400">{formErrors.email}</p>
+                    <p className="mt-1 text-sm text-error-400">{formErrors.email}</p>
                   )}
                 </div>
 
@@ -236,8 +236,8 @@ export default function SignUpPage() {
                       onChange={handleInputChange}
                       className={`w-full pl-10 pr-12 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
                         formErrors.password 
-                          ? 'border-red-500/50 focus:ring-red-400' 
-                          : 'border-white/10 focus:ring-cyan-400'
+                          ? 'border-error-500/50 focus:ring-error-400' 
+                          : 'border-white/10 focus:ring-brand-primary-400'
                       }`}
                       placeholder="Create a strong password"
                       suppressHydrationWarning
@@ -251,31 +251,31 @@ export default function SignUpPage() {
                     </button>
                   </div>
                   {formErrors.password && (
-                    <p className="mt-1 text-sm text-red-400">{formErrors.password}</p>
+                    <p className="mt-1 text-sm text-error-400">{formErrors.password}</p>
                   )}
                   
                   {/* Password Requirements */}
                   {formData.password && (
                     <div className="mt-3 space-y-2">
                       <div className="flex items-center gap-2 text-xs">
-                        {passwordChecks.length ? <Check className="h-3 w-3 text-green-400" /> : <X className="h-3 w-3 text-red-400" />}
-                        <span className={passwordChecks.length ? 'text-green-400' : 'text-red-400'}>At least 8 characters</span>
+                        {passwordChecks.length ? <Check className="h-3 w-3 text-success-400" /> : <X className="h-3 w-3 text-error-400" />}
+                        <span className={passwordChecks.length ? 'text-success-400' : 'text-error-400'}>At least 8 characters</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs">
-                        {passwordChecks.uppercase ? <Check className="h-3 w-3 text-green-400" /> : <X className="h-3 w-3 text-red-400" />}
-                        <span className={passwordChecks.uppercase ? 'text-green-400' : 'text-red-400'}>One uppercase letter</span>
+                        {passwordChecks.uppercase ? <Check className="h-3 w-3 text-success-400" /> : <X className="h-3 w-3 text-error-400" />}
+                        <span className={passwordChecks.uppercase ? 'text-success-400' : 'text-error-400'}>One uppercase letter</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs">
-                        {passwordChecks.lowercase ? <Check className="h-3 w-3 text-green-400" /> : <X className="h-3 w-3 text-red-400" />}
-                        <span className={passwordChecks.lowercase ? 'text-green-400' : 'text-red-400'}>One lowercase letter</span>
+                        {passwordChecks.lowercase ? <Check className="h-3 w-3 text-success-400" /> : <X className="h-3 w-3 text-error-400" />}
+                        <span className={passwordChecks.lowercase ? 'text-success-400' : 'text-error-400'}>One lowercase letter</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs">
-                        {passwordChecks.number ? <Check className="h-3 w-3 text-green-400" /> : <X className="h-3 w-3 text-red-400" />}
-                        <span className={passwordChecks.number ? 'text-green-400' : 'text-red-400'}>One number</span>
+                        {passwordChecks.number ? <Check className="h-3 w-3 text-success-400" /> : <X className="h-3 w-3 text-error-400" />}
+                        <span className={passwordChecks.number ? 'text-success-400' : 'text-error-400'}>One number</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs">
-                        {passwordChecks.special ? <Check className="h-3 w-3 text-green-400" /> : <X className="h-3 w-3 text-red-400" />}
-                        <span className={passwordChecks.special ? 'text-green-400' : 'text-red-400'}>One special character</span>
+                        {passwordChecks.special ? <Check className="h-3 w-3 text-success-400" /> : <X className="h-3 w-3 text-error-400" />}
+                        <span className={passwordChecks.special ? 'text-success-400' : 'text-error-400'}>One special character</span>
                       </div>
                     </div>
                   )}
@@ -296,8 +296,8 @@ export default function SignUpPage() {
                       onChange={handleInputChange}
                       className={`w-full pl-10 pr-12 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
                         formErrors.confirmPassword 
-                          ? 'border-red-500/50 focus:ring-red-400' 
-                          : 'border-white/10 focus:ring-cyan-400'
+                          ? 'border-error-500/50 focus:ring-error-400' 
+                          : 'border-white/10 focus:ring-brand-primary-400'
                       }`}
                       placeholder="Confirm your password"
                       suppressHydrationWarning
@@ -311,14 +311,14 @@ export default function SignUpPage() {
                     </button>
                   </div>
                   {formErrors.confirmPassword && (
-                    <p className="mt-1 text-sm text-red-400">{formErrors.confirmPassword}</p>
+                    <p className="mt-1 text-sm text-error-400">{formErrors.confirmPassword}</p>
                   )}
                   
                   {/* Password Match Indicator */}
                   {formData.confirmPassword && !formErrors.confirmPassword && (
                     <div className="mt-2 flex items-center gap-2 text-xs">
-                      {isPasswordMatch ? <Check className="h-3 w-3 text-green-400" /> : <X className="h-3 w-3 text-red-400" />}
-                      <span className={isPasswordMatch ? 'text-green-400' : 'text-red-400'}>
+                      {isPasswordMatch ? <Check className="h-3 w-3 text-success-400" /> : <X className="h-3 w-3 text-error-400" />}
+                      <span className={isPasswordMatch ? 'text-success-400' : 'text-error-400'}>
                         {isPasswordMatch ? 'Passwords match' : 'Passwords do not match'}
                       </span>
                     </div>
@@ -335,11 +335,11 @@ export default function SignUpPage() {
                   />
                   <label htmlFor="terms" className="text-sm text-gray-300 cursor-pointer">
                     I agree to the{' '}
-                    <Link href="/terms" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+                    <Link href="/terms" className="text-primary-400 hover:text-primary-400 transition-colors">
                       Terms of Service
                     </Link>
                     {' '}and{' '}
-                    <Link href="/privacy" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+                    <Link href="/privacy" className="text-primary-400 hover:text-primary-400 transition-colors">
                       Privacy Policy
                     </Link>
                   </label>
@@ -349,7 +349,7 @@ export default function SignUpPage() {
                 <Button
                   type="submit"
                   disabled={isLoading || !isFormValid}
-                  className="w-full bg-gradient-to-r from-cyan-400 to-pink-400 hover:from-cyan-500 hover:to-pink-500 text-white font-medium py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  className="w-full bg-gradient-to-r from-primary-400 to-secondary-400 hover:from-primary-500 hover:to-secondary-500 text-white font-medium py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
                   {isLoading ? 'Creating Account...' : 'Create Account'}
                 </Button>
@@ -360,7 +360,7 @@ export default function SignUpPage() {
                     Already have an account?{' '}
                     <Link 
                       href="/auth/signin"
-                      className="text-cyan-400 hover:text-cyan-300 transition-colors font-medium"
+                      className="text-primary-400 hover:text-primary-400 transition-colors font-medium"
                     >
                       Sign in
                     </Link>
