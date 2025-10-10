@@ -59,6 +59,8 @@ function getUserFriendlyError(code: string, message: string): string {
 async function trpcQuery<TOutput>(path: string, init?: RequestInit): Promise<TOutput> {
   const url = `${TRPC_URL}/${path}`
   
+  console.log('🔍 tRPC Query:', { url, method: 'GET' })
+  
   try {
     const res = await fetch(url, {
       method: 'GET',
@@ -69,6 +71,8 @@ async function trpcQuery<TOutput>(path: string, init?: RequestInit): Promise<TOu
       credentials: 'include',
       ...init,
     })
+
+    console.log('📡 Response status:', res.status, res.statusText)
 
     if (!res.ok) {
       // Try to parse tRPC error
@@ -93,9 +97,14 @@ async function trpcQuery<TOutput>(path: string, init?: RequestInit): Promise<TOu
     }
 
     const json = (await res.json()) as TRPCResponse<TOutput>
+    
+    console.log('📦 GET Response:', { hasError: 'error' in json, hasResult: 'result' in json })
+    
     if ('error' in json) {
       const err = json.error
       const code = err.data?.code || 'UNKNOWN_ERROR'
+      
+      console.error('❌ tRPC GET Error:', { code, message: err.message })
       
       // Handle session expired errors gracefully
       if (code === 'UNAUTHORIZED' || err.message.includes('session') || err.message.includes('expired')) {
@@ -107,8 +116,11 @@ async function trpcQuery<TOutput>(path: string, init?: RequestInit): Promise<TOu
       
       throw new Error(getUserFriendlyError(code, err.message))
     }
+    
+    console.log('✅ tRPC GET Success')
     return json.result.data
   } catch (error: unknown) {
+    console.error('❌ tRPC GET Failed:', error)
     // Handle network errors
     if (error instanceof Error && error.message.includes('fetch')) {
       throw new Error(getUserFriendlyError('NETWORK_ERROR', 'Unable to connect to the server'))

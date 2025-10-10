@@ -134,12 +134,11 @@ export default function DashboardPage() {
           loadPersonalizedRecommendations()
         }
       } catch (err: unknown) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('ℹ️ Backend not available - showing empty state.')
-        }
+        console.error('❌ Failed to load anime:', err)
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load anime data'
+        setError(errorMessage)
         setTrendingAnime([])
         setAllAnime([])
-        setError(null)
       } finally {
         setIsLoading(false)
       }

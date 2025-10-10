@@ -200,7 +200,8 @@ export default function SearchPage() {
           setAllAnime(data)
         }
       } catch (err) {
-        console.error('Failed to load anime:', err)
+        console.error('❌ Failed to load anime from API:', err)
+        console.error('API URL:', process.env.NEXT_PUBLIC_API_URL)
         setAllAnime([])
       } finally {
         setIsLoading(false)
