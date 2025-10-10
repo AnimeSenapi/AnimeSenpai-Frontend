@@ -471,76 +471,12 @@ export function SearchBar({
             ) : (
             // Default suggestions
             <div className="p-2">
-              {/* Search Tips - Enhanced Visual Design */}
-              <div className="mb-3">
-                <div className="px-4 py-3 bg-gradient-to-r from-primary-500/10 to-secondary-500/10 border-b border-white/5">
-                  <div className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider mb-1">
-                    ⚡ Power Search
-                  </div>
-                  <div className="text-[10px] text-gray-500">
-                    Use advanced syntax for faster searches
-                  </div>
-                </div>
-                <div className="px-2 py-3 space-y-1.5">
-                  <button
-                    onClick={() => {
-                      setSearchQuery('@')
-                      inputRef.current?.focus()
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-primary-500/10 hover:to-secondary-500/10 rounded-lg transition-all group"
-                  >
-                    <span className="text-lg">👤</span>
-                    <kbd className="px-2.5 py-1 bg-white/5 border border-white/10 rounded font-mono text-[10px] group-hover:border-primary-400/50">@username</kbd>
-                    <span className="flex-1 text-left">Find users</span>
-                    <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 text-primary-400 transition-opacity" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSearchQuery('genre:action')
-                      inputRef.current?.focus()
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-primary-500/10 hover:to-secondary-500/10 rounded-lg transition-all group"
-                  >
-                    <span className="text-lg">🎭</span>
-                    <kbd className="px-2.5 py-1 bg-white/5 border border-white/10 rounded font-mono text-[10px] group-hover:border-primary-400/50">genre:action</kbd>
-                    <span className="flex-1 text-left">Filter by genre</span>
-                    <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 text-primary-400 transition-opacity" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSearchQuery('year:2024')
-                      inputRef.current?.focus()
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-primary-500/10 hover:to-secondary-500/10 rounded-lg transition-all group"
-                  >
-                    <span className="text-lg">📅</span>
-                    <kbd className="px-2.5 py-1 bg-white/5 border border-white/10 rounded font-mono text-[10px] group-hover:border-primary-400/50">year:2024</kbd>
-                    <span className="flex-1 text-left">Filter by year</span>
-                    <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 text-primary-400 transition-opacity" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSearchQuery('studio:mappa')
-                      inputRef.current?.focus()
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-primary-500/10 hover:to-secondary-500/10 rounded-lg transition-all group"
-                  >
-                    <span className="text-lg">🎬</span>
-                    <kbd className="px-2.5 py-1 bg-white/5 border border-white/10 rounded font-mono text-[10px] group-hover:border-primary-400/50">studio:mappa</kbd>
-                    <span className="flex-1 text-left">Filter by studio</span>
-                    <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 text-primary-400 transition-opacity" />
-                  </button>
-                  
-                  {/* Combination Example */}
-                  <div className="mt-3 px-3 py-2 bg-white/5 rounded-lg border border-white/10">
-                    <div className="text-[10px] text-gray-500 mb-1.5 flex items-center gap-1">
-                      <span>💡</span>
-                      <span>PRO TIP</span>
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      Combine filters: <span className="font-mono text-primary-400">genre:action year:2024</span>
-                    </div>
-                  </div>
+              {/* Compact Search Tips */}
+              <div className="mb-2">
+                <div className="px-3 py-2 text-[10px] text-gray-500">
+                  💡 Try: <kbd className="px-1.5 py-0.5 mx-1 bg-white/5 border border-white/10 rounded font-mono">@user</kbd>
+                  <kbd className="px-1.5 py-0.5 mx-1 bg-white/5 border border-white/10 rounded font-mono">genre:action</kbd>
+                  <kbd className="px-1.5 py-0.5 mx-1 bg-white/5 border border-white/10 rounded font-mono">year:2024</kbd>
                 </div>
               </div>
 
