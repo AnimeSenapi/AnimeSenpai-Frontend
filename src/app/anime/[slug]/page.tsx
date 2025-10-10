@@ -605,62 +605,102 @@ export default function AnimePage() {
             )}
 
             {/* Additional Info */}
-            {((anime as AnimeDetail).source || (anime as AnimeDetail).aired) && (
-              <div className="glass rounded-xl p-5">
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Additional Information</h3>
-                <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-                  {(anime as AnimeDetail).source && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Source</span>
-                      <span className="text-white font-medium">{(anime as AnimeDetail).source}</span>
-                    </div>
-                  )}
-                  {(anime as AnimeDetail).aired && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Aired</span>
-                      <span className="text-white font-medium text-right">{(anime as AnimeDetail).aired}</span>
-                    </div>
-                  )}
-                  {(anime as AnimeDetail).broadcast && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Broadcast</span>
-                      <span className="text-white font-medium">{(anime as AnimeDetail).broadcast}</span>
-                    </div>
-                  )}
-                  {(anime as AnimeDetail).studios && (anime as AnimeDetail).studios!.length > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Studios</span>
-                      <span className="text-white font-medium text-right">{(anime as AnimeDetail).studios!.join(', ')}</span>
-                    </div>
-                  )}
+            <div className="glass rounded-xl p-5 mb-6">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Additional Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                {(anime as AnimeDetail).source && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Source</span>
+                    <span className="text-white font-medium">{(anime as AnimeDetail).source}</span>
+                  </div>
+                )}
+                {(anime as AnimeDetail).aired && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Aired</span>
+                    <span className="text-white font-medium text-right">{(anime as AnimeDetail).aired}</span>
+                  </div>
+                )}
+                {(anime as AnimeDetail).broadcast && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Broadcast</span>
+                    <span className="text-white font-medium">{(anime as AnimeDetail).broadcast}</span>
+                  </div>
+                )}
+                {(anime as AnimeDetail).studios && (anime as AnimeDetail).studios!.length > 0 && (
+                  <div className="flex justify-between col-span-full">
+                    <span className="text-gray-500">Studios</span>
+                    <span className="text-white font-medium text-right">{(anime as AnimeDetail).studios!.join(', ')}</span>
+                  </div>
+                )}
+                {(anime as AnimeDetail).producers && (anime as AnimeDetail).producers!.length > 0 && (
+                  <div className="flex justify-between col-span-full">
+                    <span className="text-gray-500">Producers</span>
+                    <span className="text-white font-medium text-right">{(anime as AnimeDetail).producers!.join(', ')}</span>
+                  </div>
+                )}
+                {(anime as AnimeDetail).licensors && (anime as AnimeDetail).licensors!.length > 0 && (
+                  <div className="flex justify-between col-span-full">
+                    <span className="text-gray-500">Licensors</span>
+                    <span className="text-white font-medium text-right">{(anime as AnimeDetail).licensors!.join(', ')}</span>
+                  </div>
+                )}
+                {(anime as AnimeDetail).themes && (anime as AnimeDetail).themes!.length > 0 && (
+                  <div className="flex justify-between col-span-full">
+                    <span className="text-gray-500">Themes</span>
+                    <span className="text-white font-medium text-right">{(anime as AnimeDetail).themes!.join(', ')}</span>
+                  </div>
+                )}
+                {(anime as AnimeDetail).demographics && (anime as AnimeDetail).demographics!.length > 0 && (
+                  <div className="flex justify-between col-span-full">
+                    <span className="text-gray-500">Demographic</span>
+                    <span className="text-white font-medium text-right">{(anime as AnimeDetail).demographics!.join(', ')}</span>
                 </div>
+                )}
+                {anime.season && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Season</span>
+                    <span className="text-white font-medium capitalize">{anime.season} {anime.year}</span>
               </div>
-            )}
+                )}
+                {(anime as AnimeDetail).malId && (
+                  <div className="flex justify-between col-span-full">
+                    <span className="text-gray-500">MAL ID</span>
+                    <a 
+                      href={`https://myanimelist.net/anime/${(anime as AnimeDetail).malId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary-400 hover:text-primary-300 font-medium"
+                    >
+                      #{(anime as AnimeDetail).malId} →
+                    </a>
                 </div>
+                )}
               </div>
-
-        {/* Recommendations */}
-        {relatedSeasons.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold text-white mb-6">More from this Series</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {relatedSeasons.map((season) => (
-                <AnimeCard key={season.id} anime={season} variant="grid" />
-              ))}
             </div>
+
+          {/* Recommendations */}
+          {relatedSeasons.length > 0 && (
+            <div className="mt-12">
+              <h2 className="text-2xl font-bold text-white mb-6">More from this Series</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                {relatedSeasons.map((season) => (
+                  <AnimeCard key={season.id} anime={season} variant="grid" />
+                ))}
               </div>
-        )}
-
-        {similarAnime.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold text-white mb-6">You Might Also Like</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {similarAnime.map((similar) => (
-                <AnimeCard key={similar.id} anime={similar} variant="grid" />
-              ))}
             </div>
-          </div>
-        )}
+          )}
+
+          {similarAnime.length > 0 && (
+            <div className="mt-12">
+              <h2 className="text-2xl font-bold text-white mb-6">You Might Also Like</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                {similarAnime.map((similar) => (
+                  <AnimeCard key={similar.id} anime={similar} variant="grid" />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </main>
 
       {/* Add to List Modal */}
