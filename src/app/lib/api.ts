@@ -420,4 +420,31 @@ export async function apiCheckUsernameAvailability(username: string): Promise<{ 
   return data.result.data
 }
 
+// Search Users
+export async function apiSearchUsers(query: string, limit: number = 10): Promise<any[]> {
+  try {
+    const url = `${TRPC_URL}/social.searchUsers?input=${encodeURIComponent(JSON.stringify({ query, limit }))}`
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      return []
+    }
+
+    const data: TRPCResponse<{ users: any[] }> = await response.json()
+    if ('error' in data) {
+      return []
+    }
+
+    return data.result.data.users || []
+  } catch (error) {
+    console.error('Failed to search users:', error)
+    return []
+  }
+}
+
 

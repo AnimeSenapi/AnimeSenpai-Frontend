@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { SearchAnimeCard } from '../anime/SearchAnimeCard'
-import { Search, X, ArrowRight, Filter } from 'lucide-react'
-import { apiSearchAnime, apiGetTrending } from '../../app/lib/api'
+import { Search, X, ArrowRight, Filter, User } from 'lucide-react'
+import { apiSearchAnime, apiGetTrending, apiSearchUsers } from '../../app/lib/api'
 
 interface SearchBarProps {
   className?: string
@@ -30,12 +30,14 @@ export function SearchBar({
   const [searchQuery, setSearchQuery] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const [filteredSuggestions, setFilteredSuggestions] = useState<any[]>([])
+  const [userResults, setUserResults] = useState<any[]>([])
   const [popularAnime, setPopularAnime] = useState<any[]>([])
   const [recentSearches, setRecentSearches] = useState<string[]>([])
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const [isSearching, setIsSearching] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const [detectedFilters, setDetectedFilters] = useState<string[]>([])
+  const [searchType, setSearchType] = useState<'anime' | 'user'>('anime')
   
   const router = useRouter()
   const searchRef = useRef<HTMLDivElement>(null)
@@ -66,16 +68,38 @@ export function SearchBar({
     debounceTimer.current = setTimeout(async () => {
       if (query.trim()) {
         setIsSearching(true)
-        try {
-          const results = await apiSearchAnime(query)
-          setFilteredSuggestions(results.slice(0, 5)) // Limit to 5 results
-        } catch (error) {
-          // Gracefully handle backend not running - silent fail
-          setFilteredSuggestions([])
+        
+        // Check if it's a user search
+        if (query.startsWith('@')) {
+          setSearchType('user')
+          const username = query.slice(1).trim()
+          if (username.length >= 2) {
+            try {
+              const users = await apiSearchUsers(username, 5)
+              setUserResults(users)
+              setFilteredSuggestions([])
+            } catch (error) {
+              setUserResults([])
+            }
+          } else {
+            setUserResults([])
+          }
+        } else {
+          // Regular anime search
+          setSearchType('anime')
+          setUserResults([])
+          try {
+            const results = await apiSearchAnime(query)
+            setFilteredSuggestions(results.slice(0, 5))
+          } catch (error) {
+            setFilteredSuggestions([])
+          }
         }
+        
         setIsSearching(false)
       } else {
         setFilteredSuggestions([])
+        setUserResults([])
       }
     }, 150) // 150ms debounce
   }, [])
@@ -331,13 +355,17 @@ export function SearchBar({
         )}
       </div>
 
-      {/* Active Filters Display */}
+      {/* Active Filters Display - Improved Design */}
       {detectedFilters.length > 0 && isFocused && (
-        <div className="mt-2 flex flex-wrap gap-2">
+        <div className="mt-2 flex flex-wrap gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="text-[10px] text-gray-500 px-2 py-1">
+            Active Filters:
+          </div>
           {detectedFilters.map((filter, index) => (
             <div 
               key={index}
-              className="text-xs px-2 py-1 bg-primary-500/20 text-primary-300 rounded-md border border-primary-400/30 animate-in fade-in slide-in-from-top-1"
+              className="text-xs px-3 py-1 bg-gradient-to-r from-primary-500/20 to-secondary-500/20 text-primary-300 rounded-full border border-primary-400/30 font-medium shadow-sm shadow-primary-500/10 animate-in fade-in slide-in-from-left-2"
+              style={{ animationDelay: `${index * 50}ms` }}
             >
               {filter}
             </div>
@@ -352,7 +380,47 @@ export function SearchBar({
             {searchQuery.trim() ? (
               // Search Results
               <div className="p-2">
-                {filteredSuggestions.length > 0 ? (
+                {/* User Search Results */}
+                {searchType === 'user' && userResults.length > 0 ? (
+                  <>
+                    <div className="px-4 py-2 text-[11px] text-gray-500 font-semibold uppercase tracking-wider flex items-center gap-2">
+                      <User className="h-3 w-3" />
+                      {userResults.length} {userResults.length === 1 ? 'User' : 'Users'}
+                    </div>
+                    <div className="space-y-1 px-1">
+                      {userResults.map((user, index) => (
+                        <div 
+                          key={user.id} 
+                          onClick={() => {
+                            router.push(`/users/${user.username}`)
+                            setIsOpen(false)
+                            setSearchQuery('')
+                          }}
+                          className={`p-3 transition-all duration-200 rounded-lg cursor-pointer flex items-center gap-3 ${
+                            selectedIndex === index 
+                              ? 'bg-gray-800/80 ring-1 ring-primary-500/50' 
+                              : 'hover:bg-gray-800/40'
+                          }`}
+                        >
+                          {/* Avatar */}
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 flex items-center justify-center text-white font-semibold flex-shrink-0">
+                            {user.avatar ? (
+                              <img src={user.avatar} alt={user.username} className="w-full h-full rounded-full object-cover" />
+                            ) : (
+                              user.username.charAt(0).toUpperCase()
+                            )}
+                          </div>
+                          {/* User Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-white text-sm truncate">@{user.username}</div>
+                            {user.name && <div className="text-xs text-gray-400 truncate">{user.name}</div>}
+                          </div>
+                          <ArrowRight className="h-4 w-4 text-gray-600 group-hover:text-primary-400 flex-shrink-0" />
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : searchType === 'anime' && filteredSuggestions.length > 0 ? (
                   <>
                     <div className="px-4 py-2 text-[11px] text-gray-500 font-semibold uppercase tracking-wider">
                       {filteredSuggestions.length} {filteredSuggestions.length === 1 ? 'Result' : 'Results'}
@@ -383,64 +451,95 @@ export function SearchBar({
                     </div>
                   </>
                 ) : (
-                  <div className="px-3 py-6 text-center text-gray-500">
-                    <Search className="h-6 w-6 mx-auto mb-2 opacity-30" />
-                    <p className="text-xs mb-1">No results found</p>
-                    <p className="text-[10px] text-gray-600">Try a different search</p>
+                  <div className="px-3 py-8 text-center text-gray-500">
+                    {searchType === 'user' ? (
+                      <>
+                        <User className="h-8 w-8 mx-auto mb-3 opacity-20" />
+                        <p className="text-sm mb-1">No users found</p>
+                        <p className="text-[10px] text-gray-600">Try a different username</p>
+                      </>
+                    ) : (
+                      <>
+                        <Search className="h-8 w-8 mx-auto mb-3 opacity-20" />
+                        <p className="text-sm mb-1">No anime found</p>
+                        <p className="text-[10px] text-gray-600">Try a different search</p>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
             ) : (
             // Default suggestions
             <div className="p-2">
-              {/* Search Tips - Clickable Examples */}
+              {/* Search Tips - Enhanced Visual Design */}
               <div className="mb-3">
-                <div className="px-4 py-2 text-[11px] text-gray-500 font-semibold uppercase tracking-wider">
-                  Quick Search Syntax
+                <div className="px-4 py-3 bg-gradient-to-r from-primary-500/10 to-secondary-500/10 border-b border-white/5">
+                  <div className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider mb-1">
+                    ⚡ Power Search
+                  </div>
+                  <div className="text-[10px] text-gray-500">
+                    Use advanced syntax for faster searches
+                  </div>
                 </div>
-                <div className="px-2 py-2 space-y-1">
+                <div className="px-2 py-3 space-y-1.5">
                   <button
                     onClick={() => {
                       setSearchQuery('@')
                       inputRef.current?.focus()
                     }}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-primary-500/10 hover:to-secondary-500/10 rounded-lg transition-all group"
                   >
-                    <kbd className="px-2 py-1 bg-white/5 border border-white/10 rounded font-mono text-[10px] min-w-[80px]">@username</kbd>
-                    <span>Find users</span>
+                    <span className="text-lg">👤</span>
+                    <kbd className="px-2.5 py-1 bg-white/5 border border-white/10 rounded font-mono text-[10px] group-hover:border-primary-400/50">@username</kbd>
+                    <span className="flex-1 text-left">Find users</span>
+                    <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 text-primary-400 transition-opacity" />
                   </button>
                   <button
                     onClick={() => {
                       setSearchQuery('genre:action')
                       inputRef.current?.focus()
                     }}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-primary-500/10 hover:to-secondary-500/10 rounded-lg transition-all group"
                   >
-                    <kbd className="px-2 py-1 bg-white/5 border border-white/10 rounded font-mono text-[10px] min-w-[80px]">genre:action</kbd>
-                    <span>Filter by genre</span>
+                    <span className="text-lg">🎭</span>
+                    <kbd className="px-2.5 py-1 bg-white/5 border border-white/10 rounded font-mono text-[10px] group-hover:border-primary-400/50">genre:action</kbd>
+                    <span className="flex-1 text-left">Filter by genre</span>
+                    <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 text-primary-400 transition-opacity" />
                   </button>
                   <button
                     onClick={() => {
                       setSearchQuery('year:2024')
                       inputRef.current?.focus()
                     }}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-primary-500/10 hover:to-secondary-500/10 rounded-lg transition-all group"
                   >
-                    <kbd className="px-2 py-1 bg-white/5 border border-white/10 rounded font-mono text-[10px] min-w-[80px]">year:2024</kbd>
-                    <span>Filter by year</span>
+                    <span className="text-lg">📅</span>
+                    <kbd className="px-2.5 py-1 bg-white/5 border border-white/10 rounded font-mono text-[10px] group-hover:border-primary-400/50">year:2024</kbd>
+                    <span className="flex-1 text-left">Filter by year</span>
+                    <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 text-primary-400 transition-opacity" />
                   </button>
                   <button
                     onClick={() => {
                       setSearchQuery('studio:mappa')
                       inputRef.current?.focus()
                     }}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-primary-500/10 hover:to-secondary-500/10 rounded-lg transition-all group"
                   >
-                    <kbd className="px-2 py-1 bg-white/5 border border-white/10 rounded font-mono text-[10px] min-w-[80px]">studio:mappa</kbd>
-                    <span>Filter by studio</span>
+                    <span className="text-lg">🎬</span>
+                    <kbd className="px-2.5 py-1 bg-white/5 border border-white/10 rounded font-mono text-[10px] group-hover:border-primary-400/50">studio:mappa</kbd>
+                    <span className="flex-1 text-left">Filter by studio</span>
+                    <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 text-primary-400 transition-opacity" />
                   </button>
-                  <div className="px-2 py-1 text-[10px] text-gray-600">
-                    💡 Combine filters: <span className="font-mono text-gray-500">genre:action year:2024</span>
+                  
+                  {/* Combination Example */}
+                  <div className="mt-3 px-3 py-2 bg-white/5 rounded-lg border border-white/10">
+                    <div className="text-[10px] text-gray-500 mb-1.5 flex items-center gap-1">
+                      <span>💡</span>
+                      <span>PRO TIP</span>
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      Combine filters: <span className="font-mono text-primary-400">genre:action year:2024</span>
+                    </div>
                   </div>
                 </div>
               </div>
