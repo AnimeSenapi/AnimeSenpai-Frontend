@@ -700,6 +700,7 @@ export default function AnimePage() {
               </div>
             </div>
           )}
+          </div>
         </div>
       </main>
 
