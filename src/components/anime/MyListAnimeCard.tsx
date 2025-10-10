@@ -19,6 +19,7 @@ export function MyListAnimeCard({
   variant = 'grid', 
   className 
 }: MyListAnimeCardProps) {
+  const router = useRouter()
   const tag = anime.tags && anime.tags.length > 0 ? getTagById(anime.tags[0]) : null
   
   const getStatusConfig = () => {
