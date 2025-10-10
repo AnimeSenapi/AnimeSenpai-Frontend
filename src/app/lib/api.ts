@@ -1,5 +1,14 @@
-// Lightweight client to talk to the backend tRPC HTTP endpoint
-// Uses the tRPC HTTP format: POST /api/trpc/<router.procedure>
+/**
+ * 🌐 AnimeSenpai API Client
+ * 
+ * Your friendly bridge to the backend! This lightweight client handles all communication
+ * with the tRPC API, including auth, anime data, and user lists.
+ * 
+ * Format: POST /api/trpc/<router.procedure>
+ * 
+ * Note: Error messages are automatically translated to user-friendly text.
+ * Technical errors like "UNAUTHORIZED" become "Your session has expired. Please sign in again."
+ */
 
 import type { 
   Anime, 
@@ -13,6 +22,7 @@ import type {
   FeatureFlag,
   FeatureAccess
 } from '../../types/anime'
+import { handleApiError, isAuthError, UserFriendlyError } from '../../lib/api-errors'
 
 type TRPCErrorShape = {
   message: string
@@ -33,35 +43,17 @@ const TRPC_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3001/api/trpc'
 
 function getAuthHeaders(): Record<string, string> {
-  const accessToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+  if (typeof window === 'undefined') return {}
+  
+  // Check both localStorage (Remember Me) and sessionStorage (current session only)
+  const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
   return accessToken ? { Authorization: `Bearer ${accessToken}` } : {}
 }
 
 // Convert technical error codes to user-friendly messages
+// Re-export for backwards compatibility
 function getUserFriendlyError(code: string, message: string): string {
-  const errorMessages: Record<string, string> = {
-    'UNAUTHORIZED': 'Your session has expired. Please sign in again.',
-    'TOKEN_INVALID': 'Your session has expired. Please sign in again.',
-    'TOKEN_EXPIRED': 'Your session has expired. Please sign in again.',
-    'USER_NOT_FOUND': 'We couldn\'t find an account with that email address.',
-    'INVALID_CREDENTIALS': 'The email or password you entered is incorrect.',
-    'EMAIL_ALREADY_EXISTS': 'An account with this email already exists.',
-    'EMAIL_NOT_VERIFIED': 'Please verify your email address before signing in.',
-    'ACCOUNT_LOCKED': 'Your account has been locked due to too many failed login attempts. Please try again later.',
-    'VALIDATION_ERROR': 'Please check your input and try again.',
-    'RATE_LIMIT_EXCEEDED': 'Too many requests. Please wait a moment and try again.',
-    'NETWORK_ERROR': 'Unable to connect to the server. Please check your internet connection.',
-    'INTERNAL_SERVER_ERROR': 'Something went wrong on our end. Please try again later.',
-    'BAD_REQUEST': 'Invalid request. Please check your input.',
-    'FORBIDDEN': 'You don\'t have permission to perform this action.',
-    'NOT_FOUND': 'The requested resource was not found.',
-    'CONFLICT': 'This action conflicts with existing data.',
-    'WEAK_PASSWORD': 'Please choose a stronger password with at least 8 characters.',
-    'INVALID_TOKEN': 'This link is invalid or has expired. Please request a new one.',
-    'PASSWORD_MISMATCH': 'The passwords you entered don\'t match.',
-  }
-
-  return errorMessages[code] || message || 'Something went wrong. Please try again.'
+  return handleApiError({ error: { data: { code }, message } })
 }
 
 async function trpcQuery<TOutput>(path: string, init?: RequestInit): Promise<TOutput> {
@@ -226,8 +218,12 @@ export async function apiVerifyEmail(input: { token: string }) {
 
 export function clearSession() {
   if (typeof window !== 'undefined') {
+    // Clear tokens from both storage types
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
+    localStorage.removeItem('rememberMe')
+    sessionStorage.removeItem('accessToken')
+    sessionStorage.removeItem('refreshToken')
   }
 }
 
@@ -307,7 +303,7 @@ export async function apiSearchAnime(query: string): Promise<Anime[]> {
 // ===== MY LIST API =====
 
 export async function apiGetUserList(): Promise<UserListResponse> {
-  return trpcQuery<UserListResponse>('mylist.getUserList')
+  return trpcQuery<UserListResponse>('user.getAnimeList')
 }
 
 export async function apiAddToList(input: { 
@@ -377,6 +373,51 @@ export async function apiGetAllFeatures(): Promise<FeatureFlag[]> {
   } catch {
     return []
   }
+}
+
+// User Profile by Username
+export async function apiGetUserByUsername(username: string): Promise<any> {
+  const url = `${TRPC_URL}/user.getUserByUsername?input=${encodeURIComponent(JSON.stringify({ username }))}`
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!response.ok) {
+    const data = await response.json()
+    throw new Error(data.error?.message || 'User not found')
+  }
+
+  const data: TRPCResponse<any> = await response.json()
+  if ('error' in data) {
+    throw new Error(data.error.message)
+  }
+
+  return data.result.data
+}
+
+// Check Username Availability
+export async function apiCheckUsernameAvailability(username: string): Promise<{ available: boolean; username: string }> {
+  const url = `${TRPC_URL}/user.checkUsernameAvailability?input=${encodeURIComponent(JSON.stringify({ username }))}`
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!response.ok) {
+    return { available: false, username }
+  }
+
+  const data: TRPCResponse<{ available: boolean; username: string }> = await response.json()
+  if ('error' in data) {
+    return { available: false, username }
+  }
+
+  return data.result.data
 }
 
 

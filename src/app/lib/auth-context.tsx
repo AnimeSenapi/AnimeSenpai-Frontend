@@ -6,12 +6,15 @@ import { apiMe, clearSession, apiSignin, apiSignup, apiForgotPassword, apiResetP
 export interface User {
   id: string
   email: string
+  username?: string
   name?: string
   firstName?: string
   lastName?: string
   avatar?: string
   bio?: string
   emailVerified?: boolean
+  role?: string
+  createdAt?: string
   preferences?: Record<string, unknown>
 }
 
@@ -26,9 +29,8 @@ export interface AuthContextType extends AuthState {
   signin: (email: string, password: string, rememberMe?: boolean) => Promise<void>
   signup: (data: {
     email: string
+    username: string
     password: string
-    firstName: string
-    lastName?: string
     gdprConsent: boolean
     dataProcessingConsent: boolean
     marketingConsent?: boolean
@@ -40,6 +42,7 @@ export interface AuthContextType extends AuthState {
   verifyEmail: (token: string) => Promise<void>
   clearError: () => void
   refreshUser: () => Promise<void>
+  getAuthHeaders: () => Record<string, string>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -67,7 +70,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Initialize auth context on mount
     useEffect(() => {
       const initAuth = async () => {
-        const accessToken = localStorage.getItem('accessToken')
+        // Check both localStorage and sessionStorage for tokens
+        const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
         
         if (accessToken) {
           try {
@@ -107,14 +111,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const data = await apiSignin({ email, password, rememberMe })
       setUser(data.user)
       
-      // Store tokens
-      localStorage.setItem('accessToken', data.accessToken)
-      localStorage.setItem('refreshToken', data.refreshToken)
+      // Store tokens based on "Remember Me" preference
+      const storage = rememberMe ? localStorage : sessionStorage
       
-      if (rememberMe) {
-        localStorage.setItem('rememberMe', 'true')
-      } else {
+      storage.setItem('accessToken', data.accessToken)
+      storage.setItem('refreshToken', data.refreshToken)
+      
+      // If using sessionStorage, clear localStorage tokens
+      if (!rememberMe) {
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
         localStorage.removeItem('rememberMe')
+      } else {
+        // If using localStorage, clear sessionStorage tokens and mark remember me
+        sessionStorage.removeItem('accessToken')
+        sessionStorage.removeItem('refreshToken')
+        localStorage.setItem('rememberMe', 'true')
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Sign in failed'
@@ -127,9 +139,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signup = async (data: {
     email: string
+    username: string
     password: string
-    firstName: string
-    lastName?: string
     gdprConsent: boolean
     dataProcessingConsent: boolean
     marketingConsent?: boolean
@@ -230,6 +241,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
+  const getAuthHeaders = (): Record<string, string> => {
+    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    }
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    return headers
+  }
+
   const value: AuthContextType = {
     user,
     isLoading,
@@ -243,6 +265,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     verifyEmail,
     clearError,
     refreshUser,
+    getAuthHeaders,
   }
 
 

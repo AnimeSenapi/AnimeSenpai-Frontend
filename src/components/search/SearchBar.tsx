@@ -3,8 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { SearchAnimeCard } from '../anime/SearchAnimeCard'
-import { Search, X, Clock, TrendingUp, Star, ArrowRight, Filter, Sparkles } from 'lucide-react'
-import { Anime } from '../../types/anime'
+import { Search, X, ArrowRight, Filter } from 'lucide-react'
 import { apiSearchAnime, apiGetTrending } from '../../app/lib/api'
 
 interface SearchBarProps {
@@ -33,7 +32,6 @@ export function SearchBar({
   const [filteredSuggestions, setFilteredSuggestions] = useState<any[]>([])
   const [popularAnime, setPopularAnime] = useState<any[]>([])
   const [recentSearches, setRecentSearches] = useState<string[]>([])
-  const [trendingSearches] = useState(['Attack on Titan', 'Demon Slayer', 'One Piece', 'Jujutsu Kaisen'])
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const [isSearching, setIsSearching] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
@@ -126,8 +124,7 @@ export function SearchBar({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    const totalItems = searchQuery.trim() ? filteredSuggestions.length : 
-      (recentSearches.length + trendingSearches.length + 3)
+    const totalItems = searchQuery.trim() ? filteredSuggestions.length : popularAnime.length
 
     if (e.key === 'Enter') {
       e.preventDefault()
@@ -278,24 +275,6 @@ export function SearchBar({
             ) : (
             // Default suggestions
             <div className="p-2">
-              {/* Trending Searches */}
-              <div className="mb-3">
-                <div className="px-4 py-2 text-[11px] text-gray-500 font-semibold uppercase tracking-wider">
-                  Trending
-                </div>
-                <div className="flex flex-wrap gap-2 px-2">
-                  {trendingSearches.map((search, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleSearch(search)}
-                      className="px-3 py-1.5 text-xs font-medium text-gray-300 hover:text-white bg-gray-800/60 hover:bg-gray-700 rounded-lg transition-all duration-200"
-                    >
-                      {search}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Popular Anime */}
               {popularAnime.length > 0 && (
                 <div className="mb-2">
@@ -319,7 +298,10 @@ export function SearchBar({
               {/* Go to Search Page */}
               <div className="mt-2 pt-2 border-t border-gray-800/50">
                 <button
-                  onClick={() => router.push('/search')}
+                  onClick={() => {
+                    setIsOpen(false)
+                    router.push('/search')
+                  }}
                   className="w-full px-4 py-2.5 text-xs font-medium text-gray-400 hover:text-gray-300 hover:bg-gray-800/40 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
                 >
                   <span>Advanced Search</span>

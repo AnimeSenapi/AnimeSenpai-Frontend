@@ -7,6 +7,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import { Button } from '../../../components/ui/button'
 import { Checkbox } from '../../../components/ui/checkbox'
 import { useAuth } from '../../lib/auth-context'
+import { useToast } from '../../../lib/toast-context'
 import { RequireGuest } from '../../lib/protected-route'
 
 export default function SignInPage() {
@@ -16,6 +17,7 @@ export default function SignInPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [formErrors, setFormErrors] = useState<{ email?: string; password?: string }>({})
   const { signin, isLoading, error, clearError } = useAuth()
+  const toast = useToast()
   const router = useRouter()
 
   const validateForm = () => {
@@ -52,9 +54,13 @@ export default function SignInPage() {
       // Wait a bit longer to ensure user state is properly set
       await new Promise(resolve => setTimeout(resolve, 100))
       
+      toast.success('Welcome back!', 'Signed In')
       router.push('/dashboard')
     } catch (err) {
-      // Error is handled by the auth context
+      // Error is handled by the auth context and shown in UI
+      if (error) {
+        toast.error(error, 'Sign In Failed')
+      }
     }
   }
 
@@ -87,8 +93,8 @@ export default function SignInPage() {
                 <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <span className="text-white font-bold text-2xl">AS</span>
                 </div>
-                <h1 className="text-2xl font-bold text-white mb-2">Welcome Back</h1>
-                <p className="text-gray-400">Sign in to your AnimeSenpai account</p>
+                <h1 className="text-2xl font-bold text-white mb-2">Welcome Back!</h1>
+                <p className="text-gray-400">Senpai's been waiting for you — let's dive back in</p>
               </div>
 
               {error && (

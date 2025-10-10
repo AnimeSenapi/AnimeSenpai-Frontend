@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Button } from '../ui/button'
 import { GuestAuth } from './GuestAuth'
 import { StandaloneDropdown } from './StandaloneDropdown'
@@ -28,13 +29,15 @@ export function Navbar() {
       <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl px-8 py-4 overflow-visible transition-all duration-300">
         <div className="flex items-center justify-between gap-6">
           {/* Logo Section */}
-          <Link href="/dashboard">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">AS</span>
-            </div>
-            <span className="text-white font-bold text-lg">AnimeSenpai</span>
-          </div>
+          <Link href="/dashboard" className="flex items-center flex-shrink-0">
+            <Image 
+              src="/assets/logo/AnimeSenpai_Inline.svg" 
+              alt="AnimeSenpai" 
+              width={450}
+              height={112}
+              className="h-16 w-auto invert"
+              priority
+            />
           </Link>
 
           {/* Navigation Items - Desktop */}
@@ -56,7 +59,7 @@ export function Navbar() {
 
           {/* Enhanced Search Bar with navbar variant */}
           <div className="w-56 transition-all duration-300">
-            <SearchBar 
+            <SearchBar
               placeholder="Search..."
               showDropdown={true}
               size="sm"
@@ -69,10 +72,10 @@ export function Navbar() {
             {isLoading ? (
               <div className="w-8 h-8 bg-white/10 rounded-full animate-pulse"></div>
             ) : isAuthenticated && user ? (
-              <StandaloneDropdown 
+              <StandaloneDropdown
                 user={{
                   id: user.id,
-                  name: user.name || 'User',
+                  name: user.username || user.name || 'User',
                   email: user.email,
                   avatar: user.avatar
                 }}

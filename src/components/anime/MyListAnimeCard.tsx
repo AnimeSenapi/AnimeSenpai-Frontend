@@ -18,7 +18,7 @@ export function MyListAnimeCard({
   variant = 'grid', 
   className 
 }: MyListAnimeCardProps) {
-  const tag = getTagById(anime.tags[0])
+  const tag = anime.tags && anime.tags.length > 0 ? getTagById(anime.tags[0]) : null
   
   const getStatusConfig = () => {
     switch (anime.listStatus) {
@@ -76,11 +76,12 @@ export function MyListAnimeCard({
             {/* Image */}
             <div className="relative flex-shrink-0">
               <div className="w-24 h-32 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl overflow-hidden">
-                {anime.imageUrl ? (
+                {(anime.coverImage || anime.imageUrl) ? (
                   <img 
-                    src={anime.imageUrl} 
+                    src={anime.coverImage || anime.imageUrl} 
                     alt={anime.title}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -130,20 +131,24 @@ export function MyListAnimeCard({
 
               {/* Tags */}
               <div className="flex items-center gap-2 mb-3">
-                {anime.tags.slice(0, 3).map((tagId) => {
-                  const tag = getTagById(tagId)
-                  return tag ? (
-                    <span 
-                      key={tagId}
-                      className={cn(
-                        "text-xs px-2 py-1 rounded-full font-medium",
-                        tag.color
-                      )}
-                    >
-                      {tag.name}
-                    </span>
-                  ) : null
-                })}
+                {anime.tags && anime.tags.length > 0 ? (
+                  anime.tags.slice(0, 3).map((tagId) => {
+                    const tag = getTagById(tagId)
+                    return tag ? (
+                      <span 
+                        key={tagId}
+                        className={cn(
+                          "text-xs px-2 py-1 rounded-full font-medium",
+                          tag.color
+                        )}
+                      >
+                        {tag.name}
+                      </span>
+                    ) : null
+                  })
+                ) : (
+                  <span className="text-xs text-gray-500">No tags</span>
+                )}
               </div>
 
               {/* Progress Bar (for watching anime) */}
@@ -174,11 +179,12 @@ export function MyListAnimeCard({
       <div className="relative transform hover:scale-105 transition-all duration-300">
         {/* Image Container */}
         <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl overflow-hidden">
-          {anime.imageUrl ? (
+          {(anime.coverImage || anime.imageUrl) ? (
             <img 
-              src={anime.imageUrl} 
+              src={anime.coverImage || anime.imageUrl} 
               alt={anime.title}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              loading="lazy"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
@@ -243,20 +249,24 @@ export function MyListAnimeCard({
           
           {/* Tags */}
           <div className="flex items-center gap-1 mt-2">
-            {anime.tags.slice(0, 2).map((tagId) => {
-              const tag = getTagById(tagId)
-              return tag ? (
-                <span 
-                  key={tagId}
-                  className={cn(
-                    "text-xs px-2 py-0.5 rounded-full font-medium",
-                    tag.color
-                  )}
-                >
-                  {tag.name}
-                </span>
-              ) : null
-            })}
+            {anime.tags && anime.tags.length > 0 ? (
+              anime.tags.slice(0, 2).map((tagId) => {
+                const tag = getTagById(tagId)
+                return tag ? (
+                  <span 
+                    key={tagId}
+                    className={cn(
+                      "text-xs px-2 py-0.5 rounded-full font-medium",
+                      tag.color
+                    )}
+                  >
+                    {tag.name}
+                  </span>
+                ) : null
+              })
+            ) : (
+              <span className="text-xs text-gray-500">No tags</span>
+            )}
           </div>
         </div>
       </div>

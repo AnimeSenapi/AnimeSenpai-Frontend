@@ -1,6 +1,10 @@
 'use client'
 
-import { useEffect } from 'react'
+import * as React from 'react'
+
+interface ThemeProviderProps {
+  children: React.ReactNode
+}
 
 /**
  * ThemeProvider - Applies the active theme to the entire app
@@ -8,8 +12,8 @@ import { useEffect } from 'react'
  * The theme CSS variables are already defined in globals.css
  * This component ensures they're applied and can enable dynamic theme switching
  */
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  useEffect(() => {
+function ThemeProvider({ children }: ThemeProviderProps) {
+  React.useEffect(() => {
     // Theme variables are already in globals.css
     // This just ensures the data-theme attribute is set for any CSS selectors that need it
     if (typeof window !== 'undefined') {
@@ -28,6 +32,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  return <>{children}</>
+  return React.createElement(React.Fragment, null, children)
 }
+
+export default ThemeProvider
+export { ThemeProvider }
 

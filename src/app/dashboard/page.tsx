@@ -1,57 +1,238 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { AnimeCard } from '../../components/anime/AnimeCard'
+import { RecommendationCarousel } from '../../components/recommendations/RecommendationCarousel'
+import { FriendsWatching } from '../../components/social/FriendsWatching'
 import { Button } from '../../components/ui/button'
-import { Sparkles, TrendingUp } from 'lucide-react'
+import { Badge } from '../../components/ui/badge'
+import { CarouselSkeleton } from '../../components/ui/skeleton'
+import { 
+  Sparkles, 
+  TrendingUp, 
+  Heart, 
+  Compass, 
+  Gem, 
+  Target,
+  Clock,
+  Calendar,
+  Users,
+  Star
+} from 'lucide-react'
 import { apiGetAllAnime, apiGetTrending } from '../lib/api'
+import { useAuth } from '../lib/auth-context'
 import type { Anime } from '../../types/anime'
 
 export default function DashboardPage() {
+  const router = useRouter()
+  const { user, isAuthenticated } = useAuth()
+  
   const [trendingAnime, setTrendingAnime] = useState<Anime[]>([])
   const [allAnime, setAllAnime] = useState<Anime[]>([])
+  const [forYouRecs, setForYouRecs] = useState<any[]>([])
+  const [fansLikeYouRecs, setFansLikeYouRecs] = useState<any[]>([])
+  const [friendRecs, setFriendRecs] = useState<any[]>([])
+  const [hiddenGemsRecs, setHiddenGemsRecs] = useState<any[]>([])
+  const [discoveryRecs, setDiscoveryRecs] = useState<any[]>([])
+  const [continueWatching, setContinueWatching] = useState<any[]>([])
+  const [newReleases, setNewReleases] = useState<any[]>([])
+  const [topRatedAnime, setTopRatedAnime] = useState<Anime[]>([])
+  const [recentlyAddedAnime, setRecentlyAddedAnime] = useState<Anime[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/trpc'
+  const getAuthHeaders = (): Record<string, string> => {
+    // Check both localStorage (Remember Me) and sessionStorage (current session)
+    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    }
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    return headers
+  }
+
+  // Check onboarding status
+  useEffect(() => {
+    async function checkOnboarding() {
+      if (!isAuthenticated) return
+      
+      try {
+        const response = await fetch(`${API_URL}/onboarding.getStatus`, {
+          method: 'GET',
+          headers: getAuthHeaders()
+        })
+        
+        const data = await response.json()
+        if (data.result?.data && !data.result.data.completed) {
+          // Redirect to onboarding if not completed
+          router.push('/onboarding')
+        } else {
+          setShowOnboarding(false)
+        }
+      } catch (err) {
+        // Ignore errors for onboarding check
+      }
+    }
+
+    checkOnboarding()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated])
 
   useEffect(() => {
     const loadAnime = async () => {
       setIsLoading(true)
       setError(null)
       try {
+        // Load basic trending/all anime (works for guests too)
         const [trending, all] = await Promise.all([
           apiGetTrending(),
           apiGetAllAnime()
         ])
         
-        // Handle API response structure
         setTrendingAnime(Array.isArray(trending) ? trending : [])
         
-        // getAll returns { anime: [], total: number }
         if (all && typeof all === 'object' && 'anime' in all) {
-          setAllAnime(Array.isArray(all.anime) ? all.anime : [])
+          const animeList = Array.isArray(all.anime) ? all.anime : []
+          setAllAnime(animeList)
+          
+          // Generate top rated and recently added from all anime
+          if (animeList.length > 0) {
+            // Top Rated: Sort by rating
+            const topRated = [...animeList]
+              .filter(anime => anime.rating && anime.rating > 0)
+              .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+              .slice(0, 20)
+            setTopRatedAnime(topRated)
+            
+            // Recently Added: Sort by ID (assuming higher ID = more recent)
+            const recentlyAdded = [...animeList]
+              .sort((a, b) => {
+                // If we have createdAt, use that, otherwise use ID
+                const aCreatedAt = (a as any).createdAt
+                const bCreatedAt = (b as any).createdAt
+                if (aCreatedAt && bCreatedAt) {
+                  return new Date(bCreatedAt).getTime() - new Date(aCreatedAt).getTime()
+                }
+                return parseInt(b.id) - parseInt(a.id)
+              })
+              .slice(0, 20)
+            setRecentlyAddedAnime(recentlyAdded)
+          }
         } else if (Array.isArray(all)) {
           setAllAnime(all)
         } else {
           setAllAnime([])
         }
+
+        // Load personalized recommendations if authenticated
+        if (isAuthenticated) {
+          loadPersonalizedRecommendations()
+        }
       } catch (err: unknown) {
-        // Gracefully handle backend not running - show empty state instead of error
-        // Only log in development
         if (process.env.NODE_ENV === 'development') {
-          console.log('ℹ️ Backend not available - showing empty state. Start backend on http://localhost:3004 to see data.')
+          console.log('ℹ️ Backend not available - showing empty state.')
         }
         setTrendingAnime([])
         setAllAnime([])
-        setError(null) // Don't show error, just show empty state
+        setError(null)
       } finally {
         setIsLoading(false)
       }
     }
+
     loadAnime()
-  }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated])
+
+  async function loadPersonalizedRecommendations() {
+    try {
+      const headers = getAuthHeaders()
+      const [forYou, fansLikeYou, friendRecs, hiddenGems, discovery, continueWatch, newAnime] = await Promise.all([
+        fetch(`${API_URL}/recommendations.getForYou`, {
+          method: 'GET',
+          headers
+        }).then(r => r.json()),
+        fetch(`${API_URL}/recommendations.getFansLikeYou`, {
+          method: 'GET',
+          headers
+        }).then(r => r.json()),
+        fetch(`${API_URL}/social.getFriendRecommendations`, {
+          method: 'GET',
+          headers
+        }).then(r => r.json()),
+        fetch(`${API_URL}/recommendations.getHiddenGems`, {
+          method: 'GET',
+          headers
+        }).then(r => r.json()),
+        fetch(`${API_URL}/recommendations.getDiscovery`, {
+          method: 'GET',
+          headers
+        }).then(r => r.json()),
+        fetch(`${API_URL}/recommendations.getContinueWatching`, {
+          method: 'GET',
+          headers
+        }).then(r => r.json()),
+        fetch(`${API_URL}/recommendations.getNewReleases`, {
+          method: 'GET',
+          headers
+        }).then(r => r.json())
+      ])
+
+      setForYouRecs(forYou.result?.data?.recommendations || [])
+      setFansLikeYouRecs(fansLikeYou.result?.data?.recommendations || [])
+      setFriendRecs(friendRecs.result?.data?.recommendations || [])
+      setHiddenGemsRecs(hiddenGems.result?.data?.recommendations || [])
+      setDiscoveryRecs(discovery.result?.data?.recommendations || [])
+      setContinueWatching(continueWatch.result?.data?.recommendations || [])
+      setNewReleases(newAnime.result?.data?.recommendations || [])
+    } catch (err) {
+      // Non-critical, just won't show personalized recommendations
+    }
+  }
+
+  async function handleDismissRecommendation(animeId: string) {
+    try {
+      await fetch(`${API_URL}/recommendations.submitFeedback`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          animeId,
+          feedbackType: 'dismiss'
+        })
+      })
+
+      // Remove from all recommendation lists
+      setForYouRecs(forYouRecs.filter(r => r.anime.id !== animeId))
+      setFansLikeYouRecs(fansLikeYouRecs.filter(r => r.anime.id !== animeId))
+      setHiddenGemsRecs(hiddenGemsRecs.filter(r => r.anime.id !== animeId))
+      setDiscoveryRecs(discoveryRecs.filter(r => r.anime.id !== animeId))
+    } catch (err) {
+      // Fail silently
+    }
+  }
 
   if (isLoading) {
-    return null // Loading skeleton will show
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+
+        <main className="container pt-32 pb-20 relative z-10">
+          {/* Loading Skeletons */}
+          <CarouselSkeleton itemCount={5} />
+          <CarouselSkeleton itemCount={5} />
+          <CarouselSkeleton itemCount={5} />
+        </main>
+      </div>
+    )
   }
 
   if (error) {
@@ -76,118 +257,268 @@ export default function DashboardPage() {
       </div>
 
       <main className="container py-20 relative z-10">
+        {/* Onboarding Banner */}
+        {showOnboarding && isAuthenticated && (
+          <div className="glass rounded-2xl p-6 mb-8 border-2 border-primary-500/30">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-xl flex items-center justify-center">
+                  <Sparkles className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-1">
+                    Get Personalized Recommendations!
+                  </h3>
+                  <p className="text-gray-300">
+                    Tell us what you like and Senpai will find your perfect anime match ✨
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setShowOnboarding(false)}
+                  variant="outline"
+                  className="border-white/20 text-white hover:bg-white/10"
+                >
+                  Later
+                </Button>
+                <Button
+                  onClick={() => router.push('/onboarding')}
+                  className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600"
+                >
+                  Let's Go!
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Hero Section */}
         <div className="mb-12 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-6">
             <Sparkles className="h-4 w-4 text-primary-400" />
-            <span className="text-sm text-gray-300">Discover Your Next Obsession</span>
+            <span className="text-sm text-gray-300">
+              {isAuthenticated ? 'Your Personalized Dashboard' : 'Discover Your Next Obsession'}
+            </span>
           </div>
           <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-white via-primary-400 to-secondary-400 bg-clip-text text-transparent">
-            Discover Amazing Anime
+            {isAuthenticated ? `Welcome Back${user?.name ? `, ${user.name}` : ''}!` : 'Discover Amazing Anime'}
           </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Personalized recommendations powered by AI to find your perfect anime match
+            {isAuthenticated 
+              ? 'Here are anime recommendations just for you'
+              : 'Personalized recommendations powered by your taste'
+            }
           </p>
         </div>
 
-        {/* Trending Section */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-primary-500/20 to-secondary-500/20">
-                <TrendingUp className="h-5 w-5 text-primary-400" />
-              </div>
-              <h2 className="text-2xl font-bold text-white">Trending Now</h2>
-            </div>
-            <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
-              View All Trending
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {trendingAnime.length > 0 ? (
-              trendingAnime.slice(0, 10).map((anime) => (
-                <AnimeCard
-                  key={anime.id}
-                  anime={anime}
-                  variant="featured"
-                />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12 text-gray-400">
-                <p>No trending anime found. Add some anime to the database!</p>
-              </div>
+        {/* Personalized Recommendations (Authenticated Users Only) */}
+        {isAuthenticated && (
+          <>
+            {/* Continue Watching */}
+            {continueWatching.length > 0 && (
+              <RecommendationCarousel
+                title="Continue Watching"
+                icon={<Clock className="h-5 w-5 text-primary-400" />}
+                recommendations={continueWatching}
+                onDismiss={handleDismissRecommendation}
+                showReasons={false}
+              />
             )}
-          </div>
-        </div>
 
-        {/* Popular Section */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-primary-500/20 to-secondary-500/20">
-                <Sparkles className="h-5 w-5 text-primary-400" />
-              </div>
-              <h2 className="text-2xl font-bold text-white">Popular Anime</h2>
-            </div>
-            <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
-              View All
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {allAnime.length > 0 ? (
-              allAnime.slice(0, 10).map((anime) => (
-                <AnimeCard
-                  key={anime.id}
-                  anime={anime}
-                  variant="featured"
-                />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12 text-gray-400">
-                <p>No anime found. Add some anime to the database!</p>
-              </div>
+            {/* For You - Main Personalized Feed (Hybrid: Content + Collaborative) */}
+            {forYouRecs.length > 0 && (
+              <RecommendationCarousel
+                title="For You"
+                icon={<Heart className="h-5 w-5 text-primary-400" />}
+                recommendations={forYouRecs}
+                onDismiss={handleDismissRecommendation}
+                showReasons={true}
+              />
             )}
-          </div>
-        </div>
 
-        {/* Recommendation Categories */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Trending Now - For logged-in users too */}
+            {trendingAnime.length > 0 && (
+              <RecommendationCarousel
+                title="Trending Now"
+                icon={<TrendingUp className="h-5 w-5 text-secondary-400" />}
+                recommendations={trendingAnime.map(anime => ({
+                  anime: {
+                    id: anime.id,
+                    slug: anime.slug,
+                    title: anime.title,
+                    coverImage: anime.coverImage ?? null,
+                    year: anime.year ?? null,
+                    averageRating: anime.rating ?? null,
+                    genres: anime.genres || []
+                  }
+                }))}
+                showReasons={false}
+              />
+            )}
+
+            {/* Friends Are Watching - Social Recommendations */}
+            <FriendsWatching />
+
+            {/* Popular Anime - For logged-in users too */}
+            {allAnime.length > 0 && (
+              <RecommendationCarousel
+                title="Popular Anime"
+                icon={<Sparkles className="h-5 w-5 text-primary-400" />}
+                recommendations={allAnime.slice(0, 20).map(anime => ({
+                  anime: {
+                    id: anime.id,
+                    slug: anime.slug,
+                    title: anime.title,
+                    coverImage: anime.coverImage ?? null,
+                    year: anime.year ?? null,
+                    averageRating: anime.rating ?? null,
+                    genres: anime.genres || []
+                  }
+                }))}
+                showReasons={false}
+              />
+            )}
+
+            {/* Fans Like You Also Watched - Pure Collaborative Filtering */}
+            {fansLikeYouRecs.length > 0 && (
+              <RecommendationCarousel
+                title="Fans Like You Also Watched"
+                icon={<Target className="h-5 w-5 text-secondary-400" />}
+                recommendations={fansLikeYouRecs}
+                onDismiss={handleDismissRecommendation}
+                showReasons={true}
+              />
+            )}
+
+            {/* Hidden Gems */}
+            {hiddenGemsRecs.length > 0 && (
+              <RecommendationCarousel
+                title="Hidden Gems You'll Love"
+                icon={<Gem className="h-5 w-5 text-primary-400" />}
+                recommendations={hiddenGemsRecs}
+                onDismiss={handleDismissRecommendation}
+                showReasons={true}
+              />
+            )}
+
+            {/* Top Rated Anime */}
+            {topRatedAnime.length > 0 && (
+              <RecommendationCarousel
+                title="Top Rated Anime"
+                icon={<Star className="h-5 w-5 text-warning-400" />}
+                recommendations={topRatedAnime.map(anime => ({
+                  anime: {
+                    id: anime.id,
+                    slug: anime.slug,
+                    title: anime.title,
+                    coverImage: anime.coverImage ?? null,
+                    year: anime.year ?? null,
+                    averageRating: anime.rating ?? null,
+                    genres: anime.genres || []
+                  }
+                }))}
+                showReasons={false}
+              />
+            )}
+
+            {/* Expand Your Horizons */}
+            {discoveryRecs.length > 0 && (
+              <RecommendationCarousel
+                title="Expand Your Horizons"
+                icon={<Compass className="h-5 w-5 text-primary-400" />}
+                recommendations={discoveryRecs}
+                onDismiss={handleDismissRecommendation}
+                showReasons={true}
+              />
+            )}
+
           {/* Recently Added */}
-          <div className="glass rounded-2xl p-6">
-            <h3 className="text-xl font-bold text-white mb-4">Recently Added</h3>
-            <div className="space-y-4">
-              {allAnime.slice(0, 3).map((anime) => (
-                <AnimeCard
-                  key={anime.id}
-                  anime={anime}
-                  variant="list"
-                />
-              ))}
-              {allAnime.length === 0 && (
-                <p className="text-center py-4 text-gray-500 text-sm">No anime yet</p>
-              )}
-            </div>
-          </div>
+            {recentlyAddedAnime.length > 0 && (
+              <RecommendationCarousel
+                title="Recently Added"
+                icon={<Calendar className="h-5 w-5 text-success-400" />}
+                recommendations={recentlyAddedAnime.map(anime => ({
+                  anime: {
+                    id: anime.id,
+                    slug: anime.slug,
+                    title: anime.title,
+                    coverImage: anime.coverImage ?? null,
+                    year: anime.year ?? null,
+                    averageRating: anime.rating ?? null,
+                    genres: anime.genres || []
+                  }
+                }))}
+                showReasons={false}
+              />
+            )}
+          </>
+        )}
 
-          {/* Top Rated */}
-          <div className="glass rounded-2xl p-6">
-            <h3 className="text-xl font-bold text-white mb-4">Top Rated</h3>
-            <div className="space-y-4">
-              {trendingAnime.slice(0, 3).map((anime) => (
-                <AnimeCard
-                  key={anime.id}
-                  anime={anime}
-                  variant="list"
-                />
-              ))}
-              {trendingAnime.length === 0 && (
-                <p className="text-center py-4 text-gray-500 text-sm">No trending anime yet</p>
-              )}
-            </div>
+        {/* New Releases Section */}
+        {newReleases.length > 0 && (
+          <RecommendationCarousel
+            title="New on AnimeSenpai"
+            icon={<Calendar className="h-5 w-5 text-primary-400" />}
+            recommendations={newReleases}
+            showReasons={false}
+          />
+        )}
+
+        {/* Trending Section - Use carousel for consistency */}
+        {!isAuthenticated && trendingAnime.length > 0 && (
+          <RecommendationCarousel
+            title="Trending Now"
+            icon={<TrendingUp className="h-5 w-5 text-primary-400" />}
+            recommendations={trendingAnime.map(anime => ({
+              anime: {
+                id: anime.id,
+                slug: anime.slug,
+                title: anime.title,
+                coverImage: anime.coverImage ?? null,
+                year: anime.year ?? null,
+                averageRating: anime.rating ?? null,
+                genres: anime.genres || []
+              }
+            }))}
+            showReasons={false}
+          />
+        )}
+
+        {/* Popular Anime Section - Use carousel for consistency */}
+        {!isAuthenticated && allAnime.length > 0 && (
+          <RecommendationCarousel
+            title="Popular Anime"
+            icon={<Sparkles className="h-5 w-5 text-primary-400" />}
+            recommendations={allAnime.slice(0, 20).map(anime => ({
+              anime: {
+                id: anime.id,
+                slug: anime.slug,
+                title: anime.title,
+                coverImage: anime.coverImage ?? null,
+                year: anime.year ?? null,
+                averageRating: anime.rating ?? null,
+                genres: anime.genres || []
+              }
+            }))}
+            showReasons={false}
+          />
+        )}
+
+        {/* Empty State for Guests */}
+        {!isAuthenticated && trendingAnime.length === 0 && allAnime.length === 0 && (
+          <div className="glass rounded-2xl p-12 text-center">
+            <div className="text-6xl mb-4">🎬</div>
+            <h3 className="text-2xl font-bold text-white mb-2">No Anime Yet</h3>
+            <p className="text-gray-400 mb-6">The anime database is being populated. Check back soon!</p>
+            <Button
+              onClick={() => router.push('/auth/signin')}
+              className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600"
+            >
+              Sign In for Personalized Recommendations
+            </Button>
           </div>
-        </div>
+        )}
       </main>
     </div>
   )

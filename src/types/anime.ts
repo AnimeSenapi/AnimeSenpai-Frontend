@@ -22,7 +22,8 @@ export interface Anime {
   duration?: number // in minutes
   studio?: string
   director?: string
-  imageUrl?: string
+  coverImage?: string // Main poster/cover image
+  imageUrl?: string // Alias for backward compatibility
   trailerUrl?: string
   malId?: number // MyAnimeList ID
   anilistId?: number // AniList ID
@@ -47,10 +48,12 @@ export interface AnimeListResponse {
 export interface AuthUser {
   id: string
   email: string
+  username: string
   firstName?: string
   lastName?: string
   name?: string
   avatar?: string
+  bio?: string
   emailVerified?: boolean
   role?: 'user' | 'tester' | 'admin' // Role-based access control
   createdAt?: string
@@ -66,9 +69,8 @@ export interface AuthResponse {
 
 export interface SignupInput {
   email: string
+  username: string
   password: string
-  firstName: string
-  lastName?: string
   gdprConsent: boolean
   dataProcessingConsent: boolean
   marketingConsent?: boolean
@@ -79,25 +81,28 @@ export interface SignupInput {
 export type ListStatus = 'watching' | 'completed' | 'plan-to-watch' | 'on-hold' | 'dropped'
 
 export interface AnimeListItem {
-  id: string
-  userId: string
-  animeId: string
-  status: ListStatus
-  isFavorite: boolean
-  currentEpisode: number
-  rating?: number // User's rating (1-10)
-  notes?: string
-  startedAt?: string
-  completedAt?: string
-  updatedAt: string
+  listId: string
+  anime: Anime | null
+  listStatus: 'favorite' | 'watching' | 'completed' | 'plan-to-watch'
+  progress: number
+  score?: number | null
+  notes?: string | null
+  startedAt?: string | null
+  completedAt?: string | null
   createdAt: string
-  anime?: Anime // Populated anime data
+  updatedAt: string
 }
 
 export interface UserListResponse {
   items: AnimeListItem[]
-  total: number
-  stats: {
+  pagination?: {
+    page: number
+    limit: number
+    total: number
+    pages: number
+  }
+  total?: number
+  stats?: {
     watching: number
     completed: number
     planToWatch: number

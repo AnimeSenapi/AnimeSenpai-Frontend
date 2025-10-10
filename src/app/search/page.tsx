@@ -4,19 +4,19 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { SearchAnimeCard } from '../../components/anime/SearchAnimeCard'
 import { Button } from '../../components/ui/button'
+import { Badge } from '../../components/ui/badge'
+import { AnimeCardSkeleton, SearchResultSkeleton } from '../../components/ui/skeleton'
 import { Anime } from '../../types/anime'
 import { getTagById } from '../../types/tags'
+import { apiGetAllAnime } from '../lib/api'
 import { 
   Search, 
   Filter, 
-  SortAsc, 
   Grid, 
   List, 
   Calendar,
   Building,
   Tag,
-  Star,
-  TrendingUp,
   Clock,
   X
 } from 'lucide-react'
@@ -176,6 +176,7 @@ const years = ['2023', '2022', '2009', '1999']
 export default function SearchPage() {
   const searchParams = useSearchParams()
   const [searchQuery, setSearchQuery] = useState('')
+  const [category, setCategory] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [sortBy, setSortBy] = useState<'relevance' | 'rating' | 'year' | 'popularity'>('relevance')
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
@@ -183,19 +184,57 @@ export default function SearchPage() {
   const [selectedSeasons, setSelectedSeasons] = useState<string[]>([])
   const [selectedYears, setSelectedYears] = useState<string[]>([])
   const [showFilters, setShowFilters] = useState(false)
-  const [filteredAnime, setFilteredAnime] = useState(searchAnime)
+  const [allAnime, setAllAnime] = useState<Anime[]>([])
+  const [filteredAnime, setFilteredAnime] = useState<Anime[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Load anime from API
+  useEffect(() => {
+    async function loadAnime() {
+      setIsLoading(true)
+      try {
+        const data = await apiGetAllAnime()
+        if (data && typeof data === 'object' && 'anime' in data) {
+          setAllAnime(Array.isArray(data.anime) ? data.anime : [])
+        } else if (Array.isArray(data)) {
+          setAllAnime(data)
+        }
+      } catch (err) {
+        console.error('Failed to load anime:', err)
+        setAllAnime([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadAnime()
+  }, [])
 
   // Handle URL parameters
   useEffect(() => {
     const query = searchParams.get('q')
+    const cat = searchParams.get('category')
+    const genre = searchParams.get('genre')
+    
     if (query) {
       setSearchQuery(query)
+    }
+    if (cat) {
+      setCategory(cat)
+    }
+    if (genre) {
+      setSelectedGenres([genre])
+      setShowFilters(true) // Show filters panel when coming from a genre click
     }
   }, [searchParams])
 
   // Filter and search logic
   useEffect(() => {
-    let results = searchAnime
+    if (allAnime.length === 0) {
+      setFilteredAnime([])
+      return
+    }
+
+    let results = [...allAnime]
 
     // Text search
     if (searchQuery.trim()) {
@@ -203,48 +242,41 @@ export default function SearchPage() {
       results = results.filter(anime => 
         anime.title.toLowerCase().includes(query) ||
         anime.studio?.toLowerCase().includes(query) ||
-        anime.tags.some(tag => tag.toLowerCase().includes(query))
+        (anime.genres && anime.genres.some((g: any) => g.name.toLowerCase().includes(query))) ||
+        anime.tags?.some((tag: string) => tag.toLowerCase().includes(query))
       )
     }
 
     // Genre filter
     if (selectedGenres.length > 0) {
       results = results.filter(anime => 
-        selectedGenres.some(genre => anime.tags.includes(genre))
+        anime.genres && selectedGenres.some(genre => 
+          anime.genres?.some((g: any) => g.name === genre)
+        )
       )
     }
 
     // Studio filter
     if (selectedStudios.length > 0) {
       results = results.filter(anime => 
-        selectedStudios.some(studio => anime.studios.includes(studio))
-      )
-    }
-
-    // Season filter
-    if (selectedSeasons.length > 0) {
-      results = results.filter(anime => 
-        selectedSeasons.some(season => anime.seasons.includes(season))
+        anime.studio && selectedStudios.includes(anime.studio)
       )
     }
 
     // Year filter
     if (selectedYears.length > 0) {
       results = results.filter(anime => 
-        selectedYears.includes(anime.year.toString())
+        anime.year && selectedYears.includes(anime.year.toString())
       )
     }
 
     // Sort results
     switch (sortBy) {
       case 'rating':
-        results.sort((a, b) => b.rating - a.rating)
+        results.sort((a, b) => (b.rating || 0) - (a.rating || 0))
         break
       case 'year':
-        results.sort((a, b) => b.year - a.year)
-        break
-      case 'popularity':
-        results.sort((a, b) => b.popularity - a.popularity)
+        results.sort((a, b) => (b.year || 0) - (a.year || 0))
         break
       default:
         // Keep original order for relevance
@@ -252,7 +284,7 @@ export default function SearchPage() {
     }
 
     setFilteredAnime(results)
-  }, [searchQuery, selectedGenres, selectedStudios, selectedSeasons, selectedYears, sortBy])
+  }, [allAnime, searchQuery, selectedGenres, selectedStudios, selectedSeasons, selectedYears, sortBy])
 
   const clearFilters = () => {
     setSelectedGenres([])
@@ -298,126 +330,143 @@ export default function SearchPage() {
   const activeFiltersCount = selectedGenres.length + selectedStudios.length + selectedSeasons.length + selectedYears.length
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
       {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
-      <main className="container pt-32 pb-20 relative z-10">
-        {/* Header Section */}
-        <div className="mb-8">
-          <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-white via-cyan-200 to-pink-200 bg-clip-text text-transparent">
-            Search Anime
-          </h1>
-          <p className="text-xl text-gray-300">
-            Discover your next favorite anime
+      <main className="container pt-28 pb-20 relative z-10">
+        {/* Header Section - Cleaner */}
+        <div className="mb-10">
+          <div className="flex items-center gap-4 mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold text-white">
+              {category ? `${category.charAt(0).toUpperCase() + category.slice(1)}` : 'Discover Anime'}
+            </h1>
+            {category && (
+              <Badge className="bg-primary-500/20 text-primary-300 border-primary-500/30 px-3 py-1">
+                {category}
+              </Badge>
+            )}
+          </div>
+          <p className="text-lg text-gray-400">
+            {isLoading ? 'Loading...' : `${filteredAnime.length} anime found`}
           </p>
         </div>
 
-        {/* Search Bar */}
+        {/* Search Bar - More Prominent */}
         <div className="mb-8">
-          <div className="relative max-w-2xl">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <div className="relative max-w-3xl">
+            <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search anime, studios, genres..."
+              placeholder="Search by title, studio, genre..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full glass rounded-2xl px-12 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-200"
+              className="w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl pl-14 pr-12 py-4 text-white placeholder-gray-400 focus:outline-none focus:border-primary-400/50 focus:ring-2 focus:ring-primary-400/20 transition-all duration-200"
             />
             {searchQuery && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+              <button
                 onClick={() => setSearchQuery('')}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors p-1.5 hover:bg-white/10 rounded-lg"
               >
                 <X className="h-4 w-4" />
-              </Button>
+              </button>
             )}
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
+        {/* Controls Bar - More Compact */}
+        <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+          <div className="flex items-center gap-3">
             <Button
               variant="outline"
               onClick={() => setShowFilters(!showFilters)}
-              className={`border-white/20 text-white hover:bg-white/10 transition-all duration-200 ${
-                showFilters ? 'bg-white/10' : ''
+              className={`border-white/20 text-white hover:bg-white/10 transition-all ${
+                showFilters ? 'bg-white/10 border-primary-400/50' : ''
               }`}
             >
               <Filter className="h-4 w-4 mr-2" />
-              Filters {activeFiltersCount > 0 && `(${activeFiltersCount})`}
+              Filters
+              {activeFiltersCount > 0 && (
+                <span className="ml-2 px-1.5 py-0.5 bg-primary-500 text-white text-xs rounded-full">
+                  {activeFiltersCount}
+                </span>
+              )}
             </Button>
-            <Button
-              variant="outline"
-              className="border-white/20 text-white hover:bg-white/10"
-            >
-              <SortAsc className="h-4 w-4 mr-2" />
-              Sort: {sortBy}
-            </Button>
+            
             {activeFiltersCount > 0 && (
               <Button
                 variant="ghost"
+                size="sm"
                 onClick={clearFilters}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-400 hover:text-white hover:bg-white/5"
               >
                 Clear all
               </Button>
             )}
           </div>
-          <div className="flex items-center gap-1 glass rounded-xl p-1">
-            <Button 
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
-              size="sm" 
-              onClick={() => setViewMode('grid')}
-              className={`transition-all duration-200 ${
-                viewMode === 'grid' 
-                  ? 'bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 shadow-lg shadow-cyan-500/25' 
-                  : 'text-white hover:bg-white/10'
-              }`}
+          
+          <div className="flex items-center gap-3">
+            {/* Sort Dropdown */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="bg-white/5 border border-white/20 text-white rounded-xl px-4 py-2 text-sm hover:bg-white/10 transition-all cursor-pointer focus:outline-none focus:border-primary-400/50"
             >
-              <Grid className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm" 
-              onClick={() => setViewMode('list')}
-              className={`transition-all duration-200 ${
-                viewMode === 'list' 
-                  ? 'bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 shadow-lg shadow-cyan-500/25' 
-                  : 'text-white hover:bg-white/10'
-              }`}
-            >
-              <List className="h-4 w-4" />
-            </Button>
+              <option value="relevance">Sort: Relevance</option>
+              <option value="rating">Sort: Rating</option>
+              <option value="year">Sort: Year</option>
+              <option value="popularity">Sort: Popularity</option>
+            </select>
+            
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-1 bg-white/5 border border-white/20 rounded-xl p-1">
+              <button 
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-lg transition-all ${
+                  viewMode === 'grid' 
+                    ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg' 
+                    : 'text-gray-400 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <Grid className="h-4 w-4" />
+              </button>
+              <button 
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-lg transition-all ${
+                  viewMode === 'list' 
+                    ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg' 
+                    : 'text-gray-400 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Filters Panel */}
+        {/* Filters Panel - Redesigned */}
         {showFilters && (
-          <div className="glass rounded-2xl p-6 mb-8">
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Genres */}
               <div>
-                <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-                  <Tag className="h-4 w-4" />
+                <h3 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
+                  <Tag className="h-4 w-4 text-primary-400" />
                   Genres
                 </h3>
-                <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
                   {genres.map(genre => (
                     <button
                       key={genre}
                       onClick={() => toggleFilter('genre', genre)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                         selectedGenres.includes(genre)
-                          ? 'bg-pink-500 text-white'
-                          : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white'
+                          ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg'
+                          : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white border border-white/10'
                       }`}
                     >
                       {genre}
@@ -428,19 +477,19 @@ export default function SearchPage() {
 
               {/* Studios */}
               <div>
-                <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-                  <Building className="h-4 w-4" />
+                <h3 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
+                  <Building className="h-4 w-4 text-secondary-400" />
                   Studios
                 </h3>
-                <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
                   {studios.map(studio => (
                     <button
                       key={studio}
                       onClick={() => toggleFilter('studio', studio)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                         selectedStudios.includes(studio)
-                          ? 'bg-cyan-500 text-white'
-                          : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white'
+                          ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg'
+                          : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white border border-white/10'
                       }`}
                     >
                       {studio}
@@ -451,19 +500,19 @@ export default function SearchPage() {
 
               {/* Seasons */}
               <div>
-                <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
+                <h3 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
+                  <Calendar className="h-4 w-4 text-success-400" />
                   Seasons
                 </h3>
-                <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
                   {seasons.map(season => (
                     <button
                       key={season}
                       onClick={() => toggleFilter('season', season)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                         selectedSeasons.includes(season)
-                          ? 'bg-green-500 text-white'
-                          : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white'
+                          ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg'
+                          : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white border border-white/10'
                       }`}
                     >
                       {season}
@@ -474,19 +523,19 @@ export default function SearchPage() {
 
               {/* Years */}
               <div>
-                <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
+                <h3 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
+                  <Clock className="h-4 w-4 text-warning-400" />
                   Years
                 </h3>
-                <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
                   {years.map(year => (
                     <button
                       key={year}
                       onClick={() => toggleFilter('year', year)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                         selectedYears.includes(year)
-                          ? 'bg-purple-500 text-white'
-                          : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white'
+                          ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg'
+                          : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white border border-white/10'
                       }`}
                     >
                       {year}
@@ -498,23 +547,47 @@ export default function SearchPage() {
           </div>
         )}
 
-        {/* Results */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-white">
-              {filteredAnime.length} results found
-            </h2>
-            {searchQuery && (
-              <p className="text-gray-400">
-                Results for "{searchQuery}"
-              </p>
+        {/* Anime Display */}
+        {isLoading ? (
+          viewMode === 'grid' ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              {Array.from({ length: 20 }).map((_, i) => (
+                <AnimeCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <SearchResultSkeleton key={i} />
+              ))}
+            </div>
+          )
+        ) : filteredAnime.length === 0 ? (
+          /* Empty State */
+          <div className="text-center py-32">
+            <div className="w-24 h-24 bg-gradient-to-br from-white/5 to-white/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/10">
+              <Search className="h-10 w-10 text-gray-500" />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-3">
+              No anime found
+            </h3>
+            <p className="text-gray-400 mb-8 max-w-md mx-auto">
+              {searchQuery 
+                ? `No results match "${searchQuery}"`
+                : 'Try adjusting your filters to find anime'
+              }
+            </p>
+            {(searchQuery || activeFiltersCount > 0) && (
+              <Button 
+                onClick={clearFilters}
+                className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 shadow-lg px-8 py-3"
+              >
+                Clear All Filters
+              </Button>
             )}
           </div>
-        </div>
-
-        {/* Anime Display */}
-        {viewMode === 'grid' ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        ) : viewMode === 'grid' ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
             {filteredAnime.map((anime) => (
               <SearchAnimeCard
                 key={anime.id}
@@ -524,7 +597,7 @@ export default function SearchPage() {
             ))}
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filteredAnime.map((anime) => (
               <SearchAnimeCard
                 key={anime.id}
@@ -532,27 +605,6 @@ export default function SearchPage() {
                 variant="list"
               />
             ))}
-          </div>
-        )}
-
-        {/* Empty State */}
-        {filteredAnime.length === 0 && (
-          <div className="text-center py-24">
-            <div className="w-24 h-24 bg-gradient-to-br from-gray-800 to-gray-900 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl">
-              <Search className="h-10 w-10 text-gray-400" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-4">
-              No results found
-            </h3>
-            <p className="text-gray-400 mb-8 max-w-lg mx-auto text-lg">
-              Try adjusting your search terms or filters to find what you're looking for
-            </p>
-            <Button 
-              onClick={clearFilters}
-              className="bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 shadow-lg shadow-cyan-500/25 px-8 py-3 text-lg font-semibold"
-            >
-              Clear Filters
-            </Button>
           </div>
         )}
       </main>

@@ -1,509 +1,790 @@
-import { notFound } from 'next/navigation'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { AnimeCard } from '../../../components/anime/AnimeCard'
+import { TrailerPlayer, TrailerButton } from '../../../components/anime/TrailerPlayer'
+import { ShareButton } from '../../../components/social/ShareButton'
+import { ShareAnimeCard } from '../../../components/social/ShareAnimeCard'
 import { Button } from '../../../components/ui/button'
 import { Badge } from '../../../components/ui/badge'
 import { BackButton } from '../../../components/ui/back-button'
-import { Anime } from '../../../types/anime'
-import { getTagById } from '../../../types/tags'
+import { DetailHeroSkeleton, AnimeCardSkeleton } from '../../../components/ui/skeleton'
+import { useAuth } from '../../lib/auth-context'
+import { useToast } from '../../../lib/toast-context'
+import type { Anime } from '../../../types/anime'
 import { 
   Play, 
   Bookmark, 
   Heart, 
-  Share2, 
   Star, 
-  Calendar, 
-  Clock, 
-  Users, 
-  Award
+  Check,
+  Plus,
+  X,
+  Loader2,
+  ExternalLink
 } from 'lucide-react'
 
-// Enable ISR (Incremental Static Regeneration)
-// Pages will be regenerated at most once every 3600 seconds (1 hour)
-export const revalidate = 3600 // Revalidate every hour
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/trpc'
 
-// Generate static params for popular anime at build time
-export async function generateStaticParams() {
-  // In production, this would fetch from your database
-  // For now, we'll generate for the known anime from mock data
-  const popularAnime = [
-    'attack-on-titan',
-    'demon-slayer',
-    'one-piece',
-    'jujutsu-kaisen',
-    'chainsaw-man',
-    'my-hero-academia',
-  ]
-  
-  return popularAnime.map((slug) => ({
-    slug: slug,
-  }))
+interface AnimeDetail extends Anime {
+  titleEnglish?: string
+  titleJapanese?: string
+  source?: string
+  aired?: string
+  synopsis?: string
+  background?: string
+  trailer?: string
+  producers?: string[]
+  licensors?: string[]
+  studios?: string[]
+  themes?: string[]
+  demographics?: string[]
+  broadcast?: string
+  malId?: number
 }
 
-// Mock data - in a real app, this would come from an API
-const mockAnimeData: Record<string, Anime & {
-  description: string
-  director: string
-  cast: string[]
-  relatedAnime: Anime[]
-  reviews: {
+interface ListStatus {
+  inList: boolean
+  status?: 'watching' | 'completed' | 'plan-to-watch' | 'favorite'
+  progress?: number
+  score?: number
+}
+
+interface Review {
+  id: string
+  userId: string
+  username: string
     rating: number
     comment: string
-    user: string
-  }[]
-}> = {
-  'attack-on-titan': {
-    id: '1',
-    slug: 'attack-on-titan',
-    title: 'Attack on Titan',
-    year: 2023,
-    rating: 9.2,
-    status: 'new',
-    tags: ['action', 'drama', 'supernatural'],
-    episodes: 25,
-    duration: 24,
-    studio: 'Wit Studio',
-    description: 'Humanity fights for survival against the Titans, giant humanoid creatures that devour humans seemingly without reason. Eren Yeager joins the military to avenge his mother and protect what remains of humanity.',
-    director: 'Tetsuro Araki',
-    cast: ['Yuki Kaji', 'Yui Ishikawa', 'Marina Inoue'],
-    relatedAnime: [
-      {
-        id: '2',
-        slug: 'demon-slayer',
-        title: 'Demon Slayer',
-        year: 2023,
-        rating: 9.1,
-        status: 'trending',
-        tags: ['action', 'supernatural', 'shounen'],
-        episodes: 26,
-        duration: 23,
-        studio: 'Ufotable'
-      },
-      {
-        id: '3',
-        slug: 'jujutsu-kaisen',
-        title: 'Jujutsu Kaisen',
-        year: 2023,
-        rating: 8.9,
-        status: 'trending',
-        tags: ['action', 'supernatural', 'school'],
-        episodes: 24,
-        duration: 24,
-        studio: 'MAPPA'
-      }
-    ],
-    reviews: [
-      {
-        rating: 5,
-        comment: 'Absolutely incredible! The animation and story are top-tier.',
-        user: 'AnimeFan123'
-      },
-      {
-        rating: 5,
-        comment: 'One of the best anime I\'ve ever watched. Highly recommended!',
-        user: 'OtakuMaster'
-      }
-    ]
-  },
-  'demon-slayer': {
-    id: '2',
-    slug: 'demon-slayer',
-    title: 'Demon Slayer',
-    year: 2023,
-    rating: 9.1,
-    status: 'trending',
-    tags: ['action', 'supernatural', 'shounen'],
-    episodes: 26,
-    duration: 23,
-    studio: 'Ufotable',
-    description: 'Tanjiro Kamado becomes a demon slayer after his family is slaughtered by demons. He sets out on a journey to find a way to turn his demon sister back into a human.',
-    director: 'Haruo Sotozaki',
-    cast: ['Natsuki Hanae', 'Akari Kitō', 'Hiro Shimono'],
-    relatedAnime: [
-      {
-        id: '1',
-        slug: 'attack-on-titan',
-        title: 'Attack on Titan',
-        year: 2023,
-        rating: 9.2,
-        status: 'new',
-        tags: ['action', 'drama', 'supernatural'],
-        episodes: 25,
-        duration: 24,
-        studio: 'Wit Studio'
-      }
-    ],
-    reviews: [
-      {
-        rating: 5,
-        comment: 'The animation quality is absolutely stunning!',
-        user: 'DemonSlayerFan'
-      }
-    ]
-  },
-  'one-piece': {
-    id: '3',
-    slug: 'one-piece',
-    title: 'One Piece',
-    year: 2023,
-    rating: 9.5,
-    status: 'hot',
-    tags: ['adventure', 'comedy', 'shounen'],
-    episodes: 1000,
-    duration: 24,
-    studio: 'Toei Animation',
-    description: 'Monkey D. Luffy sets out on a journey to become the Pirate King by finding the legendary treasure known as One Piece.',
-    director: 'Eiichiro Oda',
-    cast: ['Mayumi Tanaka', 'Kazuya Nakai', 'Akemi Okamura'],
-    relatedAnime: [
-      {
-        id: '1',
-        slug: 'attack-on-titan',
-        title: 'Attack on Titan',
-        year: 2023,
-        rating: 9.2,
-        status: 'new',
-        tags: ['action', 'drama', 'supernatural'],
-        episodes: 25,
-        duration: 24,
-        studio: 'Wit Studio'
-      }
-    ],
-    reviews: [
-      {
-        rating: 5,
-        comment: 'The greatest adventure anime of all time!',
-        user: 'PirateKing'
-      }
-    ]
-  },
-  'fullmetal-alchemist': {
-    id: '4',
-    slug: 'fullmetal-alchemist',
-    title: 'Fullmetal Alchemist',
-    year: 2009,
-    rating: 9.3,
-    status: 'classic',
-    tags: ['action', 'fantasy', 'drama'],
-    episodes: 64,
-    duration: 24,
-    studio: 'Bones',
-    description: 'Two brothers search for the Philosopher\'s Stone to restore their bodies after a failed alchemy experiment.',
-    director: 'Seiji Mizushima',
-    cast: ['Romi Park', 'Rie Kugimiya', 'Shinichiro Miki'],
-    relatedAnime: [
-      {
-        id: '1',
-        slug: 'attack-on-titan',
-        title: 'Attack on Titan',
-        year: 2023,
-        rating: 9.2,
-        status: 'new',
-        tags: ['action', 'drama', 'supernatural'],
-        episodes: 25,
-        duration: 24,
-        studio: 'Wit Studio'
-      }
-    ],
-    reviews: [
-      {
-        rating: 5,
-        comment: 'A masterpiece of storytelling and animation!',
-        user: 'AlchemistFan'
-      }
-    ]
-  },
-  'jujutsu-kaisen': {
-    id: '5',
-    slug: 'jujutsu-kaisen',
-    title: 'Jujutsu Kaisen',
-    year: 2023,
-    rating: 8.9,
-    status: 'trending',
-    tags: ['action', 'supernatural', 'school'],
-    episodes: 24,
-    duration: 24,
-    studio: 'MAPPA',
-    description: 'Yuji Itadori joins his school\'s Occult Club and becomes involved in the world of curses and sorcery.',
-    director: 'Sunghoo Park',
-    cast: ['Junya Enoki', 'Yuma Uchida', 'Asami Seto'],
-    relatedAnime: [
-      {
-        id: '1',
-        slug: 'attack-on-titan',
-        title: 'Attack on Titan',
-        year: 2023,
-        rating: 9.2,
-        status: 'new',
-        tags: ['action', 'drama', 'supernatural'],
-        episodes: 25,
-        duration: 24,
-        studio: 'Wit Studio'
-      }
-    ],
-    reviews: [
-      {
-        rating: 5,
-        comment: 'Incredible animation and fight scenes!',
-        user: 'JujutsuFan'
-      }
-    ]
-  },
-  'my-hero-academia': {
-    id: '6',
-    slug: 'my-hero-academia',
-    title: 'My Hero Academia',
-    year: 2023,
-    rating: 8.7,
-    status: 'hot',
-    tags: ['action', 'school', 'shounen'],
-    episodes: 138,
-    duration: 24,
-    studio: 'Bones',
-    description: 'Izuku Midoriya dreams of becoming a hero in a world where most people have superpowers called Quirks.',
-    director: 'Kenji Nagasaki',
-    cast: ['Daiki Yamashita', 'Nobuhiko Okamoto', 'Ayane Sakura'],
-    relatedAnime: [
-      {
-        id: '1',
-        slug: 'attack-on-titan',
-        title: 'Attack on Titan',
-        year: 2023,
-        rating: 9.2,
-        status: 'new',
-        tags: ['action', 'drama', 'supernatural'],
-        episodes: 25,
-        duration: 24,
-        studio: 'Wit Studio'
-      }
-    ],
-    reviews: [
-      {
-        rating: 5,
-        comment: 'Plus Ultra! Amazing superhero anime!',
-        user: 'HeroFan'
-      }
-    ]
-  }
+  createdAt: string
 }
 
-interface AnimePageProps {
-  params: Promise<{
-    slug: string
-  }>
-}
+export default function AnimePage() {
+  const params = useParams()
+  const router = useRouter()
+  const { isAuthenticated, user } = useAuth()
+  const toast = useToast()
+  const slug = params?.slug as string
 
-export default async function AnimePage({ params }: AnimePageProps) {
-  const { slug } = await params
+  const [anime, setAnime] = useState<AnimeDetail | null>(null)
+  const [relatedSeasons, setRelatedSeasons] = useState<Anime[]>([])
+  const [similarAnime, setSimilarAnime] = useState<Anime[]>([])
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [listStatus, setListStatus] = useState<ListStatus>({ inList: false })
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   
-  // Fetch anime from API
-  let anime
-  try {
-    const { apiGetAnimeBySlug } = await import('../../lib/api')
-    anime = await apiGetAnimeBySlug(slug)
-  } catch (error) {
-    console.error('Failed to load anime:', error)
-    notFound()
+  // Modal states
+  const [showAddToListModal, setShowAddToListModal] = useState(false)
+  const [showRatingModal, setShowRatingModal] = useState(false)
+  const [selectedListStatus, setSelectedListStatus] = useState<'watching' | 'completed' | 'plan-to-watch' | 'favorite'>('plan-to-watch')
+  const [userRating, setUserRating] = useState(0)
+  const [userReview, setUserReview] = useState('')
+  const [hoverRating, setHoverRating] = useState(0)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const getAuthHeaders = (): Record<string, string> => {
+    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    }
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    return headers
   }
 
-  if (!anime) {
-    notFound()
+  // Fetch anime data
+  useEffect(() => {
+    async function fetchAnime() {
+      if (!slug) return
+
+      setIsLoading(true)
+      setError(null)
+
+      try {
+        // Fetch anime details
+        const response = await fetch(
+          `${API_URL}/anime.getBySlug?input=${encodeURIComponent(JSON.stringify({ slug }))}`,
+          {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+          }
+        )
+
+        const data = await response.json()
+        
+        if (data.error) {
+          setError('Anime not found')
+          return
+        }
+
+        const animeData = data.result?.data
+        if (animeData) {
+          setAnime(animeData)
+          
+          // Fetch user's list status if authenticated
+          if (isAuthenticated) {
+            fetchListStatus(animeData.id)
+          }
+          
+          // Fetch related seasons
+          if (animeData.title) {
+            fetchRelatedSeasons(animeData.title)
+          }
+          
+          // Fetch similar anime
+          fetchSimilarAnime(animeData.id)
+        }
+      } catch (err) {
+        console.error('Failed to fetch anime:', err)
+        setError('Failed to load anime')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchAnime()
+  }, [slug, isAuthenticated])
+
+  const fetchListStatus = async (animeId: string) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/user.getAnimeList?input=${encodeURIComponent(JSON.stringify({}))}`,
+        {
+          method: 'GET',
+          headers: getAuthHeaders()
+        }
+      )
+
+      const data = await response.json()
+      const items = data.result?.data?.items || []
+      const userAnime = items.find((item: any) => item.anime?.id === animeId)
+      
+      if (userAnime) {
+        setListStatus({
+          inList: true,
+          status: userAnime.listStatus,
+          progress: userAnime.progress,
+          score: userAnime.score
+        })
+        if (userAnime.score) {
+          setUserRating(userAnime.score)
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch list status:', err)
+    }
   }
 
-  // Extract data from API response
-  const { title, year, rating, status, episodes, duration, studio, description, genres = [] } = anime
-  const tags = genres.map((g) => g.name || g.slug)
-  
-  // These would come from API in production
-  const director = studio || 'Unknown'
-  const cast = ['Voice Actor 1', 'Voice Actor 2', 'Voice Actor 3']
-  const relatedAnime: Anime[] = [] // Would come from API
-  const reviews: Array<{ id: string; user: string; rating: number; comment: string }> = [] // Would come from API
+  const fetchRelatedSeasons = async (title: string) => {
+    try {
+      // Extract base title (remove season numbers, part numbers, etc.)
+      const baseTitle = title.replace(/\s+(Season|Part|S)\s*\d+/gi, '').trim()
+      
+      const response = await fetch(
+        `${API_URL}/anime.search?input=${encodeURIComponent(JSON.stringify({ query: baseTitle, limit: 6 }))}`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
 
+      const data = await response.json()
+      const results = data.result?.data?.anime || []
+      
+      // Filter to only include anime with similar titles (likely same series)
+      const related = results.filter((a: Anime) => 
+        a.slug !== slug && 
+        a.title.toLowerCase().includes(baseTitle.toLowerCase())
+      )
+      
+      setRelatedSeasons(related.slice(0, 6))
+    } catch (err) {
+      console.error('Failed to fetch related seasons:', err)
+    }
+  }
+
+  const fetchSimilarAnime = async (animeId: string) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/anime.getSimilar?input=${encodeURIComponent(JSON.stringify({ animeId, limit: 6 }))}`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
+
+      const data = await response.json()
+      setSimilarAnime(data.result?.data || [])
+    } catch (err) {
+      console.error('Failed to fetch similar anime:', err)
+    }
+  }
+
+  const handleAddToList = async () => {
+    if (!isAuthenticated) {
+      router.push('/auth/signin')
+      return
+    }
+
+    if (!anime) return
+
+    const isUpdating = listStatus.inList
+
+    setIsSubmitting(true)
+    try {
+      const response = await fetch(`${API_URL}/user.addToList`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          animeId: anime.id,
+          status: selectedListStatus
+        })
+      })
+
+      const data = await response.json()
+      
+      if (data.error) {
+        toast.error(isUpdating ? 'Failed to update list' : 'Failed to add to list', 'Error')
+        return
+      }
+
+      setListStatus({
+        inList: true,
+        status: selectedListStatus,
+        progress: listStatus.progress || 0,
+        score: listStatus.score
+      })
+      setShowAddToListModal(false)
+      toast.success(isUpdating ? `Moved to ${selectedListStatus.replace('-', ' ')} list!` : `Added to ${selectedListStatus.replace('-', ' ')} list!`, 'Success')
+    } catch (err) {
+      console.error('Failed to add to list:', err)
+      toast.error(isUpdating ? 'Failed to update list. Please try again.' : 'Failed to add to list. Please try again.', 'Error')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleRemoveFromList = async () => {
+    if (!anime || !listStatus.inList) return
+
+    if (!confirm('Remove this anime from your list?')) return
+
+    setIsSubmitting(true)
+    try {
+      const response = await fetch(`${API_URL}/user.removeFromList`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          animeId: anime.id
+        })
+      })
+
+      const data = await response.json()
+      
+      if (data.error) {
+        toast.error('Failed to remove from list', 'Error')
+        return
+      }
+
+      setListStatus({ inList: false })
+      toast.success('Removed from your list', 'Success')
+    } catch (err) {
+      console.error('Failed to remove from list:', err)
+      toast.error('Failed to remove from list', 'Error')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleSubmitRating = async () => {
+    if (!anime || userRating === 0) return
+
+    setIsSubmitting(true)
+    try {
+      const response = await fetch(`${API_URL}/user.rateAnime`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          animeId: anime.id,
+          rating: userRating,
+          review: userReview || undefined
+        })
+      })
+
+      const data = await response.json()
+      
+      if (data.error) {
+        toast.error('Failed to submit rating', 'Error')
+        return
+      }
+
+      setListStatus(prev => ({ ...prev, score: userRating }))
+      setShowRatingModal(false)
+      setUserReview('')
+      toast.success(`Rated ${userRating}/10!`, 'Rating Submitted')
+    } catch (err) {
+      console.error('Failed to submit rating:', err)
+      toast.error('Failed to submit rating', 'Error')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleShare = async () => {
+    if (navigator.share && anime) {
+      try {
+        await navigator.share({
+          title: anime.title,
+          text: `Check out ${anime.title} on AnimeSenpai!`,
+          url: window.location.href
+        })
+        toast.success('Shared successfully!', 'Success')
+      } catch (err) {
+        // Fallback: copy to clipboard
+        navigator.clipboard.writeText(window.location.href)
+        toast.success('Link copied to clipboard!', 'Copied')
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href)
+      toast.success('Link copied to clipboard!', 'Copied')
+    }
+  }
+
+  // Streaming platforms (would come from API in production)
+  const streamingPlatforms = [
+    { name: 'Crunchyroll', url: '#', available: true },
+    { name: 'Funimation', url: '#', available: true },
+    { name: 'Netflix', url: '#', available: false },
+    { name: 'Hulu', url: '#', available: true },
+  ].filter(p => p.available)
+
+  if (isLoading) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
       {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
       <main className="container pt-32 pb-20 relative z-10">
-        {/* Back Button */}
+          {/* Back Button Skeleton */}
+        <div className="mb-8">
+            <div className="h-10 w-24 bg-white/10 rounded-lg animate-pulse"></div>
+          </div>
+
+          {/* Detail Hero Skeleton */}
+          <DetailHeroSkeleton />
+
+          {/* Where to Watch Skeleton */}
+          <div className="glass rounded-2xl p-6 mb-8">
+            <div className="h-8 w-48 bg-white/10 rounded-lg mb-4 animate-pulse"></div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-16 bg-white/10 rounded-xl animate-pulse"></div>
+              ))}
+            </div>
+          </div>
+
+          {/* Related Anime Skeleton */}
+          <div className="mb-12">
+            <div className="h-8 w-56 bg-white/10 rounded-lg mb-6 animate-pulse"></div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <AnimeCardSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  if (error || !anime) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-white mb-4">Anime Not Found</h1>
+          <p className="text-gray-400 mb-8">The anime you're looking for doesn't exist.</p>
+          <Link href="/search">
+            <Button className="bg-primary-500 hover:bg-primary-600">
+              Browse Anime
+            </Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900">
+      <main className="container pt-28 pb-20">
         <div className="mb-8">
           <BackButton />
         </div>
 
-        {/* Hero Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-          {/* Anime Poster/Image */}
-          <div className="lg:col-span-1">
-            <div className="aspect-[2/3] bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl overflow-hidden relative group">
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-              <div className="absolute top-4 left-4">
-                <Badge className="bg-primary-500/20 text-primary-400 border-brand-primary-500/30">
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </Badge>
-              </div>
-              <div className="absolute bottom-4 left-4 right-4">
-                <h1 className="text-2xl font-bold text-white mb-2">{title}</h1>
-                <div className="flex items-center gap-2 text-sm text-gray-300">
-                  <span>{year}</span>
-                  <span>•</span>
-                  <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 text-primary-400 fill-current" />
-                    <span>{rating}</span>
+        <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-10 max-w-7xl mx-auto">
+          {/* Left: Poster & Actions */}
+          <div className="md:sticky md:top-24 self-start">
+            <div className="glass rounded-2xl p-2 mb-6">
+              <div className="aspect-[2/3] rounded-xl overflow-hidden">
+                {(anime.coverImage || anime.imageUrl) ? (
+                  <img 
+                    src={anime.coverImage || anime.imageUrl} 
+                    alt={anime.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                    <span className="text-gray-500 text-6xl">🎬</span>
                   </div>
+                )}
+              </div>
+                  </div>
+
+            {/* Actions */}
+            <div className="space-y-3 mb-6">
+              {listStatus.inList ? (
+                <>
+                  <Button 
+                    onClick={() => setShowRatingModal(true)}
+                    className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white"
+                    size="lg"
+                  >
+                    <Star className="h-4 w-4 mr-2" />
+                    {listStatus.score ? `Your Rating: ${listStatus.score}/10` : 'Rate Anime'}
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      if (listStatus.status) {
+                        setSelectedListStatus(listStatus.status as any)
+                      }
+                      setShowAddToListModal(true)
+                    }}
+                    variant="outline"
+                    className="w-full border-white/20 text-white hover:bg-white/10"
+                  >
+                    Change List
+                  </Button>
+                  <Button 
+                    onClick={handleRemoveFromList}
+                    variant="outline"
+                    disabled={isSubmitting}
+                    className="w-full border-white/20 text-white hover:bg-white/10 hover:border-red-500/50 hover:text-red-400"
+                  >
+                    {isSubmitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <X className="h-4 w-4 mr-2" />}
+                    Remove from List
+                  </Button>
+                  {listStatus.status && (
+                    <div className="text-center py-2">
+                      <Badge className="bg-success-500/20 text-success-400 border-success-500/30">
+                        <Check className="h-3 w-3 mr-1" />
+                        In {listStatus.status?.replace('-', ' ')}
+                      </Badge>
                 </div>
+                  )}
+                </>
+              ) : (
+                <Button 
+                  onClick={() => setShowAddToListModal(true)}
+                  className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white"
+                  size="lg"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add to List
+                </Button>
+              )}
+              <div className="grid grid-cols-2 gap-2">
+                <ShareAnimeCard anime={anime} userRating={userRating} userStatus={listStatus.status} />
+                {anime.trailer && <TrailerButton trailerUrl={anime.trailer} title={anime.title} />}
               </div>
             </div>
           </div>
 
-          {/* Anime Details */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Title and Rating */}
+          {/* Right: Content */}
             <div>
-              <h1 className="text-4xl font-bold text-white mb-4">{title}</h1>
-              <div className="flex items-center gap-4 mb-4">
+            {/* Title */}
+            <div className="mb-6">
+              <h1 className="text-5xl md:text-6xl font-bold text-white mb-3 leading-tight">{anime.title}</h1>
+              {anime.titleEnglish && anime.titleEnglish !== anime.title && (
+                <p className="text-xl text-gray-400 mb-2">{anime.titleEnglish}</p>
+              )}
+              {anime.titleJapanese && (
+                <p className="text-sm text-gray-500">{anime.titleJapanese}</p>
+              )}
+            </div>
+
+            {/* Meta Info Bar */}
+            <div className="glass rounded-xl p-5 mb-6">
+              <div className="flex flex-wrap items-center gap-6">
                 <div className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-primary-400 fill-current" />
-                  <span className="text-2xl font-bold text-white">{rating}</span>
+                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                  <span className="text-2xl font-bold text-white">
+                    {anime.rating ? Number(anime.rating).toFixed(1) : 'N/A'}
+                  </span>
                 </div>
-                <Badge className="bg-primary-500/20 text-primary-400 border-brand-primary-500/30 text-lg px-3 py-1">
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </Badge>
+                {listStatus.score && (
+                  <>
+                    <div className="h-6 w-px bg-white/20"></div>
+                    <div className="text-sm">
+                      <div className="text-gray-500">Your Rating</div>
+                      <div className="text-white font-bold">{listStatus.score}/10</div>
+                    </div>
+                  </>
+                )}
+                <div className="h-6 w-px bg-white/20"></div>
+                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-400">
+                  {anime.year && <span className="text-white font-medium">{anime.year}</span>}
+                  {anime.episodes && <><span>•</span><span>{anime.episodes} eps</span></>}
+                  {anime.duration && <><span>•</span><span>{anime.duration}m</span></>}
+                  {anime.studio && <><span>•</span><span className="text-white">{anime.studio}</span></>}
+                </div>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center gap-3">
-              <Button className="bg-primary-500 hover:bg-primary-600 text-white">
-                <Play className="h-4 w-4 mr-2" />
-                Watch Now
-              </Button>
-              <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
-                <Bookmark className="h-4 w-4 mr-2" />
-                Add to Watchlist
-              </Button>
-              <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
-                <Heart className="h-4 w-4 mr-2" />
-                Favorite
-              </Button>
-              <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
-                <Share2 className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Anime Info */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="glass rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="h-4 w-4 text-primary-400" />
-                  <span className="text-sm text-gray-300">Year</span>
-                </div>
-                <span className="text-white font-semibold">{year}</span>
-              </div>
-              <div className="glass rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Clock className="h-4 w-4 text-primary-400" />
-                  <span className="text-sm text-gray-300">Episodes</span>
-                </div>
-                <span className="text-white font-semibold">{episodes}</span>
-              </div>
-              <div className="glass rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Clock className="h-4 w-4 text-primary-400" />
-                  <span className="text-sm text-gray-300">Duration</span>
-                </div>
-                <span className="text-white font-semibold">{duration}m</span>
-              </div>
-              <div className="glass rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Award className="h-4 w-4 text-primary-400" />
-                  <span className="text-sm text-gray-300">Studio</span>
-                </div>
-                <span className="text-white font-semibold">{studio}</span>
-              </div>
-            </div>
-
-            {/* Tags */}
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-3">Genres</h3>
-              <div className="flex flex-wrap gap-2">
-                {tags.map((tagId: string, index: number) => {
-                  const tag = getTagById(tagId) || { name: tagId, color: 'bg-primary-500/20 text-primary-400' }
-                  return tag ? (
-                    <Badge key={index} className={tag.color}>
-                      {tag.name}
-                    </Badge>
-                  ) : null
+            {/* Genres */}
+            {anime.genres && anime.genres.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-6">
+                {anime.genres.map((genre: any, index: number) => {
+                  const genreName = genre.name || genre.slug || genre;
+                  return (
+                    <Link 
+                      key={index}
+                      href={`/search?genre=${encodeURIComponent(genreName)}`}
+                    >
+                      <Badge 
+                        className="bg-white/10 text-white border-white/20 px-4 py-1.5 hover:bg-white/20 cursor-pointer transition-colors"
+                      >
+                        {genreName}
+                      </Badge>
+                    </Link>
+                  );
                 })}
-              </div>
             </div>
-          </div>
-        </div>
+            )}
 
-        {/* Description */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-white mb-4">Synopsis</h2>
-          <p className="text-gray-300 leading-relaxed text-lg">{description}</p>
-        </div>
+            {/* Where to Watch */}
+            {streamingPlatforms.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-sm text-gray-500 mb-3">Watch on</h3>
+                <div className="flex flex-wrap gap-2">
+                  {streamingPlatforms.map((platform) => (
+                    <a
+                      key={platform.name}
+                      href={platform.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+                    >
+                      <span className="text-white font-medium">{platform.name}</span>
+                      <ExternalLink className="h-3.5 w-3.5 text-gray-400 group-hover:text-white transition-colors" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
 
-        {/* Cast & Crew */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-          <div>
-            <h3 className="text-xl font-semibold text-white mb-4">Cast</h3>
-            <div className="space-y-2">
-              {cast.map((actor, index) => (
-                <div key={index} className="text-gray-300">{actor}</div>
+            {/* Synopsis */}
+            {anime.synopsis && (
+              <div className="glass rounded-2xl p-6 mb-6">
+                <h2 className="text-xl font-bold text-white mb-3">Synopsis</h2>
+                <p className="text-gray-300 leading-relaxed text-lg">{anime.synopsis}</p>
+                </div>
+            )}
+
+            {/* Background */}
+            {anime.background && (
+              <div className="glass rounded-2xl p-6 mb-6">
+                <h2 className="text-xl font-bold text-white mb-3">Background</h2>
+                <p className="text-gray-300 leading-relaxed">{anime.background}</p>
+              </div>
+            )}
+
+            {/* Additional Info */}
+            {((anime as AnimeDetail).source || (anime as AnimeDetail).aired) && (
+              <div className="glass rounded-xl p-5">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Additional Information</h3>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                  {(anime as AnimeDetail).source && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Source</span>
+                      <span className="text-white font-medium">{(anime as AnimeDetail).source}</span>
+                    </div>
+                  )}
+                  {(anime as AnimeDetail).aired && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Aired</span>
+                      <span className="text-white font-medium text-right">{(anime as AnimeDetail).aired}</span>
+                    </div>
+                  )}
+                  {(anime as AnimeDetail).broadcast && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Broadcast</span>
+                      <span className="text-white font-medium">{(anime as AnimeDetail).broadcast}</span>
+                    </div>
+                  )}
+                  {(anime as AnimeDetail).studios && (anime as AnimeDetail).studios!.length > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Studios</span>
+                      <span className="text-white font-medium text-right">{(anime as AnimeDetail).studios!.join(', ')}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+                </div>
+              </div>
+
+        {/* Recommendations */}
+        {relatedSeasons.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold text-white mb-6">More from this Series</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              {relatedSeasons.map((season) => (
+                <AnimeCard key={season.id} anime={season} variant="grid" />
+              ))}
+            </div>
+              </div>
+        )}
+
+        {similarAnime.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold text-white mb-6">You Might Also Like</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              {similarAnime.map((similar) => (
+                <AnimeCard key={similar.id} anime={similar} variant="grid" />
               ))}
             </div>
           </div>
-          <div>
-            <h3 className="text-xl font-semibold text-white mb-4">Director</h3>
-            <div className="text-gray-300">{director}</div>
-          </div>
-        </div>
-
-        {/* Reviews */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-white mb-6">Reviews</h2>
-          <div className="space-y-4">
-            {reviews.map((review, index) => (
-              <div key={index} className="glass rounded-lg p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-4 w-4 ${i < review.rating ? 'text-primary-400 fill-current' : 'text-gray-600'}`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-white font-medium">{review.user}</span>
-                  </div>
-                </div>
-                <p className="text-gray-300">{review.comment}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Related Anime */}
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-6">Related Anime</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {relatedAnime.map((anime) => (
-              <AnimeCard
-                key={anime.id}
-                anime={anime}
-                variant="grid"
-              />
-            ))}
-          </div>
-        </div>
+        )}
       </main>
+
+      {/* Add to List Modal */}
+      {showAddToListModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowAddToListModal(false)}>
+          <div className="glass rounded-2xl p-8 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-2xl font-bold text-white mb-2">Add to Your List</h2>
+            <p className="text-gray-400 text-sm mb-6">Choose where you'd like to save this anime</p>
+            
+            <div className="grid grid-cols-2 gap-3 mb-8">
+              {[
+                { value: 'watching', label: 'Watching', icon: Play },
+                { value: 'completed', label: 'Completed', icon: Check },
+                { value: 'plan-to-watch', label: 'Plan to Watch', icon: Bookmark },
+                { value: 'favorite', label: 'Favorite', icon: Heart }
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setSelectedListStatus(option.value as any)}
+                  className={`p-4 rounded-xl transition-all flex flex-col items-center gap-2 ${
+                    selectedListStatus === option.value
+                      ? 'bg-gradient-to-br from-primary-500/20 to-secondary-500/20 border-2 border-primary-400/50 shadow-lg shadow-primary-500/20'
+                      : 'bg-white/5 border-2 border-white/10 hover:bg-white/10 hover:border-white/20'
+                  }`}
+                >
+                  <option.icon className={`h-6 w-6 ${selectedListStatus === option.value ? 'text-primary-400' : 'text-gray-400'}`} />
+                  <span className={`text-sm font-medium ${selectedListStatus === option.value ? 'text-white' : 'text-gray-300'}`}>
+                    {option.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setShowAddToListModal(false)}
+                variant="outline"
+                className="flex-1 border-white/20 text-white hover:bg-white/10"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddToList}
+                disabled={isSubmitting || !selectedListStatus}
+                className="flex-1 bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white disabled:opacity-50"
+              >
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add to List'}
+              </Button>
+          </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rating Modal */}
+      {showRatingModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowRatingModal(false)}>
+          <div className="glass rounded-2xl p-8 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-2xl font-bold text-white mb-6">Rate {anime.title}</h2>
+            
+            <div className="mb-6">
+              <div className="flex justify-center gap-2 mb-4">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
+                  <button
+                    key={rating}
+                    onMouseEnter={() => setHoverRating(rating)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    onClick={() => setUserRating(rating)}
+                    className="transition-transform hover:scale-110"
+                  >
+                        <Star
+                      className={`h-8 w-8 ${
+                        rating <= (hoverRating || userRating)
+                          ? 'text-primary-400 fill-current'
+                          : 'text-gray-600'
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+              <p className="text-center text-white text-lg font-semibold">
+                {userRating > 0 ? `${userRating} / 10` : 'Select a rating'}
+              </p>
+        </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-300 mb-2">
+                Write a review (optional)
+              </label>
+              <textarea
+                value={userReview}
+                onChange={(e) => setUserReview(e.target.value)}
+                placeholder="Share your thoughts about this anime..."
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-400/50 min-h-[100px]"
+                maxLength={500}
+              />
+              <p className="text-xs text-gray-500 mt-1">{userReview.length}/500</p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={() => {
+                  setShowRatingModal(false)
+                  setUserReview('')
+                }}
+                variant="outline"
+                className="flex-1 border-white/20 text-white hover:bg-white/10"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmitRating}
+                disabled={isSubmitting || userRating === 0}
+                className="flex-1 bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  'Submit Rating'
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

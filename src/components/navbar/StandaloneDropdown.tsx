@@ -65,7 +65,19 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
             variant="ghost"
             className="relative h-9 w-9 rounded-full p-0 hover:bg-white/10 transition-all duration-200 focus:ring-2 focus:ring-brand-primary-400/50"
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full flex items-center justify-center ring-2 ring-white/20 hover:ring-white/40 transition-all duration-200">
+            {user.avatar ? (
+              <img 
+                src={user.avatar} 
+                alt={displayName}
+                className="w-8 h-8 rounded-full object-cover ring-2 ring-white/20 hover:ring-white/40 transition-all duration-200"
+                onError={(e) => {
+                  // Fallback to initials on error
+                  e.currentTarget.style.display = 'none'
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                }}
+              />
+            ) : null}
+            <div className={`w-8 h-8 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full flex items-center justify-center ring-2 ring-white/20 hover:ring-white/40 transition-all duration-200 ${user.avatar ? 'hidden' : ''}`}>
               <span className="text-white font-bold text-xs">{displayInitial}</span>
             </div>
           </Button>
@@ -79,19 +91,34 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
           onClick={() => setIsOpen(false)}
         >
           <div 
-            className="fixed w-56 glass rounded-xl shadow-2xl z-[9999]"
+            className="fixed w-56 glass rounded-xl shadow-2xl border border-white/10 z-[9999] animate-in fade-in slide-in-from-top-2 duration-200"
             style={{
               top: `${position.top}px`,
-              right: `${position.right}px`
+              right: `${position.right}px`,
             }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-4">
-              <div className="flex flex-col space-y-1 mb-3">
-                <p className="text-sm font-medium leading-none text-white">{displayName}</p>
-                <p className="text-xs leading-none text-gray-400">{user.email}</p>
+              <div className="flex items-center gap-3 mb-3 pb-3 border-b border-white/10">
+                {user.avatar ? (
+                  <img 
+                    src={user.avatar} 
+                    alt={displayName}
+                    className="w-10 h-10 rounded-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                      e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                    }}
+                  />
+                ) : null}
+                <div className={`w-10 h-10 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full flex items-center justify-center ${user.avatar ? 'hidden' : ''}`}>
+                  <span className="text-white font-bold text-sm">{displayInitial}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium leading-none text-white truncate">{displayName}</p>
+                  <p className="text-xs leading-none text-gray-400 mt-1 truncate">{user.email}</p>
+                </div>
               </div>
-              <div className="border-t border-white/10 mb-2"></div>
               <div className="space-y-1">
                 <button 
                   className="w-full text-left text-gray-300 hover:text-white hover:bg-white/10 rounded-lg px-3 py-2.5 transition-all duration-200 flex items-center"
@@ -135,13 +162,13 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
                   <span className="text-sm">Settings</span>
                 </button>
                 <button 
-                  className="w-full text-left text-error-400 hover:text-red-300 hover:bg-error-500/10 rounded-lg px-3 py-2.5 transition-all duration-200 flex items-center"
+                  className="w-full text-left text-error-400 hover:text-white hover:bg-gradient-to-r hover:from-error-500 hover:to-error-600 rounded-lg px-3 py-2.5 transition-all duration-200 flex items-center group shadow-none hover:shadow-lg hover:shadow-error-500/30 font-medium"
                   onClick={() => {
                     setIsOpen(false)
                     signout()
                   }}
                 >
-                  <LogOut className="mr-3 h-4 w-4" />
+                  <LogOut className="mr-3 h-4 w-4 group-hover:animate-pulse" />
                   <span className="text-sm">Log out</span>
                 </button>
               </div>

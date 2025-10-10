@@ -2,8 +2,10 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { Navbar } from '../components/navbar/navbar'
 import { AuthProvider } from './lib/auth-context'
-import { ThemeProvider } from '../components/ThemeProvider'
+import ThemeProvider from '../components/ThemeProvider'
 import { CookieConsent } from '../components/CookieConsent'
+import { ErrorBoundary } from '../components/ErrorBoundary'
+import { ToastProvider } from '../lib/toast-context'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -21,13 +23,17 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider>
-          <AuthProvider>
-            <Navbar />
-            {children}
-            <CookieConsent />
-          </AuthProvider>
-        </ThemeProvider>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <ToastProvider>
+              <AuthProvider>
+                <Navbar />
+                {children}
+                <CookieConsent />
+              </AuthProvider>
+            </ToastProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
       </body>
     </html>
   )

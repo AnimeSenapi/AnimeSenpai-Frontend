@@ -1,17 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Mail, Lock, Eye, EyeOff, User, ArrowLeft, Check, X } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, User, ArrowLeft, Check, X, Loader2, AtSign } from 'lucide-react'
 import { Button } from '../../../components/ui/button'
 import { Checkbox } from '../../../components/ui/checkbox'
 import { useAuth } from '../../lib/auth-context'
+import { useToast } from '../../../lib/toast-context'
 import { RequireGuest } from '../../lib/protected-route'
+import { apiCheckUsernameAvailability } from '../../lib/api'
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
-    name: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -20,14 +22,48 @@ export default function SignUpPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [agreeToTerms, setAgreeToTerms] = useState(false)
   const [formErrors, setFormErrors] = useState<{ 
-    name?: string
+    username?: string
     email?: string
     password?: string
     confirmPassword?: string
     terms?: string
   }>({})
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
   const { signup, isLoading, error, clearError } = useAuth()
+  const toast = useToast()
   const router = useRouter()
+
+  // Debounced username availability check
+  useEffect(() => {
+    if (!formData.username || formData.username.length < 2) {
+      setUsernameStatus('idle')
+      return
+    }
+
+    // Check format first
+    if (!/^[a-zA-Z0-9_-]+$/.test(formData.username)) {
+      setUsernameStatus('idle')
+      setFormErrors(prev => ({ ...prev, username: 'Only letters, numbers, _ and - allowed' }))
+      return
+    }
+
+    setUsernameStatus('checking')
+    const timeoutId = setTimeout(async () => {
+      try {
+        const result = await apiCheckUsernameAvailability(formData.username)
+        setUsernameStatus(result.available ? 'available' : 'taken')
+        if (!result.available) {
+          setFormErrors(prev => ({ ...prev, username: 'Username is already taken' }))
+        } else {
+          setFormErrors(prev => ({ ...prev, username: undefined }))
+        }
+      } catch (error) {
+        setUsernameStatus('idle')
+      }
+    }, 500) // 500ms debounce
+
+    return () => clearTimeout(timeoutId)
+  }, [formData.username])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -41,11 +77,15 @@ export default function SignUpPage() {
 
   const validateForm = () => {
     const errors: typeof formErrors = {}
-    
-    if (!formData.name.trim()) {
-      errors.name = 'Name is required'
-    } else if (formData.name.trim().length < 2) {
-      errors.name = 'Name must be at least 2 characters'
+
+    if (!formData.username.trim()) {
+      errors.username = 'Username is required'
+    } else if (formData.username.trim().length < 2) {
+      errors.username = 'Username must be at least 2 characters'
+    } else if (!/^[a-zA-Z0-9_-]+$/.test(formData.username)) {
+      errors.username = 'Username can only contain letters, numbers, underscores, and hyphens'
+    } else if (usernameStatus === 'taken') {
+      errors.username = 'This username is already taken'
     }
     
     if (!formData.email) {
@@ -87,7 +127,7 @@ export default function SignUpPage() {
     
     try {
       await signup({
-        firstName: formData.name,
+        username: formData.username,
         email: formData.email,
         password: formData.password,
         confirmPassword: formData.confirmPassword,
@@ -97,9 +137,15 @@ export default function SignUpPage() {
       })
       // Wait a bit longer to ensure user state is properly set
       await new Promise(resolve => setTimeout(resolve, 100))
-      router.push('/dashboard')
+      
+      // New users should go through onboarding
+      toast.success('Account created! Let\'s get you started.', 'Welcome to AnimeSenpai')
+      router.push('/onboarding')
     } catch (err) {
       // Error is handled by the auth context
+      if (error) {
+        toast.error(error, 'Sign Up Failed')
+      }
     }
   }
 
@@ -113,7 +159,7 @@ export default function SignUpPage() {
   }
   const isPasswordValid = Object.values(passwordChecks).every(Boolean)
   const isPasswordMatch = formData.password === formData.confirmPassword && formData.confirmPassword.length > 0
-  const isFormValid = formData.name && formData.email && isPasswordValid && isPasswordMatch && agreeToTerms
+  const isFormValid = formData.username && usernameStatus === 'available' && formData.email && isPasswordValid && isPasswordMatch && agreeToTerms
 
   return (
     <RequireGuest>
@@ -167,30 +213,47 @@ export default function SignUpPage() {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Name Field */}
+                {/* Username Field */}
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-                    Full Name
+                  <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
+                    Username
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <AtSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <input
-                      id="name"
-                      name="name"
+                      id="username"
+                      name="username"
                       type="text"
-                      value={formData.name}
+                      value={formData.username}
                       onChange={handleInputChange}
-                      className={`w-full pl-10 pr-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
-                        formErrors.name 
+                      className={`w-full pl-10 pr-10 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                        formErrors.username 
                           ? 'border-error-500/50 focus:ring-error-400' 
+                          : usernameStatus === 'available'
+                          ? 'border-success-500/50 focus:ring-success-400'
                           : 'border-white/10 focus:ring-brand-primary-400'
                       }`}
-                      placeholder="Enter your full name"
+                      placeholder="Choose a unique username"
                       suppressHydrationWarning
                     />
+                    {/* Status Indicator */}
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      {usernameStatus === 'checking' && (
+                        <Loader2 className="h-4 w-4 text-gray-400 animate-spin" />
+                      )}
+                      {usernameStatus === 'available' && (
+                        <Check className="h-4 w-4 text-success-400" />
+                      )}
+                      {usernameStatus === 'taken' && (
+                        <X className="h-4 w-4 text-error-400" />
+                      )}
+                    </div>
                   </div>
-                  {formErrors.name && (
-                    <p className="mt-1 text-sm text-error-400">{formErrors.name}</p>
+                  {formErrors.username && (
+                    <p className="mt-1 text-sm text-error-400">{formErrors.username}</p>
+                  )}
+                  {usernameStatus === 'available' && !formErrors.username && (
+                    <p className="mt-1 text-sm text-success-400">Username is available!</p>
                   )}
                 </div>
 

@@ -2,102 +2,151 @@
 
 import React, { Component, ReactNode } from 'react'
 import { Button } from './ui/button'
-import { AlertCircle, RefreshCw, Home } from 'lucide-react'
+import { RefreshCw, Home, AlertTriangle } from 'lucide-react'
 
-interface ErrorBoundaryProps {
+interface Props {
   children: ReactNode
   fallback?: ReactNode
 }
 
-interface ErrorBoundaryState {
+interface State {
   hasError: boolean
   error: Error | null
+  errorInfo: React.ErrorInfo | null
 }
 
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
     super(props)
-    this.state = { hasError: false, error: null }
+    this.state = {
+      hasError: false,
+      error: null,
+      errorInfo: null
+    }
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error }
+  static getDerivedStateFromError(error: Error): State {
+    return {
+      hasError: true,
+      error,
+      errorInfo: null
+    }
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log error to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Error caught by boundary:', error, errorInfo)
-    }
-    
-    // In production, you would send this to an error reporting service
-    // Example: Sentry.captureException(error, { extra: errorInfo })
+    console.error('Error caught by boundary:', error, errorInfo)
+    this.setState({
+      error,
+      errorInfo
+    })
+
+    // Log to error tracking service (e.g., Sentry)
+    // if (typeof window !== 'undefined') {
+    //   Sentry.captureException(error, { contexts: { react: { componentStack: errorInfo.componentStack } } })
+    // }
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: null })
+    this.setState({
+      hasError: false,
+      error: null,
+      errorInfo: null
+    })
+  }
+
+  handleReload = () => {
+    window.location.reload()
   }
 
   render() {
     if (this.state.hasError) {
+      // Custom fallback UI
       if (this.props.fallback) {
         return this.props.fallback
       }
 
+      // Default error UI
       return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 flex items-center justify-center px-4">
-          <div className="max-w-md w-full">
-            <div className="glass rounded-3xl p-8 text-center">
-              {/* Error Icon */}
-              <div className="w-16 h-16 bg-error-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <AlertCircle className="h-8 w-8 text-error-400" />
-              </div>
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
+          {/* Animated Background Elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute -top-40 -right-40 w-80 h-80 bg-error-500/10 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-error-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          </div>
 
-              {/* Error Message */}
-              <h1 className="text-2xl font-bold text-white mb-3">
-                Oops! Something went wrong
-              </h1>
-              <p className="text-gray-300 mb-6 leading-relaxed">
-                We're sorry, but something unexpected happened. Don't worry, your data is safe.
-              </p>
-
-              {/* Error Details (only in development) */}
-              {process.env.NODE_ENV === 'development' && this.state.error && (
-                <div className="mb-6 p-4 bg-error-500/10 border border-error-500/20 rounded-xl text-left">
-                  <p className="text-error-400 text-xs font-mono break-all">
-                    {this.state.error.message}
+          <main className="container relative z-10 flex items-center justify-center min-h-screen py-20">
+            <div className="text-center max-w-2xl px-4">
+              <div className="glass rounded-2xl p-8 md:p-12">
+                {/* Error Icon */}
+                <div className="mb-6">
+                  <div className="w-20 h-20 bg-error-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <AlertTriangle className="h-10 w-10 text-error-400" />
+                  </div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                    Oops! Something went wrong
+                  </h1>
+                  <p className="text-xl text-gray-300 mb-2">
+                    We encountered an unexpected error
+                  </p>
+                  <p className="text-gray-400 mb-6">
+                    Don't worry, our team has been notified and we're working on fixing it.
                   </p>
                 </div>
-              )}
 
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  onClick={this.handleReset}
-                  className="flex-1 bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Try Again
-                </Button>
-                <Button
-                  onClick={() => window.location.href = '/dashboard'}
-                  variant="outline"
-                  className="flex-1 border-white/20 text-white hover:bg-white/10"
-                >
-                  <Home className="h-4 w-4 mr-2" />
-                  Go Home
-                </Button>
+                {/* Error Details (only in development) */}
+                {process.env.NODE_ENV === 'development' && this.state.error && (
+                  <div className="mb-6 p-4 bg-error-500/10 border border-error-500/20 rounded-xl text-left">
+                    <h3 className="text-sm font-semibold text-error-400 mb-2">Error Details (Dev Only):</h3>
+                    <pre className="text-xs text-gray-300 overflow-x-auto whitespace-pre-wrap break-words">
+                      {this.state.error.toString()}
+                    </pre>
+                    {this.state.errorInfo && (
+                      <details className="mt-2">
+                        <summary className="text-xs text-gray-400 cursor-pointer hover:text-white">
+                          Component Stack
+                        </summary>
+                        <pre className="text-xs text-gray-400 mt-2 overflow-x-auto whitespace-pre-wrap">
+                          {this.state.errorInfo.componentStack}
+                        </pre>
+                      </details>
+                    )}
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button
+                    onClick={this.handleReload}
+                    className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Reload Page
+                  </Button>
+                  <Button
+                    onClick={() => window.location.href = '/'}
+                    variant="outline"
+                    className="border-white/20 text-white hover:bg-white/10"
+                  >
+                    <Home className="h-4 w-4 mr-2" />
+                    Go Home
+                  </Button>
+                </div>
+
+                {/* Additional Help */}
+                <div className="mt-8 pt-6 border-t border-white/10">
+                  <p className="text-sm text-gray-400">
+                    If this problem persists, please{' '}
+                    <a
+                      href="mailto:support@animesenpai.com"
+                      className="text-primary-400 hover:text-primary-300 underline"
+                    >
+                      contact support
+                    </a>
+                  </p>
+                </div>
               </div>
-
-              {/* Help Text */}
-              <p className="mt-6 text-sm text-gray-400">
-                If this problem persists, please{' '}
-                <a href="mailto:support@animesenpai.app" className="text-primary-400 hover:text-primary-400 underline">
-                  contact support
-                </a>
-              </p>
             </div>
-          </div>
+          </main>
         </div>
       )
     }
@@ -106,3 +155,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 }
 
+// Hook-based error boundary for functional components
+export function useErrorHandler() {
+  const [error, setError] = React.useState<Error | null>(null)
+
+  React.useEffect(() => {
+    if (error) {
+      throw error
+    }
+  }, [error])
+
+  return setError
+}

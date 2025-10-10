@@ -16,6 +16,7 @@ interface AnimeCardProps {
   onPlay?: () => void
   onBookmark?: () => void
   onLike?: () => void
+  isBookmarked?: boolean
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -38,7 +39,8 @@ export function AnimeCard({
   className,
   onPlay,
   onBookmark,
-  onLike
+  onLike,
+  isBookmarked = false
 }: AnimeCardProps) {
   if (!anime) return null
   
@@ -67,7 +69,18 @@ export function AnimeCard({
     
     return (
       <div className="group relative glass rounded-xl overflow-hidden hover:bg-white/10 transition-all duration-300 hover:scale-[1.02]">
-        <div className="aspect-[2/3] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center relative">
+        <div className="aspect-[2/3] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center relative overflow-hidden">
+          {anime.coverImage ? (
+            <img 
+              src={anime.coverImage} 
+              alt={title}
+              className="w-full h-full object-cover absolute inset-0"
+              loading="lazy"
+            />
+          ) : (
+            <div className="text-gray-600 text-4xl">🎬</div>
+          )}
+          
           {status && statusConfig[status] && (
             <div className="absolute top-2 left-2 z-10">
               <div className={cn(
@@ -78,19 +91,37 @@ export function AnimeCard({
               </div>
             </div>
           )}
-          <div className="absolute top-2 right-2">
-            <Button size="sm" className="bg-black/50 hover:bg-black/70 text-white border-0 h-8 w-8 p-0" onClick={onBookmark}>
-              <Bookmark className="h-3 w-3" />
-            </Button>
-          </div>
-          {/* Gradient fade overlay */}
-          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
+          {onBookmark && (
+            <div className="absolute top-2 right-2 z-10">
+              <Button 
+                size="sm" 
+                className={cn(
+                  "border-0 h-8 w-8 p-0 transition-all",
+                  isBookmarked 
+                    ? "bg-primary-500 hover:bg-primary-600 text-white shadow-lg shadow-primary-500/50" 
+                    : "bg-black/50 hover:bg-black/70 text-white"
+                )}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onBookmark()
+                }}
+              >
+                <Bookmark className={cn("h-3 w-3", isBookmarked && "fill-current")} />
+              </Button>
+            </div>
+          )}
+          
+          {/* Gradient fade overlay - focused on bottom */}
+          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/95 via-black/60 to-transparent pointer-events-none z-[1]"></div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/95 via-black/70 to-transparent">
+        
+        {/* Content overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-3 z-[2]">
           <h3 className="font-semibold text-white text-sm mb-2 truncate drop-shadow-lg">{title}</h3>
           
           {/* Subtle Genre Display */}
-          <div className="flex flex-wrap gap-1 mb-2">
+          <div className="flex flex-wrap gap-1 mb-2 min-h-[16px]">
             {genreTags.slice(0, 2).map((item: any, index: number) => {
               // Handle both genre objects and tag strings
               const genreName = typeof item === 'object' ? item.name : getTagById(item)?.name
@@ -110,25 +141,26 @@ export function AnimeCard({
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1">
               <Star className="h-3 w-3 text-cyan-400 fill-current drop-shadow-md" />
-              <span className="text-xs text-white font-medium drop-shadow-md">{rating}</span>
+              <span className="text-xs text-white font-medium drop-shadow-md">{rating || 'N/A'}</span>
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-300 drop-shadow-md">
               {episodes && (
                 <span>{episodes} eps</span>
               )}
+              {duration && episodes && (
+                <span>•</span>
+              )}
               {duration && (
-                <span>• {duration}m</span>
+                <span>{duration}m</span>
               )}
             </div>
           </div>
           
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-300 drop-shadow-md">{year}</span>
-            {studio && (
-              <span className="text-xs text-gray-400 drop-shadow-md truncate max-w-20">
-                {studio}
-              </span>
-            )}
+            <span className="text-xs text-gray-300 drop-shadow-md">{year || 'TBA'}</span>
+            <span className="text-xs text-gray-400 drop-shadow-md truncate max-w-20">
+              {studio || ''}
+            </span>
           </div>
         </div>
       </div>
@@ -146,12 +178,21 @@ export function AnimeCard({
     
     return (
       <div className="flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
-        <div className="w-10 h-14 bg-gradient-to-br from-gray-700 to-gray-800 rounded-md flex items-center justify-center">
-          <div className="text-xs text-gray-300 font-bold">{year}</div>
+        <div className="w-10 h-14 bg-gradient-to-br from-gray-700 to-gray-800 rounded-md flex items-center justify-center overflow-hidden relative">
+          {anime.coverImage ? (
+            <img 
+              src={anime.coverImage} 
+              alt={title}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <div className="text-xs text-gray-300 font-bold">{year || 'TBA'}</div>
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <h4 className="font-medium text-white text-sm truncate">{title}</h4>
-          <div className="flex items-center gap-1 mt-1">
+          <div className="flex items-center gap-1 mt-1 min-h-[16px]">
             {genreTags.slice(0, 2).map((item: any, index: number) => {
               const genreName = typeof item === 'object' ? item.name : getTagById(item)?.name
               return genreName ? (
@@ -164,7 +205,7 @@ export function AnimeCard({
           <div className="flex items-center gap-2 mt-1">
             <div className="flex items-center gap-1">
               <Star className="h-3 w-3 text-cyan-400 fill-current" />
-              <span className="text-xs text-gray-300">{rating}</span>
+              <span className="text-xs text-gray-300">{rating || 'N/A'}</span>
             </div>
             {status && statusConfig[status] && (
               <div className={cn(
@@ -194,20 +235,34 @@ export function AnimeCard({
     
     return (
       <div className="group relative glass rounded-lg overflow-hidden hover:bg-white/10 transition-all duration-300 hover:scale-[1.02]">
-        <div className="aspect-[3/4] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center relative">
+        <div className="aspect-[3/4] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center relative overflow-hidden">
+          {anime.coverImage ? (
+            <img 
+              src={anime.coverImage} 
+              alt={title}
+              className="w-full h-full object-cover absolute inset-0"
+              loading="lazy"
+            />
+          ) : (
+            <div className="text-gray-600 text-2xl">🎬</div>
+          )}
+          
           {status && statusConfig[status] && (
-            <div className="absolute top-1.5 left-1.5">
+            <div className="absolute top-1.5 left-1.5 z-10">
               <Badge className={cn("text-xs px-1.5 py-0.5", statusConfig[status].className)}>
                 {statusConfig[status].label}
               </Badge>
             </div>
           )}
-          {/* Gradient fade overlay */}
-          <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+          
+          {/* Gradient fade overlay - focused on bottom */}
+          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none z-[1]"></div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
+        
+        {/* Content overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-3 z-[2]">
           <h4 className="font-medium text-white text-xs mb-1 truncate drop-shadow-md">{title}</h4>
-          <div className="flex items-center gap-1 mb-1">
+          <div className="flex items-center gap-1 mb-1 min-h-[14px]">
             {genreTags.slice(0, 2).map((item: any, index: number) => {
               const genreName = typeof item === 'object' ? item.name : getTagById(item)?.name
               return genreName ? (
@@ -220,9 +275,9 @@ export function AnimeCard({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1">
               <Star className="h-3 w-3 text-cyan-400 fill-current drop-shadow-sm" />
-              <span className="text-xs text-white font-medium drop-shadow-sm">{rating}</span>
+              <span className="text-xs text-white font-medium drop-shadow-sm">{rating || 'N/A'}</span>
             </div>
-            <span className="text-xs text-gray-300 drop-shadow-sm">{year}</span>
+            <span className="text-xs text-gray-300 drop-shadow-sm">{year || 'TBA'}</span>
           </div>
         </div>
       </div>
@@ -240,12 +295,21 @@ export function AnimeCard({
     
     return (
       <div className="flex items-center gap-2 p-1.5 rounded-md bg-white/5 hover:bg-white/10 transition-colors">
-        <div className="w-6 h-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded flex items-center justify-center">
-          <div className="text-xs text-gray-300 font-bold">{year}</div>
+        <div className="w-6 h-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded flex items-center justify-center overflow-hidden relative">
+          {anime.coverImage ? (
+            <img 
+              src={anime.coverImage} 
+              alt={title}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <div className="text-xs text-gray-300 font-bold">{year || 'TBA'}</div>
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <h5 className="font-medium text-white text-xs truncate">{title}</h5>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 min-h-[14px]">
             {genreTags.slice(0, 1).map((item: any, index: number) => {
               const genreName = typeof item === 'object' ? item.name : getTagById(item)?.name
               return genreName ? (
@@ -258,7 +322,7 @@ export function AnimeCard({
         </div>
         <div className="flex items-center gap-1">
           <Star className="h-2.5 w-2.5 text-cyan-400 fill-current" />
-          <span className="text-xs text-gray-300">{rating}</span>
+          <span className="text-xs text-gray-300">{rating || 'N/A'}</span>
         </div>
       </div>
     )

@@ -42,10 +42,10 @@ export default function Error({ error, reset }: ErrorProps) {
           <div className="glass rounded-2xl p-12">
             <h1 className="text-6xl font-bold text-white mb-4">500</h1>
             <h2 className="text-3xl font-bold text-white mb-6">
-              Internal Server Error
+              Oops! Something Went Wrong
             </h2>
             <p className="text-gray-300 text-lg mb-8 max-w-lg mx-auto">
-              Something went wrong on our end. We're working to fix this issue. Please try again in a few moments.
+              We hit a snag on our end. Don't worry — Senpai's on it! Give it another try in a moment.
             </p>
 
             {/* Error Details (Development Only) */}
@@ -82,7 +82,7 @@ export default function Error({ error, reset }: ErrorProps) {
 
             {/* Helpful Information */}
             <div className="mt-12 pt-8 border-t border-white/10">
-              <h3 className="text-lg font-semibold text-white mb-4">What you can do:</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">Things to try:</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div className="flex items-center gap-3 text-gray-300">
                   <RefreshCw className="h-4 w-4 text-primary-400" />
@@ -90,11 +90,11 @@ export default function Error({ error, reset }: ErrorProps) {
                 </div>
                 <div className="flex items-center gap-3 text-gray-300">
                   <Wifi className="h-4 w-4 text-primary-400" />
-                  <span>Check your connection</span>
+                  <span>Check your internet</span>
                 </div>
                 <div className="flex items-center gap-3 text-gray-300">
                   <Server className="h-4 w-4 text-primary-400" />
-                  <span>Try again later</span>
+                  <span>Wait a minute and retry</span>
                 </div>
               </div>
             </div>
@@ -102,13 +102,14 @@ export default function Error({ error, reset }: ErrorProps) {
             {/* Contact Support */}
             <div className="mt-8">
               <p className="text-gray-400 text-sm">
-                If this problem persists, please{' '}
+                Still stuck?{' '}
                 <a 
                   href="mailto:support@animesenpai.app" 
-                  className="text-primary-400 hover:text-primary-400 transition-colors"
+                  className="text-primary-400 hover:text-primary-300 transition-colors"
                 >
-                  contact support
+                  Drop us a line
                 </a>
+                {' '}— we're here to help!
               </p>
             </div>
           </div>

@@ -4,8 +4,7 @@ import Link from 'next/link'
 import { cn } from '../../app/lib/utils'
 import { Anime } from '../../types/anime'
 import { getTagById } from '../../types/tags'
-import { Star, Play, Bookmark, Heart, Clock, Calendar, CheckCircle } from 'lucide-react'
-import { Button } from '../ui/button'
+import { Star, Play, Calendar } from 'lucide-react'
 
 interface SearchAnimeCardProps {
   anime: Anime & { 
@@ -27,15 +26,16 @@ export function SearchAnimeCard({
   if (variant === 'compact') {
     return (
       <Link href={`/anime/${anime.slug}`} className={cn("block group", className)}>
-        <div className="flex items-center gap-3 p-3 hover:bg-white/5 rounded-lg transition-all duration-200">
+        <div className="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-lg transition-all duration-200 border border-transparent hover:border-primary-500/30">
           {/* Image */}
           <div className="relative flex-shrink-0">
-            <div className="w-12 h-16 bg-gradient-to-br from-gray-800 to-gray-900 rounded-md overflow-hidden">
-              {anime.imageUrl ? (
+            <div className="w-12 h-16 bg-gradient-to-br from-gray-800 to-gray-900 rounded-md overflow-hidden border border-white/10">
+              {(anime.coverImage || anime.imageUrl) ? (
                 <img 
-                  src={anime.imageUrl} 
+                  src={anime.coverImage || anime.imageUrl} 
                   alt={anime.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
@@ -47,39 +47,23 @@ export function SearchAnimeCard({
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-white font-semibold text-sm mb-1 group-hover:text-cyan-300 transition-colors line-clamp-1">
+            <h3 className="text-white font-semibold text-sm mb-1 group-hover:text-primary-300 transition-colors line-clamp-1">
               {anime.title}
             </h3>
-            <div className="flex items-center gap-2 text-xs text-gray-400">
-              <span>{anime.year}</span>
-              <span>•</span>
-              <span>{anime.studio}</span>
+            <div className="flex items-center gap-2 text-xs text-gray-400 mb-1">
+              {anime.year && <span>{anime.year}</span>}
+              {anime.studio && (
+                <>
+                  {anime.year && <span>•</span>}
+                  <span className="truncate">{anime.studio}</span>
+                </>
+              )}
             </div>
-            <div className="flex items-center gap-1 mt-1">
+            <div className="flex items-center gap-1">
               <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-              <span className="text-xs text-white font-medium">{anime.rating}</span>
+              <span className="text-xs text-white font-medium">{anime.rating || 'N/A'}</span>
             </div>
           </div>
-
-          {/* Status Indicator */}
-          {anime.listStatus && (
-            <div className="flex-shrink-0">
-              {anime.listStatus === 'favorite' && (
-                <Heart className="h-4 w-4 text-pink-400" />
-              )}
-              {anime.listStatus === 'watching' && (
-                <Play className="h-4 w-4 text-cyan-400" />
-              )}
-              {anime.listStatus === 'completed' && (
-                <div className="w-4 h-4 bg-green-400 rounded-full flex items-center justify-center">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                </div>
-              )}
-              {anime.listStatus === 'plan-to-watch' && (
-                <Star className="h-4 w-4 text-purple-400" />
-              )}
-            </div>
-          )}
         </div>
       </Link>
     )
@@ -88,81 +72,88 @@ export function SearchAnimeCard({
   if (variant === 'list') {
     return (
       <Link href={`/anime/${anime.slug}`} className={cn("block group", className)}>
-        <div className="glass rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 transform hover:scale-[1.02]">
-          <div className="flex items-center gap-6">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-5 hover:bg-white/10 hover:border-primary-500/50 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-primary-500/10">
+          <div className="flex items-start gap-5">
             {/* Image */}
             <div className="relative flex-shrink-0">
-              <div className="w-20 h-28 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl overflow-hidden">
-                {anime.imageUrl ? (
+              <div className="w-24 h-36 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border border-white/10">
+                {(anime.coverImage || anime.imageUrl) ? (
                   <img 
-                    src={anime.imageUrl} 
+                    src={anime.coverImage || anime.imageUrl} 
                     alt={anime.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-gray-500 text-sm font-medium">No Image</span>
+                    <span className="text-gray-500 text-xs font-medium">No Image</span>
                   </div>
                 )}
-              </div>
-              {/* Rating Badge */}
-              <div className="absolute -top-2 -right-2">
-                <div className="bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-lg flex items-center gap-1">
-                  <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                  <span className="font-semibold">{anime.rating}</span>
+                
+                {/* Rating Badge - Shows on Hover */}
+                <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="bg-black/70 backdrop-blur-md border border-white/20 text-white text-xs px-2 py-1 rounded-lg flex items-center gap-1 shadow-lg">
+                    <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                    <span className="font-bold">{anime.rating || 'N/A'}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h3 className="text-xl font-bold text-white mb-1 group-hover:text-cyan-300 transition-colors">
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-white mb-2 group-hover:text-primary-300 transition-colors line-clamp-1">
                     {anime.title}
                   </h3>
-                  <div className="flex items-center gap-4 text-sm text-gray-400 mb-2">
-                    <span>{anime.year}</span>
-                    <span>•</span>
-                    <span>{anime.episodes} episodes</span>
-                    <span>•</span>
-                    <span>{anime.studio}</span>
+                  <div className="flex items-center gap-3 text-sm text-gray-400 mb-3">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3.5 w-3.5" />
+                      {anime.year || 'TBA'}
+                    </span>
+                    {anime.episodes && (
+                      <>
+                        <span>•</span>
+                        <span>{anime.episodes} eps</span>
+                      </>
+                    )}
+                    {anime.studio && (
+                      <>
+                        <span>•</span>
+                        <span className="truncate max-w-[150px]">{anime.studio}</span>
+                      </>
+                    )}
                   </div>
-                  {anime.genres && (
-                    <div className="flex items-center gap-2 mb-3">
-                      {anime.genres.slice(0, 3).map((genre, index) => (
+                  
+                  {/* Genres */}
+                  {anime.genres && anime.genres.length > 0 && (
+                    <div className="flex items-center gap-2 flex-wrap mb-3">
+                      {anime.genres.slice(0, 4).map((genre, index) => (
                         <span 
                           key={index}
-                          className="text-xs px-2 py-1 bg-white/10 text-gray-300 rounded-full"
+                          className="text-xs px-2.5 py-1 bg-white/10 text-gray-300 rounded-md border border-white/20"
                         >
                           {typeof genre === 'string' ? genre : genre.name}
                         </span>
                       ))}
                     </div>
                   )}
+
+                  {/* Description */}
+                  <p className="text-gray-400 text-sm line-clamp-2 leading-relaxed">
+                    {anime.description || 'An exciting anime adventure awaits...'}
+                  </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  {anime.listStatus && (
-                    <div className={cn(
-                      "text-xs px-2.5 py-1 rounded-lg border backdrop-blur-sm",
-                      anime.listStatus === 'favorite' && 'bg-gray-800/80 border-secondary-500/30 text-secondary-400',
-                      anime.listStatus === 'watching' && 'bg-gray-800/80 border-primary-500/30 text-primary-400',
-                      anime.listStatus === 'completed' && 'bg-gray-800/80 border-success-500/30 text-success-400',
-                      anime.listStatus === 'plan-to-watch' && 'bg-gray-800/80 border-planning-500/30 text-planning-400'
-                    )}>
-                      {anime.listStatus === 'favorite' && '❤️ Favorite'}
-                      {anime.listStatus === 'watching' && '▶️ Watching'}
-                      {anime.listStatus === 'completed' && '✅ Completed'}
-                      {anime.listStatus === 'plan-to-watch' && '⭐ Plan to Watch'}
-                    </div>
-                  )}
+
+                {/* Action Button */}
+                <div className="flex-shrink-0">
+                  <div className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-4 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center gap-2 whitespace-nowrap shadow-lg">
+                    <Play className="h-4 w-4" />
+                    <span className="text-sm font-medium">View</span>
+                  </div>
                 </div>
               </div>
-
-              {/* Description */}
-              <p className="text-gray-300 text-sm line-clamp-2">
-                {anime.description || 'No description available'}
-              </p>
             </div>
           </div>
         </div>
@@ -173,14 +164,15 @@ export function SearchAnimeCard({
   // Grid variant
   return (
     <Link href={`/anime/${anime.slug}`} className={cn("block group", className)}>
-      <div className="relative transform hover:scale-105 transition-all duration-300">
+      <div className="relative transform hover:scale-[1.03] transition-all duration-300 cursor-pointer">
         {/* Image Container */}
-        <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl overflow-hidden">
-          {anime.imageUrl ? (
+        <div className="relative aspect-[2/3] bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl overflow-hidden border border-white/10 group-hover:border-primary-500/50 transition-all duration-300">
+          {(anime.coverImage || anime.imageUrl) ? (
             <img 
-              src={anime.imageUrl} 
+              src={anime.coverImage || anime.imageUrl} 
               alt={anime.title}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              className="w-full h-full object-cover transition-all duration-300 group-hover:blur-sm"
+              loading="lazy"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
@@ -188,94 +180,53 @@ export function SearchAnimeCard({
             </div>
           )}
           
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          {/* Gradient Overlay - Always visible */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
           
-          {/* Rating */}
-          <div className="absolute top-3 left-3 z-10">
-            <div className="bg-black/50 backdrop-blur-sm text-white text-sm px-2 py-1 rounded-lg flex items-center gap-1">
+          {/* Rating Badge - Shows on Hover */}
+          <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="bg-black/70 backdrop-blur-md border border-white/20 text-white text-xs px-2 py-1 rounded-lg flex items-center gap-1 shadow-lg">
               <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-              <span className="font-semibold">{anime.rating}</span>
+              <span className="font-bold">{anime.rating || 'N/A'}</span>
             </div>
           </div>
 
-          {/* Status Badge - Subtle Dark Style */}
-          {anime.listStatus && (
-            <div className="absolute top-3 right-3 z-10">
-              {anime.listStatus === 'favorite' && (
-                <div className="bg-gray-800/80 backdrop-blur-md border border-secondary-500/30 text-secondary-400 text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5">
-                  <Heart className="h-3 w-3 text-secondary-500" />
-                  <span className="font-medium">Favorite</span>
-                </div>
-              )}
-              {anime.listStatus === 'watching' && (
-                <div className="bg-gray-800/80 backdrop-blur-md border border-primary-500/30 text-primary-400 text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5">
-                  <Play className="h-3 w-3 text-primary-500" />
-                  <span className="font-medium">Watching</span>
-                </div>
-              )}
-              {anime.listStatus === 'completed' && (
-                <div className="bg-gray-800/80 backdrop-blur-md border border-success-500/30 text-success-400 text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5">
-                  <CheckCircle className="h-3 w-3 text-success-500" />
-                  <span className="font-medium">Completed</span>
-                </div>
-              )}
-              {anime.listStatus === 'plan-to-watch' && (
-                <div className="bg-gray-800/80 backdrop-blur-md border border-planning-500/30 text-planning-400 text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5">
-                  <Star className="h-3 w-3 text-planning-500" />
-                  <span className="font-medium">Plan to Watch</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="flex items-center gap-2">
-              <Button 
-                size="sm" 
-                className="flex-1 bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 border border-white/20"
-              >
-                <Play className="h-4 w-4 mr-1" />
-                Watch
-              </Button>
-              <Button 
-                size="sm" 
-                variant="ghost"
-                className="bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 border border-white/20"
-              >
-                <Bookmark className="h-4 w-4" />
-              </Button>
+          {/* View Button - Shows on Hover - Subtle */}
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100">
+            <div className="bg-white/10 backdrop-blur-md text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 border border-white/30">
+              <Play className="h-3.5 w-3.5" />
+              View
             </div>
           </div>
-        </div>
 
-        {/* Content */}
-        <div className="mt-3">
-          <h3 className="text-white font-bold text-sm mb-1 group-hover:text-cyan-300 transition-colors line-clamp-2">
-            {anime.title}
-          </h3>
-          <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
-            <span>{anime.year}</span>
-            <span>{anime.episodes} eps</span>
-          </div>
-          
-          {/* Tags */}
-          <div className="flex items-center gap-1">
-            {anime.tags.slice(0, 2).map((tagId) => {
-              const tag = getTagById(tagId)
-              return tag ? (
-                <span 
-                  key={tagId}
-                  className={cn(
-                    "text-xs px-2 py-0.5 rounded-full font-medium",
-                    tag.color
-                  )}
-                >
-                  {tag.name}
-                </span>
-              ) : null
-            })}
+          {/* Bottom Info - Always visible */}
+          <div className="absolute bottom-0 left-0 right-0 p-3 z-10">
+            <h3 className="text-white font-bold text-sm mb-1.5 line-clamp-2 drop-shadow-lg">
+              {anime.title}
+            </h3>
+            <div className="flex items-center gap-2 text-xs text-gray-300 mb-2">
+              <span>{anime.year || 'TBA'}</span>
+              {anime.episodes && (
+                <>
+                  <span>•</span>
+                  <span>{anime.episodes} eps</span>
+                </>
+              )}
+            </div>
+            
+            {/* Genres */}
+            {anime.genres && anime.genres.length > 0 && (
+              <div className="flex items-center gap-1 flex-wrap">
+                {anime.genres.slice(0, 2).map((genre, index) => (
+                  <span 
+                    key={index}
+                    className="text-xs px-2 py-0.5 bg-white/10 backdrop-blur-sm text-gray-200 rounded-md border border-white/20"
+                  >
+                    {typeof genre === 'string' ? genre : genre.name}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
