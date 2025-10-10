@@ -155,52 +155,52 @@ export default function SignUpPage() {
 
   return (
     <RequireGuest>
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4 py-8">
         {/* Subtle Background */}
         <div className="absolute inset-0 overflow-hidden opacity-30">
           <div className="absolute top-0 -right-40 w-96 h-96 bg-secondary-500/30 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 -left-40 w-96 h-96 bg-primary-500/30 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="relative z-10 w-full max-w-md">
+        <div className="relative z-50 w-full max-w-md">
           {/* Back Link */}
           <Link 
             href="/dashboard"
-            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 group"
           >
             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
             Back
           </Link>
 
           {/* Main Card */}
-          <div className="glass rounded-3xl p-8 md:p-10 shadow-2xl border border-white/10">
+          <div className="glass rounded-3xl p-6 md:p-8 shadow-2xl border border-white/10">
             {/* Logo & Title */}
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-secondary-400 to-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-secondary-500/20">
-                <span className="text-white font-bold text-2xl">AS</span>
+            <div className="text-center mb-6">
+              <div className="w-14 h-14 bg-gradient-to-br from-secondary-400 to-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-secondary-500/20">
+                <span className="text-white font-bold text-xl">AS</span>
               </div>
-              <h1 className="text-3xl font-bold text-white mb-2">
+              <h1 className="text-2xl font-bold text-white mb-1">
                 Create Account
               </h1>
-              <p className="text-gray-400">
+              <p className="text-gray-400 text-sm">
                 Join AnimeSenpai today
               </p>
             </div>
 
             {/* Error Messages */}
             {error && (
-              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
                 <p className="text-red-400 text-sm">{error}</p>
               </div>
             )}
 
             {formErrors.terms && (
-              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
                 <p className="text-red-400 text-sm">{formErrors.terms}</p>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3.5">
               {/* Username Field */}
               <div>
                 <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
@@ -214,7 +214,7 @@ export default function SignUpPage() {
                     type="text"
                     value={formData.username}
                     onChange={handleInputChange}
-                    className={`w-full pl-12 pr-12 py-3.5 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all ${
+                    className={`w-full pl-12 pr-12 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all ${
                       formErrors.username 
                         ? 'border-red-500/50' 
                         : usernameStatus === 'available'
@@ -259,7 +259,7 @@ export default function SignUpPage() {
                     type="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className={`w-full pl-12 pr-4 py-3.5 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all ${
+                    className={`w-full pl-12 pr-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all ${
                       formErrors.email 
                         ? 'border-red-500/50' 
                         : 'border-white/10'
@@ -286,7 +286,7 @@ export default function SignUpPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={handleInputChange}
-                    className={`w-full pl-12 pr-12 py-3.5 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all ${
+                    className={`w-full pl-12 pr-12 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all ${
                       formErrors.password 
                         ? 'border-red-500/50' 
                         : 'border-white/10'
@@ -308,7 +308,7 @@ export default function SignUpPage() {
                 
                 {/* Password Requirements */}
                 {formData.password && (
-                  <div className="mt-3 grid grid-cols-2 gap-2">
+                  <div className="mt-2 grid grid-cols-2 gap-1.5">
                     <div className={`flex items-center gap-1.5 text-xs ${passwordChecks.length ? 'text-green-400' : 'text-gray-500'}`}>
                       {passwordChecks.length ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
                       <span>8+ characters</span>
@@ -342,7 +342,7 @@ export default function SignUpPage() {
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className={`w-full pl-12 pr-12 py-3.5 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all ${
+                    className={`w-full pl-12 pr-12 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all ${
                       formErrors.confirmPassword 
                         ? 'border-red-500/50' 
                         : isPasswordMatch
@@ -373,14 +373,14 @@ export default function SignUpPage() {
               </div>
 
               {/* Terms Agreement */}
-              <div className="flex items-start gap-3 pt-2">
+              <div className="flex items-start gap-2.5 pt-1">
                 <Checkbox
                   id="terms"
                   checked={agreeToTerms}
                   onCheckedChange={(checked) => setAgreeToTerms(checked === true)}
                   className="mt-0.5"
                 />
-                <label htmlFor="terms" className="text-sm text-gray-300 cursor-pointer select-none">
+                <label htmlFor="terms" className="text-xs text-gray-300 cursor-pointer select-none">
                   I agree to the{' '}
                   <Link href="/terms" className="text-primary-400 hover:text-primary-300 transition-colors">
                     Terms
@@ -396,7 +396,7 @@ export default function SignUpPage() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-secondary-500 to-primary-500 hover:from-secondary-600 hover:to-primary-600 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-secondary-500/25 mt-6"
+                className="w-full bg-gradient-to-r from-secondary-500 to-primary-500 hover:from-secondary-600 hover:to-primary-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-secondary-500/25 mt-4"
               >
                 {isLoading ? (
                   <span className="flex items-center justify-center gap-2">
@@ -409,7 +409,7 @@ export default function SignUpPage() {
               </Button>
 
               {/* Sign In Link */}
-              <div className="text-center pt-4">
+              <div className="text-center pt-3">
                 <p className="text-gray-400 text-sm">
                   Already have an account?{' '}
                   <Link 
