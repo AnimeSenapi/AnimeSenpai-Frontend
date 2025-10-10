@@ -1,12 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Users, UserPlus, UserCheck } from 'lucide-react'
 import { FollowList } from '../../../components/social/FollowList'
 import { useAuth } from '../../lib/auth-context'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '../../../components/ui/button'
+
+// Force dynamic rendering to prevent SSR issues
+export const dynamic = 'force-dynamic'
 
 type TabType = 'friends' | 'followers' | 'following'
 
@@ -15,9 +18,15 @@ export default function FriendsPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<TabType>('friends')
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated (in useEffect to avoid SSR issues)
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/auth/signin')
+    }
+  }, [authLoading, isAuthenticated, router])
+
+  // Show nothing while redirecting
   if (!authLoading && !isAuthenticated) {
-    router.push('/auth/signin')
     return null
   }
 
