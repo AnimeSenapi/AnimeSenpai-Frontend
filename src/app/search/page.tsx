@@ -223,7 +223,7 @@ export default function SearchPage() {
     }
     if (genre) {
       setSelectedGenres([genre])
-      setShowFilters(true) // Show filters panel when coming from a genre click
+      // Keep filters closed when coming from a genre click
     }
   }, [searchParams])
 

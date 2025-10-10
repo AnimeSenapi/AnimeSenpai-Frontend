@@ -247,21 +247,23 @@ export function MyListAnimeCard({
             <span>{anime.episodes} eps</span>
           </div>
           
-          {/* Tags */}
+          {/* Tags - Clickable */}
           <div className="flex items-center gap-1 mt-2">
             {anime.tags && anime.tags.length > 0 ? (
               anime.tags.slice(0, 2).map((tagId) => {
                 const tag = getTagById(tagId)
                 return tag ? (
-                  <span 
+                  <Link
                     key={tagId}
+                    href={`/search?genre=${encodeURIComponent(tag.name)}`}
                     className={cn(
-                      "text-xs px-2 py-0.5 rounded-full font-medium",
+                      "text-xs px-2 py-0.5 rounded-full font-medium hover:opacity-80 transition-opacity",
                       tag.color
                     )}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     {tag.name}
-                  </span>
+                  </Link>
                 ) : null
               })
             ) : (

@@ -214,17 +214,22 @@ export function SearchAnimeCard({
               )}
             </div>
             
-            {/* Genres */}
+            {/* Genres - Clickable */}
             {anime.genres && anime.genres.length > 0 && (
               <div className="flex items-center gap-1 flex-wrap">
-                {anime.genres.slice(0, 2).map((genre, index) => (
-                  <span 
-                    key={index}
-                    className="text-xs px-2 py-0.5 bg-white/10 backdrop-blur-sm text-gray-200 rounded-md border border-white/20"
-                  >
-                    {typeof genre === 'string' ? genre : genre.name}
-                  </span>
-                ))}
+                {anime.genres.slice(0, 2).map((genre, index) => {
+                  const genreName = typeof genre === 'string' ? genre : genre.name
+                  return (
+                    <Link
+                      key={index}
+                      href={`/search?genre=${encodeURIComponent(genreName)}`}
+                      className="text-xs px-2 py-0.5 bg-white/10 backdrop-blur-sm text-gray-200 rounded-md border border-white/20 hover:bg-primary-500/20 hover:border-primary-400 transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {genreName}
+                    </Link>
+                  )
+                })}
               </div>
             )}
           </div>

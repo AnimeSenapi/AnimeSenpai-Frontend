@@ -120,15 +120,20 @@ export function AnimeCard({
         <div className="absolute bottom-0 left-0 right-0 p-3 z-[2]">
           <h3 className="font-semibold text-white text-sm mb-2 truncate drop-shadow-lg">{title}</h3>
           
-          {/* Subtle Genre Display */}
+          {/* Subtle Genre Display - Clickable */}
           <div className="flex flex-wrap gap-1 mb-2 min-h-[16px]">
             {genreTags.slice(0, 2).map((item: any, index: number) => {
               // Handle both genre objects and tag strings
               const genreName = typeof item === 'object' ? item.name : getTagById(item)?.name
               return genreName ? (
-                <span key={index} className="text-xs text-gray-400">
+                <Link 
+                  key={index} 
+                  href={`/search?genre=${encodeURIComponent(genreName)}`}
+                  className="text-xs text-gray-400 hover:text-primary-400 transition-colors hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {genreName}
-                </span>
+                </Link>
               ) : null
             })}
             {genreTags.length > 2 && (
