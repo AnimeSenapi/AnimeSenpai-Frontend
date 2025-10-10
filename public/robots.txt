@@ -1,0 +1,36 @@
+# AnimeSenpai - Robots.txt
+# Allow all search engines to crawl the site
+
+User-agent: *
+Allow: /
+
+# Disallow authenticated pages
+Disallow: /auth/
+Disallow: /user/settings
+Disallow: /mylist
+Disallow: /onboarding
+
+# Allow public pages
+Allow: /anime/
+Allow: /search
+Allow: /users/
+
+# Sitemap
+Sitemap: https://animesenpai.app/sitemap.xml
+
+# Crawl-delay for polite bots
+Crawl-delay: 1
+
+# Block bad bots
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: SemrushBot
+Crawl-delay: 10
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: dotbot
+Disallow: /
+
