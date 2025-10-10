@@ -225,14 +225,20 @@ export default function SearchPage() {
     if (cat) {
       setCategory(cat)
     }
+    // Capitalize first letter for display, but filtering is case-insensitive
     if (genre) {
-      setSelectedGenres([genre])
+      const capitalizedGenre = genre.charAt(0).toUpperCase() + genre.slice(1).toLowerCase()
+      setSelectedGenres([capitalizedGenre])
     }
     if (year) {
       setSelectedYears([year])
     }
     if (studio) {
-      setSelectedStudios([studio])
+      // Capitalize each word for display (e.g., "mappa" → "MAPPA", "wit studio" → "Wit Studio")
+      const capitalizedStudio = studio.split(' ').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      ).join(' ')
+      setSelectedStudios([capitalizedStudio])
     }
     // Keep filters closed when coming from advanced search
   }, [searchParams])
@@ -257,19 +263,21 @@ export default function SearchPage() {
       )
     }
 
-    // Genre filter
+    // Genre filter (case-insensitive)
     if (selectedGenres.length > 0) {
       results = results.filter(anime => 
         anime.genres && selectedGenres.some(genre => 
-          anime.genres?.some((g: any) => g.name === genre)
+          anime.genres?.some((g: any) => g.name.toLowerCase() === genre.toLowerCase())
         )
       )
     }
 
-    // Studio filter
+    // Studio filter (case-insensitive)
     if (selectedStudios.length > 0) {
       results = results.filter(anime => 
-        anime.studio && selectedStudios.includes(anime.studio)
+        anime.studio && selectedStudios.some(studio => 
+          anime.studio.toLowerCase() === studio.toLowerCase()
+        )
       )
     }
 
