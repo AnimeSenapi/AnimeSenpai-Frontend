@@ -64,7 +64,7 @@ export default function SignInPage() {
 
   return (
     <RequireGuest>
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4 pt-32">
         {/* Subtle Background */}
         <div className="absolute inset-0 overflow-hidden opacity-30">
           <div className="absolute top-0 -right-40 w-96 h-96 bg-primary-500/30 rounded-full blur-3xl"></div>

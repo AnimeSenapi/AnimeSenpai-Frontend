@@ -155,14 +155,14 @@ export default function SignUpPage() {
 
   return (
     <RequireGuest>
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4 pt-32 pb-8">
         {/* Subtle Background */}
         <div className="absolute inset-0 overflow-hidden opacity-30">
           <div className="absolute top-0 -right-40 w-96 h-96 bg-secondary-500/30 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 -left-40 w-96 h-96 bg-primary-500/30 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="relative z-10 w-full max-w-md">
+        <div className="relative z-10 w-full max-w-lg">
           {/* Back Link */}
           <Link 
             href="/dashboard"
