@@ -42,6 +42,8 @@ export function AnimeCard({
   onLike,
   isBookmarked = false
 }: AnimeCardProps) {
+  const router = useRouter()
+  
   if (!anime) return null
   
   // Handle both API format (genres array of objects) and old format (tags array of strings)
@@ -126,14 +128,17 @@ export function AnimeCard({
               // Handle both genre objects and tag strings
               const genreName = typeof item === 'object' ? item.name : getTagById(item)?.name
               return genreName ? (
-                <Link 
+                <span
                   key={index} 
-                  href={`/search?genre=${encodeURIComponent(genreName)}`}
-                  className="text-xs text-gray-400 hover:text-primary-400 transition-colors hover:underline"
-                  onClick={(e) => e.stopPropagation()}
+                  className="text-xs text-gray-400 hover:text-primary-400 transition-colors hover:underline cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    router.push(`/search?genre=${encodeURIComponent(genreName)}`)
+                  }}
                 >
                   {genreName}
-                </Link>
+                </span>
               ) : null
             })}
             {genreTags.length > 2 && (

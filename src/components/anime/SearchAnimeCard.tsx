@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { cn } from '../../app/lib/utils'
 import { Anime } from '../../types/anime'
 import { getTagById } from '../../types/tags'
@@ -19,6 +20,8 @@ export function SearchAnimeCard({
   variant = 'grid', 
   className 
 }: SearchAnimeCardProps) {
+  const router = useRouter()
+  
   // Handle both old format (tags array) and new format (genres array)
   const firstTag = anime.genres?.[0] || anime.tags?.[0]
   const tag = typeof firstTag === 'string' ? getTagById(firstTag) : firstTag || { name: 'Anime', color: 'bg-gray-500/20 text-gray-400' }
@@ -220,14 +223,17 @@ export function SearchAnimeCard({
                 {anime.genres.slice(0, 2).map((genre, index) => {
                   const genreName = typeof genre === 'string' ? genre : genre.name
                   return (
-                    <Link
+                    <span
                       key={index}
-                      href={`/search?genre=${encodeURIComponent(genreName)}`}
-                      className="text-xs px-2 py-0.5 bg-white/10 backdrop-blur-sm text-gray-200 rounded-md border border-white/20 hover:bg-primary-500/20 hover:border-primary-400 transition-colors"
-                      onClick={(e) => e.stopPropagation()}
+                      className="text-xs px-2 py-0.5 bg-white/10 backdrop-blur-sm text-gray-200 rounded-md border border-white/20 hover:bg-primary-500/20 hover:border-primary-400 transition-colors cursor-pointer"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        router.push(`/search?genre=${encodeURIComponent(genreName)}`)
+                      }}
                     >
                       {genreName}
-                    </Link>
+                    </span>
                   )
                 })}
               </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { cn } from '../../app/lib/utils'
 import { Anime } from '../../types/anime'
 import { getTagById } from '../../types/tags'
@@ -253,17 +254,20 @@ export function MyListAnimeCard({
               anime.tags.slice(0, 2).map((tagId) => {
                 const tag = getTagById(tagId)
                 return tag ? (
-                  <Link
+                  <span
                     key={tagId}
-                    href={`/search?genre=${encodeURIComponent(tag.name)}`}
                     className={cn(
-                      "text-xs px-2 py-0.5 rounded-full font-medium hover:opacity-80 transition-opacity",
+                      "text-xs px-2 py-0.5 rounded-full font-medium hover:opacity-80 transition-opacity cursor-pointer",
                       tag.color
                     )}
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      router.push(`/search?genre=${encodeURIComponent(tag.name)}`)
+                    }}
                   >
                     {tag.name}
-                  </Link>
+                  </span>
                 ) : null
               })
             ) : (
