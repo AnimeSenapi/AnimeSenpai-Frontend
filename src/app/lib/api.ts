@@ -66,7 +66,7 @@ async function trpcQuery<TOutput>(path: string, init?: RequestInit): Promise<TOu
         ...getAuthHeaders(),
         ...(init?.headers || {}),
       },
-      credentials: 'omit',
+      credentials: 'include',
       ...init,
     })
 
@@ -129,7 +129,7 @@ async function trpcMutation<TInput, TOutput>(path: string, input?: TInput, init?
         ...(init?.headers || {}),
       },
       body: input !== undefined ? JSON.stringify(input) : undefined,
-      credentials: 'omit',
+      credentials: 'include',
       ...init,
     })
 
