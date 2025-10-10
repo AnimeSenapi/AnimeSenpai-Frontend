@@ -375,8 +375,8 @@ export function SearchBar({
 
       {/* Dropdown - Polished Design */}
       {isOpen && showDropdown && (
-        <div className="absolute top-full left-0 right-0 mt-3 bg-[#0a0a0a] rounded-xl shadow-2xl shadow-black/80 z-50 max-h-96 overflow-hidden">
-          <div className="overflow-y-auto max-h-96 custom-scrollbar">
+        <div className="absolute top-full left-0 right-0 mt-3 bg-[#0a0a0a] rounded-xl shadow-2xl shadow-black/80 z-50 max-h-96 overflow-hidden min-w-[300px]">
+          <div className="overflow-y-auto overflow-x-hidden max-h-96 custom-scrollbar">
             {searchQuery.trim() ? (
               // Search Results
               <div className="p-2">
@@ -473,10 +473,11 @@ export function SearchBar({
             <div className="p-2">
               {/* Compact Search Tips */}
               <div className="mb-2">
-                <div className="px-3 py-2 text-[10px] text-gray-500">
-                  💡 Try: <kbd className="px-1.5 py-0.5 mx-1 bg-white/5 border border-white/10 rounded font-mono">@user</kbd>
-                  <kbd className="px-1.5 py-0.5 mx-1 bg-white/5 border border-white/10 rounded font-mono">genre:action</kbd>
-                  <kbd className="px-1.5 py-0.5 mx-1 bg-white/5 border border-white/10 rounded font-mono">year:2024</kbd>
+                <div className="px-3 py-2 text-[10px] text-gray-500 flex flex-wrap items-center gap-1">
+                  <span>💡 Try:</span>
+                  <kbd className="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded font-mono whitespace-nowrap">@user</kbd>
+                  <kbd className="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded font-mono whitespace-nowrap">genre:action</kbd>
+                  <kbd className="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded font-mono whitespace-nowrap">year:2024</kbd>
                 </div>
               </div>
 
