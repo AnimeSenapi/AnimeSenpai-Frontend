@@ -209,11 +209,15 @@ export default function SearchPage() {
     loadAnime()
   }, [])
 
-  // Handle URL parameters
+  // Handle URL parameters (including advanced search syntax)
   useEffect(() => {
     const query = searchParams.get('q')
     const cat = searchParams.get('category')
     const genre = searchParams.get('genre')
+    const year = searchParams.get('year')
+    const studio = searchParams.get('studio')
+    const status = searchParams.get('status')
+    const type = searchParams.get('type')
     
     if (query) {
       setSearchQuery(query)
@@ -223,8 +227,14 @@ export default function SearchPage() {
     }
     if (genre) {
       setSelectedGenres([genre])
-      // Keep filters closed when coming from a genre click
     }
+    if (year) {
+      setSelectedYears([year])
+    }
+    if (studio) {
+      setSelectedStudios([studio])
+    }
+    // Keep filters closed when coming from advanced search
   }, [searchParams])
 
   // Filter and search logic

@@ -20,7 +20,7 @@ interface SearchBarProps {
 
 export function SearchBar({ 
   className = '', 
-  placeholder = 'Search anime, studios, genres...',
+  placeholder = 'Try: @user, genre:action, year:2024...',
   showDropdown = true,
   size = 'md',
   variant = 'navbar',
@@ -35,6 +35,7 @@ export function SearchBar({
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const [isSearching, setIsSearching] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
+  const [detectedFilters, setDetectedFilters] = useState<string[]>([])
   
   const router = useRouter()
   const searchRef = useRef<HTMLDivElement>(null)
@@ -79,6 +80,37 @@ export function SearchBar({
     }, 150) // 150ms debounce
   }, [])
 
+  // Detect advanced search syntax in real-time
+  useEffect(() => {
+    const filters: string[] = []
+    
+    if (searchQuery.startsWith('@')) {
+      filters.push('👤 User Search')
+    }
+    
+    if (searchQuery.includes('genre:') || searchQuery.includes('g:')) {
+      filters.push('🎭 Genre Filter')
+    }
+    
+    if (searchQuery.includes('year:') || searchQuery.includes('y:')) {
+      filters.push('📅 Year Filter')
+    }
+    
+    if (searchQuery.includes('studio:') || searchQuery.includes('s:')) {
+      filters.push('🎬 Studio Filter')
+    }
+    
+    if (searchQuery.includes('status:')) {
+      filters.push('📊 Status Filter')
+    }
+    
+    if (searchQuery.includes('type:') || searchQuery.includes('t:')) {
+      filters.push('📺 Type Filter')
+    }
+    
+    setDetectedFilters(filters)
+  }, [searchQuery])
+
   // Filter suggestions based on search query with debounce
   useEffect(() => {
     debouncedFilter(searchQuery)
@@ -110,16 +142,88 @@ export function SearchBar({
     }
   }, [])
 
+  const parseAdvancedSearch = (query: string): { type: string; value: string; params: URLSearchParams } => {
+    const trimmed = query.trim()
+    const params = new URLSearchParams()
+    
+    // Check for user search (@username)
+    if (trimmed.startsWith('@')) {
+      const username = trimmed.slice(1).trim()
+      return { type: 'user', value: username, params }
+    }
+    
+    // Check for advanced filters (genre:, year:, studio:, status:, type:)
+    const filterRegex = /(\w+):([^\s]+)/g
+    let match
+    let hasFilters = false
+    let remainingQuery = trimmed
+    
+    while ((match = filterRegex.exec(trimmed)) !== null) {
+      const [fullMatch, filterType, filterValue] = match
+      hasFilters = true
+      
+      // Remove the filter from the remaining query
+      remainingQuery = remainingQuery.replace(fullMatch, '').trim()
+      
+      switch (filterType.toLowerCase()) {
+        case 'genre':
+        case 'g':
+          params.set('genre', filterValue)
+          break
+        case 'year':
+        case 'y':
+          params.set('year', filterValue)
+          break
+        case 'studio':
+        case 's':
+          params.set('studio', filterValue)
+          break
+        case 'status':
+          params.set('status', filterValue)
+          break
+        case 'type':
+        case 't':
+          params.set('type', filterValue)
+          break
+        default:
+          // Unknown filter, add to text search
+          remainingQuery += ` ${fullMatch}`
+          break
+      }
+    }
+    
+    // Add remaining text as general search query
+    if (remainingQuery) {
+      params.set('q', remainingQuery)
+    }
+    
+    if (hasFilters || remainingQuery) {
+      return { type: 'anime', value: trimmed, params }
+    }
+    
+    // Default: regular anime search
+    params.set('q', trimmed)
+    return { type: 'anime', value: trimmed, params }
+  }
+
   const handleSearch = (query: string) => {
     if (query.trim()) {
+      const { type, value, params } = parseAdvancedSearch(query)
+      
       // Save to recent searches
       const newRecent = [query, ...recentSearches.filter(s => s !== query)].slice(0, 5)
       setRecentSearches(newRecent)
       localStorage.setItem('recentSearches', JSON.stringify(newRecent))
       
-      // Navigate to search page
-      router.push(`/search?q=${encodeURIComponent(query)}`)
+      // Navigate based on search type
+      if (type === 'user') {
+        router.push(`/users/${encodeURIComponent(value)}`)
+      } else {
+        router.push(`/search?${params.toString()}`)
+      }
+      
       setIsOpen(false)
+      setSearchQuery('')
     }
   }
 
@@ -227,6 +331,20 @@ export function SearchBar({
         )}
       </div>
 
+      {/* Active Filters Display */}
+      {detectedFilters.length > 0 && isFocused && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {detectedFilters.map((filter, index) => (
+            <div 
+              key={index}
+              className="text-xs px-2 py-1 bg-primary-500/20 text-primary-300 rounded-md border border-primary-400/30 animate-in fade-in slide-in-from-top-1"
+            >
+              {filter}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Dropdown - Polished Design */}
       {isOpen && showDropdown && (
         <div className="absolute top-full left-0 right-0 mt-3 bg-[#0a0a0a] rounded-xl shadow-2xl shadow-black/80 z-50 max-h-96 overflow-hidden">
@@ -275,10 +393,62 @@ export function SearchBar({
             ) : (
             // Default suggestions
             <div className="p-2">
+              {/* Search Tips - Clickable Examples */}
+              <div className="mb-3">
+                <div className="px-4 py-2 text-[11px] text-gray-500 font-semibold uppercase tracking-wider">
+                  Quick Search Syntax
+                </div>
+                <div className="px-2 py-2 space-y-1">
+                  <button
+                    onClick={() => {
+                      setSearchQuery('@')
+                      inputRef.current?.focus()
+                    }}
+                    className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    <kbd className="px-2 py-1 bg-white/5 border border-white/10 rounded font-mono text-[10px] min-w-[80px]">@username</kbd>
+                    <span>Find users</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSearchQuery('genre:action')
+                      inputRef.current?.focus()
+                    }}
+                    className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    <kbd className="px-2 py-1 bg-white/5 border border-white/10 rounded font-mono text-[10px] min-w-[80px]">genre:action</kbd>
+                    <span>Filter by genre</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSearchQuery('year:2024')
+                      inputRef.current?.focus()
+                    }}
+                    className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    <kbd className="px-2 py-1 bg-white/5 border border-white/10 rounded font-mono text-[10px] min-w-[80px]">year:2024</kbd>
+                    <span>Filter by year</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSearchQuery('studio:mappa')
+                      inputRef.current?.focus()
+                    }}
+                    className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    <kbd className="px-2 py-1 bg-white/5 border border-white/10 rounded font-mono text-[10px] min-w-[80px]">studio:mappa</kbd>
+                    <span>Filter by studio</span>
+                  </button>
+                  <div className="px-2 py-1 text-[10px] text-gray-600">
+                    💡 Combine filters: <span className="font-mono text-gray-500">genre:action year:2024</span>
+                  </div>
+                </div>
+              </div>
+
               {/* Popular Anime */}
               {popularAnime.length > 0 && (
                 <div className="mb-2">
-                  <div className="px-4 py-2 text-[11px] text-gray-500 font-semibold uppercase tracking-wider">
+                  <div className="px-4 py-2 text-[11px] text-gray-500 font-semibold uppercase tracking-wider border-t border-gray-800/50 pt-3">
                     Popular
                   </div>
                   <div className="space-y-1 px-1">
