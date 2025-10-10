@@ -95,7 +95,7 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
           <div className="absolute bottom-0 -left-40 w-96 h-96 bg-secondary-500/30 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="relative z-50 w-full max-w-md">
+        <div className="relative z-10 w-full max-w-md">
           <div className="glass rounded-3xl p-12 text-center shadow-2xl border border-white/10">
             <Loader2 className="h-10 w-10 text-primary-400 animate-spin mx-auto mb-4" />
             <p className="text-gray-400">Validating reset link...</p>
@@ -113,7 +113,7 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
           <div className="absolute bottom-0 -left-40 w-96 h-96 bg-orange-500/30 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="relative z-50 w-full max-w-md">
+        <div className="relative z-10 w-full max-w-md">
           <Link 
             href="/auth/signin"
             className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
@@ -168,7 +168,7 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
           <div className="absolute bottom-0 -left-40 w-96 h-96 bg-primary-500/30 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="relative z-50 w-full max-w-md">
+        <div className="relative z-10 w-full max-w-md">
           <Link 
             href="/auth/signin"
             className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
@@ -214,7 +214,7 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
           <div className="absolute bottom-0 -left-40 w-96 h-96 bg-secondary-500/30 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="relative z-50 w-full max-w-md">
+        <div className="relative z-10 w-full max-w-md">
           <Link 
             href="/auth/signin"
             className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"

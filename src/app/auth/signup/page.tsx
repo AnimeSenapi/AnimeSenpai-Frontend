@@ -162,7 +162,7 @@ export default function SignUpPage() {
           <div className="absolute bottom-0 -left-40 w-96 h-96 bg-primary-500/30 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="relative z-50 w-full max-w-md">
+        <div className="relative z-10 w-full max-w-md">
           {/* Back Link */}
           <Link 
             href="/dashboard"

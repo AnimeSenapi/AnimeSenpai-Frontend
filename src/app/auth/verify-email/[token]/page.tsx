@@ -60,7 +60,7 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
           <div className="absolute bottom-0 -left-40 w-96 h-96 bg-secondary-500/30 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="relative z-50 w-full max-w-md">
+        <div className="relative z-10 w-full max-w-md">
           <div className="glass rounded-3xl p-12 text-center shadow-2xl border border-white/10">
             <div className="w-16 h-16 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <Mail className="h-8 w-8 text-white animate-pulse" />
@@ -81,7 +81,7 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
           <div className="absolute bottom-0 -left-40 w-96 h-96 bg-orange-500/30 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="relative z-50 w-full max-w-md">
+        <div className="relative z-10 w-full max-w-md">
           <Link 
             href="/auth/signin"
             className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
@@ -136,7 +136,7 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
           <div className="absolute bottom-0 -left-40 w-96 h-96 bg-primary-500/30 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="relative z-50 w-full max-w-md">
+        <div className="relative z-10 w-full max-w-md">
           <Link 
             href="/auth/signin"
             className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
