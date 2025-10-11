@@ -147,6 +147,7 @@ export default function AnimePage() {
     }
 
     fetchAnime()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, isAuthenticated])
 
   const fetchListStatus = async (animeId: string) => {

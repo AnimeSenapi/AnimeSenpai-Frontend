@@ -26,6 +26,18 @@ const nextConfig = {
         protocol: 'https',
         hostname: '**.imagekit.io', // Alternative CDN
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.myanimelist.net', // MyAnimeList CDN for anime images
+      },
+      {
+        protocol: 'https',
+        hostname: '**.githubusercontent.com', // GitHub avatars
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.ytimg.com', // YouTube thumbnails
+      },
     ],
     formats: ['image/webp', 'image/avif'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],

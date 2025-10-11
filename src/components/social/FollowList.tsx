@@ -34,6 +34,7 @@ export function FollowList({ userId, type, limit = 20 }: FollowListProps) {
 
   useEffect(() => {
     fetchUsers()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, type, limit])
 
   const fetchUsers = async () => {
@@ -193,4 +194,3 @@ export function FollowList({ userId, type, limit = 20 }: FollowListProps) {
     </div>
   )
 }
-

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '../ui/card'
 import { Badge } from '../ui/badge'
@@ -74,11 +75,13 @@ export function AnimeCard({
       <div className="group relative glass rounded-xl overflow-hidden hover:bg-white/10 transition-all duration-300 hover:scale-[1.02]">
         <div className="aspect-[2/3] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center relative overflow-hidden">
           {anime.coverImage ? (
-            <img 
+            <Image 
               src={anime.coverImage} 
               alt={title}
-              className="w-full h-full object-cover absolute inset-0"
-              loading="lazy"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              priority={false}
             />
           ) : (
             <div className="text-gray-600 text-4xl">🎬</div>
@@ -191,11 +194,13 @@ export function AnimeCard({
       <div className="flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
         <div className="w-10 h-14 bg-gradient-to-br from-gray-700 to-gray-800 rounded-md flex items-center justify-center overflow-hidden relative">
           {anime.coverImage ? (
-            <img 
+            <Image 
               src={anime.coverImage} 
               alt={title}
-              className="w-full h-full object-cover"
-              loading="lazy"
+              width={40}
+              height={56}
+              className="object-cover"
+              sizes="40px"
             />
           ) : (
             <div className="text-xs text-gray-300 font-bold">{year || 'TBA'}</div>
@@ -248,11 +253,12 @@ export function AnimeCard({
       <div className="group relative glass rounded-lg overflow-hidden hover:bg-white/10 transition-all duration-300 hover:scale-[1.02]">
         <div className="aspect-[3/4] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center relative overflow-hidden">
           {anime.coverImage ? (
-            <img 
+            <Image 
               src={anime.coverImage} 
               alt={title}
-              className="w-full h-full object-cover absolute inset-0"
-              loading="lazy"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             />
           ) : (
             <div className="text-gray-600 text-2xl">🎬</div>
@@ -308,11 +314,13 @@ export function AnimeCard({
       <div className="flex items-center gap-2 p-1.5 rounded-md bg-white/5 hover:bg-white/10 transition-colors">
         <div className="w-6 h-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded flex items-center justify-center overflow-hidden relative">
           {anime.coverImage ? (
-            <img 
+            <Image 
               src={anime.coverImage} 
               alt={title}
-              className="w-full h-full object-cover"
-              loading="lazy"
+              width={24}
+              height={32}
+              className="object-cover"
+              sizes="24px"
             />
           ) : (
             <div className="text-xs text-gray-300 font-bold">{year || 'TBA'}</div>

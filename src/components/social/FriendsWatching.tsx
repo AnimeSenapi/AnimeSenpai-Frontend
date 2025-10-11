@@ -35,6 +35,7 @@ export function FriendsWatching() {
     } else {
       setIsLoading(false)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
   const fetchFriendRecommendations = async () => {
@@ -182,4 +183,3 @@ export function FriendsWatching() {
     </div>
   )
 }
-

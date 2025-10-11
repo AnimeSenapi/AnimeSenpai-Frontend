@@ -32,6 +32,7 @@ export function ProtectedRoute({
       router.push('/dashboard')
       return
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, isLoading, requireAuth, requireGuest, router])
 
   // Show loading state while checking authentication

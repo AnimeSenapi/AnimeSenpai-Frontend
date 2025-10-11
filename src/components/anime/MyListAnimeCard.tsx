@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { cn } from '../../app/lib/utils'
 import { Anime } from '../../types/anime'
@@ -77,13 +78,14 @@ export function MyListAnimeCard({
           <div className="flex items-center gap-6">
             {/* Image */}
             <div className="relative flex-shrink-0">
-              <div className="w-24 h-32 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl overflow-hidden">
+              <div className="w-24 h-32 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl overflow-hidden relative">
                 {(anime.coverImage || anime.imageUrl) ? (
-                  <img 
+                  <Image 
                     src={anime.coverImage || anime.imageUrl} 
                     alt={anime.title}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
+                    fill
+                    className="object-cover"
+                    sizes="96px"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -182,11 +184,12 @@ export function MyListAnimeCard({
         {/* Image Container */}
         <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl overflow-hidden">
           {(anime.coverImage || anime.imageUrl) ? (
-            <img 
+            <Image 
               src={anime.coverImage || anime.imageUrl} 
               alt={anime.title}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-              loading="lazy"
+              fill
+              className="object-cover group-hover:scale-110 transition-transform duration-500"
+              sizes="(max-width: 768px) 50vw, 33vw"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">

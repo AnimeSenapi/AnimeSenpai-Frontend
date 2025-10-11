@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { cn } from '../../app/lib/utils'
 import { Anime } from '../../types/anime'
@@ -32,13 +33,14 @@ export function SearchAnimeCard({
         <div className="flex items-center gap-3 px-2 py-2 hover:bg-white/5 rounded-lg transition-all duration-200">
           {/* Image - Clean without rating badge */}
           <div className="relative flex-shrink-0">
-            <div className="w-14 h-20 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border border-white/10 group-hover:border-primary-500/40 transition-colors">
+            <div className="w-14 h-20 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border border-white/10 group-hover:border-primary-500/40 transition-colors relative">
               {(anime.coverImage || anime.imageUrl) ? (
-                <img 
+                <Image 
                   src={anime.coverImage || anime.imageUrl} 
                   alt={anime.title}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
+                  fill
+                  className="object-cover"
+                  sizes="56px"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
@@ -93,13 +95,14 @@ export function SearchAnimeCard({
           <div className="flex items-start gap-5">
             {/* Image */}
             <div className="relative flex-shrink-0">
-              <div className="w-24 h-36 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border border-white/10">
+              <div className="w-24 h-36 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border border-white/10 relative">
                 {(anime.coverImage || anime.imageUrl) ? (
-                  <img 
+                  <Image 
                     src={anime.coverImage || anime.imageUrl} 
                     alt={anime.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    loading="lazy"
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    sizes="96px"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -185,11 +188,12 @@ export function SearchAnimeCard({
         {/* Image Container */}
         <div className="relative aspect-[2/3] bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl overflow-hidden border border-white/10 group-hover:border-primary-500/50 transition-all duration-300">
           {(anime.coverImage || anime.imageUrl) ? (
-            <img 
+            <Image 
               src={anime.coverImage || anime.imageUrl} 
               alt={anime.title}
-              className="w-full h-full object-cover transition-all duration-300 group-hover:blur-sm"
-              loading="lazy"
+              fill
+              className="object-cover transition-all duration-300 group-hover:blur-sm"
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">

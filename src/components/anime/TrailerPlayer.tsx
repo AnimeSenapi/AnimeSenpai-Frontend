@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
+import Image from 'next/image'
 import { Play, X } from 'lucide-react'
 import { Button } from '../ui/button'
 
@@ -56,14 +57,12 @@ export function TrailerPlayer({ trailerUrl, title, className = '' }: TrailerPlay
       {!isPlaying ? (
         // Thumbnail with Play Button
         <div className="relative aspect-video rounded-2xl overflow-hidden group cursor-pointer bg-gray-900">
-          <img
+          <Image
             src={thumbnailUrl}
             alt={`${title} Trailer`}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            onError={(e) => {
-              // Fallback to default thumbnail
-              e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
-            }}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 60vw"
           />
           
           {/* Dark Overlay */}
