@@ -1,10 +1,8 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { Navbar } from '../components/navbar/navbar'
-import { AuthProvider } from './lib/auth-context'
-import ThemeProvider from '../components/ThemeProvider'
+import { Providers } from './providers'
 import { CookieConsent } from '../components/CookieConsent'
-import { ToastProvider } from '../lib/toast-context'
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import './globals.css'
@@ -106,17 +104,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider>
-          <ToastProvider>
-            <AuthProvider>
-              <Navbar />
-              {children}
-              <CookieConsent />
-              <Analytics />
-              <SpeedInsights />
-            </AuthProvider>
-          </ToastProvider>
-        </ThemeProvider>
+        <Providers>
+          <Navbar />
+          {children}
+          <CookieConsent />
+          <Analytics />
+          <SpeedInsights />
+        </Providers>
       </body>
     </html>
   )
