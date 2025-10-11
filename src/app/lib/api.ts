@@ -504,10 +504,12 @@ export async function apiGetAdminStats() {
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
     },
+    credentials: 'include',
   })
 
   if (!response.ok) {
-    throw new Error('Failed to fetch admin stats')
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to fetch admin stats')
   }
 
   const data: TRPCResponse<any> = await response.json()
@@ -527,10 +529,12 @@ export async function apiGetAllUsers(input?: { page?: number; limit?: number; ro
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
     },
+    credentials: 'include',
   })
 
   if (!response.ok) {
-    throw new Error('Failed to fetch users')
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to fetch users')
   }
 
   const data: TRPCResponse<any> = await response.json()
@@ -550,10 +554,12 @@ export async function apiAdminSearchUsers(query: string, limit: number = 20) {
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
     },
+    credentials: 'include',
   })
 
   if (!response.ok) {
-    throw new Error('Failed to search users')
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to search users')
   }
 
   const data: TRPCResponse<any> = await response.json()
@@ -573,10 +579,12 @@ export async function apiGetUserDetails(userId: string) {
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
     },
+    credentials: 'include',
   })
 
   if (!response.ok) {
-    throw new Error('Failed to fetch user details')
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to fetch user details')
   }
 
   const data: TRPCResponse<any> = await response.json()
@@ -596,11 +604,13 @@ export async function apiUpdateUserRole(userId: string, role: 'user' | 'moderato
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
     },
+    credentials: 'include',
     body: JSON.stringify({ userId, role }),
   })
 
   if (!response.ok) {
-    throw new Error('Failed to update user role')
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to update user role')
   }
 
   const data: TRPCResponse<any> = await response.json()
@@ -620,11 +630,13 @@ export async function apiBanUser(userId: string, reason?: string) {
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
     },
+    credentials: 'include',
     body: JSON.stringify({ userId, reason }),
   })
 
   if (!response.ok) {
-    throw new Error('Failed to ban user')
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to ban user')
   }
 
   const data: TRPCResponse<any> = await response.json()
@@ -644,11 +656,13 @@ export async function apiDeleteUser(userId: string) {
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
     },
+    credentials: 'include',
     body: JSON.stringify({ userId }),
   })
 
   if (!response.ok) {
-    throw new Error('Failed to delete user')
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to delete user')
   }
 
   const data: TRPCResponse<any> = await response.json()
