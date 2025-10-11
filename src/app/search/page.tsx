@@ -195,9 +195,15 @@ export default function SearchPage() {
       try {
         const data = await apiGetAllAnime()
         if (data && typeof data === 'object' && 'anime' in data) {
-          setAllAnime(Array.isArray(data.anime) ? data.anime : [])
+          const animeList = Array.isArray(data.anime) ? data.anime : []
+          setAllAnime(animeList)
+          console.log(`✅ Loaded ${animeList.length} anime from API`)
+          if (animeList.length > 0 && animeList[0]?.genres) {
+            console.log('Sample genres from first anime:', animeList[0].genres.map((g: any) => g.name))
+          }
         } else if (Array.isArray(data)) {
           setAllAnime(data)
+          console.log(`✅ Loaded ${data.length} anime from API`)
         }
       } catch (err) {
         console.error('❌ Failed to load anime from API:', err)
