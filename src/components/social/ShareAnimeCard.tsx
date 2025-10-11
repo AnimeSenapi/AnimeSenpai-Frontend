@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { Share2, Twitter, Download, X } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
@@ -91,11 +92,15 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
             <div className="bg-white/5 rounded-xl p-4 mb-6 border border-white/10">
               <div className="flex gap-4">
                 {anime.coverImage && (
-                  <img
-                    src={anime.coverImage}
-                    alt={anime.title}
-                    className="w-20 h-28 object-cover rounded-lg"
-                  />
+                  <div className="relative w-20 h-28 rounded-lg overflow-hidden">
+                    <Image
+                      src={anime.coverImage}
+                      alt={anime.title}
+                      fill
+                      className="object-cover"
+                      sizes="80px"
+                    />
+                  </div>
                 )}
                 <div className="flex-1 min-w-0">
                   <h4 className="text-white font-semibold mb-1 line-clamp-2">

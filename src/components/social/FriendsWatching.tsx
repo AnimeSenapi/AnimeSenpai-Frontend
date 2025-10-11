@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Users, TrendingUp, Loader2, User } from 'lucide-react'
 import { useAuth } from '../../app/lib/auth-context'
 
@@ -126,10 +127,12 @@ export function FriendsWatching() {
             {/* Anime Card */}
             <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-gray-800 shadow-lg group-hover:shadow-2xl group-hover:scale-105 transition-all duration-300">
               {rec.anime.coverImage ? (
-                <img
+                <Image
                   src={rec.anime.coverImage}
                   alt={rec.anime.title}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 50vw, 33vw"
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { SearchAnimeCard } from '../anime/SearchAnimeCard'
 import { Search, X, ArrowRight, Filter, User } from 'lucide-react'
 import { apiSearchAnime, apiGetTrending, apiSearchUsers } from '../../app/lib/api'
@@ -403,9 +404,9 @@ export function SearchBar({
                           }`}
                         >
                           {/* Avatar */}
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 flex items-center justify-center text-white font-semibold flex-shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 flex items-center justify-center text-white font-semibold flex-shrink-0 relative overflow-hidden">
                             {user.avatar ? (
-                              <img src={user.avatar} alt={user.username} className="w-full h-full rounded-full object-cover" />
+                              <Image src={user.avatar} alt={user.username} fill className="object-cover" sizes="40px" />
                             ) : (
                               user.username.charAt(0).toUpperCase()
                             )}
