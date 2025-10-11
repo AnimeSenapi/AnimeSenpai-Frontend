@@ -409,13 +409,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                       <User className="h-16 w-16 text-white" />
                     </div>
                   )}
-                  {profile.role !== 'user' && (
-                    <div className="absolute -bottom-2 -right-2">
-                      <Badge className={`${profile.role === 'admin' ? 'bg-error-500' : 'bg-info-500'} text-white text-xs px-3 py-1 shadow-lg`}>
-                        {profile.role === 'admin' ? '👑 Admin' : '🧪 Tester'}
-                      </Badge>
-                    </div>
-                  )}
                 </div>
 
                 {/* User Info */}

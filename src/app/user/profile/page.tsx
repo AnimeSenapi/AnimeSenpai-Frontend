@@ -361,14 +361,6 @@ export default function ProfilePage() {
                           <Camera className="h-6 w-6 text-white" />
                         )}
                       </label>
-                      
-                      {user?.role && user.role !== 'user' && (
-                        <div className="absolute -bottom-2 -right-2">
-                          <Badge className={`${user.role === 'admin' ? 'bg-error-500' : 'bg-info-500'} text-white text-xs px-2 py-0.5 shadow-lg`}>
-                            {user.role === 'admin' ? '👑' : '🧪'}
-                          </Badge>
-                        </div>
-                      )}
             </div>
 
             {/* User Info */}
