@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Mail, Lock, Eye, EyeOff, User, ArrowLeft, Check, X, Loader2, AtSign } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, Check, X, Loader2, AtSign } from 'lucide-react'
 import { Button } from '../../../components/ui/button'
 import { Checkbox } from '../../../components/ui/checkbox'
 import { useAuth } from '../../lib/auth-context'
@@ -40,7 +40,6 @@ export default function SignUpPage() {
       return
     }
 
-    // Check format first
     if (!/^[a-zA-Z0-9_-]+$/.test(formData.username)) {
       setUsernameStatus('idle')
       setFormErrors(prev => ({ ...prev, username: 'Only letters, numbers, _ and - allowed' }))
@@ -60,7 +59,7 @@ export default function SignUpPage() {
       } catch (error) {
         setUsernameStatus('idle')
       }
-    }, 500) // 500ms debounce
+    }, 500)
 
     return () => clearTimeout(timeoutId)
   }, [formData.username])
@@ -69,7 +68,6 @@ export default function SignUpPage() {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
     if (error) clearError()
-    // Clear specific field error
     if (formErrors[name as keyof typeof formErrors]) {
       setFormErrors({ ...formErrors, [name]: undefined })
     }
@@ -135,14 +133,11 @@ export default function SignUpPage() {
         dataProcessingConsent: true,
         marketingConsent: false
       })
-      // Wait a bit longer to ensure user state is properly set
       await new Promise(resolve => setTimeout(resolve, 100))
       
-      // New users should go through onboarding
       toast.success('Account created! Let\'s get you started.', 'Welcome to AnimeSenpai')
       router.push('/onboarding')
     } catch (err) {
-      // Error is handled by the auth context
       if (error) {
         toast.error(error, 'Sign Up Failed')
       }
@@ -155,283 +150,283 @@ export default function SignUpPage() {
     uppercase: /[A-Z]/.test(formData.password),
     lowercase: /[a-z]/.test(formData.password),
     number: /\d/.test(formData.password),
-    special: /[!@#$%^&*(),.?":{}|<>]/.test(formData.password)
   }
-  const isPasswordValid = Object.values(passwordChecks).every(Boolean)
   const isPasswordMatch = formData.password === formData.confirmPassword && formData.confirmPassword.length > 0
-  const isFormValid = formData.username && usernameStatus === 'available' && formData.email && isPasswordValid && isPasswordMatch && agreeToTerms
 
   return (
     <RequireGuest>
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4 pt-32 pb-8">
+        {/* Subtle Background */}
+        <div className="absolute inset-0 overflow-hidden opacity-30">
+          <div className="absolute top-0 -right-40 w-96 h-96 bg-secondary-500/30 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 -left-40 w-96 h-96 bg-primary-500/30 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="relative z-10 min-h-screen flex items-center justify-center px-4 py-8">
-          <div className="w-full max-w-md">
-            {/* Back Button */}
-            <div className="mb-8">
-              <Link 
-                href="/dashboard"
-                className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back to Home
-              </Link>
+        <div className="relative z-10 w-full max-w-lg">
+          {/* Back Link */}
+          <Link 
+            href="/dashboard"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 group"
+          >
+            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+            Back
+          </Link>
+
+          {/* Main Card */}
+          <div className="glass rounded-3xl p-6 md:p-8 shadow-2xl border border-white/10">
+            {/* Logo & Title */}
+            <div className="text-center mb-6">
+              <div className="w-14 h-14 bg-gradient-to-br from-secondary-400 to-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-secondary-500/20">
+                <span className="text-white font-bold text-xl">AS</span>
+              </div>
+              <h1 className="text-2xl font-bold text-white mb-1">
+                Create Account
+              </h1>
+              <p className="text-gray-400 text-sm">
+                Join AnimeSenpai today
+              </p>
             </div>
 
-            {/* Sign Up Form */}
-            <div className="glass rounded-2xl p-8">
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white font-bold text-2xl">AS</span>
+            {/* Error Messages */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            )}
+
+            {formErrors.terms && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                <p className="text-red-400 text-sm">{formErrors.terms}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-3.5">
+              {/* Username Field */}
+              <div>
+                <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
+                  Username
+                </label>
+                <div className="relative">
+                  <AtSign className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    className={`w-full pl-12 pr-12 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all ${
+                      formErrors.username 
+                        ? 'border-red-500/50' 
+                        : usernameStatus === 'available'
+                        ? 'border-green-500/50'
+                        : 'border-white/10'
+                    }`}
+                    placeholder="yourname"
+                    suppressHydrationWarning
+                  />
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                    {usernameStatus === 'checking' && (
+                      <Loader2 className="h-5 w-5 text-gray-400 animate-spin" />
+                    )}
+                    {usernameStatus === 'available' && (
+                      <Check className="h-5 w-5 text-green-400" />
+                    )}
+                    {usernameStatus === 'taken' && (
+                      <X className="h-5 w-5 text-red-400" />
+                    )}
+                  </div>
                 </div>
-                <h1 className="text-2xl font-bold text-white mb-2">Join AnimeSenpai</h1>
-                <p className="text-gray-400">Create your account to get started</p>
+                {formErrors.username && (
+                  <p className="mt-2 text-sm text-red-400">{formErrors.username}</p>
+                )}
+                {usernameStatus === 'available' && !formErrors.username && (
+                  <p className="mt-2 text-sm text-green-400 flex items-center gap-1">
+                    <Check className="h-3 w-3" /> Available
+                  </p>
+                )}
               </div>
 
-              {error && (
-                <div className="mb-6 p-4 bg-error-500/10 border border-error-500/20 rounded-xl flex items-start gap-3">
-                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-error-500/20 flex items-center justify-center mt-0.5">
-                    <span className="text-error-400 text-xs font-bold">!</span>
-                  </div>
-                  <p className="text-error-400 text-sm flex-1">{error}</p>
-                </div>
-              )}
-
-              {formErrors.terms && (
-                <div className="mb-6 p-4 bg-error-500/10 border border-error-500/20 rounded-xl flex items-start gap-3">
-                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-error-500/20 flex items-center justify-center mt-0.5">
-                    <span className="text-error-400 text-xs font-bold">!</span>
-                  </div>
-                  <p className="text-error-400 text-sm flex-1">{formErrors.terms}</p>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Username Field */}
-                <div>
-                  <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
-                    Username
-                  </label>
-                  <div className="relative">
-                    <AtSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      id="username"
-                      name="username"
-                      type="text"
-                      value={formData.username}
-                      onChange={handleInputChange}
-                      className={`w-full pl-10 pr-10 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
-                        formErrors.username 
-                          ? 'border-error-500/50 focus:ring-error-400' 
-                          : usernameStatus === 'available'
-                          ? 'border-success-500/50 focus:ring-success-400'
-                          : 'border-white/10 focus:ring-brand-primary-400'
-                      }`}
-                      placeholder="Choose a unique username"
-                      suppressHydrationWarning
-                    />
-                    {/* Status Indicator */}
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      {usernameStatus === 'checking' && (
-                        <Loader2 className="h-4 w-4 text-gray-400 animate-spin" />
-                      )}
-                      {usernameStatus === 'available' && (
-                        <Check className="h-4 w-4 text-success-400" />
-                      )}
-                      {usernameStatus === 'taken' && (
-                        <X className="h-4 w-4 text-error-400" />
-                      )}
-                    </div>
-                  </div>
-                  {formErrors.username && (
-                    <p className="mt-1 text-sm text-error-400">{formErrors.username}</p>
-                  )}
-                  {usernameStatus === 'available' && !formErrors.username && (
-                    <p className="mt-1 text-sm text-success-400">Username is available!</p>
-                  )}
-                </div>
-
-                {/* Email Field */}
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className={`w-full pl-10 pr-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
-                        formErrors.email 
-                          ? 'border-error-500/50 focus:ring-error-400' 
-                          : 'border-white/10 focus:ring-brand-primary-400'
-                      }`}
-                      placeholder="Enter your email"
-                      suppressHydrationWarning
-                    />
-                  </div>
-                  {formErrors.email && (
-                    <p className="mt-1 text-sm text-error-400">{formErrors.email}</p>
-                  )}
-                </div>
-
-                {/* Password Field */}
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      id="password"
-                      name="password"
-                      type={showPassword ? 'text' : 'password'}
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      className={`w-full pl-10 pr-12 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
-                        formErrors.password 
-                          ? 'border-error-500/50 focus:ring-error-400' 
-                          : 'border-white/10 focus:ring-brand-primary-400'
-                      }`}
-                      placeholder="Create a strong password"
-                      suppressHydrationWarning
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  {formErrors.password && (
-                    <p className="mt-1 text-sm text-error-400">{formErrors.password}</p>
-                  )}
-                  
-                  {/* Password Requirements */}
-                  {formData.password && (
-                    <div className="mt-3 space-y-2">
-                      <div className="flex items-center gap-2 text-xs">
-                        {passwordChecks.length ? <Check className="h-3 w-3 text-success-400" /> : <X className="h-3 w-3 text-error-400" />}
-                        <span className={passwordChecks.length ? 'text-success-400' : 'text-error-400'}>At least 8 characters</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        {passwordChecks.uppercase ? <Check className="h-3 w-3 text-success-400" /> : <X className="h-3 w-3 text-error-400" />}
-                        <span className={passwordChecks.uppercase ? 'text-success-400' : 'text-error-400'}>One uppercase letter</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        {passwordChecks.lowercase ? <Check className="h-3 w-3 text-success-400" /> : <X className="h-3 w-3 text-error-400" />}
-                        <span className={passwordChecks.lowercase ? 'text-success-400' : 'text-error-400'}>One lowercase letter</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        {passwordChecks.number ? <Check className="h-3 w-3 text-success-400" /> : <X className="h-3 w-3 text-error-400" />}
-                        <span className={passwordChecks.number ? 'text-success-400' : 'text-error-400'}>One number</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        {passwordChecks.special ? <Check className="h-3 w-3 text-success-400" /> : <X className="h-3 w-3 text-error-400" />}
-                        <span className={passwordChecks.special ? 'text-success-400' : 'text-error-400'}>One special character</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Confirm Password Field */}
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
-                    Confirm Password
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange}
-                      className={`w-full pl-10 pr-12 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
-                        formErrors.confirmPassword 
-                          ? 'border-error-500/50 focus:ring-error-400' 
-                          : 'border-white/10 focus:ring-brand-primary-400'
-                      }`}
-                      placeholder="Confirm your password"
-                      suppressHydrationWarning
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                    >
-                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  {formErrors.confirmPassword && (
-                    <p className="mt-1 text-sm text-error-400">{formErrors.confirmPassword}</p>
-                  )}
-                  
-                  {/* Password Match Indicator */}
-                  {formData.confirmPassword && !formErrors.confirmPassword && (
-                    <div className="mt-2 flex items-center gap-2 text-xs">
-                      {isPasswordMatch ? <Check className="h-3 w-3 text-success-400" /> : <X className="h-3 w-3 text-error-400" />}
-                      <span className={isPasswordMatch ? 'text-success-400' : 'text-error-400'}>
-                        {isPasswordMatch ? 'Passwords match' : 'Passwords do not match'}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Terms Agreement */}
-                <div className="flex items-start gap-3">
-                  <Checkbox
-                    id="terms"
-                    checked={agreeToTerms}
-                    onCheckedChange={(checked) => setAgreeToTerms(checked === true)}
-                    className="mt-1"
+              {/* Email Field */}
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className={`w-full pl-12 pr-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all ${
+                      formErrors.email 
+                        ? 'border-red-500/50' 
+                        : 'border-white/10'
+                    }`}
+                    placeholder="you@example.com"
+                    suppressHydrationWarning
                   />
-                  <label htmlFor="terms" className="text-sm text-gray-300 cursor-pointer">
-                    I agree to the{' '}
-                    <Link href="/terms" className="text-primary-400 hover:text-primary-400 transition-colors">
-                      Terms of Service
-                    </Link>
-                    {' '}and{' '}
-                    <Link href="/privacy" className="text-primary-400 hover:text-primary-400 transition-colors">
-                      Privacy Policy
-                    </Link>
-                  </label>
                 </div>
+                {formErrors.email && (
+                  <p className="mt-2 text-sm text-red-400">{formErrors.email}</p>
+                )}
+              </div>
 
-                {/* Sign Up Button */}
-                <Button
-                  type="submit"
-                  disabled={isLoading || !isFormValid}
-                  className="w-full bg-gradient-to-r from-primary-400 to-secondary-400 hover:from-primary-500 hover:to-secondary-500 text-white font-medium py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                >
-                  {isLoading ? 'Creating Account...' : 'Create Account'}
-                </Button>
-
-                {/* Sign In Link */}
-                <div className="text-center">
-                  <p className="text-gray-400">
-                    Already have an account?{' '}
-                    <Link 
-                      href="/auth/signin"
-                      className="text-primary-400 hover:text-primary-400 transition-colors font-medium"
-                    >
-                      Sign in
-                    </Link>
-                  </p>
+              {/* Password Field */}
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className={`w-full pl-12 pr-12 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all ${
+                      formErrors.password 
+                        ? 'border-red-500/50' 
+                        : 'border-white/10'
+                    }`}
+                    placeholder="••••••••"
+                    suppressHydrationWarning
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
                 </div>
-              </form>
-            </div>
+                {formErrors.password && (
+                  <p className="mt-2 text-sm text-red-400">{formErrors.password}</p>
+                )}
+                
+                {/* Password Requirements */}
+                {formData.password && (
+                  <div className="mt-2 grid grid-cols-2 gap-1.5">
+                    <div className={`flex items-center gap-1.5 text-xs ${passwordChecks.length ? 'text-green-400' : 'text-gray-500'}`}>
+                      {passwordChecks.length ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                      <span>8+ characters</span>
+                    </div>
+                    <div className={`flex items-center gap-1.5 text-xs ${passwordChecks.uppercase ? 'text-green-400' : 'text-gray-500'}`}>
+                      {passwordChecks.uppercase ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                      <span>Uppercase</span>
+                    </div>
+                    <div className={`flex items-center gap-1.5 text-xs ${passwordChecks.lowercase ? 'text-green-400' : 'text-gray-500'}`}>
+                      {passwordChecks.lowercase ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                      <span>Lowercase</span>
+                    </div>
+                    <div className={`flex items-center gap-1.5 text-xs ${passwordChecks.number ? 'text-green-400' : 'text-gray-500'}`}>
+                      {passwordChecks.number ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                      <span>Number</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Confirm Password Field */}
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    className={`w-full pl-12 pr-12 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all ${
+                      formErrors.confirmPassword 
+                        ? 'border-red-500/50' 
+                        : isPasswordMatch
+                        ? 'border-green-500/50'
+                        : 'border-white/10'
+                    }`}
+                    placeholder="••••••••"
+                    suppressHydrationWarning
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+                {formErrors.confirmPassword && (
+                  <p className="mt-2 text-sm text-red-400">{formErrors.confirmPassword}</p>
+                )}
+                
+                {formData.confirmPassword && !formErrors.confirmPassword && (
+                  <div className={`mt-2 flex items-center gap-1.5 text-xs ${isPasswordMatch ? 'text-green-400' : 'text-red-400'}`}>
+                    {isPasswordMatch ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                    <span>{isPasswordMatch ? 'Passwords match' : 'Passwords do not match'}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Terms Agreement */}
+              <div className="flex items-start gap-2.5 pt-1">
+                <Checkbox
+                  id="terms"
+                  checked={agreeToTerms}
+                  onCheckedChange={(checked) => setAgreeToTerms(checked === true)}
+                  className="mt-0.5"
+                />
+                <label htmlFor="terms" className="text-xs text-gray-300 cursor-pointer select-none">
+                  I agree to the{' '}
+                  <Link href="/terms" className="text-primary-400 hover:text-primary-300 transition-colors">
+                    Terms
+                  </Link>
+                  {' '}and{' '}
+                  <Link href="/privacy" className="text-primary-400 hover:text-primary-300 transition-colors">
+                    Privacy Policy
+                  </Link>
+                </label>
+              </div>
+
+              {/* Sign Up Button */}
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-secondary-500 to-primary-500 hover:from-secondary-600 hover:to-primary-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-secondary-500/25 mt-4"
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Creating account...
+                  </span>
+                ) : (
+                  'Create Account'
+                )}
+              </Button>
+
+              {/* Sign In Link */}
+              <div className="text-center pt-3">
+                <p className="text-gray-400 text-sm">
+                  Already have an account?{' '}
+                  <Link 
+                    href="/auth/signin"
+                    className="text-primary-400 hover:text-primary-300 transition-colors font-medium"
+                  >
+                    Sign in
+                  </Link>
+                </p>
+              </div>
+            </form>
           </div>
+
+          {/* Footer Note */}
+          <p className="text-center text-gray-500 text-sm mt-6">
+            Track, discover, and share your favorite anime
+          </p>
         </div>
       </div>
     </RequireGuest>

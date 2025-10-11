@@ -17,7 +17,11 @@ import {
   Settings, 
   LogOut, 
   Bookmark,
-  Star
+  Star,
+  Shield,
+  ShieldCheck,
+  Crown,
+  ShieldAlert
 } from 'lucide-react'
 import { useAuth } from '../../app/lib/auth-context'
 
@@ -27,6 +31,7 @@ interface StandaloneDropdownProps {
     name: string
     email: string
     avatar?: string
+    role?: string
   }
 }
 
@@ -39,6 +44,37 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
   const router = useRouter()
   const displayName = user.name || user.email || 'User'
   const displayInitial = (displayName || 'U').trim().charAt(0).toUpperCase()
+  
+  // Get role badge configuration
+  const getRoleBadge = () => {
+    if (!user.role || user.role.toLowerCase() === 'user') return null
+    
+    const roleConfig: Record<string, { label: string; icon: typeof Shield; color: string; bgColor: string }> = {
+      admin: {
+        label: 'Admin',
+        icon: Crown,
+        color: 'text-yellow-300',
+        bgColor: 'bg-yellow-500/20'
+      },
+      moderator: {
+        label: 'Mod',
+        icon: ShieldCheck,
+        color: 'text-blue-300',
+        bgColor: 'bg-blue-500/20'
+      }
+    }
+    
+    const config = roleConfig[user.role.toLowerCase()] || {
+      label: user.role.charAt(0).toUpperCase() + user.role.slice(1),
+      icon: Shield,
+      color: 'text-primary-300',
+      bgColor: 'bg-primary-500/20'
+    }
+    
+    return config
+  }
+  
+  const roleBadge = getRoleBadge()
 
   useEffect(() => {
     setMounted(true)
@@ -91,7 +127,7 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
           onClick={() => setIsOpen(false)}
         >
           <div 
-            className="fixed w-56 glass rounded-xl shadow-2xl border border-white/10 z-[9999] animate-in fade-in slide-in-from-top-2 duration-200"
+            className="fixed w-72 glass rounded-xl shadow-2xl border border-white/10 z-[9999] animate-in fade-in slide-in-from-top-2 duration-200"
             style={{
               top: `${position.top}px`,
               right: `${position.right}px`,
@@ -115,7 +151,15 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
                   <span className="text-white font-bold text-sm">{displayInitial}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium leading-none text-white truncate">{displayName}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium leading-none text-white truncate">{displayName}</p>
+                    {roleBadge && (
+                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${roleBadge.bgColor}`}>
+                        <roleBadge.icon className={`h-2.5 w-2.5 ${roleBadge.color}`} />
+                        <span className={roleBadge.color}>{roleBadge.label}</span>
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs leading-none text-gray-400 mt-1 truncate">{user.email}</p>
                 </div>
               </div>
@@ -150,6 +194,21 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
                   <Star className="mr-3 h-4 w-4" />
                   <span className="text-sm">Favorites</span>
                 </button>
+                {user.role === 'admin' && (
+                  <>
+                    <div className="border-t border-white/10 my-2"></div>
+                    <button 
+                      className="w-full text-left text-yellow-300 hover:text-white hover:bg-gradient-to-r hover:from-yellow-500/20 hover:to-yellow-600/20 rounded-lg px-3 py-2.5 transition-all duration-200 flex items-center font-medium group"
+                      onClick={() => {
+                        setIsOpen(false)
+                        router.push('/admin')
+                      }}
+                    >
+                      <ShieldAlert className="mr-3 h-4 w-4 group-hover:animate-pulse" />
+                      <span className="text-sm">Admin Panel</span>
+                    </button>
+                  </>
+                )}
                 <div className="border-t border-white/10 my-2"></div>
                 <button 
                   className="w-full text-left text-gray-300 hover:text-white hover:bg-white/10 rounded-lg px-3 py-2.5 transition-all duration-200 flex items-center"

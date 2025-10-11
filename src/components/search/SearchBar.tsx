@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { SearchAnimeCard } from '../anime/SearchAnimeCard'
-import { Search, X, ArrowRight, Filter } from 'lucide-react'
-import { apiSearchAnime, apiGetTrending } from '../../app/lib/api'
+import { Search, X, ArrowRight, Filter, User } from 'lucide-react'
+import { apiSearchAnime, apiGetTrending, apiSearchUsers } from '../../app/lib/api'
 
 interface SearchBarProps {
   className?: string
@@ -20,7 +20,7 @@ interface SearchBarProps {
 
 export function SearchBar({ 
   className = '', 
-  placeholder = 'Search anime, studios, genres...',
+  placeholder = 'Try: @user, genre:action, year:2024...',
   showDropdown = true,
   size = 'md',
   variant = 'navbar',
@@ -30,11 +30,14 @@ export function SearchBar({
   const [searchQuery, setSearchQuery] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const [filteredSuggestions, setFilteredSuggestions] = useState<any[]>([])
+  const [userResults, setUserResults] = useState<any[]>([])
   const [popularAnime, setPopularAnime] = useState<any[]>([])
   const [recentSearches, setRecentSearches] = useState<string[]>([])
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const [isSearching, setIsSearching] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
+  const [detectedFilters, setDetectedFilters] = useState<string[]>([])
+  const [searchType, setSearchType] = useState<'anime' | 'user'>('anime')
   
   const router = useRouter()
   const searchRef = useRef<HTMLDivElement>(null)
@@ -65,19 +68,72 @@ export function SearchBar({
     debounceTimer.current = setTimeout(async () => {
       if (query.trim()) {
         setIsSearching(true)
-        try {
-          const results = await apiSearchAnime(query)
-          setFilteredSuggestions(results.slice(0, 5)) // Limit to 5 results
-        } catch (error) {
-          // Gracefully handle backend not running - silent fail
-          setFilteredSuggestions([])
+        
+        // Check if it's a user search
+        if (query.startsWith('@')) {
+          setSearchType('user')
+          const username = query.slice(1).trim()
+          if (username.length >= 2) {
+            try {
+              const users = await apiSearchUsers(username, 5)
+              setUserResults(users)
+              setFilteredSuggestions([])
+            } catch (error) {
+              setUserResults([])
+            }
+          } else {
+            setUserResults([])
+          }
+        } else {
+          // Regular anime search
+          setSearchType('anime')
+          setUserResults([])
+          try {
+            const results = await apiSearchAnime(query)
+            setFilteredSuggestions(results.slice(0, 5))
+          } catch (error) {
+            setFilteredSuggestions([])
+          }
         }
+        
         setIsSearching(false)
       } else {
         setFilteredSuggestions([])
+        setUserResults([])
       }
     }, 150) // 150ms debounce
   }, [])
+
+  // Detect advanced search syntax in real-time
+  useEffect(() => {
+    const filters: string[] = []
+    
+    if (searchQuery.startsWith('@')) {
+      filters.push('👤 User Search')
+    }
+    
+    if (searchQuery.includes('genre:') || searchQuery.includes('g:')) {
+      filters.push('🎭 Genre Filter')
+    }
+    
+    if (searchQuery.includes('year:') || searchQuery.includes('y:')) {
+      filters.push('📅 Year Filter')
+    }
+    
+    if (searchQuery.includes('studio:') || searchQuery.includes('s:')) {
+      filters.push('🎬 Studio Filter')
+    }
+    
+    if (searchQuery.includes('status:')) {
+      filters.push('📊 Status Filter')
+    }
+    
+    if (searchQuery.includes('type:') || searchQuery.includes('t:')) {
+      filters.push('📺 Type Filter')
+    }
+    
+    setDetectedFilters(filters)
+  }, [searchQuery])
 
   // Filter suggestions based on search query with debounce
   useEffect(() => {
@@ -110,16 +166,88 @@ export function SearchBar({
     }
   }, [])
 
+  const parseAdvancedSearch = (query: string): { type: string; value: string; params: URLSearchParams } => {
+    const trimmed = query.trim()
+    const params = new URLSearchParams()
+    
+    // Check for user search (@username)
+    if (trimmed.startsWith('@')) {
+      const username = trimmed.slice(1).trim()
+      return { type: 'user', value: username, params }
+    }
+    
+    // Check for advanced filters (genre:, year:, studio:, status:, type:)
+    const filterRegex = /(\w+):([^\s]+)/g
+    let match
+    let hasFilters = false
+    let remainingQuery = trimmed
+    
+    while ((match = filterRegex.exec(trimmed)) !== null) {
+      const [fullMatch, filterType, filterValue] = match
+      hasFilters = true
+      
+      // Remove the filter from the remaining query
+      remainingQuery = remainingQuery.replace(fullMatch, '').trim()
+      
+      switch (filterType.toLowerCase()) {
+        case 'genre':
+        case 'g':
+          params.set('genre', filterValue)
+          break
+        case 'year':
+        case 'y':
+          params.set('year', filterValue)
+          break
+        case 'studio':
+        case 's':
+          params.set('studio', filterValue)
+          break
+        case 'status':
+          params.set('status', filterValue)
+          break
+        case 'type':
+        case 't':
+          params.set('type', filterValue)
+          break
+        default:
+          // Unknown filter, add to text search
+          remainingQuery += ` ${fullMatch}`
+          break
+      }
+    }
+    
+    // Add remaining text as general search query
+    if (remainingQuery) {
+      params.set('q', remainingQuery)
+    }
+    
+    if (hasFilters || remainingQuery) {
+      return { type: 'anime', value: trimmed, params }
+    }
+    
+    // Default: regular anime search
+    params.set('q', trimmed)
+    return { type: 'anime', value: trimmed, params }
+  }
+
   const handleSearch = (query: string) => {
     if (query.trim()) {
+      const { type, value, params } = parseAdvancedSearch(query)
+      
       // Save to recent searches
       const newRecent = [query, ...recentSearches.filter(s => s !== query)].slice(0, 5)
       setRecentSearches(newRecent)
       localStorage.setItem('recentSearches', JSON.stringify(newRecent))
       
-      // Navigate to search page
-      router.push(`/search?q=${encodeURIComponent(query)}`)
+      // Navigate based on search type
+      if (type === 'user') {
+        router.push(`/users/${encodeURIComponent(value)}`)
+      } else {
+        router.push(`/search?${params.toString()}`)
+      }
+      
       setIsOpen(false)
+      setSearchQuery('')
     }
   }
 
@@ -227,14 +355,72 @@ export function SearchBar({
         )}
       </div>
 
+      {/* Active Filters Display - Improved Design */}
+      {detectedFilters.length > 0 && isFocused && (
+        <div className="mt-2 flex flex-wrap gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="text-[10px] text-gray-500 px-2 py-1">
+            Active Filters:
+          </div>
+          {detectedFilters.map((filter, index) => (
+            <div 
+              key={index}
+              className="text-xs px-3 py-1 bg-gradient-to-r from-primary-500/20 to-secondary-500/20 text-primary-300 rounded-full border border-primary-400/30 font-medium shadow-sm shadow-primary-500/10 animate-in fade-in slide-in-from-left-2"
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              {filter}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Dropdown - Polished Design */}
       {isOpen && showDropdown && (
-        <div className="absolute top-full left-0 right-0 mt-3 bg-[#0a0a0a] rounded-xl shadow-2xl shadow-black/80 z-50 max-h-96 overflow-hidden">
-          <div className="overflow-y-auto max-h-96 custom-scrollbar">
+        <div className="absolute top-full left-0 right-0 mt-3 bg-[#0a0a0a] rounded-xl shadow-2xl shadow-black/80 z-50 max-h-96 overflow-hidden min-w-[300px]">
+          <div className="overflow-y-auto overflow-x-hidden max-h-96 custom-scrollbar">
             {searchQuery.trim() ? (
               // Search Results
               <div className="p-2">
-                {filteredSuggestions.length > 0 ? (
+                {/* User Search Results */}
+                {searchType === 'user' && userResults.length > 0 ? (
+                  <>
+                    <div className="px-4 py-2 text-[11px] text-gray-500 font-semibold uppercase tracking-wider flex items-center gap-2">
+                      <User className="h-3 w-3" />
+                      {userResults.length} {userResults.length === 1 ? 'User' : 'Users'}
+                    </div>
+                    <div className="space-y-1 px-1">
+                      {userResults.map((user, index) => (
+                        <div 
+                          key={user.id} 
+                          onClick={() => {
+                            router.push(`/users/${user.username}`)
+                            setIsOpen(false)
+                            setSearchQuery('')
+                          }}
+                          className={`p-3 transition-all duration-200 rounded-lg cursor-pointer flex items-center gap-3 ${
+                            selectedIndex === index 
+                              ? 'bg-gray-800/80 ring-1 ring-primary-500/50' 
+                              : 'hover:bg-gray-800/40'
+                          }`}
+                        >
+                          {/* Avatar */}
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 flex items-center justify-center text-white font-semibold flex-shrink-0">
+                            {user.avatar ? (
+                              <img src={user.avatar} alt={user.username} className="w-full h-full rounded-full object-cover" />
+                            ) : (
+                              user.username.charAt(0).toUpperCase()
+                            )}
+                          </div>
+                          {/* User Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-white text-sm truncate">@{user.username}</div>
+                            {user.name && <div className="text-xs text-gray-400 truncate">{user.name}</div>}
+                          </div>
+                          <ArrowRight className="h-4 w-4 text-gray-600 group-hover:text-primary-400 flex-shrink-0" />
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : searchType === 'anime' && filteredSuggestions.length > 0 ? (
                   <>
                     <div className="px-4 py-2 text-[11px] text-gray-500 font-semibold uppercase tracking-wider">
                       {filteredSuggestions.length} {filteredSuggestions.length === 1 ? 'Result' : 'Results'}
@@ -265,20 +451,40 @@ export function SearchBar({
                     </div>
                   </>
                 ) : (
-                  <div className="px-3 py-6 text-center text-gray-500">
-                    <Search className="h-6 w-6 mx-auto mb-2 opacity-30" />
-                    <p className="text-xs mb-1">No results found</p>
-                    <p className="text-[10px] text-gray-600">Try a different search</p>
+                  <div className="px-3 py-8 text-center text-gray-500">
+                    {searchType === 'user' ? (
+                      <>
+                        <User className="h-8 w-8 mx-auto mb-3 opacity-20" />
+                        <p className="text-sm mb-1">No users found</p>
+                        <p className="text-[10px] text-gray-600">Try a different username</p>
+                      </>
+                    ) : (
+                      <>
+                        <Search className="h-8 w-8 mx-auto mb-3 opacity-20" />
+                        <p className="text-sm mb-1">No anime found</p>
+                        <p className="text-[10px] text-gray-600">Try a different search</p>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
             ) : (
             // Default suggestions
             <div className="p-2">
+              {/* Compact Search Tips */}
+              <div className="mb-2">
+                <div className="px-3 py-2 text-[10px] text-gray-500 flex flex-wrap items-center gap-1">
+                  <span>💡 Try:</span>
+                  <kbd className="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded font-mono whitespace-nowrap">@user</kbd>
+                  <kbd className="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded font-mono whitespace-nowrap">genre:action</kbd>
+                  <kbd className="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded font-mono whitespace-nowrap">year:2024</kbd>
+                </div>
+              </div>
+
               {/* Popular Anime */}
               {popularAnime.length > 0 && (
                 <div className="mb-2">
-                  <div className="px-4 py-2 text-[11px] text-gray-500 font-semibold uppercase tracking-wider">
+                  <div className="px-4 py-2 text-[11px] text-gray-500 font-semibold uppercase tracking-wider border-t border-gray-800/50 pt-3">
                     Popular
                   </div>
                   <div className="space-y-1 px-1">

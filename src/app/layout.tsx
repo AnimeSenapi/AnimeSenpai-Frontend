@@ -6,6 +6,8 @@ import ThemeProvider from '../components/ThemeProvider'
 import { CookieConsent } from '../components/CookieConsent'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { ToastProvider } from '../lib/toast-context'
+import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -112,7 +114,9 @@ export default function RootLayout({
                 <Navbar />
                 {children}
                 <CookieConsent />
-              </AuthProvider>
+                <Analytics />
+                <SpeedInsights />
+                </AuthProvider>
             </ToastProvider>
           </ThemeProvider>
         </ErrorBoundary>

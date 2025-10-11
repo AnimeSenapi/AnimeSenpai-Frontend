@@ -210,11 +210,15 @@ export default function SearchPage() {
     loadAnime()
   }, [])
 
-  // Handle URL parameters
+  // Handle URL parameters (including advanced search syntax)
   useEffect(() => {
     const query = searchParams.get('q')
     const cat = searchParams.get('category')
     const genre = searchParams.get('genre')
+    const year = searchParams.get('year')
+    const studio = searchParams.get('studio')
+    const status = searchParams.get('status')
+    const type = searchParams.get('type')
     
     if (query) {
       setSearchQuery(query)
@@ -222,10 +226,22 @@ export default function SearchPage() {
     if (cat) {
       setCategory(cat)
     }
+    // Capitalize first letter for display, but filtering is case-insensitive
     if (genre) {
-      setSelectedGenres([genre])
-      setShowFilters(true) // Show filters panel when coming from a genre click
+      const capitalizedGenre = genre.charAt(0).toUpperCase() + genre.slice(1).toLowerCase()
+      setSelectedGenres([capitalizedGenre])
     }
+    if (year) {
+      setSelectedYears([year])
+    }
+    if (studio) {
+      // Capitalize each word for display (e.g., "mappa" → "MAPPA", "wit studio" → "Wit Studio")
+      const capitalizedStudio = studio.split(' ').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      ).join(' ')
+      setSelectedStudios([capitalizedStudio])
+    }
+    // Keep filters closed when coming from advanced search
   }, [searchParams])
 
   // Filter and search logic
@@ -248,19 +264,21 @@ export default function SearchPage() {
       )
     }
 
-    // Genre filter
+    // Genre filter (case-insensitive)
     if (selectedGenres.length > 0) {
       results = results.filter(anime => 
         anime.genres && selectedGenres.some(genre => 
-          anime.genres?.some((g: any) => g.name === genre)
+          anime.genres?.some((g: any) => g.name.toLowerCase() === genre.toLowerCase())
         )
       )
     }
 
-    // Studio filter
+    // Studio filter (case-insensitive)
     if (selectedStudios.length > 0) {
       results = results.filter(anime => 
-        anime.studio && selectedStudios.includes(anime.studio)
+        anime.studio && selectedStudios.some(studio => 
+          anime.studio?.toLowerCase() === studio.toLowerCase()
+        )
       )
     }
 

@@ -77,7 +77,8 @@ export function Navbar() {
                   id: user.id,
                   name: user.username || user.name || 'User',
                   email: user.email,
-                  avatar: user.avatar
+                  avatar: user.avatar,
+                  role: user.role
                 }}
               />
             ) : (

@@ -236,20 +236,23 @@ export function RecommendationCarousel({
           </div>
         ))}
         
-        {/* See All Button */}
+        {/* See All Button - Matches anime card size */}
         {recommendations.length > 10 && (
           <div className="flex-shrink-0 w-48">
             <a href={`/search?category=${encodeURIComponent(title.toLowerCase())}`}>
-              <div className="h-full glass rounded-xl overflow-hidden hover:bg-white/10 transition-all duration-200 hover:scale-105 flex flex-col items-center justify-center p-6 min-h-[320px] cursor-pointer border-2 border-dashed border-white/20 hover:border-primary-400/50">
-                <div className="w-16 h-16 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-full flex items-center justify-center mb-4">
-                  <ChevronRight className="h-8 w-8 text-primary-400" />
+              <div className="glass rounded-xl overflow-hidden hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] cursor-pointer border-2 border-dashed border-white/20 hover:border-primary-400/50 relative group">
+                {/* Match aspect ratio of anime cards */}
+                <div className="aspect-[2/3] bg-gradient-to-br from-gray-800/50 to-gray-900/50 flex flex-col items-center justify-center p-6">
+                  <div className="w-16 h-16 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <ChevronRight className="h-8 w-8 text-primary-400" />
+                  </div>
+                  <h3 className="text-white font-semibold text-center mb-2">
+                    See All
+                  </h3>
+                  <p className="text-gray-400 text-sm text-center">
+                    {recommendations.length}+ anime
+                  </p>
                 </div>
-                <h3 className="text-white font-semibold text-center mb-2">
-                  See All
-                </h3>
-                <p className="text-gray-400 text-sm text-center">
-                  {recommendations.length}+ anime
-                </p>
               </div>
             </a>
           </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { cn } from '../../app/lib/utils'
 import { Anime } from '../../types/anime'
 import { getTagById } from '../../types/tags'
@@ -18,6 +19,7 @@ export function MyListAnimeCard({
   variant = 'grid', 
   className 
 }: MyListAnimeCardProps) {
+  const router = useRouter()
   const tag = anime.tags && anime.tags.length > 0 ? getTagById(anime.tags[0]) : null
   
   const getStatusConfig = () => {
@@ -247,18 +249,23 @@ export function MyListAnimeCard({
             <span>{anime.episodes} eps</span>
           </div>
           
-          {/* Tags */}
+          {/* Tags - Clickable */}
           <div className="flex items-center gap-1 mt-2">
             {anime.tags && anime.tags.length > 0 ? (
               anime.tags.slice(0, 2).map((tagId) => {
                 const tag = getTagById(tagId)
                 return tag ? (
-                  <span 
+                  <span
                     key={tagId}
                     className={cn(
-                      "text-xs px-2 py-0.5 rounded-full font-medium",
+                      "text-xs px-2 py-0.5 rounded-full font-medium hover:opacity-80 transition-opacity cursor-pointer",
                       tag.color
                     )}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      router.push(`/search?genre=${encodeURIComponent(tag.name)}`)
+                    }}
                   >
                     {tag.name}
                   </span>
