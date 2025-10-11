@@ -52,22 +52,22 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
       admin: {
         label: 'Admin',
         icon: Crown,
-        color: 'text-yellow-400',
-        bgColor: 'bg-yellow-500/20 border-yellow-500/30'
+        color: 'text-yellow-300',
+        bgColor: 'bg-yellow-500/20'
       },
       moderator: {
-        label: 'Moderator',
+        label: 'Mod',
         icon: ShieldCheck,
-        color: 'text-blue-400',
-        bgColor: 'bg-blue-500/20 border-blue-500/30'
+        color: 'text-blue-300',
+        bgColor: 'bg-blue-500/20'
       }
     }
     
     const config = roleConfig[user.role.toLowerCase()] || {
       label: user.role.charAt(0).toUpperCase() + user.role.slice(1),
       icon: Shield,
-      color: 'text-primary-400',
-      bgColor: 'bg-primary-500/20 border-primary-500/30'
+      color: 'text-primary-300',
+      bgColor: 'bg-primary-500/20'
     }
     
     return config
@@ -150,14 +150,16 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
                   <span className="text-white font-bold text-sm">{displayInitial}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium leading-none text-white truncate">{displayName}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium leading-none text-white truncate">{displayName}</p>
+                    {roleBadge && (
+                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${roleBadge.bgColor}`}>
+                        <roleBadge.icon className={`h-2.5 w-2.5 ${roleBadge.color}`} />
+                        <span className={roleBadge.color}>{roleBadge.label}</span>
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs leading-none text-gray-400 mt-1 truncate">{user.email}</p>
-                  {roleBadge && (
-                    <div className={`inline-flex items-center gap-1.5 mt-2 px-2 py-1 rounded-md border text-xs font-medium ${roleBadge.bgColor}`}>
-                      <roleBadge.icon className={`h-3 w-3 ${roleBadge.color}`} />
-                      <span className={roleBadge.color}>{roleBadge.label}</span>
-                    </div>
-                  )}
                 </div>
               </div>
               <div className="space-y-1">
