@@ -49,6 +49,7 @@ export function AnimeTab() {
 
   useEffect(() => {
     loadAnime()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, viewMode])
 
   const loadAnime = async () => {

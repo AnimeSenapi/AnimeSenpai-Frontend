@@ -28,6 +28,7 @@ export function UsersTab() {
 
   useEffect(() => {
     loadUsers()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, roleFilter])
 
   const loadUsers = async () => {
