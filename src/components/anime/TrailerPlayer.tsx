@@ -170,12 +170,16 @@ export function TrailerButton({ trailerUrl, title }: TrailerButtonProps) {
       {showModal && (
         <div 
           className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
-          style={{ zIndex: 9999 }}
+          style={{ 
+            zIndex: 999999,
+            position: 'fixed',
+            isolation: 'isolate'
+          }}
           onClick={() => setShowModal(false)}
         >
           <div 
             className="w-full max-w-4xl relative"
-            style={{ zIndex: 10000 }}
+            style={{ zIndex: 1000000 }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl border border-white/10">
