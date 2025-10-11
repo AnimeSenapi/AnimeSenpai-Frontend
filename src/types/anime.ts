@@ -14,6 +14,7 @@ export interface Anime {
   description?: string
   year: number
   season?: 'Spring' | 'Summer' | 'Fall' | 'Winter'
+  type?: string // TV, Movie, OVA, ONA, Special, etc.
   rating: number
   status: 'new' | 'hot' | 'trending' | 'classic' | 'ongoing' | 'completed' | 'upcoming'
   tags: string[] // Tag IDs
