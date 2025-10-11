@@ -34,8 +34,13 @@ export function DashboardTab() {
       setLoading(true)
       const data = await apiGetAdminStats()
       setStats(data)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load stats:', error)
+      // Show user-friendly error message
+      if (error.message?.includes('FORBIDDEN') || error.message?.includes('admin')) {
+        alert('Access denied. You must be an admin to view this page.')
+        window.location.href = '/dashboard'
+      }
     } finally {
       setLoading(false)
     }

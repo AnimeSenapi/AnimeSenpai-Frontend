@@ -40,8 +40,14 @@ export function UsersTab() {
       })
       setUsers(data.users)
       setTotalPages(data.pagination.pages)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load users:', error)
+      if (error.message?.includes('FORBIDDEN') || error.message?.includes('admin')) {
+        alert('Access denied. Admin privileges required.')
+        window.location.href = '/dashboard'
+      } else {
+        alert('Failed to load users. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
