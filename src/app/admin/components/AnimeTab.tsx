@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { 
   Film, 
   Search, 
@@ -273,12 +274,14 @@ export function AnimeTab() {
                     <tr key={item.id} className="hover:bg-white/5 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-16 bg-gray-800 rounded overflow-hidden flex-shrink-0">
+                          <div className="w-12 h-16 bg-gray-800 rounded overflow-hidden flex-shrink-0 relative">
                             {item.coverImage ? (
-                              <img 
+                              <Image 
                                 src={item.coverImage} 
                                 alt={item.title}
-                                className="w-full h-full object-cover"
+                                fill
+                                className="object-cover"
+                                sizes="48px"
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
@@ -398,10 +401,12 @@ export function AnimeTab() {
               >
                 <div className="aspect-[2/3] bg-gray-800 relative">
                   {item.coverImage ? (
-                    <img 
+                    <Image 
                       src={item.coverImage} 
                       alt={item.title}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
@@ -472,11 +477,13 @@ export function AnimeTab() {
             <div className="space-y-6">
               {/* Cover Image */}
               {selectedAnime.coverImage && (
-                <div className="w-full max-w-xs mx-auto">
-                  <img 
+                <div className="w-full max-w-xs mx-auto relative aspect-[2/3]">
+                  <Image 
                     src={selectedAnime.coverImage} 
                     alt={selectedAnime.title}
-                    className="w-full rounded-xl"
+                    fill
+                    className="object-cover rounded-xl"
+                    sizes="(max-width: 768px) 100vw, 384px"
                   />
                 </div>
               )}

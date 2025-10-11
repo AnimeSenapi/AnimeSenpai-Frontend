@@ -436,7 +436,7 @@ export default function AnimePage() {
               <div className="aspect-[2/3] rounded-xl overflow-hidden relative">
                 {(anime.coverImage || anime.imageUrl) ? (
                   <Image 
-                    src={anime.coverImage || anime.imageUrl} 
+                    src={(anime.coverImage || anime.imageUrl) as string} 
                     alt={anime.title}
                     fill
                     className="object-cover"
