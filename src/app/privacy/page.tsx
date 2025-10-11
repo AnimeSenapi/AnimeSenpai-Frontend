@@ -1,44 +1,46 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Button } from '../../components/ui/button'
-import { ArrowLeft, Shield, Eye, Database, Lock, Mail, Settings, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Shield, Eye, Database, Lock, Mail, Settings, AlertCircle, Home, FileText } from 'lucide-react'
 
 export default function PrivacyPage() {
+  const router = useRouter()
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+      {/* Subtle Background Gradient */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/5 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="container mx-auto px-4 py-20 relative z-10">
+      <div className="container mx-auto px-4 pt-32 pb-16 relative z-10">
         <div className="max-w-4xl mx-auto">
           {/* Back Button */}
           <div className="mb-8">
-            <Link 
-              href="/auth/signup"
-              className="inline-flex items-center text-gray-300 hover:text-white transition-colors text-sm"
+            <button
+              onClick={() => router.back()}
+              className="inline-flex items-center text-gray-400 hover:text-white transition-colors text-sm group"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Sign Up
-            </Link>
+              <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+              Back
+            </button>
           </div>
 
           {/* Privacy Content */}
-          <div className="glass rounded-2xl p-8">
+          <div className="glass rounded-2xl p-8 md:p-12 border border-white/10">
             {/* Header */}
             <div className="text-center mb-12">
-              <div className="w-16 h-16 bg-primary-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Shield className="h-8 w-8 text-primary-400" />
+              <div className="w-20 h-20 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary-500/10">
+                <Shield className="h-10 w-10 text-primary-400" />
               </div>
-              <h1 className="text-4xl font-bold text-white mb-4">
+              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-4">
                 Privacy Policy
               </h1>
-              <p className="text-gray-300 text-lg">
-                Last updated: {new Date().toLocaleDateString()}
+              <p className="text-gray-400">
+                Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
               </p>
             </div>
 
@@ -198,21 +200,29 @@ export default function PrivacyPage() {
 
             {/* Footer Actions */}
             <div className="mt-12 pt-8 border-t border-white/10">
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button
-                  onClick={() => window.location.href = '/auth/signup'}
-                  className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold px-8 py-3 rounded-xl transition-all duration-200 shadow-lg shadow-brand-primary-500/25"
-                >
-                  Back to Sign Up
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => window.location.href = '/terms'}
-                  className="border-white/20 text-white hover:bg-white/10 px-8 py-3"
-                >
-                  View Terms of Service
-                </Button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                <Link href="/">
+                  <Button
+                    variant="outline"
+                    className="border-white/10 text-white hover:bg-white/5 hover:border-white/20 px-6 py-2.5 gap-2"
+                  >
+                    <Home className="h-4 w-4" />
+                    Home
+                  </Button>
+                </Link>
+                <Link href="/terms">
+                  <Button
+                    variant="outline"
+                    className="border-white/10 text-white hover:bg-white/5 hover:border-white/20 px-6 py-2.5 gap-2"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Terms of Service
+                  </Button>
+                </Link>
               </div>
+              <p className="text-center text-gray-500 text-sm mt-6">
+                Questions? Contact us at <a href="mailto:privacy@animesenpai.app" className="text-primary-400 hover:text-primary-300 transition-colors">privacy@animesenpai.app</a>
+              </p>
             </div>
           </div>
         </div>
