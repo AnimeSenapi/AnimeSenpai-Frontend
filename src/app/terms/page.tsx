@@ -74,11 +74,11 @@ export default function TermsPage() {
 
       <div className="container mx-auto px-4 pt-32 pb-16 relative z-10">
         <div className="max-w-7xl mx-auto">
-          {/* Back Button */}
-          <div className="mb-8">
+          {/* Back Button - Fixed */}
+          <div className="fixed top-20 left-4 z-20">
             <button
               onClick={() => router.back()}
-              className="inline-flex items-center text-gray-400 hover:text-white transition-colors text-sm group"
+              className="inline-flex items-center px-3 py-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors text-sm group shadow-lg"
             >
               <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
               Back
@@ -580,7 +580,7 @@ export default function TermsPage() {
                 </Link>
               </div>
               <p className="text-center text-gray-500 text-sm mt-6">
-                Questions? Contact us at <a href="mailto:legal@animesenpai.app" className="text-primary-400 hover:text-primary-300 transition-colors">legal@animesenpai.app</a>
+                Questions? Contact us at <a href="mailto:contact@animesenpai.app" className="text-primary-400 hover:text-primary-300 transition-colors">legal@animesenpai.app</a>
               </p>
               </div>
             </div>
