@@ -254,7 +254,26 @@ export function clearSession() {
 
 // Anime API calls
 export async function apiGetAllAnime() {
-  return trpcQuery<AnimeListResponse | Anime[]>('anime.getAll')
+  // Request all anime with high limit (backend max is 100 per page, so we need to handle pagination)
+  // For now, request a very large limit to get all anime
+  const url = `${TRPC_URL}/anime.getAll?input=${encodeURIComponent(JSON.stringify({ limit: 10000 }))}`
+  
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    console.error('Failed to fetch all anime:', response.status)
+    return { anime: [], pagination: { page: 1, limit: 20, total: 0, pages: 0 } }
+  }
+
+  const json = await response.json()
+  return json.result?.data || { anime: [], pagination: { page: 1, limit: 20, total: 0, pages: 0 } }
 }
 
 export async function apiGetTrending() {
