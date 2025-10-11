@@ -38,9 +38,15 @@ type TRPCErrorShape = {
 
 type TRPCResponse<T> = { result: { data: T } } | { error: TRPCErrorShape }
 
-// Backend runs on port 3001 by default (see backend README)
+// Backend runs on port 3003 (check .env.local file)
 const TRPC_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3001/api/trpc'
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+
+// Debug: Log the API URL being used (only in browser)
+if (typeof window !== 'undefined') {
+  console.log('🔧 TRPC_URL:', TRPC_URL)
+  console.log('🔧 NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL)
+}
 
 function getAuthHeaders(): Record<string, string> {
   if (typeof window === 'undefined') return {}
