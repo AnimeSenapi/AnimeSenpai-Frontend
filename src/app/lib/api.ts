@@ -447,4 +447,151 @@ export async function apiSearchUsers(query: string, limit: number = 10): Promise
   }
 }
 
+// ============================================
+// Admin API Functions
+// ============================================
+
+// Get Admin Statistics
+export async function apiGetAdminStats() {
+  const url = `${TRPC_URL}/admin.getStats`
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: await getHeaders(),
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch admin stats')
+  }
+
+  const data: TRPCResponse<any> = await response.json()
+  if ('error' in data) {
+    throw new Error(data.error.message)
+  }
+
+  return data.result.data
+}
+
+// Get All Users (Admin)
+export async function apiGetAllUsers(input?: { page?: number; limit?: number; role?: string }) {
+  const url = `${TRPC_URL}/admin.getAllUsers${input ? `?input=${encodeURIComponent(JSON.stringify(input))}` : ''}`
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: await getHeaders(),
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch users')
+  }
+
+  const data: TRPCResponse<any> = await response.json()
+  if ('error' in data) {
+    throw new Error(data.error.message)
+  }
+
+  return data.result.data
+}
+
+// Search Users (Admin)
+export async function apiAdminSearchUsers(query: string, limit: number = 20) {
+  const url = `${TRPC_URL}/admin.searchUsers?input=${encodeURIComponent(JSON.stringify({ query, limit }))}`
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: await getHeaders(),
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to search users')
+  }
+
+  const data: TRPCResponse<any> = await response.json()
+  if ('error' in data) {
+    throw new Error(data.error.message)
+  }
+
+  return data.result.data
+}
+
+// Get User Details (Admin)
+export async function apiGetUserDetails(userId: string) {
+  const url = `${TRPC_URL}/admin.getUserDetails?input=${encodeURIComponent(JSON.stringify({ userId }))}`
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: await getHeaders(),
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch user details')
+  }
+
+  const data: TRPCResponse<any> = await response.json()
+  if ('error' in data) {
+    throw new Error(data.error.message)
+  }
+
+  return data.result.data
+}
+
+// Update User Role (Admin)
+export async function apiUpdateUserRole(userId: string, role: 'user' | 'moderator' | 'admin') {
+  const url = `${TRPC_URL}/admin.updateUserRole`
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: await getHeaders(),
+    body: JSON.stringify({ userId, role }),
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to update user role')
+  }
+
+  const data: TRPCResponse<any> = await response.json()
+  if ('error' in data) {
+    throw new Error(data.error.message)
+  }
+
+  return data.result.data
+}
+
+// Ban User (Admin)
+export async function apiBanUser(userId: string, reason?: string) {
+  const url = `${TRPC_URL}/admin.banUser`
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: await getHeaders(),
+    body: JSON.stringify({ userId, reason }),
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to ban user')
+  }
+
+  const data: TRPCResponse<any> = await response.json()
+  if ('error' in data) {
+    throw new Error(data.error.message)
+  }
+
+  return data.result.data
+}
+
+// Delete User (Admin)
+export async function apiDeleteUser(userId: string) {
+  const url = `${TRPC_URL}/admin.deleteUser`
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: await getHeaders(),
+    body: JSON.stringify({ userId }),
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to delete user')
+  }
+
+  const data: TRPCResponse<any> = await response.json()
+  if ('error' in data) {
+    throw new Error(data.error.message)
+  }
+
+  return data.result.data
+}
+
 

@@ -20,7 +20,8 @@ import {
   Star,
   Shield,
   ShieldCheck,
-  Crown
+  Crown,
+  ShieldAlert
 } from 'lucide-react'
 import { useAuth } from '../../app/lib/auth-context'
 
@@ -193,6 +194,21 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
                   <Star className="mr-3 h-4 w-4" />
                   <span className="text-sm">Favorites</span>
                 </button>
+                {user.role === 'admin' && (
+                  <>
+                    <div className="border-t border-white/10 my-2"></div>
+                    <button 
+                      className="w-full text-left text-yellow-300 hover:text-white hover:bg-gradient-to-r hover:from-yellow-500/20 hover:to-yellow-600/20 rounded-lg px-3 py-2.5 transition-all duration-200 flex items-center font-medium group"
+                      onClick={() => {
+                        setIsOpen(false)
+                        router.push('/admin')
+                      }}
+                    >
+                      <ShieldAlert className="mr-3 h-4 w-4 group-hover:animate-pulse" />
+                      <span className="text-sm">Admin Panel</span>
+                    </button>
+                  </>
+                )}
                 <div className="border-t border-white/10 my-2"></div>
                 <button 
                   className="w-full text-left text-gray-300 hover:text-white hover:bg-white/10 rounded-lg px-3 py-2.5 transition-all duration-200 flex items-center"
