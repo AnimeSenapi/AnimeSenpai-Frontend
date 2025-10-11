@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Play, X } from 'lucide-react'
 import { Button } from '../ui/button'
 
@@ -167,7 +168,7 @@ export function TrailerButton({ trailerUrl, title }: TrailerButtonProps) {
         Watch Trailer
       </Button>
 
-      {showModal && (
+      {showModal && typeof document !== 'undefined' && createPortal(
         <div 
           className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
           style={{ 
@@ -200,7 +201,8 @@ export function TrailerButton({ trailerUrl, title }: TrailerButtonProps) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )
