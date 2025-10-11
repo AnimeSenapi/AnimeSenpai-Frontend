@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import Head from 'next/head'
 import Link from 'next/link'
 import { AnimeCard } from '../../../components/anime/AnimeCard'
 import { TrailerPlayer, TrailerButton } from '../../../components/anime/TrailerPlayer'
@@ -14,7 +13,6 @@ import { BackButton } from '../../../components/ui/back-button'
 import { DetailHeroSkeleton, AnimeCardSkeleton } from '../../../components/ui/skeleton'
 import { useAuth } from '../../lib/auth-context'
 import { useToast } from '../../../lib/toast-context'
-import { StructuredData, getAnimeSchema, getBreadcrumbSchema } from '../../../components/StructuredData'
 import type { Anime } from '../../../types/anime'
 import { 
   Play, 
@@ -423,45 +421,11 @@ export default function AnimePage() {
   }
 
   return (
-    <>
-      {/* SEO: Structured Data for this anime */}
-      <StructuredData data={getAnimeSchema({
-        title: anime.title,
-        description: anime.description || anime.synopsis,
-        slug: anime.slug,
-        coverImage: anime.coverImage || anime.imageUrl,
-        rating: anime.averageRating || 0,
-        year: anime.year,
-        genres: anime.genres,
-        episodes: anime.episodes,
-        type: anime.type,
-        status: anime.status
-      })} />
-      
-      <StructuredData data={getBreadcrumbSchema([
-        { name: 'Home', url: 'https://animesenpai.app' },
-        { name: 'Anime', url: 'https://animesenpai.app/search' },
-        { name: anime.title, url: `https://animesenpai.app/anime/${anime.slug}` }
-      ])} />
-      
-      <Head>
-        <title>{anime.title} - Watch & Track on AnimeSenpai</title>
-        <meta name="description" content={anime.description || anime.synopsis || `Watch ${anime.title} and track your progress on AnimeSenpai. Get recommendations and connect with fans.`} />
-        <meta property="og:title" content={`${anime.title} - AnimeSenpai`} />
-        <meta property="og:description" content={anime.description || anime.synopsis || `Watch and track ${anime.title}`} />
-        <meta property="og:image" content={anime.coverImage || anime.imageUrl} />
-        <meta property="og:url" content={`https://animesenpai.app/anime/${anime.slug}`} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${anime.title} - AnimeSenpai`} />
-        <meta name="twitter:description" content={anime.description || anime.synopsis || `Watch and track ${anime.title}`} />
-        <meta name="twitter:image" content={anime.coverImage || anime.imageUrl} />
-      </Head>
-    
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900">
-        <main className="container pt-28 pb-20">
-          <div className="mb-8">
-            <BackButton />
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900">
+      <main className="container pt-28 pb-20">
+        <div className="mb-8">
+          <BackButton />
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-10 max-w-7xl mx-auto">
           {/* Left: Poster & Actions */}
@@ -862,7 +826,7 @@ export default function AnimePage() {
           </div>
         </div>
       )}
-      </div>
-    </>
+      </main>
+    </div>
   )
 }
