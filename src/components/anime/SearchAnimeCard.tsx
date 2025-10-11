@@ -30,7 +30,7 @@ export function SearchAnimeCard({
     return (
       <Link href={`/anime/${anime.slug}`} className={cn("block group", className)}>
         <div className="flex items-center gap-3 px-2 py-2 hover:bg-white/5 rounded-lg transition-all duration-200">
-          {/* Image - Smaller and cleaner */}
+          {/* Image - Clean without rating badge */}
           <div className="relative flex-shrink-0">
             <div className="w-14 h-20 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border border-white/10 group-hover:border-primary-500/40 transition-colors">
               {(anime.coverImage || anime.imageUrl) ? (
@@ -46,13 +46,6 @@ export function SearchAnimeCard({
                 </div>
               )}
             </div>
-            {/* Small rating badge on image */}
-            {anime.rating && (
-              <div className="absolute -top-1 -right-1 bg-black/80 backdrop-blur-sm border border-yellow-500/30 rounded px-1 py-0.5 flex items-center gap-0.5">
-                <Star className="h-2.5 w-2.5 text-yellow-400 fill-yellow-400" />
-                <span className="text-[10px] font-bold text-white">{anime.rating}</span>
-              </div>
-            )}
           </div>
 
           {/* Content - More compact */}
