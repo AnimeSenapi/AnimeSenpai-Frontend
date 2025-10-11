@@ -108,9 +108,9 @@ export default function RootLayout({
           <Navbar />
           {children}
           <CookieConsent />
-          <Analytics />
-          <SpeedInsights />
         </Providers>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )
