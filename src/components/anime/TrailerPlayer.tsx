@@ -169,14 +169,14 @@ export function TrailerButton({ trailerUrl, title }: TrailerButtonProps) {
 
       {showModal && (
         <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/90 backdrop-blur-md z-[999] flex items-center justify-center p-4"
           onClick={() => setShowModal(false)}
         >
           <div 
-            className="w-full max-w-4xl"
+            className="w-full max-w-4xl relative z-[1000]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl">
+            <div className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl border border-white/10">
               <iframe
                 src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
                 title={`${title} Trailer`}
@@ -188,9 +188,9 @@ export function TrailerButton({ trailerUrl, title }: TrailerButtonProps) {
               {/* Close Button */}
               <button
                 onClick={() => setShowModal(false)}
-                className="absolute top-4 right-4 w-12 h-12 bg-black/80 hover:bg-black rounded-full flex items-center justify-center transition-colors"
+                className="absolute -top-12 right-0 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors backdrop-blur-sm border border-white/20"
               >
-                <X className="h-6 w-6 text-white" />
+                <X className="h-5 w-5 text-white" />
               </button>
             </div>
           </div>
