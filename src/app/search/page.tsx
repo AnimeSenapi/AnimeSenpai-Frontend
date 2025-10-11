@@ -266,11 +266,17 @@ export default function SearchPage() {
 
     // Genre filter (case-insensitive)
     if (selectedGenres.length > 0) {
-      results = results.filter(anime => 
-        anime.genres && selectedGenres.some(genre => 
-          anime.genres?.some((g: any) => g.name.toLowerCase() === genre.toLowerCase())
+      console.log('Filtering by genres:', selectedGenres)
+      results = results.filter(anime => {
+        const hasGenre = anime.genres && selectedGenres.some(genre => 
+          anime.genres?.some((g: any) => {
+            const match = g.name.toLowerCase() === genre.toLowerCase()
+            return match
+          })
         )
-      )
+        return hasGenre
+      })
+      console.log(`Genre filter: ${results.length} anime match genres [${selectedGenres.join(', ')}]`)
     }
 
     // Studio filter (case-insensitive)
