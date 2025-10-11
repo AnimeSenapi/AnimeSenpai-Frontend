@@ -36,7 +36,7 @@ export function SearchAnimeCard({
             <div className="w-14 h-20 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border border-white/10 group-hover:border-primary-500/40 transition-colors relative">
               {(anime.coverImage || anime.imageUrl) ? (
                 <Image 
-                  src={anime.coverImage || anime.imageUrl} 
+                  src={(anime.coverImage || anime.imageUrl) as string} 
                   alt={anime.title}
                   fill
                   className="object-cover"
@@ -98,7 +98,7 @@ export function SearchAnimeCard({
               <div className="w-24 h-36 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border border-white/10 relative">
                 {(anime.coverImage || anime.imageUrl) ? (
                   <Image 
-                    src={anime.coverImage || anime.imageUrl} 
+                    src={(anime.coverImage || anime.imageUrl) as string} 
                     alt={anime.title}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -189,7 +189,7 @@ export function SearchAnimeCard({
         <div className="relative aspect-[2/3] bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl overflow-hidden border border-white/10 group-hover:border-primary-500/50 transition-all duration-300">
           {(anime.coverImage || anime.imageUrl) ? (
             <Image 
-              src={anime.coverImage || anime.imageUrl} 
+              src={(anime.coverImage || anime.imageUrl) as string} 
               alt={anime.title}
               fill
               className="object-cover transition-all duration-300 group-hover:blur-sm"

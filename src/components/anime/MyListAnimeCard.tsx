@@ -81,7 +81,7 @@ export function MyListAnimeCard({
               <div className="w-24 h-32 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl overflow-hidden relative">
                 {(anime.coverImage || anime.imageUrl) ? (
                   <Image 
-                    src={anime.coverImage || anime.imageUrl} 
+                    src={(anime.coverImage || anime.imageUrl) as string} 
                     alt={anime.title}
                     fill
                     className="object-cover"
@@ -185,7 +185,7 @@ export function MyListAnimeCard({
         <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl overflow-hidden">
           {(anime.coverImage || anime.imageUrl) ? (
             <Image 
-              src={anime.coverImage || anime.imageUrl} 
+              src={(anime.coverImage || anime.imageUrl) as string} 
               alt={anime.title}
               fill
               className="object-cover group-hover:scale-110 transition-transform duration-500"
