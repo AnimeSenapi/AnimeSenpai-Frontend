@@ -276,7 +276,7 @@ export default function SearchPage() {
     if (selectedStudios.length > 0) {
       results = results.filter(anime => 
         anime.studio && selectedStudios.some(studio => 
-          anime.studio.toLowerCase() === studio.toLowerCase()
+          anime.studio?.toLowerCase() === studio.toLowerCase()
         )
       )
     }
