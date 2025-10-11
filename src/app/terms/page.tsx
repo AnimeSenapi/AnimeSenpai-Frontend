@@ -124,52 +124,51 @@ export default function TermsPage() {
             )}
           </div>
 
-          {/* Desktop Layout: Sidebar + Content */}
-          <div className="grid lg:grid-cols-[280px_1fr] gap-8">
-            {/* Sticky Table of Contents - Desktop Only */}
-            <aside className="hidden lg:block">
-              <div className="sticky top-24 space-y-4">
-                <div className="glass rounded-xl p-4 border border-white/10">
-                  <h2 className="text-sm font-semibold text-white mb-4 px-2">Table of Contents</h2>
-                  <nav className="space-y-1">
-                    {sections.map((section, index) => {
-                      const Icon = section.icon
-                      return (
-                        <button
-                          key={section.id}
-                          onClick={() => scrollToSection(section.id)}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all group ${
-                            activeSection === section.id
-                              ? 'bg-primary-500/20 text-primary-300 border border-primary-500/30'
-                              : 'text-gray-400 hover:text-white hover:bg-white/5'
-                          }`}
-                        >
-                          <span className="text-xs text-gray-500 w-4">{index + 1}</span>
-                          <Icon className={`h-4 w-4 flex-shrink-0 transition-transform group-hover:scale-110 ${
-                            activeSection === section.id ? 'text-primary-400' : ''
-                          }`} />
-                          <span className="flex-1 text-left truncate">{section.title}</span>
-                        </button>
-                      )
-                    })}
-                  </nav>
-                </div>
-
-                {/* Quick Actions */}
-                <div className="glass rounded-xl p-4 border border-white/10 space-y-2">
-                  <Link href="/privacy" className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
-                    <Shield className="h-4 w-4" />
-                    Privacy Policy
-                  </Link>
-                  <Link href="/" className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
-                    <Home className="h-4 w-4" />
-                    Back to Home
-                  </Link>
-                </div>
+          {/* Fixed Sidebar - Desktop Only */}
+          <aside className="hidden lg:block">
+            <div className="fixed top-32 left-8 w-64 space-y-4 max-h-[calc(100vh-140px)] overflow-y-auto">
+              <div className="glass rounded-xl p-4 border border-white/10">
+                <h2 className="text-sm font-semibold text-white mb-4 px-2">Table of Contents</h2>
+                <nav className="space-y-1">
+                  {sections.map((section, index) => {
+                    const Icon = section.icon
+                    return (
+                      <button
+                        key={section.id}
+                        onClick={() => scrollToSection(section.id)}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all group ${
+                          activeSection === section.id
+                            ? 'bg-primary-500/20 text-primary-300 border border-primary-500/30'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        <span className="text-xs text-gray-500 w-4">{index + 1}</span>
+                        <Icon className={`h-4 w-4 flex-shrink-0 transition-transform group-hover:scale-110 ${
+                          activeSection === section.id ? 'text-primary-400' : ''
+                        }`} />
+                        <span className="flex-1 text-left truncate">{section.title}</span>
+                      </button>
+                    )
+                  })}
+                </nav>
               </div>
-            </aside>
 
-            {/* Main Content */}
+              {/* Quick Actions */}
+              <div className="glass rounded-xl p-4 border border-white/10 space-y-2">
+                <Link href="/privacy" className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+                  <Shield className="h-4 w-4" />
+                  Privacy Policy
+                </Link>
+                <Link href="/" className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+                  <Home className="h-4 w-4" />
+                  Back to Home
+                </Link>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main Content with left margin for sidebar */}
+          <div className="lg:ml-72">
             <div className="glass rounded-2xl p-6 md:p-10 border border-white/10">
             {/* Header */}
             <div className="text-center mb-12">
@@ -582,7 +581,7 @@ export default function TermsPage() {
               <p className="text-center text-gray-500 text-sm mt-6">
                 Questions? Contact us at <a href="mailto:contact@animesenpai.app" className="text-primary-400 hover:text-primary-300 transition-colors">legal@animesenpai.app</a>
               </p>
-              </div>
+            </div>
             </div>
           </div>
         </div>
