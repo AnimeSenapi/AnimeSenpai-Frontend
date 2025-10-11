@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { User, Users, Loader2 } from 'lucide-react'
 import { FollowButton } from './FollowButton'
 import { useAuth } from '../../app/lib/auth-context'
@@ -34,6 +35,7 @@ export function FollowList({ userId, type, limit = 20 }: FollowListProps) {
 
   useEffect(() => {
     fetchUsers()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, type, limit])
 
   const fetchUsers = async () => {
@@ -139,11 +141,15 @@ export function FollowList({ userId, type, limit = 20 }: FollowListProps) {
           {/* Avatar */}
           <Link href={`/users/@${user.username}`}>
             {user.avatar ? (
-              <img
-                src={user.avatar}
-                alt={user.username}
-                className="w-12 h-12 rounded-xl object-cover"
-              />
+              <div className="relative w-12 h-12 rounded-xl overflow-hidden">
+                <Image
+                  src={user.avatar}
+                  alt={user.username}
+                  fill
+                  className="object-cover"
+                  sizes="48px"
+                />
+              </div>
             ) : (
               <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-xl flex items-center justify-center">
                 <User className="h-6 w-6 text-white" />
@@ -193,4 +199,3 @@ export function FollowList({ userId, type, limit = 20 }: FollowListProps) {
     </div>
   )
 }
-

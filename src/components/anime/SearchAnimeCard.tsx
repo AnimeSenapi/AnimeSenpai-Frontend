@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { cn } from '../../app/lib/utils'
 import { Anime } from '../../types/anime'
@@ -29,43 +30,58 @@ export function SearchAnimeCard({
   if (variant === 'compact') {
     return (
       <Link href={`/anime/${anime.slug}`} className={cn("block group", className)}>
-        <div className="flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-lg transition-all duration-200 border border-transparent hover:border-primary-500/30">
-          {/* Image */}
+        <div className="flex items-center gap-3 px-2 py-2 hover:bg-white/5 rounded-lg transition-all duration-200">
+          {/* Image - Clean without rating badge */}
           <div className="relative flex-shrink-0">
-            <div className="w-12 h-16 bg-gradient-to-br from-gray-800 to-gray-900 rounded-md overflow-hidden border border-white/10">
+            <div className="w-14 h-20 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border border-white/10 group-hover:border-primary-500/40 transition-colors relative">
               {(anime.coverImage || anime.imageUrl) ? (
-                <img 
-                  src={anime.coverImage || anime.imageUrl} 
+                <Image 
+                  src={(anime.coverImage || anime.imageUrl) as string} 
                   alt={anime.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  loading="lazy"
+                  fill
+                  className="object-cover"
+                  sizes="56px"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <span className="text-gray-500 text-xs">No Image</span>
+                  <Play className="h-5 w-5 text-gray-600" />
                 </div>
               )}
             </div>
           </div>
 
-          {/* Content */}
+          {/* Content - More compact */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-white font-semibold text-sm mb-1 group-hover:text-primary-300 transition-colors line-clamp-1">
+            <h3 className="text-white font-medium text-sm mb-1 group-hover:text-primary-300 transition-colors line-clamp-2 leading-tight">
               {anime.title}
             </h3>
-            <div className="flex items-center gap-2 text-xs text-gray-400 mb-1">
+            <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
               {anime.year && <span>{anime.year}</span>}
-              {anime.studio && (
+              {anime.type && anime.year && <span>•</span>}
+              {anime.type && <span>{anime.type}</span>}
+              {anime.episodes && (
                 <>
-                  {anime.year && <span>•</span>}
-                  <span className="truncate">{anime.studio}</span>
+                  <span>•</span>
+                  <span>{anime.episodes} eps</span>
                 </>
               )}
             </div>
-            <div className="flex items-center gap-1">
-              <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-              <span className="text-xs text-white font-medium">{anime.rating || 'N/A'}</span>
-            </div>
+            {/* Genre tags - compact */}
+            {anime.genres && anime.genres.length > 0 && (
+              <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                {anime.genres.slice(0, 2).map((genre, index) => {
+                  const genreName = typeof genre === 'string' ? genre : genre.name
+                  return (
+                    <span
+                      key={index}
+                      className="text-[10px] px-1.5 py-0.5 bg-primary-500/10 text-primary-300 rounded border border-primary-500/20"
+                    >
+                      {genreName}
+                    </span>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </div>
       </Link>
@@ -79,13 +95,14 @@ export function SearchAnimeCard({
           <div className="flex items-start gap-5">
             {/* Image */}
             <div className="relative flex-shrink-0">
-              <div className="w-24 h-36 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border border-white/10">
+              <div className="w-24 h-36 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border border-white/10 relative">
                 {(anime.coverImage || anime.imageUrl) ? (
-                  <img 
-                    src={anime.coverImage || anime.imageUrl} 
+                  <Image 
+                    src={(anime.coverImage || anime.imageUrl) as string} 
                     alt={anime.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    loading="lazy"
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    sizes="96px"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -171,11 +188,12 @@ export function SearchAnimeCard({
         {/* Image Container */}
         <div className="relative aspect-[2/3] bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl overflow-hidden border border-white/10 group-hover:border-primary-500/50 transition-all duration-300">
           {(anime.coverImage || anime.imageUrl) ? (
-            <img 
-              src={anime.coverImage || anime.imageUrl} 
+            <Image 
+              src={(anime.coverImage || anime.imageUrl) as string} 
               alt={anime.title}
-              className="w-full h-full object-cover transition-all duration-300 group-hover:blur-sm"
-              loading="lazy"
+              fill
+              className="object-cover transition-all duration-300 group-hover:blur-sm"
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">

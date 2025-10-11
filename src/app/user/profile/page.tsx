@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Button } from '../../../components/ui/button'
 import { Badge } from '../../../components/ui/badge'
 import { RequireAuth } from '../../lib/protected-route'
@@ -331,11 +332,15 @@ export default function ProfilePage() {
                     {/* Avatar */}
                     <div className="relative group">
                       {user?.avatar ? (
-                        <img 
-                          src={user.avatar} 
-                          alt={user.username || 'User'}
-                          className="w-24 h-24 rounded-2xl object-cover border-4 border-gray-900 shadow-xl"
-                        />
+                        <div className="relative w-24 h-24 rounded-2xl border-4 border-gray-900 shadow-xl overflow-hidden">
+                          <Image 
+                            src={user.avatar} 
+                            alt={user.username || 'User'}
+                            fill
+                            className="object-cover"
+                            sizes="96px"
+                          />
+                        </div>
                       ) : (
                         <div className="w-24 h-24 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-2xl flex items-center justify-center border-4 border-gray-900 shadow-xl">
                           <User className="h-12 w-12 text-white" />
@@ -361,14 +366,6 @@ export default function ProfilePage() {
                           <Camera className="h-6 w-6 text-white" />
                         )}
                       </label>
-                      
-                      {user?.role && user.role !== 'user' && (
-                        <div className="absolute -bottom-2 -right-2">
-                          <Badge className={`${user.role === 'admin' ? 'bg-error-500' : 'bg-info-500'} text-white text-xs px-2 py-0.5 shadow-lg`}>
-                            {user.role === 'admin' ? '👑' : '🧪'}
-                          </Badge>
-                        </div>
-                      )}
             </div>
 
             {/* User Info */}

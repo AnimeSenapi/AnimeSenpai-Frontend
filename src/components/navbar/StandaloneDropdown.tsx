@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Button } from '../ui/button'
 import {
   DropdownMenu,
@@ -39,6 +40,7 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [position, setPosition] = useState({ top: 0, right: 0 })
+  const [avatarError, setAvatarError] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const { signout } = useAuth()
   const router = useRouter()
@@ -101,21 +103,22 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
             variant="ghost"
             className="relative h-9 w-9 rounded-full p-0 hover:bg-white/10 transition-all duration-200 focus:ring-2 focus:ring-brand-primary-400/50"
           >
-            {user.avatar ? (
-              <img 
-                src={user.avatar} 
-                alt={displayName}
-                className="w-8 h-8 rounded-full object-cover ring-2 ring-white/20 hover:ring-white/40 transition-all duration-200"
-                onError={(e) => {
-                  // Fallback to initials on error
-                  e.currentTarget.style.display = 'none'
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden')
-                }}
-              />
-            ) : null}
-            <div className={`w-8 h-8 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full flex items-center justify-center ring-2 ring-white/20 hover:ring-white/40 transition-all duration-200 ${user.avatar ? 'hidden' : ''}`}>
-              <span className="text-white font-bold text-xs">{displayInitial}</span>
-            </div>
+            {user.avatar && !avatarError ? (
+              <div className="relative w-8 h-8 rounded-full ring-2 ring-white/20 hover:ring-white/40 transition-all duration-200 overflow-hidden">
+                <Image 
+                  src={user.avatar} 
+                  alt={displayName}
+                  fill
+                  className="object-cover"
+                  sizes="32px"
+                  onError={() => setAvatarError(true)}
+                />
+              </div>
+            ) : (
+              <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full flex items-center justify-center ring-2 ring-white/20 hover:ring-white/40 transition-all duration-200">
+                <span className="text-white font-bold text-xs">{displayInitial}</span>
+              </div>
+            )}
           </Button>
         </DropdownMenuTrigger>
       </DropdownMenu>
@@ -136,20 +139,22 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
           >
             <div className="p-4">
               <div className="flex items-center gap-3 mb-3 pb-3 border-b border-white/10">
-                {user.avatar ? (
-                  <img 
-                    src={user.avatar} 
-                    alt={displayName}
-                    className="w-10 h-10 rounded-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none'
-                      e.currentTarget.nextElementSibling?.classList.remove('hidden')
-                    }}
-                  />
-                ) : null}
-                <div className={`w-10 h-10 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full flex items-center justify-center ${user.avatar ? 'hidden' : ''}`}>
-                  <span className="text-white font-bold text-sm">{displayInitial}</span>
-                </div>
+                {user.avatar && !avatarError ? (
+                  <div className="relative w-10 h-10 rounded-full overflow-hidden">
+                    <Image 
+                      src={user.avatar} 
+                      alt={displayName}
+                      fill
+                      className="object-cover"
+                      sizes="40px"
+                      onError={() => setAvatarError(true)}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">{displayInitial}</span>
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium leading-none text-white truncate">{displayName}</p>

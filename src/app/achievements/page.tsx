@@ -26,6 +26,7 @@ export default function AchievementsPage() {
     if (user) {
       fetchUserStats()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading, isAuthenticated])
 
   const fetchUserStats = async () => {
@@ -177,4 +178,3 @@ export default function AchievementsPage() {
     </div>
   )
 }
-

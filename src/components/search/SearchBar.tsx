@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { SearchAnimeCard } from '../anime/SearchAnimeCard'
 import { Search, X, ArrowRight, Filter, User } from 'lucide-react'
 import { apiSearchAnime, apiGetTrending, apiSearchUsers } from '../../app/lib/api'
@@ -373,9 +374,9 @@ export function SearchBar({
         </div>
       )}
 
-      {/* Dropdown - Polished Design */}
+      {/* Dropdown - Solid Dark Design */}
       {isOpen && showDropdown && (
-        <div className="absolute top-full left-0 right-0 mt-3 bg-[#0a0a0a] rounded-xl shadow-2xl shadow-black/80 z-50 max-h-96 overflow-hidden min-w-[300px]">
+        <div className="absolute top-full left-0 right-0 mt-3 bg-gray-900 rounded-xl shadow-2xl border border-white/10 z-50 max-h-96 overflow-hidden min-w-[300px] animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="overflow-y-auto overflow-x-hidden max-h-96 custom-scrollbar">
             {searchQuery.trim() ? (
               // Search Results
@@ -403,9 +404,9 @@ export function SearchBar({
                           }`}
                         >
                           {/* Avatar */}
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 flex items-center justify-center text-white font-semibold flex-shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 flex items-center justify-center text-white font-semibold flex-shrink-0 relative overflow-hidden">
                             {user.avatar ? (
-                              <img src={user.avatar} alt={user.username} className="w-full h-full rounded-full object-cover" />
+                              <Image src={user.avatar} alt={user.username} fill className="object-cover" sizes="40px" />
                             ) : (
                               user.username.charAt(0).toUpperCase()
                             )}

@@ -39,6 +39,7 @@ export function FollowButton({
     }
 
     checkFollowingStatus()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, userId])
 
   const checkFollowingStatus = async () => {
@@ -171,4 +172,3 @@ export function FollowButton({
     </Button>
   )
 }
-

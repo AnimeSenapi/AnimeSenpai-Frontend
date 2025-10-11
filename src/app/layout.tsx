@@ -1,11 +1,8 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { Navbar } from '../components/navbar/navbar'
-import { AuthProvider } from './lib/auth-context'
-import ThemeProvider from '../components/ThemeProvider'
+import { Providers } from './providers'
 import { CookieConsent } from '../components/CookieConsent'
-import { ErrorBoundary } from '../components/ErrorBoundary'
-import { ToastProvider } from '../lib/toast-context'
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import './globals.css'
@@ -19,25 +16,37 @@ const siteDescription = 'Discover, track, and explore your favorite anime. Get p
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'AnimeSenpai - Your Ultimate Anime Companion',
+    default: 'AnimeSenpai - Track, Discover & Watch Anime | Free Anime Tracker',
     template: '%s | AnimeSenpai'
   },
   description: siteDescription,
   keywords: [
     'anime',
     'anime tracker',
-    'anime recommendations',
     'anime list',
+    'anime recommendations',
     'watch anime',
     'anime database',
     'anime community',
+    'track anime',
+    'anime watchlist',
+    'discover anime',
+    'anime collection',
+    'free anime tracker',
+    'myanimelist alternative',
+    'anilist alternative',
+    'anime organizer',
     'manga',
     'japanese animation',
-    'anime streaming',
-    'my anime list',
-    'anime discovery',
+    'anime streaming guide',
     'seasonal anime',
-    'anime reviews'
+    'anime reviews',
+    'anime ratings',
+    'best anime',
+    'new anime',
+    'popular anime',
+    'AnimeSenpai',
+    'anime senpai'
   ],
   authors: [{ name: 'AnimeSenpai Team' }],
   creator: 'AnimeSenpai',
@@ -52,23 +61,24 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: siteUrl,
     siteName: siteName,
-    title: 'AnimeSenpai - Your Ultimate Anime Companion',
+    title: 'AnimeSenpai - Track, Discover & Watch Anime | Free Anime Tracker',
     description: siteDescription,
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'AnimeSenpai - Discover Your Next Favorite Anime',
+        alt: 'AnimeSenpai - Your Ultimate Anime Tracking & Discovery Platform',
       }
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AnimeSenpai - Your Ultimate Anime Companion',
+    title: 'AnimeSenpai - Track, Discover & Watch Anime',
     description: siteDescription,
     images: ['/og-image.png'],
     creator: '@AnimeSenpai',
+    site: '@AnimeSenpai',
   },
   robots: {
     index: true,
@@ -107,19 +117,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className={inter.className}>
-        <ErrorBoundary>
-          <ThemeProvider>
-            <ToastProvider>
-              <AuthProvider>
-                <Navbar />
-                {children}
-                <CookieConsent />
-                <Analytics />
-                <SpeedInsights />
-                </AuthProvider>
-            </ToastProvider>
-          </ThemeProvider>
-        </ErrorBoundary>
+        <Providers>
+          <Navbar />
+          {children}
+          <CookieConsent />
+        </Providers>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )

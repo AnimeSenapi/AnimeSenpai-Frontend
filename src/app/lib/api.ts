@@ -38,9 +38,15 @@ type TRPCErrorShape = {
 
 type TRPCResponse<T> = { result: { data: T } } | { error: TRPCErrorShape }
 
-// Backend runs on port 3001 by default (see backend README)
+// Backend runs on port 3003 (check .env.local file)
 const TRPC_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3001/api/trpc'
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+
+// Debug: Log the API URL being used (only in browser)
+if (typeof window !== 'undefined') {
+  console.log('🔧 TRPC_URL:', TRPC_URL)
+  console.log('🔧 NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL)
+}
 
 function getAuthHeaders(): Record<string, string> {
   if (typeof window === 'undefined') return {}
@@ -60,6 +66,7 @@ async function trpcQuery<TOutput>(path: string, init?: RequestInit): Promise<TOu
   const url = `${TRPC_URL}/${path}`
   
   console.log('🔍 tRPC Query:', { url, method: 'GET' })
+  console.log('🔧 Full URL being fetched:', url)
   
   try {
     const res = await fetch(url, {
@@ -121,9 +128,15 @@ async function trpcQuery<TOutput>(path: string, init?: RequestInit): Promise<TOu
     return json.result.data
   } catch (error: unknown) {
     console.error('❌ tRPC GET Failed:', error)
+    console.error('❌ Failed URL was:', url)
+    console.error('❌ TRPC_URL constant is:', TRPC_URL)
+    console.error('❌ Backend should be at: http://localhost:3003/api/trpc')
+    
     // Handle network errors
     if (error instanceof Error && error.message.includes('fetch')) {
-      throw new Error(getUserFriendlyError('NETWORK_ERROR', 'Unable to connect to the server'))
+      const errorMsg = `Unable to connect to backend at ${url}. Is the backend running on port 3003?`
+      console.error('❌ Network Error:', errorMsg)
+      throw new Error(getUserFriendlyError('NETWORK_ERROR', errorMsg))
     }
     throw error
   }
@@ -241,7 +254,26 @@ export function clearSession() {
 
 // Anime API calls
 export async function apiGetAllAnime() {
-  return trpcQuery<AnimeListResponse | Anime[]>('anime.getAll')
+  // Request all anime with high limit (backend max is 100 per page, so we need to handle pagination)
+  // For now, request a very large limit to get all anime
+  const url = `${TRPC_URL}/anime.getAll?input=${encodeURIComponent(JSON.stringify({ limit: 10000 }))}`
+  
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    console.error('Failed to fetch all anime:', response.status)
+    return { anime: [], pagination: { page: 1, limit: 20, total: 0, pages: 0 } }
+  }
+
+  const json = await response.json()
+  return json.result?.data || { anime: [], pagination: { page: 1, limit: 20, total: 0, pages: 0 } }
 }
 
 export async function apiGetTrending() {
@@ -472,10 +504,12 @@ export async function apiGetAdminStats() {
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
     },
+    credentials: 'include',
   })
 
   if (!response.ok) {
-    throw new Error('Failed to fetch admin stats')
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to fetch admin stats')
   }
 
   const data: TRPCResponse<any> = await response.json()
@@ -495,10 +529,12 @@ export async function apiGetAllUsers(input?: { page?: number; limit?: number; ro
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
     },
+    credentials: 'include',
   })
 
   if (!response.ok) {
-    throw new Error('Failed to fetch users')
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to fetch users')
   }
 
   const data: TRPCResponse<any> = await response.json()
@@ -518,10 +554,12 @@ export async function apiAdminSearchUsers(query: string, limit: number = 20) {
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
     },
+    credentials: 'include',
   })
 
   if (!response.ok) {
-    throw new Error('Failed to search users')
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to search users')
   }
 
   const data: TRPCResponse<any> = await response.json()
@@ -541,10 +579,12 @@ export async function apiGetUserDetails(userId: string) {
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
     },
+    credentials: 'include',
   })
 
   if (!response.ok) {
-    throw new Error('Failed to fetch user details')
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to fetch user details')
   }
 
   const data: TRPCResponse<any> = await response.json()
@@ -564,11 +604,13 @@ export async function apiUpdateUserRole(userId: string, role: 'user' | 'moderato
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
     },
+    credentials: 'include',
     body: JSON.stringify({ userId, role }),
   })
 
   if (!response.ok) {
-    throw new Error('Failed to update user role')
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to update user role')
   }
 
   const data: TRPCResponse<any> = await response.json()
@@ -588,11 +630,13 @@ export async function apiBanUser(userId: string, reason?: string) {
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
     },
+    credentials: 'include',
     body: JSON.stringify({ userId, reason }),
   })
 
   if (!response.ok) {
-    throw new Error('Failed to ban user')
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to ban user')
   }
 
   const data: TRPCResponse<any> = await response.json()
@@ -612,11 +656,13 @@ export async function apiDeleteUser(userId: string) {
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
     },
+    credentials: 'include',
     body: JSON.stringify({ userId }),
   })
 
   if (!response.ok) {
-    throw new Error('Failed to delete user')
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to delete user')
   }
 
   const data: TRPCResponse<any> = await response.json()

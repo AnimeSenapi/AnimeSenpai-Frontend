@@ -62,6 +62,7 @@ export default function PrivacyPage() {
 
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
@@ -667,7 +668,7 @@ export default function PrivacyPage() {
               <p className="text-center text-gray-500 text-sm mt-6">
                 Questions? Contact us at <a href="mailto:contact@animesenpai.app" className="text-primary-400 hover:text-primary-300 transition-colors">contact@animesenpai.app</a>
               </p>
-            </div>
+              </div>
             </div>
           </div>
         </div>

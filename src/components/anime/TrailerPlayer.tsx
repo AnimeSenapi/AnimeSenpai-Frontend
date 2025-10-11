@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
+import Image from 'next/image'
 import { Play, X } from 'lucide-react'
 import { Button } from '../ui/button'
 
@@ -55,14 +57,12 @@ export function TrailerPlayer({ trailerUrl, title, className = '' }: TrailerPlay
       {!isPlaying ? (
         // Thumbnail with Play Button
         <div className="relative aspect-video rounded-2xl overflow-hidden group cursor-pointer bg-gray-900">
-          <img
+          <Image
             src={thumbnailUrl}
             alt={`${title} Trailer`}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            onError={(e) => {
-              // Fallback to default thumbnail
-              e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
-            }}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 60vw"
           />
           
           {/* Dark Overlay */}
@@ -167,16 +167,22 @@ export function TrailerButton({ trailerUrl, title }: TrailerButtonProps) {
         Watch Trailer
       </Button>
 
-      {showModal && (
+      {showModal && typeof document !== 'undefined' && createPortal(
         <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+          style={{ 
+            zIndex: 999999,
+            position: 'fixed',
+            isolation: 'isolate'
+          }}
           onClick={() => setShowModal(false)}
         >
           <div 
-            className="w-full max-w-4xl"
+            className="w-full max-w-4xl relative"
+            style={{ zIndex: 1000000 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl">
+            <div className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl border border-white/10">
               <iframe
                 src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
                 title={`${title} Trailer`}
@@ -188,13 +194,14 @@ export function TrailerButton({ trailerUrl, title }: TrailerButtonProps) {
               {/* Close Button */}
               <button
                 onClick={() => setShowModal(false)}
-                className="absolute top-4 right-4 w-12 h-12 bg-black/80 hover:bg-black rounded-full flex items-center justify-center transition-colors"
+                className="absolute -top-12 right-0 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors backdrop-blur-sm border border-white/20"
               >
-                <X className="h-6 w-6 text-white" />
+                <X className="h-5 w-5 text-white" />
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )
