@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { 
   User, 
   Calendar, 
@@ -399,11 +400,15 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                 {/* Avatar */}
                 <div className="relative">
                   {profile.avatar ? (
-                    <img 
-                      src={profile.avatar} 
-                      alt={profile.username}
-                      className="w-32 h-32 rounded-2xl object-cover border-4 border-gray-900 shadow-xl"
-                    />
+                    <div className="relative w-32 h-32 rounded-2xl border-4 border-gray-900 shadow-xl overflow-hidden">
+                      <Image 
+                        src={profile.avatar} 
+                        alt={profile.username}
+                        fill
+                        className="object-cover"
+                        sizes="128px"
+                      />
+                    </div>
                   ) : (
                     <div className="w-32 h-32 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-2xl flex items-center justify-center border-4 border-gray-900 shadow-xl">
                       <User className="h-16 w-16 text-white" />

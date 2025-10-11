@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { AnimeCard } from '../../../components/anime/AnimeCard'
 import { TrailerPlayer, TrailerButton } from '../../../components/anime/TrailerPlayer'
 import { ShareButton } from '../../../components/social/ShareButton'
@@ -432,12 +433,15 @@ export default function AnimePage() {
           {/* Left: Poster & Actions */}
           <div className="md:sticky md:top-24 self-start">
             <div className="glass rounded-2xl p-2 mb-6">
-              <div className="aspect-[2/3] rounded-xl overflow-hidden">
+              <div className="aspect-[2/3] rounded-xl overflow-hidden relative">
                 {(anime.coverImage || anime.imageUrl) ? (
-                  <img 
+                  <Image 
                     src={anime.coverImage || anime.imageUrl} 
                     alt={anime.title}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    priority
                   />
                 ) : (
                   <div className="w-full h-full bg-gray-800 flex items-center justify-center">
