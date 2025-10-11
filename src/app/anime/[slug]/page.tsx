@@ -430,7 +430,7 @@ export default function AnimePage() {
         description: anime.description || anime.synopsis,
         slug: anime.slug,
         coverImage: anime.coverImage || anime.imageUrl,
-        rating: anime.rating || (anime.stats?.averageRating),
+        rating: anime.averageRating || 0,
         year: anime.year,
         genres: anime.genres,
         episodes: anime.episodes,
