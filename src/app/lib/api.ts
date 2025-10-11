@@ -456,7 +456,10 @@ export async function apiGetAdminStats() {
   const url = `${TRPC_URL}/admin.getStats`
   const response = await fetch(url, {
     method: 'GET',
-    headers: await getHeaders(),
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
   })
 
   if (!response.ok) {
@@ -476,7 +479,10 @@ export async function apiGetAllUsers(input?: { page?: number; limit?: number; ro
   const url = `${TRPC_URL}/admin.getAllUsers${input ? `?input=${encodeURIComponent(JSON.stringify(input))}` : ''}`
   const response = await fetch(url, {
     method: 'GET',
-    headers: await getHeaders(),
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
   })
 
   if (!response.ok) {
@@ -496,7 +502,10 @@ export async function apiAdminSearchUsers(query: string, limit: number = 20) {
   const url = `${TRPC_URL}/admin.searchUsers?input=${encodeURIComponent(JSON.stringify({ query, limit }))}`
   const response = await fetch(url, {
     method: 'GET',
-    headers: await getHeaders(),
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
   })
 
   if (!response.ok) {
@@ -516,7 +525,10 @@ export async function apiGetUserDetails(userId: string) {
   const url = `${TRPC_URL}/admin.getUserDetails?input=${encodeURIComponent(JSON.stringify({ userId }))}`
   const response = await fetch(url, {
     method: 'GET',
-    headers: await getHeaders(),
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
   })
 
   if (!response.ok) {
@@ -536,7 +548,10 @@ export async function apiUpdateUserRole(userId: string, role: 'user' | 'moderato
   const url = `${TRPC_URL}/admin.updateUserRole`
   const response = await fetch(url, {
     method: 'POST',
-    headers: await getHeaders(),
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
     body: JSON.stringify({ userId, role }),
   })
 
@@ -557,7 +572,10 @@ export async function apiBanUser(userId: string, reason?: string) {
   const url = `${TRPC_URL}/admin.banUser`
   const response = await fetch(url, {
     method: 'POST',
-    headers: await getHeaders(),
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
     body: JSON.stringify({ userId, reason }),
   })
 
@@ -578,7 +596,10 @@ export async function apiDeleteUser(userId: string) {
   const url = `${TRPC_URL}/admin.deleteUser`
   const response = await fetch(url, {
     method: 'POST',
-    headers: await getHeaders(),
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
     body: JSON.stringify({ userId }),
   })
 
