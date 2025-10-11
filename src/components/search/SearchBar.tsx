@@ -373,9 +373,9 @@ export function SearchBar({
         </div>
       )}
 
-      {/* Dropdown - Glassmorphic Design */}
+      {/* Dropdown - Solid Dark Design */}
       {isOpen && showDropdown && (
-        <div className="absolute top-full left-0 right-0 mt-3 glass rounded-xl shadow-2xl border border-white/10 z-50 max-h-96 overflow-hidden min-w-[300px] animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute top-full left-0 right-0 mt-3 bg-gray-900/95 backdrop-blur-sm rounded-xl shadow-2xl border border-white/10 z-50 max-h-96 overflow-hidden min-w-[300px] animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="overflow-y-auto overflow-x-hidden max-h-96 custom-scrollbar">
             {searchQuery.trim() ? (
               // Search Results
