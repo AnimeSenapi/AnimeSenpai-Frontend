@@ -66,6 +66,7 @@ async function trpcQuery<TOutput>(path: string, init?: RequestInit): Promise<TOu
   const url = `${TRPC_URL}/${path}`
   
   console.log('🔍 tRPC Query:', { url, method: 'GET' })
+  console.log('🔧 Full URL being fetched:', url)
   
   try {
     const res = await fetch(url, {
@@ -127,9 +128,15 @@ async function trpcQuery<TOutput>(path: string, init?: RequestInit): Promise<TOu
     return json.result.data
   } catch (error: unknown) {
     console.error('❌ tRPC GET Failed:', error)
+    console.error('❌ Failed URL was:', url)
+    console.error('❌ TRPC_URL constant is:', TRPC_URL)
+    console.error('❌ Backend should be at: http://localhost:3003/api/trpc')
+    
     // Handle network errors
     if (error instanceof Error && error.message.includes('fetch')) {
-      throw new Error(getUserFriendlyError('NETWORK_ERROR', 'Unable to connect to the server'))
+      const errorMsg = `Unable to connect to backend at ${url}. Is the backend running on port 3003?`
+      console.error('❌ Network Error:', errorMsg)
+      throw new Error(getUserFriendlyError('NETWORK_ERROR', errorMsg))
     }
     throw error
   }
