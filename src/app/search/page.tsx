@@ -8,7 +8,7 @@ import { Badge } from '../../components/ui/badge'
 import { AnimeCardSkeleton, SearchResultSkeleton } from '../../components/ui/skeleton'
 import { Anime } from '../../types/anime'
 import { getTagById } from '../../types/tags'
-import { apiGetAllAnime } from '../lib/api'
+import { apiGetAllAnime, apiGetAllSeries } from '../lib/api'
 import { useFavorites } from '../lib/favorites-context'
 import { 
   Search, 
@@ -190,15 +190,24 @@ export default function SearchPage() {
   const [filteredAnime, setFilteredAnime] = useState<Anime[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // Load anime from API
+  // Load anime from API (use series grouping)
   useEffect(() => {
     async function loadAnime() {
       setIsLoading(true)
       try {
-        const data = await apiGetAllAnime()
-        if (data && typeof data === 'object' && 'anime' in data) {
-          const animeList = Array.isArray(data.anime) ? data.anime : []
-          setAllAnime(animeList)
+        const data = await apiGetAllSeries()
+        if (data && typeof data === 'object' && 'series' in data) {
+          // Convert series to anime format with season metadata
+          const seriesList = Array.isArray(data.series) ? data.series : []
+          const animeList = seriesList.map(series => ({
+            ...series,
+            titleEnglish: series.titleEnglish || series.displayTitle,
+            // Add series metadata
+            seasonCount: series.seasonCount,
+            totalEpisodes: series.totalEpisodes,
+            seasons: series.seasons
+          }))
+          setAllAnime(animeList as any[])
           console.log(`✅ Loaded ${animeList.length} anime from API`)
           if (animeList.length > 0 && animeList[0]?.genres) {
             console.log('Sample genres from first anime:', animeList[0].genres.map((g: any) => g.name))

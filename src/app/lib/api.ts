@@ -276,6 +276,28 @@ export async function apiGetAllAnime() {
   return json.result?.data || { anime: [], pagination: { page: 1, limit: 20, total: 0, pages: 0 } }
 }
 
+export async function apiGetAllSeries() {
+  // Get anime grouped by series (Crunchyroll-style)
+  const url = `${TRPC_URL}/anime.getAllSeries?input=${encodeURIComponent(JSON.stringify({ limit: 100 }))}`
+  
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    console.error('Failed to fetch series:', response.status)
+    return { series: [], pagination: { page: 1, limit: 20, total: 0, pages: 0 } }
+  }
+
+  const json = await response.json()
+  return json.result?.data || { series: [], pagination: { page: 1, limit: 20, total: 0, pages: 0 } }
+}
+
 export async function apiGetTrending() {
   return trpcQuery<Anime[]>('anime.getTrending')
 }

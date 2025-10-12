@@ -88,7 +88,16 @@ export function AnimeCard({
             <div className="text-gray-600 text-4xl">🎬</div>
           )}
           
-          {status && statusConfig[status] && (
+          {/* Season Count Badge - Top Left */}
+          {anime.seasonCount && anime.seasonCount > 1 && (
+            <div className="absolute top-2 left-2 z-10">
+              <div className="text-[10px] px-2 py-0.5 rounded font-semibold uppercase tracking-wide backdrop-blur-sm bg-gray-900/90 text-primary-400 border border-primary-500/30">
+                {anime.seasonCount} Seasons
+              </div>
+            </div>
+          )}
+          
+          {status && statusConfig[status] && !anime.seasonCount && (
             <div className="absolute top-2 left-2 z-10">
               <div className={cn(
                 "text-[10px] px-2 py-0.5 rounded font-semibold uppercase tracking-wide backdrop-blur-sm",
@@ -159,10 +168,10 @@ export function AnimeCard({
               <span className="text-xs text-white font-medium drop-shadow-md">{rating || 'N/A'}</span>
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-300 drop-shadow-md">
-              {episodes && (
-                <span>{episodes} eps</span>
+              {(anime.totalEpisodes || episodes) && (
+                <span>{anime.totalEpisodes || episodes} eps</span>
               )}
-              {duration && episodes && (
+              {duration && (anime.totalEpisodes || episodes) && (
                 <span>•</span>
               )}
               {duration && (

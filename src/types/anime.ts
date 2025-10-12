@@ -31,6 +31,10 @@ export interface Anime {
   trailerUrl?: string
   malId?: number // MyAnimeList ID
   anilistId?: number // AniList ID
+  // Series grouping metadata
+  seasonCount?: number // Number of seasons in the series
+  totalEpisodes?: number // Total episodes across all seasons
+  seasons?: any[] // All seasons data
 }
 
 export interface AnimeCardProps {

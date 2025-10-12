@@ -209,6 +209,15 @@ export function SearchAnimeCard({
             </div>
           )}
           
+          {/* Season Count Badge - Top Left */}
+          {anime.seasonCount && anime.seasonCount > 1 && (
+            <div className="absolute top-2 left-2 z-10">
+              <div className="text-[10px] px-2 py-0.5 rounded font-semibold uppercase tracking-wide backdrop-blur-sm bg-gray-900/90 text-primary-400 border border-primary-500/30">
+                {anime.seasonCount} Seasons
+              </div>
+            </div>
+          )}
+          
           {/* Gradient Overlay - Always visible */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
           
@@ -260,10 +269,10 @@ export function SearchAnimeCard({
             </h3>
             <div className="flex items-center gap-2 text-xs text-gray-300 mb-2">
               <span>{anime.year || 'TBA'}</span>
-              {anime.episodes && (
+              {(anime.totalEpisodes || anime.episodes) && (
                 <>
                   <span>•</span>
-                  <span>{anime.episodes} eps</span>
+                  <span>{anime.totalEpisodes || anime.episodes} eps</span>
                 </>
               )}
             </div>
