@@ -20,7 +20,7 @@ import {
   Users,
   Star
 } from 'lucide-react'
-import { apiGetAllAnime, apiGetTrending } from '../lib/api'
+import { apiGetAllAnime, apiGetAllSeries, apiGetTrending } from '../lib/api'
 import { useAuth } from '../lib/auth-context'
 import type { Anime } from '../../types/anime'
 
@@ -30,6 +30,7 @@ export default function DashboardPage() {
   
   const [trendingAnime, setTrendingAnime] = useState<Anime[]>([])
   const [allAnime, setAllAnime] = useState<Anime[]>([])
+  const [allSeries, setAllSeries] = useState<any[]>([]) // Grouped series
   const [forYouRecs, setForYouRecs] = useState<any[]>([])
   const [fansLikeYouRecs, setFansLikeYouRecs] = useState<any[]>([])
   const [friendRecs, setFriendRecs] = useState<any[]>([])
@@ -38,6 +39,7 @@ export default function DashboardPage() {
   const [continueWatching, setContinueWatching] = useState<any[]>([])
   const [newReleases, setNewReleases] = useState<any[]>([])
   const [topRatedAnime, setTopRatedAnime] = useState<Anime[]>([])
+  const [topRatedSeries, setTopRatedSeries] = useState<any[]>([]) // Grouped series
   const [recentlyAddedAnime, setRecentlyAddedAnime] = useState<Anime[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -89,12 +91,26 @@ export default function DashboardPage() {
       setError(null)
       try {
         // Load basic trending/all anime (works for guests too)
-        const [trending, all] = await Promise.all([
+        const [trending, all, series] = await Promise.all([
           apiGetTrending(),
-          apiGetAllAnime()
+          apiGetAllAnime(),
+          apiGetAllSeries()
         ])
         
         setTrendingAnime(Array.isArray(trending) ? trending : [])
+        
+        // Store series data
+        if (series && typeof series === 'object' && 'series' in series) {
+          const seriesList = Array.isArray(series.series) ? series.series : []
+          setAllSeries(seriesList)
+          
+          // Top Rated Series
+          const topRated = [...seriesList]
+            .filter(s => s.rating && s.rating > 0)
+            .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+            .slice(0, 20)
+          setTopRatedSeries(topRated)
+        }
         
         if (all && typeof all === 'object' && 'anime' in all) {
           const animeList = Array.isArray(all.anime) ? all.anime : []
@@ -263,15 +279,15 @@ export default function DashboardPage() {
               <div className="flex items-start sm:items-center gap-3 sm:gap-4">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
                   <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                </div>
+          </div>
                 <div>
                   <h3 className="text-lg sm:text-xl font-bold text-white mb-1">
                     Get Personalized Recommendations!
                   </h3>
                   <p className="text-sm sm:text-base text-gray-300">
                     Tell us what you like and Senpai will find your perfect anime match ✨
-                  </p>
-                </div>
+          </p>
+        </div>
               </div>
               <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
                 <Button
@@ -289,8 +305,8 @@ export default function DashboardPage() {
                 </Button>
               </div>
             </div>
-          </div>
-        )}
+              </div>
+            )}
 
         {/* Hero Section - Responsive */}
         <div className="mb-8 sm:mb-10 lg:mb-12 text-center">
@@ -362,23 +378,26 @@ export default function DashboardPage() {
             {/* Friends Are Watching - Social Recommendations */}
             <FriendsWatching />
 
-            {/* Popular Anime - For logged-in users too */}
-            {allAnime.length > 0 && (
+            {/* Popular Series - Grouped by series like Crunchyroll */}
+            {allSeries.length > 0 && (
               <RecommendationCarousel
                 title="Popular Anime"
                 icon={<Sparkles className="h-5 w-5 text-primary-400" />}
-                recommendations={allAnime.slice(0, 20).map(anime => ({
+                recommendations={allSeries.slice(0, 20).map(series => ({
                   anime: {
-                    id: anime.id,
-                    slug: anime.slug,
-                    title: anime.title,
-                    titleEnglish: (anime as any).titleEnglish,
-                    titleJapanese: (anime as any).titleJapanese,
-                    titleSynonyms: (anime as any).titleSynonyms,
-                    coverImage: anime.coverImage ?? null,
-                    year: anime.year ?? null,
-                    averageRating: anime.rating ?? null,
-                    genres: anime.genres || []
+                    id: series.id,
+                    slug: series.slug,
+                    title: series.title,
+                    titleEnglish: series.titleEnglish || series.displayTitle,
+                    titleJapanese: series.titleJapanese,
+                    titleSynonyms: series.titleSynonyms,
+                    coverImage: series.coverImage ?? null,
+                    year: series.year ?? null,
+                    averageRating: series.rating ?? null,
+                    genres: series.genres || [],
+                    // Add season metadata for badge display
+                    seasonCount: series.seasonCount,
+                    totalEpisodes: series.totalEpisodes
                   }
                 }))}
                 showReasons={false}
@@ -407,23 +426,25 @@ export default function DashboardPage() {
               />
             )}
 
-            {/* Top Rated Anime */}
-            {topRatedAnime.length > 0 && (
+            {/* Top Rated Series - Grouped */}
+            {topRatedSeries.length > 0 && (
               <RecommendationCarousel
                 title="Top Rated Anime"
                 icon={<Star className="h-5 w-5 text-warning-400" />}
-                recommendations={topRatedAnime.map(anime => ({
+                recommendations={topRatedSeries.map(series => ({
                   anime: {
-                    id: anime.id,
-                    slug: anime.slug,
-                    title: anime.title,
-                    titleEnglish: (anime as any).titleEnglish,
-                    titleJapanese: (anime as any).titleJapanese,
-                    titleSynonyms: (anime as any).titleSynonyms,
-                    coverImage: anime.coverImage ?? null,
-                    year: anime.year ?? null,
-                    averageRating: anime.rating ?? null,
-                    genres: anime.genres || []
+                    id: series.id,
+                    slug: series.slug,
+                    title: series.title,
+                    titleEnglish: series.titleEnglish || series.displayTitle,
+                    titleJapanese: series.titleJapanese,
+                    titleSynonyms: series.titleSynonyms,
+                    coverImage: series.coverImage ?? null,
+                    year: series.year ?? null,
+                    averageRating: series.rating ?? null,
+                    genres: series.genres || [],
+                    seasonCount: series.seasonCount,
+                    totalEpisodes: series.totalEpisodes
                   }
                 }))}
                 showReasons={false}
