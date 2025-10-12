@@ -388,7 +388,7 @@ export async function apiToggleFavoriteByAnimeId(animeId: string): Promise<{ isF
 // Get user's favorited anime IDs
 export async function apiGetFavoritedAnimeIds(): Promise<string[]> {
   try {
-    const result = await trpcQuery<undefined, { animeIds: string[] }>('user.getFavoritedAnimeIds')
+    const result = await trpcQuery<{ animeIds: string[] }>('user.getFavoritedAnimeIds')
     return result.animeIds || []
   } catch (error) {
     console.error('Failed to fetch favorited anime IDs:', error)
