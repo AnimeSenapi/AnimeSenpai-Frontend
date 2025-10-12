@@ -338,10 +338,11 @@ export default function AnimePage() {
 
   const handleShare = async () => {
     if (navigator.share && anime) {
+      const displayTitle = anime.titleEnglish || anime.title
       try {
         await navigator.share({
-          title: anime.title,
-          text: `Check out ${anime.title} on AnimeSenpai!`,
+          title: displayTitle,
+          text: `Check out ${displayTitle} on AnimeSenpai!`,
           url: window.location.href
         })
         toast.success('Shared successfully!', 'Success')
@@ -437,7 +438,7 @@ export default function AnimePage() {
                 {(anime.coverImage || anime.imageUrl) ? (
                   <Image 
                     src={(anime.coverImage || anime.imageUrl) as string} 
-                    alt={anime.title}
+                    alt={anime.titleEnglish || anime.title}
                     fill
                     className="object-cover"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -505,20 +506,22 @@ export default function AnimePage() {
               )}
               <div className="grid grid-cols-2 gap-2">
                 <ShareAnimeCard anime={anime} userRating={userRating} userStatus={listStatus.status} />
-                {anime.trailer && <TrailerButton trailerUrl={anime.trailer} title={anime.title} />}
+                {anime.trailer && <TrailerButton trailerUrl={anime.trailer} title={anime.titleEnglish || anime.title} />}
               </div>
             </div>
           </div>
 
           {/* Right: Content */}
             <div>
-            {/* Title */}
+            {/* Title - Prioritize English */}
             <div className="mb-6">
-              <h1 className="text-5xl md:text-6xl font-bold text-white mb-3 leading-tight">{anime.title}</h1>
-              {anime.titleEnglish && anime.titleEnglish !== anime.title && (
-                <p className="text-xl text-gray-400 mb-2">{anime.titleEnglish}</p>
+              <h1 className="text-5xl md:text-6xl font-bold text-white mb-3 leading-tight">
+                {anime.titleEnglish || anime.title}
+              </h1>
+              {anime.titleEnglish && anime.title !== anime.titleEnglish && (
+                <p className="text-xl text-gray-400 mb-2">{anime.title}</p>
               )}
-              {anime.titleJapanese && (
+              {anime.titleJapanese && anime.titleJapanese !== anime.title && (
                 <p className="text-sm text-gray-500">{anime.titleJapanese}</p>
               )}
             </div>
@@ -764,7 +767,7 @@ export default function AnimePage() {
       {showRatingModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowRatingModal(false)}>
           <div className="glass rounded-2xl p-8 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-2xl font-bold text-white mb-6">Rate {anime.title}</h2>
+            <h2 className="text-2xl font-bold text-white mb-6">Rate {anime.titleEnglish || anime.title}</h2>
             
             <div className="mb-6">
               <div className="flex justify-center gap-2 mb-4">
