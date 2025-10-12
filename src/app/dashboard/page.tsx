@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { apiGetAllAnime, apiGetAllSeries, apiGetTrending } from '../lib/api'
 import { useAuth } from '../lib/auth-context'
+import { groupAnimeIntoSeries } from '../../lib/series-grouping'
 import type { Anime } from '../../types/anime'
 
 export default function DashboardPage() {
@@ -97,7 +98,10 @@ export default function DashboardPage() {
           apiGetAllSeries()
         ])
         
-        setTrendingAnime(Array.isArray(trending) ? trending : [])
+        // Group trending anime into series
+        const trendingList = Array.isArray(trending) ? trending : []
+        const groupedTrending = groupAnimeIntoSeries(trendingList)
+        setTrendingAnime(groupedTrending)
         
         // Store series data
         if (series && typeof series === 'object' && 'series' in series) {
@@ -352,23 +356,25 @@ export default function DashboardPage() {
               />
             )}
 
-            {/* Trending Now - For logged-in users too */}
+            {/* Trending Now - For logged-in users too - Grouped by series */}
             {trendingAnime.length > 0 && (
               <RecommendationCarousel
                 title="Trending Now"
                 icon={<TrendingUp className="h-5 w-5 text-secondary-400" />}
-                recommendations={trendingAnime.map(anime => ({
+                recommendations={trendingAnime.map(series => ({
                   anime: {
-                    id: anime.id,
-                    slug: anime.slug,
-                    title: anime.title,
-                    titleEnglish: (anime as any).titleEnglish,
-                    titleJapanese: (anime as any).titleJapanese,
-                    titleSynonyms: (anime as any).titleSynonyms,
-                    coverImage: anime.coverImage ?? null,
-                    year: anime.year ?? null,
-                    averageRating: anime.rating ?? null,
-                    genres: anime.genres || []
+                    id: series.id,
+                    slug: series.slug,
+                    title: series.title,
+                    titleEnglish: series.titleEnglish || series.displayTitle,
+                    titleJapanese: series.titleJapanese,
+                    titleSynonyms: series.titleSynonyms,
+                    coverImage: series.coverImage ?? null,
+                    year: series.year ?? null,
+                    averageRating: series.rating || series.averageRating,
+                    genres: series.genres || [],
+                    seasonCount: series.seasonCount,
+                    totalEpisodes: series.totalEpisodes
                   }
                 }))}
                 showReasons={false}
@@ -497,46 +503,50 @@ export default function DashboardPage() {
           />
         )}
 
-        {/* Trending Section - Use carousel for consistency */}
+        {/* Trending Series - Use carousel for consistency - Guest users */}
         {!isAuthenticated && trendingAnime.length > 0 && (
           <RecommendationCarousel
             title="Trending Now"
             icon={<TrendingUp className="h-5 w-5 text-primary-400" />}
-            recommendations={trendingAnime.map(anime => ({
+            recommendations={trendingAnime.map(series => ({
               anime: {
-                id: anime.id,
-                slug: anime.slug,
-                title: anime.title,
-                titleEnglish: (anime as any).titleEnglish,
-                titleJapanese: (anime as any).titleJapanese,
-                titleSynonyms: (anime as any).titleSynonyms,
-                coverImage: anime.coverImage ?? null,
-                year: anime.year ?? null,
-                averageRating: anime.rating ?? null,
-                genres: anime.genres || []
+                id: series.id,
+                slug: series.slug,
+                title: series.title,
+                titleEnglish: series.titleEnglish || series.displayTitle,
+                titleJapanese: series.titleJapanese,
+                titleSynonyms: series.titleSynonyms,
+                coverImage: series.coverImage ?? null,
+                year: series.year ?? null,
+                averageRating: series.rating || series.averageRating,
+                genres: series.genres || [],
+                seasonCount: series.seasonCount,
+                totalEpisodes: series.totalEpisodes
               }
             }))}
             showReasons={false}
           />
         )}
 
-        {/* Popular Anime Section - Use carousel for consistency */}
-        {!isAuthenticated && allAnime.length > 0 && (
+        {/* Popular Series - Use carousel for consistency - Guest users */}
+        {!isAuthenticated && allSeries.length > 0 && (
           <RecommendationCarousel
             title="Popular Anime"
             icon={<Sparkles className="h-5 w-5 text-primary-400" />}
-            recommendations={allAnime.slice(0, 20).map(anime => ({
+            recommendations={allSeries.slice(0, 20).map(series => ({
               anime: {
-                id: anime.id,
-                slug: anime.slug,
-                title: anime.title,
-                titleEnglish: (anime as any).titleEnglish,
-                titleJapanese: (anime as any).titleJapanese,
-                titleSynonyms: (anime as any).titleSynonyms,
-                coverImage: anime.coverImage ?? null,
-                year: anime.year ?? null,
-                averageRating: anime.rating ?? null,
-                genres: anime.genres || []
+                id: series.id,
+                slug: series.slug,
+                title: series.title,
+                titleEnglish: series.titleEnglish || series.displayTitle,
+                titleJapanese: series.titleJapanese,
+                titleSynonyms: series.titleSynonyms,
+                coverImage: series.coverImage ?? null,
+                year: series.year ?? null,
+                averageRating: series.rating ?? null,
+                genres: series.genres || [],
+                seasonCount: series.seasonCount,
+                totalEpisodes: series.totalEpisodes
               }
             }))}
             showReasons={false}
