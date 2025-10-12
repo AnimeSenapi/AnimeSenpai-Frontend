@@ -15,6 +15,12 @@ const siteDescription = 'Discover, track, and explore your favorite anime. Get p
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+  },
   title: {
     default: 'AnimeSenpai - Track, Discover & Watch Anime | Free Anime Tracker',
     template: '%s | AnimeSenpai'

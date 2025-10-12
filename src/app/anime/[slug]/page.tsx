@@ -373,29 +373,29 @@ export default function AnimePage() {
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
-      <main className="container pt-32 pb-20 relative z-10">
+      <main className="container px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 lg:pb-20 relative z-10">
           {/* Back Button Skeleton */}
-        <div className="mb-8">
-            <div className="h-10 w-24 bg-white/10 rounded-lg animate-pulse"></div>
+        <div className="mb-4 sm:mb-6 lg:mb-8">
+            <div className="h-8 sm:h-10 w-20 sm:w-24 bg-white/10 rounded-lg animate-pulse"></div>
           </div>
 
           {/* Detail Hero Skeleton */}
           <DetailHeroSkeleton />
 
           {/* Where to Watch Skeleton */}
-          <div className="glass rounded-2xl p-6 mb-8">
-            <div className="h-8 w-48 bg-white/10 rounded-lg mb-4 animate-pulse"></div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8">
+            <div className="h-6 sm:h-8 w-36 sm:w-48 bg-white/10 rounded-lg mb-3 sm:mb-4 animate-pulse"></div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-16 bg-white/10 rounded-xl animate-pulse"></div>
+                <div key={i} className="h-14 sm:h-16 bg-white/10 rounded-xl animate-pulse"></div>
               ))}
             </div>
           </div>
 
           {/* Related Anime Skeleton */}
-          <div className="mb-12">
-            <div className="h-8 w-56 bg-white/10 rounded-lg mb-6 animate-pulse"></div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="mb-8 sm:mb-10 lg:mb-12">
+            <div className="h-6 sm:h-8 w-44 sm:w-56 bg-white/10 rounded-lg mb-4 sm:mb-6 animate-pulse"></div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
                 <AnimeCardSkeleton key={i} />
               ))}
@@ -424,16 +424,16 @@ export default function AnimePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900">
-      <main className="container pt-28 pb-20">
-        <div className="mb-8">
+      <main className="container px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 lg:pb-20">
+        <div className="mb-4 sm:mb-6 lg:mb-8">
           <BackButton />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-10 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] xl:grid-cols-[320px_1fr] gap-6 lg:gap-8 xl:gap-10 max-w-7xl mx-auto">
           {/* Left: Poster & Actions */}
-          <div className="md:sticky md:top-24 self-start">
-            <div className="glass rounded-2xl p-2 mb-6">
-              <div className="aspect-[2/3] rounded-xl overflow-hidden relative">
+          <div className="lg:sticky lg:top-24 self-start">
+            <div className="glass rounded-xl sm:rounded-2xl p-2 mb-4 sm:mb-6">
+              <div className="aspect-[2/3] rounded-lg sm:rounded-xl overflow-hidden relative">
                 {(anime.coverImage || anime.imageUrl) ? (
                   <Image 
                     src={(anime.coverImage || anime.imageUrl) as string} 
