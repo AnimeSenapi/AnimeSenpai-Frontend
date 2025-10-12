@@ -14,6 +14,9 @@ interface RecommendationAnime {
   id: string
   slug: string
   title: string
+  titleEnglish?: string | null
+  titleJapanese?: string | null
+  titleSynonyms?: string[] | null
   coverImage: string | null
   year: number | null
   averageRating: number | null
@@ -147,6 +150,9 @@ export function RecommendationCarousel({
                 id: anime.id,
                 slug: anime.slug,
                 title: anime.title,
+                titleEnglish: anime.titleEnglish,
+                titleJapanese: anime.titleJapanese,
+                titleSynonyms: anime.titleSynonyms,
                 coverImage: anime.coverImage || undefined,
                 year: anime.year || 0,
                 rating: anime.averageRating || 0,
@@ -154,7 +160,7 @@ export function RecommendationCarousel({
                 genres: anime.genres.map(g => ({ ...g, slug: g.id }))
               } as any}
               variant="featured"
-              onFavorite={() => handleFavorite(anime.id, anime.title)}
+              onFavorite={() => handleFavorite(anime.id, anime.titleEnglish || anime.title)}
               isFavorited={isFavorited(anime.id)}
             />
 

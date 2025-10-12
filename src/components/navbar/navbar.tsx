@@ -62,7 +62,7 @@ export function Navbar() {
             </div>
 
             {/* Enhanced Search Bar - Responsive */}
-            <div className="hidden sm:block flex-1 max-w-xs lg:max-w-sm xl:max-w-md transition-all duration-300">
+            <div className="hidden sm:block w-48 lg:w-56 xl:w-64 transition-all duration-300">
               <SearchBar
                 placeholder="Search..."
                 showDropdown={true}
