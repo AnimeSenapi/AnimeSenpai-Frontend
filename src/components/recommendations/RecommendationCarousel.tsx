@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { Button } from '../ui/button'
 import { AnimeCard } from '../anime/AnimeCard'
 import { useAuth } from '../../app/lib/auth-context'
+import { useFavorites } from '../../app/lib/favorites-context'
 import { useToast } from '../../lib/toast-context'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/trpc'
@@ -45,37 +46,9 @@ export function RecommendationCarousel({
 }: RecommendationCarouselProps) {
   const [scrollPosition, setScrollPosition] = useState(0)
   const [showReason, setShowReason] = useState<string | null>(null)
-  const [bookmarkedAnime, setBookmarkedAnime] = useState<Set<string>>(new Set())
-  const { isAuthenticated, getAuthHeaders } = useAuth()
+  const { isAuthenticated } = useAuth()
+  const { isFavorited, toggleFavorite } = useFavorites()
   const toast = useToast()
-
-  // Fetch user's list to check which anime are bookmarked
-  useEffect(() => {
-    const fetchUserList = async () => {
-      if (!isAuthenticated) {
-        setBookmarkedAnime(new Set())
-        return
-      }
-
-      try {
-        const response = await fetch(`${API_URL}/user.getMyList`, {
-          method: 'GET',
-          headers: getAuthHeaders()
-        })
-
-        const data = await response.json()
-        
-        if (!data.error && data.result?.data) {
-          const animeIds = new Set<string>(data.result.data.map((item: any) => item.anime.id as string))
-          setBookmarkedAnime(animeIds)
-        }
-      } catch (err) {
-        console.error('Failed to fetch user list:', err)
-      }
-    }
-
-    fetchUserList()
-  }, [isAuthenticated, getAuthHeaders])
 
   if (recommendations.length === 0) {
     return null
@@ -94,77 +67,37 @@ export function RecommendationCarousel({
     }
   }
 
-  const handleBookmark = async (animeId: string, animeTitle: string) => {
+  const handleFavorite = async (animeId: string, animeTitle: string) => {
     if (!isAuthenticated) {
-      toast.info('Please sign in to add anime to your list', 'Sign In Required')
+      toast.info('Please sign in to favorite anime', 'Sign In Required')
       return
     }
 
-    const isCurrentlyBookmarked = bookmarkedAnime.has(animeId)
-
-    try {
-      if (isCurrentlyBookmarked) {
-        // Remove from list
-        const response = await fetch(`${API_URL}/user.removeFromList`, {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({ animeId })
-        })
-
-        const data = await response.json()
-        
-        if (data.error) {
-          toast.error('Failed to remove from list', 'Error')
-          return
-        }
-
-        setBookmarkedAnime(prev => {
-          const newSet = new Set(prev)
-          newSet.delete(animeId)
-          return newSet
-        })
-        toast.success(`Removed "${animeTitle}" from your list`, 'Success')
-      } else {
-        // Add to list
-        const response = await fetch(`${API_URL}/user.addToList`, {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({
-            animeId: animeId,
-            status: 'plan-to-watch'
-          })
-        })
-
-        const data = await response.json()
-        
-        if (data.error) {
-          toast.error('Failed to add to list', 'Error')
-          return
-        }
-
-        setBookmarkedAnime(prev => new Set(prev).add(animeId))
-        toast.success(`Added "${animeTitle}" to Plan to Watch!`, 'Success')
-      }
-    } catch (err) {
-      console.error('Failed to update list:', err)
-      toast.error('Failed to update list', 'Error')
+    const wasFavorited = isFavorited(animeId)
+    await toggleFavorite(animeId)
+    
+    // Show success message
+    if (wasFavorited) {
+      toast.success(`Removed "${animeTitle}" from favorites`, 'Success')
+    } else {
+      toast.success(`Added "${animeTitle}" to favorites!`, 'Success')
     }
   }
 
   return (
-    <div className="mb-12">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
+    <div className="mb-8 sm:mb-10 lg:mb-12">
+      {/* Header - Responsive */}
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <div className="flex items-center gap-2 sm:gap-3">
           {icon && (
-            <div className="p-2 rounded-lg bg-gradient-to-br from-primary-500/20 to-secondary-500/20">
+            <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-br from-primary-500/20 to-secondary-500/20">
               {icon}
             </div>
           )}
-          <h2 className="text-2xl font-bold text-white">{title}</h2>
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">{title}</h2>
         </div>
         
-        <div className="flex gap-2">
+        <div className="hidden sm:flex gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -184,16 +117,16 @@ export function RecommendationCarousel({
         </div>
       </div>
 
-      {/* Carousel */}
+      {/* Carousel - Touch-friendly scrolling on mobile */}
       <div 
         id={`carousel-${title.replace(/\s/g, '-')}`}
-        className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth pb-4"
+        className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide scroll-smooth pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory touch-pan-x"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {recommendations.slice(0, 20).map(({ anime, reason }) => (
           <div 
             key={anime.id}
-            className="flex-shrink-0 w-48 relative group/card"
+            className="flex-shrink-0 w-36 sm:w-44 lg:w-48 relative group/card snap-start"
           >
             {/* Dismiss Button - Top Left, Show on Hover */}
             {onDismiss && (
@@ -221,8 +154,8 @@ export function RecommendationCarousel({
                 genres: anime.genres.map(g => ({ ...g, slug: g.id }))
               } as any}
               variant="featured"
-              onBookmark={() => handleBookmark(anime.id, anime.title)}
-              isBookmarked={bookmarkedAnime.has(anime.id)}
+              onFavorite={() => handleFavorite(anime.id, anime.title)}
+              isFavorited={isFavorited(anime.id)}
             />
 
             {/* Reason text below card */}

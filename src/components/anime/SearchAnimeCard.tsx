@@ -7,6 +7,7 @@ import { cn } from '../../app/lib/utils'
 import { Anime } from '../../types/anime'
 import { getTagById } from '../../types/tags'
 import { Star, Play, Calendar } from 'lucide-react'
+import { Button } from '../ui/button'
 
 interface SearchAnimeCardProps {
   anime: Anime & { 
@@ -14,12 +15,16 @@ interface SearchAnimeCardProps {
   }
   variant?: 'grid' | 'list' | 'compact'
   className?: string
+  onFavorite?: () => void
+  isFavorited?: boolean
 }
 
 export function SearchAnimeCard({ 
   anime, 
   variant = 'grid', 
-  className 
+  className,
+  onFavorite,
+  isFavorited = false
 }: SearchAnimeCardProps) {
   const router = useRouter()
   
@@ -204,8 +209,33 @@ export function SearchAnimeCard({
           {/* Gradient Overlay - Always visible */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
           
+          {/* Favorite Button - Always visible */}
+          {onFavorite && (
+            <div className="absolute top-2 right-2 z-10">
+              <Button 
+                size="sm" 
+                className="border-0 h-8 w-8 p-0 transition-all bg-black/50 hover:bg-black/70"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onFavorite()
+                }}
+              >
+                <Star className={cn(
+                  "h-3.5 w-3.5 transition-all",
+                  isFavorited 
+                    ? "fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" 
+                    : "text-white"
+                )} />
+              </Button>
+            </div>
+          )}
+          
           {/* Rating Badge - Shows on Hover */}
-          <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className={cn(
+            "absolute top-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+            onFavorite ? "right-12" : "right-2"
+          )}>
             <div className="bg-black/70 backdrop-blur-md border border-white/20 text-white text-xs px-2 py-1 rounded-lg flex items-center gap-1 shadow-lg">
               <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
               <span className="font-bold">{anime.rating || 'N/A'}</span>

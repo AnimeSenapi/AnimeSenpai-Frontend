@@ -9,6 +9,7 @@ import { AnimeCardSkeleton, SearchResultSkeleton } from '../../components/ui/ske
 import { Anime } from '../../types/anime'
 import { getTagById } from '../../types/tags'
 import { apiGetAllAnime } from '../lib/api'
+import { useFavorites } from '../lib/favorites-context'
 import { 
   Search, 
   Filter, 
@@ -175,6 +176,7 @@ const years = ['2023', '2022', '2009', '1999']
 
 export default function SearchPage() {
   const searchParams = useSearchParams()
+  const { isFavorited, toggleFavorite } = useFavorites()
   const [searchQuery, setSearchQuery] = useState('')
   const [category, setCategory] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -369,53 +371,53 @@ export default function SearchPage() {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
-      <main className="container pt-28 pb-20 relative z-10">
-        {/* Header Section - Cleaner */}
-        <div className="mb-10">
-          <div className="flex items-center gap-4 mb-4">
-            <h1 className="text-4xl md:text-5xl font-bold text-white">
+      <main className="container px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 lg:pb-20 relative z-10">
+        {/* Header Section - Responsive */}
+        <div className="mb-6 sm:mb-8 lg:mb-10">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3 sm:mb-4">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white">
               {category ? `${category.charAt(0).toUpperCase() + category.slice(1)}` : 'Discover Anime'}
             </h1>
             {category && (
-              <Badge className="bg-primary-500/20 text-primary-300 border-primary-500/30 px-3 py-1">
+              <Badge className="bg-primary-500/20 text-primary-300 border-primary-500/30 px-3 py-1 self-start">
                 {category}
               </Badge>
             )}
           </div>
-          <p className="text-lg text-gray-400">
+          <p className="text-sm sm:text-base lg:text-lg text-gray-400">
             {isLoading ? 'Loading...' : `${filteredAnime.length} anime found`}
           </p>
         </div>
 
-        {/* Search Bar - More Prominent */}
-        <div className="mb-8">
+        {/* Search Bar - Responsive */}
+        <div className="mb-6 sm:mb-8">
           <div className="relative max-w-3xl">
-            <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Search className="absolute left-4 sm:left-5 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search by title, studio, genre..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl pl-14 pr-12 py-4 text-white placeholder-gray-400 focus:outline-none focus:border-primary-400/50 focus:ring-2 focus:ring-primary-400/20 transition-all duration-200"
+              className="w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl pl-11 sm:pl-14 pr-10 sm:pr-12 py-3 sm:py-4 text-sm sm:text-base text-white placeholder-gray-400 focus:outline-none focus:border-primary-400/50 focus:ring-2 focus:ring-primary-400/20 transition-all duration-200"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors p-1.5 hover:bg-white/10 rounded-lg"
+                className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors p-1.5 hover:bg-white/10 rounded-lg"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </button>
             )}
           </div>
         </div>
 
-        {/* Controls Bar - More Compact */}
-        <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
-          <div className="flex items-center gap-3">
+        {/* Controls Bar - Responsive */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between mb-6 sm:mb-8 gap-3 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Button
               variant="outline"
               onClick={() => setShowFilters(!showFilters)}
-              className={`border-white/20 text-white hover:bg-white/10 transition-all ${
+              className={`border-white/20 text-white hover:bg-white/10 transition-all text-sm flex-1 sm:flex-initial ${
                 showFilters ? 'bg-white/10 border-primary-400/50' : ''
               }`}
             >
@@ -433,14 +435,14 @@ export default function SearchPage() {
                 variant="ghost"
                 size="sm"
                 onClick={clearFilters}
-                className="text-gray-400 hover:text-white hover:bg-white/5"
+                className="text-gray-400 hover:text-white hover:bg-white/5 text-sm"
               >
                 Clear all
               </Button>
             )}
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Sort Dropdown */}
             <select
               value={sortBy}
@@ -618,12 +620,14 @@ export default function SearchPage() {
             )}
           </div>
         ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
             {filteredAnime.map((anime) => (
               <SearchAnimeCard
                 key={anime.id}
                 anime={anime}
                 variant="grid"
+                onFavorite={() => toggleFavorite(anime.id)}
+                isFavorited={isFavorited(anime.id)}
               />
             ))}
           </div>
@@ -634,6 +638,8 @@ export default function SearchPage() {
                 key={anime.id}
                 anime={anime}
                 variant="list"
+                onFavorite={() => toggleFavorite(anime.id)}
+                isFavorited={isFavorited(anime.id)}
               />
             ))}
           </div>

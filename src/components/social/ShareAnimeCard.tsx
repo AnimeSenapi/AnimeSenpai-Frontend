@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { Share2, Twitter, Download, X } from 'lucide-react'
 import { Button } from '../ui/button'
@@ -70,26 +71,34 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
         Share
       </Button>
 
-      {/* Share Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="glass rounded-2xl max-w-md w-full p-6 relative border border-white/10 animate-in zoom-in-95 duration-200">
-            {/* Close Button */}
+      {/* Share Modal - Using Portal to render at document.body - Mobile Optimized */}
+      {showModal && createPortal(
+        <div 
+          className="fixed inset-0 flex items-center justify-center p-3 sm:p-4 lg:p-6 bg-black/80 backdrop-blur-sm"
+          style={{ 
+            zIndex: 999999,
+            position: 'fixed',
+            isolation: 'isolate'
+          }}
+        >
+          <div className="glass rounded-xl sm:rounded-2xl max-w-md w-full p-4 sm:p-6 relative border border-white/10 animate-in zoom-in-95 duration-200">
+            {/* Close Button - Touch-friendly */}
             <button
               onClick={() => setShowModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-white transition-colors w-8 h-8 sm:w-auto sm:h-auto flex items-center justify-center touch-manipulation"
+              aria-label="Close share modal"
             >
               <X className="h-5 w-5" />
             </button>
 
-            {/* Header */}
-            <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-              <Share2 className="h-6 w-6 text-primary-400" />
+            {/* Header - Responsive */}
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2 pr-8">
+              <Share2 className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400" />
               Share Anime
             </h3>
 
-            {/* Anime Preview Card */}
-            <div className="bg-white/5 rounded-xl p-4 mb-6 border border-white/10">
+            {/* Anime Preview Card - Responsive */}
+            <div className="bg-white/5 rounded-lg sm:rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 border border-white/10">
               <div className="flex gap-4">
                 {anime.coverImage && (
                   <div className="relative w-20 h-28 rounded-lg overflow-hidden">
@@ -206,7 +215,8 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )

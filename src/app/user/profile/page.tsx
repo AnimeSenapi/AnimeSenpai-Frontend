@@ -255,13 +255,13 @@ export default function ProfilePage() {
             <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
           </div>
 
-          <div className="relative pt-32 px-4 pb-12">
+          <div className="relative pt-24 sm:pt-28 lg:pt-32 px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16 lg:pb-20">
             <div className="max-w-7xl mx-auto">
               {/* Profile Header Skeleton */}
               <ProfileHeaderSkeleton />
 
               {/* Stats Skeleton */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
                 <StatsCardSkeleton />
                 <StatsCardSkeleton />
                 <StatsCardSkeleton />
@@ -269,19 +269,19 @@ export default function ProfilePage() {
               </div>
 
               {/* Content Sections Skeleton */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="glass rounded-2xl p-6">
-                  <div className="h-8 w-48 bg-white/10 rounded-lg mb-6 animate-pulse"></div>
-                  <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6">
+                  <div className="h-6 sm:h-8 w-36 sm:w-48 bg-white/10 rounded-lg mb-4 sm:mb-6 animate-pulse"></div>
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
                     <AnimeCardSkeleton />
                     <AnimeCardSkeleton />
                     <AnimeCardSkeleton />
                     <AnimeCardSkeleton />
                   </div>
                 </div>
-                <div className="glass rounded-2xl p-6">
-                  <div className="h-8 w-48 bg-white/10 rounded-lg mb-6 animate-pulse"></div>
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6">
+                  <div className="h-6 sm:h-8 w-36 sm:w-48 bg-white/10 rounded-lg mb-4 sm:mb-6 animate-pulse"></div>
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
                     <AnimeCardSkeleton />
                     <AnimeCardSkeleton />
                     <AnimeCardSkeleton />
@@ -317,22 +317,22 @@ export default function ProfilePage() {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
-        <div className="relative pt-32 px-4 pb-12">
+        <div className="relative pt-24 sm:pt-28 lg:pt-32 px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16 lg:pb-20">
           <div className="max-w-7xl mx-auto">
-            {/* Profile Header with Cover */}
-            <div className="glass rounded-2xl overflow-hidden mb-8">
+            {/* Profile Header with Cover - Responsive */}
+            <div className="glass rounded-xl sm:rounded-2xl overflow-hidden mb-6 sm:mb-8">
               {/* Cover Area */}
-              <div className="h-32 bg-gradient-to-r from-primary-500/20 via-secondary-500/20 to-primary-500/20 relative">
+              <div className="h-24 sm:h-32 bg-gradient-to-r from-primary-500/20 via-secondary-500/20 to-primary-500/20 relative">
               </div>
 
               {/* Profile Info */}
-              <div className="px-8 pb-8 -mt-12 relative">
-                <div className="flex flex-col md:flex-row items-start md:items-end gap-6 justify-between">
-                  <div className="flex items-end gap-6">
+              <div className="px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 -mt-10 sm:-mt-12 relative">
+                <div className="flex flex-col md:flex-row items-start md:items-end gap-4 sm:gap-6 justify-between">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 sm:gap-6 w-full md:w-auto">
                     {/* Avatar */}
                     <div className="relative group">
                       {user?.avatar ? (
-                        <div className="relative w-24 h-24 rounded-2xl border-4 border-gray-900 shadow-xl overflow-hidden">
+                        <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl border-2 sm:border-4 border-gray-900 shadow-xl overflow-hidden">
                           <Image 
                             src={user.avatar} 
                             alt={user.username || 'User'}
