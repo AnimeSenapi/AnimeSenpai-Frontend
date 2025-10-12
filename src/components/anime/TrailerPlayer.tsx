@@ -55,8 +55,8 @@ export function TrailerPlayer({ trailerUrl, title, className = '' }: TrailerPlay
   return (
     <div className={`relative ${className}`}>
       {!isPlaying ? (
-        // Thumbnail with Play Button
-        <div className="relative aspect-video rounded-2xl overflow-hidden group cursor-pointer bg-gray-900">
+        // Thumbnail with Play Button - Responsive
+        <div className="relative aspect-video rounded-xl sm:rounded-2xl overflow-hidden group cursor-pointer bg-gray-900">
           <Image
             src={thumbnailUrl}
             alt={`${title} Trailer`}
@@ -68,27 +68,28 @@ export function TrailerPlayer({ trailerUrl, title, className = '' }: TrailerPlay
           {/* Dark Overlay */}
           <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors"></div>
           
-          {/* Play Button */}
+          {/* Play Button - Touch-friendly */}
           <button
             onClick={() => setIsPlaying(true)}
-            className="absolute inset-0 flex items-center justify-center"
+            className="absolute inset-0 flex items-center justify-center touch-manipulation"
+            aria-label="Play trailer"
           >
-            <div className="w-20 h-20 bg-primary-500/90 hover:bg-primary-500 rounded-full flex items-center justify-center transition-all duration-200 transform group-hover:scale-110 shadow-2xl">
-              <Play className="h-10 w-10 text-white ml-1" fill="white" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary-500/90 hover:bg-primary-500 active:bg-primary-600 rounded-full flex items-center justify-center transition-all duration-200 transform group-hover:scale-110 active:scale-95 shadow-2xl">
+              <Play className="h-8 w-8 sm:h-10 sm:w-10 text-white ml-1" fill="white" />
             </div>
           </button>
 
-          {/* Trailer Badge */}
-          <div className="absolute top-4 left-4">
-            <div className="glass rounded-lg px-3 py-1.5 flex items-center gap-2">
-              <Play className="h-4 w-4 text-primary-400" />
-              <span className="text-white font-semibold text-sm">Trailer</span>
+          {/* Trailer Badge - Responsive */}
+          <div className="absolute top-2 left-2 sm:top-4 sm:left-4">
+            <div className="glass rounded-md sm:rounded-lg px-2 py-1 sm:px-3 sm:py-1.5 flex items-center gap-1.5 sm:gap-2">
+              <Play className="h-3 w-3 sm:h-4 sm:w-4 text-primary-400" />
+              <span className="text-white font-semibold text-xs sm:text-sm">Trailer</span>
             </div>
           </div>
 
-          {/* Duration/Info */}
-          <div className="absolute bottom-4 right-4">
-            <div className="glass rounded-lg px-3 py-1.5">
+          {/* Duration/Info - Responsive */}
+          <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4">
+            <div className="glass rounded-md sm:rounded-lg px-2 py-1 sm:px-3 sm:py-1.5">
               <span className="text-white text-xs font-medium">Watch Trailer</span>
             </div>
           </div>
@@ -169,7 +170,7 @@ export function TrailerButton({ trailerUrl, title }: TrailerButtonProps) {
 
       {showModal && typeof document !== 'undefined' && createPortal(
         <div 
-          className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 lg:p-8"
           style={{ 
             zIndex: 999999,
             position: 'fixed',
@@ -182,7 +183,7 @@ export function TrailerButton({ trailerUrl, title }: TrailerButtonProps) {
             style={{ zIndex: 1000000 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl border border-white/10">
+            <div className="relative aspect-video rounded-lg sm:rounded-xl lg:rounded-2xl overflow-hidden bg-black shadow-2xl border border-white/10">
               <iframe
                 src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
                 title={`${title} Trailer`}
@@ -191,12 +192,13 @@ export function TrailerButton({ trailerUrl, title }: TrailerButtonProps) {
                 className="w-full h-full"
               />
               
-              {/* Close Button */}
+              {/* Close Button - Touch-friendly */}
               <button
                 onClick={() => setShowModal(false)}
-                className="absolute -top-12 right-0 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors backdrop-blur-sm border border-white/20"
+                className="absolute -top-10 sm:-top-12 right-0 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors backdrop-blur-sm border border-white/20 touch-manipulation"
+                aria-label="Close trailer"
               >
-                <X className="h-5 w-5 text-white" />
+                <X className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </button>
             </div>
           </div>
