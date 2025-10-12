@@ -76,6 +76,9 @@ export default function AnimePage() {
   const [listStatus, setListStatus] = useState<ListStatus>({ inList: false })
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [seasons, setSeasons] = useState<any[]>([])
+  const [seriesName, setSeriesName] = useState<string>('')
+  const [selectedSeason, setSelectedSeason] = useState<string>('')
   
   // Modal states
   const [showAddToListModal, setShowAddToListModal] = useState(false)
@@ -125,16 +128,15 @@ export default function AnimePage() {
         const animeData = data.result?.data
         if (animeData) {
           setAnime(animeData)
+          setSelectedSeason(slug)
           
           // Fetch user's list status if authenticated
           if (isAuthenticated) {
             fetchListStatus(animeData.id)
           }
           
-          // Fetch related seasons
-          if (animeData.title) {
-            fetchRelatedSeasons(animeData.title)
-          }
+          // Fetch all seasons for this series
+          fetchAllSeasons(slug)
           
           // Fetch similar anime
           fetchSimilarAnime(animeData.id)
@@ -181,13 +183,10 @@ export default function AnimePage() {
     }
   }
 
-  const fetchRelatedSeasons = async (title: string) => {
+  const fetchAllSeasons = async (currentSlug: string) => {
     try {
-      // Extract base title (remove season numbers, part numbers, etc.)
-      const baseTitle = title.replace(/\s+(Season|Part|S)\s*\d+/gi, '').trim()
-      
       const response = await fetch(
-        `${API_URL}/anime.search?input=${encodeURIComponent(JSON.stringify({ query: baseTitle, limit: 6 }))}`,
+        `${API_URL}/anime.getSeasons?input=${encodeURIComponent(JSON.stringify({ slug: currentSlug }))}`,
         {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' }
@@ -195,17 +194,15 @@ export default function AnimePage() {
       )
 
       const data = await response.json()
-      const results = data.result?.data?.anime || []
+      const result = data.result?.data
       
-      // Filter to only include anime with similar titles (likely same series)
-      const related = results.filter((a: Anime) => 
-        a.slug !== slug && 
-        a.title.toLowerCase().includes(baseTitle.toLowerCase())
-      )
-      
-      setRelatedSeasons(related.slice(0, 6))
+      if (result) {
+        setSeasons(result.seasons || [])
+        setSeriesName(result.seriesName || '')
+        setRelatedSeasons(result.seasons || [])
+      }
     } catch (err) {
-      console.error('Failed to fetch related seasons:', err)
+      console.error('Failed to fetch seasons:', err)
     }
   }
 
@@ -516,7 +513,7 @@ export default function AnimePage() {
             {/* Title - Prioritize English */}
             <div className="mb-6">
               <h1 className="text-5xl md:text-6xl font-bold text-white mb-3 leading-tight">
-                {anime.titleEnglish || anime.title}
+                {seriesName || anime.titleEnglish || anime.title}
               </h1>
               {anime.titleEnglish && anime.title !== anime.titleEnglish && (
                 <p className="text-xl text-gray-400 mb-2">{anime.title}</p>
@@ -525,6 +522,37 @@ export default function AnimePage() {
                 <p className="text-sm text-gray-500">{anime.titleJapanese}</p>
               )}
             </div>
+
+            {/* Season Selector - Crunchyroll Style */}
+            {seasons.length > 1 && (
+              <div className="glass rounded-xl p-4 mb-6">
+                <h3 className="text-sm text-gray-400 mb-3 uppercase tracking-wide">Seasons ({seasons.length})</h3>
+                <div className="flex flex-wrap gap-2">
+                  {seasons.map((season) => (
+                    <button
+                      key={season.slug}
+                      onClick={() => {
+                        setSelectedSeason(season.slug)
+                        router.push(`/anime/${season.slug}`)
+                      }}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        season.slug === selectedSeason
+                          ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
+                          : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white border border-white/10'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span>{season.seasonName}</span>
+                        {season.year && <span className="text-xs opacity-70">({season.year})</span>}
+                      </div>
+                      {season.episodes && (
+                        <div className="text-xs opacity-70 mt-0.5">{season.episodes} eps</div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Meta Info Bar */}
             <div className="glass rounded-xl p-5 mb-6">
