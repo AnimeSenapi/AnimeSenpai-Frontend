@@ -254,9 +254,9 @@ export function clearSession() {
 
 // Anime API calls
 export async function apiGetAllAnime() {
-  // Request all anime with high limit (backend max is 100 per page, so we need to handle pagination)
-  // For now, request a very large limit to get all anime
-  const url = `${TRPC_URL}/anime.getAll?input=${encodeURIComponent(JSON.stringify({ limit: 10000 }))}`
+  // Request reasonable limit to avoid API size limits (max 100)
+  // With titleEnglish fields, large requests exceed 5MB response size
+  const url = `${TRPC_URL}/anime.getAll?input=${encodeURIComponent(JSON.stringify({ limit: 100 }))}`
   
   const response = await fetch(url, {
     method: 'GET',
