@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { Share2, Twitter, Download, X } from 'lucide-react'
 import { Button } from '../ui/button'
@@ -70,9 +71,16 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
         Share
       </Button>
 
-      {/* Share Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+      {/* Share Modal - Using Portal to render at document.body */}
+      {showModal && createPortal(
+        <div 
+          className="fixed inset-0 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          style={{ 
+            zIndex: 999999,
+            position: 'fixed',
+            isolation: 'isolate'
+          }}
+        >
           <div className="glass rounded-2xl max-w-md w-full p-6 relative border border-white/10 animate-in zoom-in-95 duration-200">
             {/* Close Button */}
             <button
@@ -206,7 +214,8 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )
