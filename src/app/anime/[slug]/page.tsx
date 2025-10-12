@@ -715,12 +715,24 @@ export default function AnimePage() {
             </div>
 
           {/* Recommendations */}
-          {relatedSeasons.length > 0 && (
+          {relatedSeasons.length > 1 && (
             <div className="mt-12">
               <h2 className="text-2xl font-bold text-white mb-6">More from this Series</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                {relatedSeasons.map((season) => (
-                  <AnimeCard key={season.id} anime={season} variant="grid" />
+                {relatedSeasons
+                  .filter((season) => season.slug !== slug)
+                  .map((season) => (
+                  <AnimeCard 
+                    key={season.animeId || season.slug} 
+                    anime={{
+                      ...season,
+                      id: season.animeId,
+                      rating: season.averageRating,
+                      tags: [],
+                      genres: season.genres || []
+                    } as any} 
+                    variant="grid" 
+                  />
                 ))}
               </div>
             </div>
