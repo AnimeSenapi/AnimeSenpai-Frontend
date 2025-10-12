@@ -51,7 +51,8 @@ export function AnimeCard({
   // Handle both API format (genres array of objects) and old format (tags array of strings)
   const animeGenres = 'genres' in anime ? (anime as unknown as { genres: Array<{ id: string; name: string; slug: string; color?: string }> }).genres || [] : []
   const animeTags = anime.tags || []
-  const title = anime.title
+  // Prefer English title over romanized Japanese
+  const title = anime.titleEnglish || anime.title
   const year = anime.year
   const rating = anime.rating
   const status = anime.status

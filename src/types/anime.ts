@@ -10,7 +10,10 @@ export interface Genre {
 export interface Anime {
   id: string
   slug: string
-  title: string
+  title: string // Romanized Japanese title
+  titleEnglish?: string // English title - PREFER THIS
+  titleJapanese?: string // Native Japanese title
+  titleSynonyms?: string[] // Alternative titles
   description?: string
   year: number
   season?: 'Spring' | 'Summer' | 'Fall' | 'Winter'
