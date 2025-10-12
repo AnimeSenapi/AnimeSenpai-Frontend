@@ -9,6 +9,7 @@ import { AnimeCardSkeleton, SearchResultSkeleton } from '../../components/ui/ske
 import { Anime } from '../../types/anime'
 import { getTagById } from '../../types/tags'
 import { apiGetAllAnime } from '../lib/api'
+import { useFavorites } from '../lib/favorites-context'
 import { 
   Search, 
   Filter, 
@@ -175,6 +176,7 @@ const years = ['2023', '2022', '2009', '1999']
 
 export default function SearchPage() {
   const searchParams = useSearchParams()
+  const { isFavorited, toggleFavorite } = useFavorites()
   const [searchQuery, setSearchQuery] = useState('')
   const [category, setCategory] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -624,6 +626,8 @@ export default function SearchPage() {
                 key={anime.id}
                 anime={anime}
                 variant="grid"
+                onFavorite={() => toggleFavorite(anime.id)}
+                isFavorited={isFavorited(anime.id)}
               />
             ))}
           </div>
@@ -634,6 +638,8 @@ export default function SearchPage() {
                 key={anime.id}
                 anime={anime}
                 variant="list"
+                onFavorite={() => toggleFavorite(anime.id)}
+                isFavorited={isFavorited(anime.id)}
               />
             ))}
           </div>

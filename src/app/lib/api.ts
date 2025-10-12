@@ -380,6 +380,22 @@ export async function apiToggleFavorite(listItemId: string): Promise<AnimeListIt
   return trpcMutation<{ listItemId: string }, AnimeListItem>('mylist.toggleFavorite', { listItemId })
 }
 
+// Toggle favorite by anime ID (creates list entry if not exists)
+export async function apiToggleFavoriteByAnimeId(animeId: string): Promise<{ isFavorite: boolean }> {
+  return trpcMutation<{ animeId: string }, { isFavorite: boolean }>('user.toggleFavorite', { animeId })
+}
+
+// Get user's favorited anime IDs
+export async function apiGetFavoritedAnimeIds(): Promise<string[]> {
+  try {
+    const result = await trpcQuery<undefined, { animeIds: string[] }>('user.getFavoritedAnimeIds')
+    return result.animeIds || []
+  } catch (error) {
+    console.error('Failed to fetch favorited anime IDs:', error)
+    return []
+  }
+}
+
 export async function apiUpdateListRating(input: {
   listItemId: string
   rating: number // 1-10
