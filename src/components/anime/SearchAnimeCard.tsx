@@ -28,6 +28,9 @@ export function SearchAnimeCard({
 }: SearchAnimeCardProps) {
   const router = useRouter()
   
+  // Prefer English title over romanized Japanese
+  const displayTitle = anime.titleEnglish || anime.title
+  
   // Handle both old format (tags array) and new format (genres array)
   const firstTag = anime.genres?.[0] || anime.tags?.[0]
   const tag = typeof firstTag === 'string' ? getTagById(firstTag) : firstTag || { name: 'Anime', color: 'bg-gray-500/20 text-gray-400' }
@@ -42,7 +45,7 @@ export function SearchAnimeCard({
               {(anime.coverImage || anime.imageUrl) ? (
                 <Image 
                   src={(anime.coverImage || anime.imageUrl) as string} 
-                  alt={anime.title}
+                  alt={displayTitle}
                   fill
                   className="object-cover"
                   sizes="56px"
@@ -58,7 +61,7 @@ export function SearchAnimeCard({
           {/* Content - More compact */}
           <div className="flex-1 min-w-0">
             <h3 className="text-white font-medium text-sm mb-1 group-hover:text-primary-300 transition-colors line-clamp-2 leading-tight">
-              {anime.title}
+              {displayTitle}
             </h3>
             <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
               {anime.year && <span>{anime.year}</span>}
@@ -104,7 +107,7 @@ export function SearchAnimeCard({
                 {(anime.coverImage || anime.imageUrl) ? (
                   <Image 
                     src={(anime.coverImage || anime.imageUrl) as string} 
-                    alt={anime.title}
+                    alt={displayTitle}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                     sizes="96px"
@@ -130,7 +133,7 @@ export function SearchAnimeCard({
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div className="flex-1">
                   <h3 className="text-lg font-bold text-white mb-2 group-hover:text-primary-300 transition-colors line-clamp-1">
-                    {anime.title}
+                    {displayTitle}
                   </h3>
                   <div className="flex items-center gap-3 text-sm text-gray-400 mb-3">
                     <span className="flex items-center gap-1">
@@ -195,7 +198,7 @@ export function SearchAnimeCard({
           {(anime.coverImage || anime.imageUrl) ? (
             <Image 
               src={(anime.coverImage || anime.imageUrl) as string} 
-              alt={anime.title}
+              alt={displayTitle}
               fill
               className="object-cover transition-all duration-300 group-hover:blur-sm"
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
@@ -253,7 +256,7 @@ export function SearchAnimeCard({
           {/* Bottom Info - Always visible */}
           <div className="absolute bottom-0 left-0 right-0 p-3 z-10">
             <h3 className="text-white font-bold text-sm mb-1.5 line-clamp-2 drop-shadow-lg">
-              {anime.title}
+              {displayTitle}
             </h3>
             <div className="flex items-center gap-2 text-xs text-gray-300 mb-2">
               <span>{anime.year || 'TBA'}</span>

@@ -21,6 +21,8 @@ export function MyListAnimeCard({
   className 
 }: MyListAnimeCardProps) {
   const router = useRouter()
+  // Prefer English title over romanized Japanese
+  const displayTitle = anime.titleEnglish || anime.title
   const tag = anime.tags && anime.tags.length > 0 ? getTagById(anime.tags[0]) : null
   
   const getStatusConfig = () => {
@@ -82,7 +84,7 @@ export function MyListAnimeCard({
                 {(anime.coverImage || anime.imageUrl) ? (
                   <Image 
                     src={(anime.coverImage || anime.imageUrl) as string} 
-                    alt={anime.title}
+                    alt={displayTitle}
                     fill
                     className="object-cover"
                     sizes="96px"
@@ -112,7 +114,7 @@ export function MyListAnimeCard({
               <div className="flex items-start justify-between mb-2">
                 <div>
                   <h3 className="text-xl font-bold text-white mb-1 group-hover:text-primary-400 transition-colors">
-                    {anime.title}
+                    {displayTitle}
                   </h3>
                   <div className="flex items-center gap-4 text-sm text-gray-400">
                     <span>{anime.year}</span>
@@ -186,7 +188,7 @@ export function MyListAnimeCard({
           {(anime.coverImage || anime.imageUrl) ? (
             <Image 
               src={(anime.coverImage || anime.imageUrl) as string} 
-              alt={anime.title}
+              alt={displayTitle}
               fill
               className="object-cover group-hover:scale-110 transition-transform duration-500"
               sizes="(max-width: 768px) 50vw, 33vw"
@@ -245,7 +247,7 @@ export function MyListAnimeCard({
         {/* Content */}
         <div className="mt-3">
           <h3 className="text-white font-bold text-sm mb-1 group-hover:text-primary-400 transition-colors line-clamp-2">
-            {anime.title}
+            {displayTitle}
           </h3>
           <div className="flex items-center justify-between text-xs text-gray-400">
             <span>{anime.year}</span>
