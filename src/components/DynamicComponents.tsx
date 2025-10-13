@@ -64,7 +64,7 @@ export const DynamicTrailerPlayer = dynamic(
  * Chart Components - Heavy libraries, load on demand
  */
 export const DynamicCharts = dynamic(
-  () => import('./admin/components/DashboardTab').then(mod => ({ default: mod.DashboardTab })),
+  () => import('../app/admin/components/DashboardTab').then(mod => ({ default: mod.DashboardTab })),
   { loading: LoadingFallback, ssr: false }
 )
 
