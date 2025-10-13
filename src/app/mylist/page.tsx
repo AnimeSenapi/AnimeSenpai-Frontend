@@ -14,6 +14,7 @@ import { StatsCardSkeleton, AnimeCardSkeleton, ListItemSkeleton } from '../../co
 import { LoadingState } from '../../components/ui/loading-state'
 import { EmptyState, ErrorState } from '../../components/ui/error-state'
 import { VerificationGuard } from '../../lib/verification-guard'
+import { VirtualGrid, VirtualList } from '../../components/VirtualList'
 import { Bookmark, Heart, Grid, List as ListIcon, Clock, Star, CheckCircle, Play, Plus, Lock, Loader2, Search, X, RefreshCw, TrendingUp } from 'lucide-react'
 
 // Sort options
@@ -749,29 +750,71 @@ export default function MyListPage() {
 
         {/* Anime Display */}
         {viewMode === 'grid' ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {filteredAnime.map((anime) => (
-              <MyListAnimeCard
-                key={anime.id}
-                anime={anime}
-                variant="grid"
-                onFavorite={toggleFavorite}
-                isFavorited={isFavorited(anime.id)}
-              />
-            ))}
-          </div>
+          // Use virtual scrolling for grid view (optimal for 100+ items)
+          filteredAnime.length > 50 ? (
+            <VirtualGrid
+              items={filteredAnime}
+              itemWidth={220}
+              itemHeight={360}
+              columns={5}
+              gap={24}
+              height={800}
+              className="pb-8"
+              renderItem={(anime) => (
+                <MyListAnimeCard
+                  key={anime.id}
+                  anime={anime}
+                  variant="grid"
+                  onFavorite={toggleFavorite}
+                  isFavorited={isFavorited(anime.id)}
+                />
+              )}
+            />
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              {filteredAnime.map((anime) => (
+                <MyListAnimeCard
+                  key={anime.id}
+                  anime={anime}
+                  variant="grid"
+                  onFavorite={toggleFavorite}
+                  isFavorited={isFavorited(anime.id)}
+                />
+              ))}
+            </div>
+          )
         ) : (
-          <div className="space-y-4">
-            {filteredAnime.map((anime) => (
-              <MyListAnimeCard
-                key={anime.id}
-                anime={anime}
-                variant="list"
-                onFavorite={toggleFavorite}
-                isFavorited={isFavorited(anime.id)}
-              />
-            ))}
-          </div>
+          // Use virtual scrolling for list view (optimal for 100+ items)
+          filteredAnime.length > 50 ? (
+            <VirtualList
+              items={filteredAnime}
+              itemHeight={120}
+              height={800}
+              gap={16}
+              className="pb-8"
+              renderItem={(anime) => (
+                <MyListAnimeCard
+                  key={anime.id}
+                  anime={anime}
+                  variant="list"
+                  onFavorite={toggleFavorite}
+                  isFavorited={isFavorited(anime.id)}
+                />
+              )}
+            />
+          ) : (
+            <div className="space-y-4">
+              {filteredAnime.map((anime) => (
+                <MyListAnimeCard
+                  key={anime.id}
+                  anime={anime}
+                  variant="list"
+                  onFavorite={toggleFavorite}
+                  isFavorited={isFavorited(anime.id)}
+                />
+              ))}
+            </div>
+          )
         )}
 
         {/* Empty State */}

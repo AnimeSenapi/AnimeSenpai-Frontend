@@ -12,6 +12,7 @@ import { Anime } from '../../types/anime'
 import { getTagById } from '../../types/tags'
 import { apiGetAllAnime, apiGetAllSeries } from '../lib/api'
 import { useFavorites } from '../lib/favorites-context'
+import { VirtualGrid, VirtualList } from '../../components/VirtualList'
 import { 
   Search, 
   Filter, 
@@ -616,29 +617,71 @@ export default function SearchPage() {
             onAction={(searchQuery || activeFiltersCount > 0) ? clearFilters : undefined}
           />
         ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
-            {filteredAnime.map((anime) => (
-              <SearchAnimeCard
-                key={anime.id}
-                anime={anime}
-                variant="grid"
-                onFavorite={() => toggleFavorite(anime.id)}
-                isFavorited={isFavorited(anime.id)}
-              />
-            ))}
-          </div>
+          // Use virtual scrolling for large result sets (100+ items)
+          filteredAnime.length > 100 ? (
+            <VirtualGrid
+              items={filteredAnime}
+              itemWidth={200}
+              itemHeight={340}
+              columns={6}
+              gap={20}
+              height={900}
+              className="pb-8"
+              renderItem={(anime) => (
+                <SearchAnimeCard
+                  key={anime.id}
+                  anime={anime}
+                  variant="grid"
+                  onFavorite={() => toggleFavorite(anime.id)}
+                  isFavorited={isFavorited(anime.id)}
+                />
+              )}
+            />
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
+              {filteredAnime.map((anime) => (
+                <SearchAnimeCard
+                  key={anime.id}
+                  anime={anime}
+                  variant="grid"
+                  onFavorite={() => toggleFavorite(anime.id)}
+                  isFavorited={isFavorited(anime.id)}
+                />
+              ))}
+            </div>
+          )
         ) : (
-          <div className="space-y-3">
-            {filteredAnime.map((anime) => (
-              <SearchAnimeCard
-                key={anime.id}
-                anime={anime}
-                variant="list"
-                onFavorite={() => toggleFavorite(anime.id)}
-                isFavorited={isFavorited(anime.id)}
-              />
-            ))}
-          </div>
+          // Use virtual scrolling for list view with large results
+          filteredAnime.length > 100 ? (
+            <VirtualList
+              items={filteredAnime}
+              itemHeight={110}
+              height={900}
+              gap={12}
+              className="pb-8"
+              renderItem={(anime) => (
+                <SearchAnimeCard
+                  key={anime.id}
+                  anime={anime}
+                  variant="list"
+                  onFavorite={() => toggleFavorite(anime.id)}
+                  isFavorited={isFavorited(anime.id)}
+                />
+              )}
+            />
+          ) : (
+            <div className="space-y-3">
+              {filteredAnime.map((anime) => (
+                <SearchAnimeCard
+                  key={anime.id}
+                  anime={anime}
+                  variant="list"
+                  onFavorite={() => toggleFavorite(anime.id)}
+                  isFavorited={isFavorited(anime.id)}
+                />
+              ))}
+            </div>
+          )
         )}
       </main>
     </div>
