@@ -15,10 +15,12 @@ export interface Anime {
   titleJapanese?: string // Native Japanese title
   titleSynonyms?: string[] // Alternative titles
   description?: string
-  year: number
+  synopsis?: string // Alias for description
+  year: number | null
   season?: 'Spring' | 'Summer' | 'Fall' | 'Winter'
   type?: string // TV, Movie, OVA, ONA, Special, etc.
   rating: number
+  averageRating?: number // Alias for rating
   status: 'new' | 'hot' | 'trending' | 'classic' | 'ongoing' | 'completed' | 'upcoming'
   tags: string[] // Tag IDs
   genres?: Genre[] // API format includes genres
@@ -27,11 +29,14 @@ export interface Anime {
   studio?: string
   director?: string
   coverImage?: string // Main poster/cover image
+  bannerImage?: string // Banner/backdrop image
   imageUrl?: string // Alias for backward compatibility
   trailerUrl?: string
   malId?: number // MyAnimeList ID
   anilistId?: number // AniList ID
   // Series grouping metadata
+  animeId?: string // For seasons (alias for id)
+  displayTitle?: string // Computed display title
   seasonCount?: number // Number of seasons in the series
   totalEpisodes?: number // Total episodes across all seasons
   seasons?: any[] // All seasons data

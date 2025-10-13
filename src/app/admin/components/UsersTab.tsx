@@ -14,7 +14,7 @@ interface User {
   email: string
   name: string | null
   username: string | null
-  role: 'user' | 'tester' | 'admin'
+  role: 'user' | 'moderator' | 'admin'
   emailVerified: boolean
   createdAt: string
   lastLoginAt: string | null
@@ -450,9 +450,9 @@ export function UsersTab() {
                           <div className="flex items-center gap-2">
                             <p className="text-sm font-medium text-white">{user.name || user.username || 'Unknown'}</p>
                             {user.emailVerified ? (
-                              <CheckCircle className="h-3.5 w-3.5 text-green-400" title="Email Verified" />
+                              <CheckCircle className="h-3.5 w-3.5 text-green-400" />
                             ) : (
-                              <AlertCircle className="h-3.5 w-3.5 text-warning-400" title="Email Not Verified" />
+                              <AlertCircle className="h-3.5 w-3.5 text-warning-400" />
                             )}
                           </div>
                           <p className="text-xs text-gray-400">{user.email}</p>
@@ -481,7 +481,7 @@ export function UsersTab() {
                           </button>
                           <select
                             value={user.role}
-                            onChange={(e) => handleRoleChange(user.id, e.target.value as 'user' | 'tester' | 'admin')}
+                            onChange={(e) => handleRoleChange(user.id, e.target.value as 'user' | 'moderator' | 'admin')}
                             className="px-2 py-1 text-xs bg-white/5 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500/50"
                           >
                             <option value="user">User</option>

@@ -22,32 +22,38 @@ interface SiteSettings {
     siteName: string
     siteDescription: string
     maintenanceMode: boolean
-    allowSignups: boolean
+    allowRegistration: boolean
+    requireEmailVerification: boolean
   }
   features: {
     enableSocialFeatures: boolean
     enableRecommendations: boolean
     enableComments: boolean
     enableReviews: boolean
+    enableAchievements?: boolean
   }
   security: {
-    requireEmailVerification: boolean
     sessionTimeout: number
     maxLoginAttempts: number
+    requireStrongPasswords?: boolean
     enableTwoFactor: boolean
   }
   notifications: {
-    enableEmailNotifications: boolean
-    emailProvider: string
-    smtpHost: string
-    smtpPort: number
-    smtpUser: string
-    smtpPassword: string
+    emailNotifications?: boolean
+    enableEmailNotifications?: boolean
+    emailProvider?: string
+    smtpHost?: string
+    smtpPort?: number
+    smtpUser?: string
+    smtpPassword?: string
+    newUserAlert?: boolean
+    errorReporting?: boolean
   }
   analytics: {
-    enableAnalytics: boolean
+    enableAnalytics?: boolean
+    enableTracking?: boolean
     googleAnalyticsId: string
-    enableErrorTracking: boolean
+    enableErrorTracking?: boolean
   }
 }
 
@@ -57,7 +63,8 @@ export function SettingsTab() {
       siteName: 'AnimeSenpai',
       siteDescription: 'Your ultimate anime companion',
       maintenanceMode: false,
-      allowSignups: true,
+      allowRegistration: true,
+      requireEmailVerification: false,
     },
     features: {
       enableSocialFeatures: true,
@@ -66,7 +73,6 @@ export function SettingsTab() {
       enableReviews: false,
     },
     security: {
-      requireEmailVerification: false,
       sessionTimeout: 30,
       maxLoginAttempts: 5,
       enableTwoFactor: false,

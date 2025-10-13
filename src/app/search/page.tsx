@@ -42,6 +42,23 @@ export default function SearchPage() {
   const [filteredAnime, setFilteredAnime] = useState<Anime[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
+  // Compute unique values for filters from all anime
+  const genres = Array.from(new Set(
+    allAnime.flatMap(anime => anime.genres?.map((g: any) => g.name || g.slug || g) || [])
+  )).sort()
+  
+  const studios = Array.from(new Set(
+    allAnime.map(anime => anime.studio).filter(Boolean)
+  )).sort() as string[]
+  
+  const seasons = Array.from(new Set(
+    allAnime.map(anime => anime.season).filter(Boolean)
+  )).sort() as string[]
+  
+  const years = Array.from(new Set(
+    allAnime.map(anime => anime.year).filter((y): y is number => y !== null && y !== undefined)
+  )).sort((a, b) => b - a).map(String)
+
   // Load anime from API (use series grouping)
   useEffect(() => {
     async function loadAnime() {

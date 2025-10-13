@@ -4,14 +4,11 @@ import { use, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Grid3x3, List as ListIcon, SortDesc, Building2, TvMinimalPlay, Calendar, Star, Loader2, Search } from 'lucide-react'
-import { SearchAnimeCard } from '@/components/anime/SearchAnimeCard'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { LoadingState } from '@/components/ui/loading-state'
-import { EmptyState } from '@/components/ui/error-state'
-import { cn } from '@/app/lib/utils'
-import { apiCall } from '@/app/lib/api'
+import { SearchAnimeCard } from '../../../components/anime/SearchAnimeCard'
+import { Button } from '../../../components/ui/button'
+import { LoadingState } from '../../../components/ui/loading-state'
+import { EmptyState } from '../../../components/ui/error-state'
+import { cn } from '../../lib/utils'
 
 interface Studio {
   name: string
@@ -78,15 +75,30 @@ export default function StudioPage({ params }: { params: Promise<{ slug: string 
       setLoading(true)
       setError(null)
       
-      const data = await apiCall('studio.getStudioBySlug', {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003/api/trpc'
+      const url = `${API_URL}/studio.getStudioBySlug?input=${encodeURIComponent(JSON.stringify({
         slug,
         page: currentPage,
         limit: 24,
         sortBy,
         order: sortOrder
+      }))}`
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
       })
       
-      setStudioData(data as StudioPageData)
+      if (!response.ok) {
+        throw new Error('Failed to fetch studio data')
+      }
+      
+      const json = await response.json()
+      if (json.error) {
+        throw new Error(json.error.message || 'Failed to load studio')
+      }
+      
+      setStudioData(json.result.data as StudioPageData)
     } catch (err: any) {
       setError(err.message || 'Failed to load studio')
     } finally {
@@ -179,31 +191,30 @@ export default function StudioPage({ params }: { params: Promise<{ slug: string 
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <Input
+                <input
                   type="text"
                   placeholder="Search anime..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-primary-500/50"
+                  onChange={(e: any) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/50"
                 />
               </div>
             </div>
 
             {/* Sort By */}
-            <Select value={sortBy} onValueChange={(value: 'rating' | 'year' | 'popularity' | 'title') => {
-              setSortBy(value)
-              setCurrentPage(1)
-            }}>
-              <SelectTrigger className="w-full lg:w-48 bg-white/5 border-white/10 text-white focus:ring-primary-500/50">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-700 text-white">
-                <SelectItem value="year">Release Year</SelectItem>
-                <SelectItem value="rating">Highest Rated</SelectItem>
-                <SelectItem value="popularity">Most Popular</SelectItem>
-                <SelectItem value="title">Title (A-Z)</SelectItem>
-              </SelectContent>
-            </Select>
+            <select 
+              value={sortBy} 
+              onChange={(e: any) => {
+                setSortBy(e.target.value as 'rating' | 'year' | 'popularity' | 'title')
+                setCurrentPage(1)
+              }}
+              className="w-full lg:w-48 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-primary-500/50"
+            >
+              <option value="year" className="bg-gray-800">Release Year</option>
+              <option value="rating" className="bg-gray-800">Highest Rated</option>
+              <option value="popularity" className="bg-gray-800">Most Popular</option>
+              <option value="title" className="bg-gray-800">Title (A-Z)</option>
+            </select>
 
             {/* Sort Order */}
             <Button
