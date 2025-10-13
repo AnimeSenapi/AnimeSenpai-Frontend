@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useMemo } from 'react'
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 
 /**
  * Debounce hook
@@ -18,7 +18,7 @@ import { useCallback, useEffect, useRef, useMemo } from 'react'
  * ```
  */
 export function useDebounce<T>(value: T, delay: number = 300): T {
-  const [debouncedValue, setDebouncedValue] = React.useState<T>(value)
+  const [debouncedValue, setDebouncedValue] = useState<T>(value)
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -49,7 +49,7 @@ export function useThrottle<T extends (...args: any[]) => any>(
   delay: number = 300
 ): T {
   const lastRun = useRef(Date.now())
-  const timeoutRef = useRef<NodeJS.Timeout>()
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
 
   return useCallback(
     ((...args) => {
@@ -87,8 +87,8 @@ export function useThrottle<T extends (...args: any[]) => any>(
  * ```
  */
 export function useIntersectionObserver(options: IntersectionObserverInit = {}) {
-  const [isIntersecting, setIsIntersecting] = React.useState(false)
-  const [node, setNode] = React.useState<Element | null>(null)
+  const [isIntersecting, setIsIntersecting] = useState(false)
+  const [node, setNode] = useState<Element | null>(null)
 
   useEffect(() => {
     if (!node) return
@@ -126,7 +126,7 @@ export function useVirtualList({
   itemCount,
   overscan = 3,
 }: UseVirtualListOptions) {
-  const [scrollTop, setScrollTop] = React.useState(0)
+  const [scrollTop, setScrollTop] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const handleScroll = useThrottle(() => {
@@ -212,7 +212,7 @@ export function useMemoized<T>(factory: () => T, deps: any[]): T {
  * Returns the previous value of a variable
  */
 export function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T>()
+  const ref = useRef<T | undefined>(undefined)
   
   useEffect(() => {
     ref.current = value
@@ -225,7 +225,7 @@ export function usePrevious<T>(value: T): T | undefined {
  * Media query hook for responsive optimization
  */
 export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = React.useState(false)
+  const [matches, setMatches] = useState(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
