@@ -1034,4 +1034,28 @@ export async function apiGetFlaggedUsers() {
   return response
 }
 
+// ============================================================================
+// GDPR Compliance API
+// ============================================================================
+
+export async function apiExportUserData() {
+  const response = await apiCall('gdpr.exportUserData')
+  return response
+}
+
+export async function apiRequestAccountDeletion(password: string, reason?: string) {
+  const response = await apiCall('gdpr.requestAccountDeletion', { password, reason })
+  return response
+}
+
+export async function apiCancelAccountDeletion() {
+  const response = await apiCall('gdpr.cancelAccountDeletion')
+  return response
+}
+
+export async function apiGetDataProcessingInfo() {
+  const response = await apiCall('gdpr.getDataProcessingInfo')
+  return response
+}
+
 
