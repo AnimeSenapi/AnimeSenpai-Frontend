@@ -77,7 +77,7 @@ class ErrorHandler {
 
     // Extract status code if available
     if (originalError && typeof originalError === 'object' && 'statusCode' in originalError) {
-      appError.statusCode = (originalError as any).statusCode
+      appError.statusCode = (originalError as { statusCode: number }).statusCode
     }
 
     // Log the error

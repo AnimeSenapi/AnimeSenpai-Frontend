@@ -156,9 +156,10 @@ export function RecommendationCarousel({
                 coverImage: anime.coverImage || undefined,
                 year: anime.year || 0,
                 rating: anime.averageRating || 0,
+                status: 'trending' as const,
                 tags: [],
                 genres: anime.genres.map(g => ({ ...g, slug: g.id }))
-              } as any}
+              }}
               variant="featured"
               onFavorite={() => handleFavorite(anime.id, anime.titleEnglish || anime.title)}
               isFavorited={isFavorited(anime.id)}

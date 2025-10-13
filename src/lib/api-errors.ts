@@ -31,10 +31,27 @@ interface ParsedError {
   statusCode?: number
 }
 
+interface TRPCErrorResponse {
+  error?: {
+    data?: {
+      code?: string
+      httpStatus?: number
+    }
+    message?: string
+  }
+  data?: {
+    code?: string
+    httpStatus?: number
+  }
+  code?: string
+  message?: string
+  statusCode?: number
+}
+
 function parseError(error: unknown): ParsedError {
   // Handle tRPC errors
   if (error && typeof error === 'object') {
-    const err = error as any
+    const err = error as TRPCErrorResponse
     
     // tRPC error format
     if (err.error?.data?.code || err.data?.code) {
@@ -153,7 +170,7 @@ export function isNetworkError(error: unknown): boolean {
 
 export function isAuthError(error: unknown): boolean {
   if (error && typeof error === 'object') {
-    const err = error as any
+    const err = error as TRPCErrorResponse
     const code = err.error?.data?.code || err.data?.code || err.code
     return ['UNAUTHORIZED', 'FORBIDDEN', 'INVALID_TOKEN', 'TOKEN_EXPIRED'].includes(code)
   }
@@ -164,7 +181,7 @@ export function shouldRetry(error: unknown): boolean {
   if (isNetworkError(error)) return true
   
   if (error && typeof error === 'object') {
-    const err = error as any
+    const err = error as TRPCErrorResponse
     const statusCode = err.error?.data?.httpStatus || err.data?.httpStatus || err.statusCode
     
     // Retry on server errors (5xx) but not client errors (4xx)

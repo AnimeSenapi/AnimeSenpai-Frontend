@@ -384,7 +384,7 @@ export default function OnboardingPage() {
                   {EXPERIENCE_LEVELS.map(level => (
                     <button
                       key={level.id}
-                      onClick={() => setExperienceLevel(level.id as any)}
+                      onClick={() => setExperienceLevel(level.id as 'beginner' | 'casual' | 'regular' | 'veteran')}
                       className={`p-6 rounded-xl border-2 transition-all duration-200 ${
                         experienceLevel === level.id
                           ? 'bg-primary-500/20 border-primary-500 shadow-lg shadow-primary-500/25'
@@ -601,7 +601,7 @@ export default function OnboardingPage() {
                   {AUDIO_PREFERENCES.map(pref => (
                     <button
                       key={pref.id}
-                      onClick={() => setAudioPreference(pref.id as any)}
+                      onClick={() => setAudioPreference(pref.id as 'sub' | 'dub' | 'both')}
                       className={`p-6 rounded-xl border-2 transition-all duration-200 ${
                         audioPreference === pref.id
                           ? 'bg-primary-500/20 border-primary-500 shadow-lg shadow-primary-500/25'
@@ -760,7 +760,7 @@ export default function OnboardingPage() {
                     return (
                       <button
                         key={mode.id}
-                        onClick={() => setDiscoveryMode(mode.id as any)}
+                        onClick={() => setDiscoveryMode(mode.id as 'focused' | 'balanced' | 'exploratory')}
                         className={`p-6 rounded-xl border-2 transition-all duration-200 ${
                           discoveryMode === mode.id
                             ? 'bg-primary-500/20 border-primary-500 shadow-lg shadow-primary-500/25'

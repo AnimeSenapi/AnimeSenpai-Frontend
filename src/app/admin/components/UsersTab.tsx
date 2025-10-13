@@ -14,10 +14,16 @@ interface User {
   email: string
   name: string | null
   username: string | null
-  role: string
+  role: 'user' | 'tester' | 'admin'
   emailVerified: boolean
   createdAt: string
   lastLoginAt: string | null
+}
+
+interface UserDetails extends User {
+  _count?: {
+    userAnimeList: number
+  }
 }
 
 export function UsersTab() {
@@ -28,7 +34,7 @@ export function UsersTab() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [roleFilter, setRoleFilter] = useState<string>('all')
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [selectedUser, setSelectedUser] = useState<UserDetails | null>(null)
   const [showUserModal, setShowUserModal] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
@@ -116,7 +122,7 @@ export function UsersTab() {
   const handleViewDetails = async (user: User) => {
     try {
       const details = await apiGetUserDetails(user.id)
-      setSelectedUser(details as any)
+      setSelectedUser(details as UserDetails)
       setShowUserModal(true)
     } catch (error) {
       console.error('Failed to load user details:', error)
@@ -287,7 +293,7 @@ export function UsersTab() {
         </select>
         <select
           value={verifiedFilter}
-          onChange={(e) => setVerifiedFilter(e.target.value as any)}
+          onChange={(e) => setVerifiedFilter(e.target.value as 'all' | 'verified' | 'unverified')}
           className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
         >
           <option value="all">All Status</option>
@@ -475,7 +481,7 @@ export function UsersTab() {
                           </button>
                           <select
                             value={user.role}
-                            onChange={(e) => handleRoleChange(user.id, e.target.value as any)}
+                            onChange={(e) => handleRoleChange(user.id, e.target.value as 'user' | 'tester' | 'admin')}
                             className="px-2 py-1 text-xs bg-white/5 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500/50"
                           >
                             <option value="user">User</option>
@@ -581,10 +587,10 @@ export function UsersTab() {
                   {selectedUser.emailVerified ? 'Yes' : 'No'}
                 </p>
               </div>
-              {(selectedUser as any)._count && (
+              {selectedUser._count && (
                 <div>
                   <p className="text-sm text-gray-400 mb-1">Anime List Entries</p>
-                  <p className="text-white">{(selectedUser as any)._count.userAnimeList}</p>
+                  <p className="text-white">{selectedUser._count.userAnimeList}</p>
                 </div>
               )}
             </div>
