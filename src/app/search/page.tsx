@@ -68,7 +68,7 @@ export default function SearchPage() {
         if (data && typeof data === 'object' && 'series' in data) {
           // Convert series to anime format with season metadata
           const seriesList = Array.isArray(data.series) ? data.series : []
-          const animeList = seriesList.map(series => ({
+          const animeList = seriesList.map((series: any) => ({
             ...series,
             titleEnglish: series.titleEnglish || series.displayTitle,
             // Add series metadata

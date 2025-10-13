@@ -33,6 +33,7 @@ interface Anime {
   averageRating?: number | null
   rating?: number | null
   members?: number | null
+  tags: string[]
   genres: Array<{
     id: string
     name: string
