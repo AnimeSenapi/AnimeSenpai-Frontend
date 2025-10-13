@@ -13,6 +13,7 @@ import { groupAnimeIntoSeries } from '../../lib/series-grouping'
 import { StatsCardSkeleton, AnimeCardSkeleton, ListItemSkeleton } from '../../components/ui/skeleton'
 import { LoadingState } from '../../components/ui/loading-state'
 import { EmptyState, ErrorState } from '../../components/ui/error-state'
+import { VerificationGuard } from '../../lib/verification-guard'
 import { Bookmark, Heart, Grid, List as ListIcon, Clock, Star, CheckCircle, Play, Plus, Lock, Loader2, Search, X, RefreshCw, TrendingUp } from 'lucide-react'
 
 // Sort options
@@ -498,12 +499,13 @@ export default function MyListPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+    <VerificationGuard requireVerification={false}>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
       <main className="container px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 lg:pb-20 relative z-10">
@@ -800,5 +802,6 @@ export default function MyListPage() {
         )}
       </main>
     </div>
+    </VerificationGuard>
   )
 }

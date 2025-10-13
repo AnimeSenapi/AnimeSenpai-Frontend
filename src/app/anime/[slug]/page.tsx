@@ -238,6 +238,15 @@ export default function AnimePage() {
       return
     }
 
+    // Check email verification
+    if (!user?.emailVerified) {
+      toast.error(
+        'Email Verification Required', 
+        'Please verify your email to add anime to your list. Check your inbox for the verification link.'
+      )
+      return
+    }
+
     if (!anime) return
 
     const isUpdating = listStatus.inList
@@ -310,6 +319,16 @@ export default function AnimePage() {
 
   const handleSubmitRating = async () => {
     if (!anime || userRating === 0) return
+
+    // Check email verification
+    if (!user?.emailVerified) {
+      toast.error(
+        'Email Verification Required', 
+        'Please verify your email to rate anime. Check your inbox for the verification link.'
+      )
+      setShowRatingModal(false)
+      return
+    }
 
     setIsSubmitting(true)
     try {

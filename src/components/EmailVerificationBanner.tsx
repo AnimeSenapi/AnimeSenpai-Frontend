@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from './ui/button'
-import { Mail, X, Send, CheckCircle, AlertCircle } from 'lucide-react'
+import { Mail, X, Send, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 import { useToast } from '../lib/toast-context'
 
 interface EmailVerificationBannerProps {
