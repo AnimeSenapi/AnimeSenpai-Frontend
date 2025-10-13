@@ -13,14 +13,20 @@ const siteUrl = 'https://animesenpai.app'
 const siteName = 'AnimeSenpai'
 const siteDescription = 'Discover, track, and explore your favorite anime. Get personalized recommendations, connect with fellow fans, and build your ultimate anime collection.'
 
+// Viewport configuration (Next.js 15+)
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' }
+  ]
+}
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 5,
-    userScalable: true,
-  },
   title: {
     default: 'AnimeSenpai - Track, Discover & Watch Anime | Free Anime Tracker',
     template: '%s | AnimeSenpai'
@@ -98,11 +104,18 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon-16x16.png',
-    apple: '/apple-touch-icon.png',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icons/icon-192x192.png', type: 'image/png', sizes: '192x192' },
+      { url: '/icons/icon-512x512.png', type: 'image/png', sizes: '512x512' }
+    ],
+    shortcut: '/favicon.ico',
+    apple: [
+      { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/icons/icon-152x152.png', sizes: '152x152', type: 'image/png' }
+    ],
   },
-  manifest: '/site.webmanifest',
+  manifest: '/manifest.json',
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION || '',
     // yandex: 'your-yandex-verification-code',
