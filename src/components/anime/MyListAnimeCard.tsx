@@ -10,11 +10,15 @@ import { Heart, Play, CheckCircle, Star, MoreVertical, Bookmark } from 'lucide-r
 import { Button } from '../ui/button'
 
 interface MyListAnimeCardProps {
-  anime: Anime & { listStatus: 'favorite' | 'watching' | 'completed' | 'plan-to-watch' }
+  anime: Anime & { 
+    listStatus: 'favorite' | 'watching' | 'completed' | 'plan-to-watch'
+    progress?: number
+  }
   variant?: 'grid' | 'list'
   className?: string
   onFavorite?: (animeId: string) => void
   isFavorited?: boolean
+  onProgressUpdate?: (animeId: string, progress: number) => void
 }
 
 export function MyListAnimeCard({ 
@@ -22,12 +26,16 @@ export function MyListAnimeCard({
   variant = 'grid', 
   className,
   onFavorite,
-  isFavorited = false
+  isFavorited = false,
+  onProgressUpdate
 }: MyListAnimeCardProps) {
   const router = useRouter()
   // Prefer English title over romanized Japanese
   const displayTitle = anime.titleEnglish || anime.title
   const tag = anime.tags && anime.tags.length > 0 ? getTagById(anime.tags[0]) : null
+  const progress = anime.progress || 0
+  const totalEpisodes = anime.totalEpisodes || anime.episodes || 0
+  const progressPercent = totalEpisodes > 0 ? (progress / totalEpisodes) * 100 : 0
   
   const getStatusConfig = () => {
     switch (anime.listStatus) {
@@ -127,6 +135,22 @@ export function MyListAnimeCard({
                     <span>•</span>
                     <span>{anime.studio}</span>
                   </div>
+                  
+                  {/* Episode Progress */}
+                  {totalEpisodes > 0 && (
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
+                        <span>Progress</span>
+                        <span>{progress} / {totalEpisodes} episodes</span>
+                      </div>
+                      <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
+                        <div 
+                          className="bg-gradient-to-r from-primary-500 to-primary-400 h-full transition-all duration-300"
+                          style={{ width: `${Math.min(100, progressPercent)}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1">
@@ -187,18 +211,18 @@ export function MyListAnimeCard({
                 )}
               </div>
 
-              {/* Progress Bar (for watching anime) */}
-              {anime.listStatus === 'watching' && (
+              {/* Episode Progress */}
+              {totalEpisodes > 0 && (
                 <div className="w-full">
                   <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
                     <span>Progress</span>
-                    <span>5 / {anime.episodes || '?'}</span>
+                    <span>{progress} / {totalEpisodes} eps</span>
                   </div>
-                  <div className="w-full bg-gray-700 rounded-full h-1.5">
+                  <div className="w-full bg-gray-700/50 rounded-full h-1.5 overflow-hidden">
                     <div 
                       className="bg-gradient-to-r from-primary-500 to-secondary-500 h-1.5 rounded-full transition-all duration-300"
-                      style={{ width: `${anime.episodes ? (5 / anime.episodes) * 100 : 0}%` }}
-                    ></div>
+                      style={{ width: `${Math.min(100, progressPercent)}%` }}
+                    />
                   </div>
                 </div>
               )}
@@ -300,7 +324,7 @@ export function MyListAnimeCard({
           <h3 className="text-white font-bold text-sm mb-1 group-hover:text-primary-400 transition-colors line-clamp-2">
             {displayTitle}
           </h3>
-          <div className="flex items-center justify-between text-xs text-gray-400">
+          <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
             <span>{anime.year}</span>
             <div className="flex items-center gap-2">
               {anime.seasonCount && anime.seasonCount > 1 && (
@@ -312,8 +336,24 @@ export function MyListAnimeCard({
             </div>
           </div>
           
+          {/* Episode Progress Bar */}
+          {totalEpisodes > 0 && (
+            <div className="mb-2">
+              <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
+                <span>Progress</span>
+                <span className="font-medium">{progress}/{totalEpisodes}</span>
+              </div>
+              <div className="w-full bg-gray-700/50 rounded-full h-1.5 overflow-hidden">
+                <div 
+                  className="bg-gradient-to-r from-primary-500 to-secondary-500 h-1.5 rounded-full transition-all duration-300"
+                  style={{ width: `${Math.min(100, progressPercent)}%` }}
+                />
+              </div>
+            </div>
+          )}
+          
           {/* Tags - Clickable */}
-          <div className="flex items-center gap-1 mt-2">
+          <div className="flex items-center gap-1">
             {anime.tags && anime.tags.length > 0 ? (
               anime.tags.slice(0, 2).map((tagId) => {
                 const tag = getTagById(tagId)

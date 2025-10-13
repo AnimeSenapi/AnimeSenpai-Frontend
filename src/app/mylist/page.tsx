@@ -234,6 +234,8 @@ export default function MyListPage() {
     .map(item => ({
       ...item.anime!,
       listStatus: item.listStatus as 'favorite' | 'watching' | 'completed' | 'plan-to-watch',
+      // Include progress for episode tracking
+      progress: item.progress || 0,
       // Ensure rating field exists for grouping
       rating: item.anime!.averageRating || item.anime!.rating || 0,
       averageRating: item.anime!.averageRating || item.anime!.rating || 0,
@@ -244,6 +246,8 @@ export default function MyListPage() {
     ...series,
     // Preserve list status from the first season (or most recent)
     listStatus: series.seasons?.[0]?.listStatus || myListAnimeRaw.find(a => a.id === series.id)?.listStatus || 'plan-to-watch',
+    // Sum progress across all seasons for series
+    progress: series.seasons?.reduce((sum: number, season: any) => sum + (season.progress || 0), 0) || myListAnimeRaw.find(a => a.id === series.id)?.progress || 0,
     // Use English title if available
     title: series.titleEnglish || series.displayTitle || series.title,
     titleEnglish: series.titleEnglish || series.displayTitle,
