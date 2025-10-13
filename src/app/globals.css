@@ -5,6 +5,9 @@
 /* Mobile Touch Optimization */
 @import '../styles/mobile-touch.css';
 
+/* Accessibility Enhancements */
+@import '../styles/accessibility.css';
+
 @layer base {
   :root {
     /* Cyberpunk Theme - Original Look */

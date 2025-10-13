@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import { Navbar } from '../components/navbar/navbar'
 import { Providers } from './providers'
 import { CookieConsent } from '../components/CookieConsent'
+import { SkipNav } from '../components/SkipNav'
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import './globals.css'
@@ -181,8 +182,11 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <Providers>
+          {/* Skip Navigation Links for Screen Readers */}
+          <SkipNav />
+          
           {/* Alpha Badge - Simple & Clean */}
-          <div className="fixed top-3 left-3 sm:top-4 sm:left-4 z-[999] pointer-events-none animate-in fade-in duration-700">
+          <div className="fixed top-3 left-3 sm:top-4 sm:left-4 z-[999] pointer-events-none animate-in fade-in duration-700" aria-hidden="true">
             <div className="relative">
               {/* Subtle glow */}
               <div className="absolute -inset-0.5 bg-violet-500/20 rounded-lg blur-sm"></div>
@@ -204,7 +208,9 @@ export default function RootLayout({
           </div>
           
           <Navbar />
-          {children}
+          <main id="main-content" role="main">
+            {children}
+          </main>
           <CookieConsent />
         </Providers>
         <Analytics />
