@@ -384,7 +384,7 @@ export default function OnboardingPage() {
                   {EXPERIENCE_LEVELS.map(level => (
                     <button
                       key={level.id}
-                      onClick={() => setExperienceLevel(level.id as 'beginner' | 'casual' | 'regular' | 'veteran')}
+                      onClick={() => setExperienceLevel(level.id as 'beginner' | 'intermediate' | 'expert')}
                       className={`p-6 rounded-xl border-2 transition-all duration-200 ${
                         experienceLevel === level.id
                           ? 'bg-primary-500/20 border-primary-500 shadow-lg shadow-primary-500/25'
