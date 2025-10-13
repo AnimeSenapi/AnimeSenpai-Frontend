@@ -613,8 +613,20 @@ export default function SearchPage() {
                 ? `No anime match your current filters (${activeFiltersCount} active). Try adjusting them to see more results.`
                 : 'The anime database is being populated. Check back soon for thousands of titles!'
             }
+            suggestions={
+              searchQuery || activeFiltersCount > 0
+                ? [
+                    'Check your spelling and try again',
+                    'Use broader search terms (e.g., "action" instead of "action comedy")',
+                    'Remove some filters to see more results',
+                    'Try searching by genre or year instead'
+                  ]
+                : undefined
+            }
             actionLabel={(searchQuery || activeFiltersCount > 0) ? 'Clear All Filters' : undefined}
             onAction={(searchQuery || activeFiltersCount > 0) ? clearFilters : undefined}
+            secondaryActionLabel={searchQuery || activeFiltersCount > 0 ? 'Browse All' : undefined}
+            onSecondaryAction={searchQuery || activeFiltersCount > 0 ? () => { clearFilters(); setSearchQuery('') } : undefined}
           />
         ) : viewMode === 'grid' ? (
           // Use virtual scrolling for large result sets (100+ items)

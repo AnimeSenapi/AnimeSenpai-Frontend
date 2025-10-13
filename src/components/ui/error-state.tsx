@@ -201,6 +201,7 @@ export function ErrorState({
 
 /**
  * Empty State Component (for when there's no data, not an error)
+ * Enhanced with helpful suggestions and multiple actions
  */
 interface EmptyStateProps {
   icon?: ReactNode
@@ -208,7 +209,11 @@ interface EmptyStateProps {
   message: string
   actionLabel?: string
   onAction?: () => void
+  secondaryActionLabel?: string
+  onSecondaryAction?: () => void
+  suggestions?: string[]
   className?: string
+  variant?: 'default' | 'simple'
 }
 
 export function EmptyState({
@@ -217,8 +222,37 @@ export function EmptyState({
   message,
   actionLabel,
   onAction,
+  secondaryActionLabel,
+  onSecondaryAction,
+  suggestions,
   className = '',
+  variant = 'default',
 }: EmptyStateProps) {
+  // Simple variant (compact, no suggestions)
+  if (variant === 'simple') {
+    return (
+      <div className={`text-center py-8 px-4 ${className}`}>
+        <div className="max-w-sm mx-auto">
+          <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3">
+            {icon}
+          </div>
+          <h3 className="text-lg font-semibold text-white mb-1">{title}</h3>
+          <p className="text-gray-400 text-sm mb-4">{message}</p>
+          {actionLabel && onAction && (
+            <Button
+              onClick={onAction}
+              size="sm"
+              className="bg-gradient-to-r from-primary-500 to-secondary-500"
+            >
+              {actionLabel}
+            </Button>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // Default variant (full with suggestions)
   return (
     <div className={`text-center py-12 px-4 ${className}`}>
       <div className="max-w-md mx-auto">
@@ -227,14 +261,42 @@ export function EmptyState({
         </div>
         <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
         <p className="text-gray-400 mb-6">{message}</p>
-        {actionLabel && onAction && (
-          <Button
-            onClick={onAction}
-            className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white"
-          >
-            {actionLabel}
-          </Button>
+        
+        {/* Helpful Suggestions */}
+        {suggestions && suggestions.length > 0 && (
+          <div className="mb-6 text-left bg-white/5 rounded-lg p-4 border border-white/10">
+            <p className="text-sm font-medium text-gray-300 mb-2">💡 Try this:</p>
+            <ul className="space-y-1.5">
+              {suggestions.map((suggestion, i) => (
+                <li key={i} className="text-sm text-gray-400 flex items-start gap-2">
+                  <span className="text-primary-400 flex-shrink-0">•</span>
+                  <span>{suggestion}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
+
+        {/* Actions */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          {actionLabel && onAction && (
+            <Button
+              onClick={onAction}
+              className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white"
+            >
+              {actionLabel}
+            </Button>
+          )}
+          {secondaryActionLabel && onSecondaryAction && (
+            <Button
+              onClick={onSecondaryAction}
+              variant="outline"
+              className="border-white/20 text-white hover:bg-white/10"
+            >
+              {secondaryActionLabel}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   )

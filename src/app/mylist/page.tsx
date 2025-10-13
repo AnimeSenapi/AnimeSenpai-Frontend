@@ -821,7 +821,7 @@ export default function MyListPage() {
           )
         )}
 
-        {/* Empty State */}
+        {/* Empty State - Enhanced with helpful suggestions */}
         {filteredAnime.length === 0 && (
           <EmptyState
             icon={
@@ -834,17 +834,36 @@ export default function MyListPage() {
             title={
               selectedCategory === 'all' 
                 ? 'Your list is empty' 
+                : searchQuery
+                ? 'No results found'
                 : `No ${selectedCategory.replace('-', ' ')} anime`
             }
             message={
               selectedCategory === 'all' 
-                ? 'Start building your anime collection by adding shows you love or want to watch'
+                ? 'Start building your anime collection by adding shows you love or want to watch!'
                 : searchQuery
                 ? `No anime matching "${searchQuery}" in your ${selectedCategory.replace('-', ' ')} list`
                 : `Add some anime to your ${selectedCategory.replace('-', ' ')} list to see them here`
             }
-            actionLabel="Discover Anime"
-            onAction={() => window.location.href = '/search'}
+            suggestions={
+              selectedCategory === 'all' && !searchQuery
+                ? [
+                    'Browse our full anime catalog in the Search page',
+                    'Check out trending anime on the Dashboard',
+                    'Use filters to find anime by genre, year, or studio'
+                  ]
+                : searchQuery
+                ? [
+                    'Check your spelling',
+                    'Try different keywords',
+                    'Clear filters and search again'
+                  ]
+                : undefined
+            }
+            actionLabel={searchQuery ? 'Clear Search' : 'Discover Anime'}
+            onAction={() => searchQuery ? setSearchQuery('') : window.location.href = '/search'}
+            secondaryActionLabel={!searchQuery ? 'View Trending' : undefined}
+            onSecondaryAction={!searchQuery ? () => window.location.href = '/dashboard' : undefined}
           />
         )}
       </main>
