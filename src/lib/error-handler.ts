@@ -41,6 +41,7 @@ export interface AppError {
   timestamp: Date
   context?: Record<string, any>
   userMessage?: string
+  stack?: string
 }
 
 class ErrorHandler {
@@ -195,7 +196,7 @@ class ErrorHandler {
     try {
       // Send to Sentry with context
       Sentry.captureException(error.originalError || new Error(error.message), {
-        level: error.type === ErrorType.FATAL_ERROR ? 'fatal' : 'error',
+        level: error.type === ErrorType.SERVER_ERROR ? 'fatal' : 'error',
         tags: {
           errorType: error.type,
         },
