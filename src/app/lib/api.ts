@@ -1058,4 +1058,116 @@ export async function apiGetDataProcessingInfo() {
   return response
 }
 
+// ============================================================================
+// Social Features API - Phase 1
+// ============================================================================
+
+// Follow System
+export async function apiFollowUser(userId: string) {
+  const response = await apiCall('social.followUser', { userId })
+  return response
+}
+
+export async function apiUnfollowUser(userId: string) {
+  const response = await apiCall('social.unfollowUser', { userId })
+  return response
+}
+
+// Friend System
+export async function apiSendFriendRequest(userId: string) {
+  const response = await apiCall('social.sendFriendRequest', { userId })
+  return response
+}
+
+export async function apiAcceptFriendRequest(requestId: string) {
+  const response = await apiCall('social.acceptFriendRequest', { requestId })
+  return response
+}
+
+export async function apiDeclineFriendRequest(requestId: string) {
+  const response = await apiCall('social.declineFriendRequest', { requestId })
+  return response
+}
+
+export async function apiUnfriend(userId: string) {
+  const response = await apiCall('social.unfriend', { userId })
+  return response
+}
+
+// Relationships
+export async function apiGetRelationshipStatus(userId: string) {
+  const response = await apiCall('social.getRelationshipStatus', { userId })
+  return response
+}
+
+export async function apiGetFriends(userId?: string) {
+  const response = await apiCall('social.getFriends', userId ? { userId } : undefined)
+  return response
+}
+
+export async function apiGetPendingFriendRequests() {
+  const response = await apiCall('social.getPendingFriendRequests')
+  return response
+}
+
+export async function apiGetFollowers(userId?: string, page?: number, limit?: number) {
+  const response = await apiCall('social.getFollowers', { userId, page, limit })
+  return response
+}
+
+export async function apiGetFollowing(userId?: string, page?: number, limit?: number) {
+  const response = await apiCall('social.getFollowing', { userId, page, limit })
+  return response
+}
+
+// User Profiles
+export async function apiGetUserProfile(username: string) {
+  const response = await apiCall('social.getUserProfile', { username })
+  return response
+}
+
+// Notifications
+export async function apiGetNotifications(page?: number, limit?: number, unreadOnly?: boolean) {
+  const response = await apiCall('social.getNotifications', { page, limit, unreadOnly })
+  return response
+}
+
+export async function apiMarkNotificationRead(notificationId: string) {
+  const response = await apiCall('social.markNotificationRead', { notificationId })
+  return response
+}
+
+export async function apiMarkAllNotificationsRead() {
+  const response = await apiCall('social.markAllNotificationsRead')
+  return response
+}
+
+// Privacy Settings
+export async function apiGetPrivacySettings() {
+  const response = await apiCall('social.getPrivacySettings')
+  return response
+}
+
+export async function apiUpdatePrivacySettings(settings: {
+  profileVisibility?: 'public' | 'friends' | 'private'
+  listVisibility?: 'public' | 'friends' | 'private'
+  activityVisibility?: 'public' | 'friends' | 'private'
+  friendsVisibility?: 'public' | 'friends' | 'private'
+  reviewsVisibility?: 'public' | 'friends' | 'private'
+  hiddenAnimeIds?: string[]
+}) {
+  const response = await apiCall('social.updatePrivacySettings', settings)
+  return response
+}
+
+export async function apiHideAnimeFromList(animeId: string) {
+  const response = await apiCall('social.hideAnimeFromList', { animeId })
+  return response
+}
+
+export async function apiUnhideAnimeFromList(animeId: string) {
+  const response = await apiCall('social.unhideAnimeFromList', { animeId })
+  return response
+}
+
 

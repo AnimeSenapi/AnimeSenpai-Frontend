@@ -7,6 +7,7 @@ import { Button } from '../ui/button'
 import { GuestAuth } from './GuestAuth'
 import { StandaloneDropdown } from './StandaloneDropdown'
 import { SearchBar } from '../search/SearchBar'
+import { NotificationBell } from './NotificationBell'
 import { useAuth } from '../../app/lib/auth-context'
 import {
   Home,
@@ -76,15 +77,21 @@ export function Navbar() {
               {isLoading ? (
                 <div className="w-8 h-8 bg-white/10 rounded-full animate-pulse"></div>
               ) : isAuthenticated && user ? (
-                <StandaloneDropdown
-                  user={{
-                    id: user.id,
-                    name: user.username || user.name || 'User',
-                    email: user.email,
-                    avatar: user.avatar,
-                    role: user.role
-                  }}
-                />
+                <>
+                  {/* Notification Bell */}
+                  <NotificationBell />
+                  
+                  {/* User Dropdown */}
+                  <StandaloneDropdown
+                    user={{
+                      id: user.id,
+                      name: user.username || user.name || 'User',
+                      email: user.email,
+                      avatar: user.avatar,
+                      role: user.role
+                    }}
+                  />
+                </>
               ) : (
                 <div className="hidden sm:block">
                   <GuestAuth />

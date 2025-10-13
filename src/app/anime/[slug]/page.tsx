@@ -695,7 +695,7 @@ export default function AnimePage() {
                 </div>
                 )}
               </div>
-            </div>
+                </div>
 
           {/* Recommendations */}
           {relatedSeasons.length > 1 && (
