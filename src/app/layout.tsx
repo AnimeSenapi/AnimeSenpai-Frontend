@@ -19,6 +19,11 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
+  viewportFit: 'cover', // Enable safe area for iPhone notch/dynamic island
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0f' },
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' }
+  ],
 }
 
 export const metadata: Metadata = {
@@ -104,7 +109,12 @@ export const metadata: Metadata = {
     shortcut: '/favicon-16x16.png',
     apple: '/apple-touch-icon.png',
   },
-  manifest: '/site.webmanifest',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'AnimeSenpai',
+  },
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION || '',
     // yandex: 'your-yandex-verification-code',
