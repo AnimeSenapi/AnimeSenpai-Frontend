@@ -154,7 +154,7 @@ export default function OnboardingPage() {
       'Content-Type': 'application/json'
     }
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`
+      headers['Authorization'] = 'Bearer ' + token
     }
     return headers
   }

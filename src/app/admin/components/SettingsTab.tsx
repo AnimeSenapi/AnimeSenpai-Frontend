@@ -91,20 +91,36 @@ export function SettingsTab() {
   const [activeSection, setActiveSection] = useState<'general' | 'features' | 'security' | 'notifications' | 'analytics'>('general')
   const [showPassword, setShowPassword] = useState(false)
 
+  // Load settings from backend
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        setLoading(true)
+        const { apiGetSettings } = await import('../../lib/api')
+        const loadedSettings = await apiGetSettings()
+        setSettings(loadedSettings)
+      } catch (error: any) {
+        console.error('Failed to load settings:', error)
+        // Keep default settings if loading fails
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadSettings()
+  }, [])
+
   const handleSave = async () => {
     try {
       setSaveStatus('saving')
       
-      // TODO: Implement backend endpoint to save settings
-      // await apiSaveSettings(settings)
-      
-      // Simulate API call for now
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const { apiSaveSettings } = await import('../../lib/api')
+      await apiSaveSettings(settings)
       
       setSaveStatus('saved')
       setTimeout(() => setSaveStatus('idle'), 2000)
       
-      alert('Settings saved successfully! (Backend implementation pending)')
+      alert('Settings saved successfully!')
     } catch (error: any) {
       setSaveStatus('error')
       alert(error.message || 'Failed to save settings')

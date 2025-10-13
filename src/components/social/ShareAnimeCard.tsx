@@ -164,24 +164,24 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
 
             {/* Share Options */}
             <div className="space-y-3">
-              {/* Twitter */}
+              {/* Twitter - Mobile Optimized */}
               <button
                 onClick={shareToTwitter}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-[#1DA1F2]/10 hover:bg-[#1DA1F2]/20 border border-[#1DA1F2]/20 transition-colors group"
+                className="w-full flex items-center gap-3 px-4 py-3.5 sm:py-3 rounded-xl bg-[#1DA1F2]/10 hover:bg-[#1DA1F2]/20 active:bg-[#1DA1F2]/30 border border-[#1DA1F2]/20 transition-colors group touch-manipulation"
               >
-                <div className="w-10 h-10 bg-[#1DA1F2]/20 rounded-lg flex items-center justify-center group-hover:bg-[#1DA1F2]/30 transition-colors">
+                <div className="w-10 h-10 sm:w-10 sm:h-10 bg-[#1DA1F2]/20 rounded-lg flex items-center justify-center group-hover:bg-[#1DA1F2]/30 transition-colors">
                   <Twitter className="h-5 w-5 text-[#1DA1F2]" />
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="text-white font-medium">Share on Twitter</p>
+                  <p className="text-white font-medium text-sm sm:text-base">Share on Twitter</p>
                   <p className="text-gray-400 text-xs">Post to your timeline</p>
                 </div>
               </button>
 
-              {/* Generate Share Image (Coming Soon) */}
+              {/* Generate Share Image (Coming Soon) - Mobile Optimized */}
               <button
                 onClick={generateShareImage}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors group"
+                className="w-full flex items-center gap-3 px-4 py-3.5 sm:py-3 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/10 transition-colors group touch-manipulation"
               >
                 <div className="w-10 h-10 bg-primary-500/20 rounded-lg flex items-center justify-center group-hover:bg-primary-500/30 transition-colors">
                   <Download className="h-5 w-5 text-primary-400" />

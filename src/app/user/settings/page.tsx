@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '../../../components/ui/button'
 import { Checkbox } from '../../../components/ui/checkbox'
 import { Badge } from '../../../components/ui/badge'
+import { EmailVerificationPrompt } from '../../../components/EmailVerificationBanner'
 import { RequireAuth } from '../../lib/protected-route'
 import { useAuth } from '../../lib/auth-context'
 import { useToast } from '../../../lib/toast-context'
@@ -70,7 +71,7 @@ export default function UserSettingsPage() {
       'Content-Type': 'application/json'
     }
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`
+      headers['Authorization'] = 'Bearer ' + token
     }
     return headers
   }
@@ -361,6 +362,11 @@ export default function UserSettingsPage() {
                         </p>
                       </div>
 
+                      {/* Email Verification Status */}
+                      {user && !user.emailVerified && (
+                        <EmailVerificationPrompt email={user.email} />
+                      )}
+
                       <div className="h-px bg-white/10"></div>
 
                       {/* Username */}
@@ -514,7 +520,7 @@ export default function UserSettingsPage() {
                             <div className={`h-1 flex-1 rounded-full ${newPassword.length >= 8 ? 'bg-success-500' : 'bg-gray-700'}`}></div>
                             <div className={`h-1 flex-1 rounded-full ${newPassword.length >= 12 ? 'bg-success-500' : 'bg-gray-700'}`}></div>
                             <div className={`h-1 flex-1 rounded-full ${/[A-Z]/.test(newPassword) && /[0-9]/.test(newPassword) ? 'bg-success-500' : 'bg-gray-700'}`}></div>
-                          </div>
+                      </div>
                           <p className="mt-2 text-xs text-gray-400">
                             {newPassword.length >= 8 ? '✓ At least 8 characters' : '○ At least 8 characters'}
                           </p>

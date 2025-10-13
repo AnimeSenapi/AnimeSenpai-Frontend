@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { apiGetAllUsers, apiAdminSearchUsers, apiUpdateUserRole, apiDeleteUser, apiGetUserDetails } from '../../lib/api'
-import { Search, ChevronLeft, ChevronRight, Shield, ShieldCheck, Crown, Trash2, Ban, Eye, X } from 'lucide-react'
+import { Search, ChevronLeft, ChevronRight, Shield, ShieldCheck, Crown, Trash2, Ban, Eye, X, RefreshCw, Mail, CheckCircle, AlertCircle, Download, ArrowUpDown, Check, Users } from 'lucide-react'
 import { Button } from '../../../components/ui/button'
+import { LoadingState } from '../../../components/ui/loading-state'
+import { EmptyState } from '../../../components/ui/error-state'
+import { Badge } from '../../../components/ui/badge'
+import { useToast } from '../../../lib/toast-context'
 
 interface User {
   id: string
@@ -17,6 +21,7 @@ interface User {
 }
 
 export function UsersTab() {
+  const toast = useToast()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -25,6 +30,12 @@ export function UsersTab() {
   const [roleFilter, setRoleFilter] = useState<string>('all')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [showUserModal, setShowUserModal] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [userToDelete, setUserToDelete] = useState<User | null>(null)
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set())
+  const [sortBy, setSortBy] = useState<'createdAt' | 'lastLoginAt' | 'email'>('createdAt')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [verifiedFilter, setVerifiedFilter] = useState<'all' | 'verified' | 'unverified'>('all')
 
   useEffect(() => {
     loadUsers()
@@ -72,30 +83,33 @@ export function UsersTab() {
   }
 
   const handleRoleChange = async (userId: string, newRole: 'user' | 'moderator' | 'admin') => {
-    if (!confirm(`Are you sure you want to change this user's role to ${newRole}?`)) {
-      return
-    }
-
     try {
       await apiUpdateUserRole(userId, newRole)
       loadUsers()
-      alert('User role updated successfully!')
+      toast.success(`User role updated to ${newRole}`, 'Success')
     } catch (error: any) {
-      alert(error.message || 'Failed to update user role')
+      toast.error(error.message || 'Failed to update user role', 'Error')
     }
   }
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone!')) {
-      return
-    }
+    const user = users.find(u => u.id === userId)
+    setUserToDelete(user || null)
+    setShowDeleteConfirm(true)
+  }
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return
 
     try {
-      await apiDeleteUser(userId)
+      await apiDeleteUser(userToDelete.id)
       loadUsers()
-      alert('User deleted successfully!')
+      setShowUserModal(false)
+      setShowDeleteConfirm(false)
+      setUserToDelete(null)
+      toast.success('User deleted successfully', 'Deleted')
     } catch (error: any) {
-      alert(error.message || 'Failed to delete user')
+      toast.error(error.message || 'Failed to delete user', 'Error')
     }
   }
 
@@ -120,6 +134,96 @@ export function UsersTab() {
     }
   }
 
+  const toggleUserSelection = (userId: string) => {
+    const newSelected = new Set(selectedUsers)
+    if (newSelected.has(userId)) {
+      newSelected.delete(userId)
+    } else {
+      newSelected.add(userId)
+    }
+    setSelectedUsers(newSelected)
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedUsers.size === users.length) {
+      setSelectedUsers(new Set())
+    } else {
+      setSelectedUsers(new Set(users.map(u => u.id)))
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedUsers.size === 0) return
+    
+    if (!confirm(`Delete ${selectedUsers.size} selected users? This cannot be undone!`)) {
+      return
+    }
+
+    try {
+      for (const userId of selectedUsers) {
+        await apiDeleteUser(userId)
+      }
+      loadUsers()
+      setSelectedUsers(new Set())
+      toast.success(`Deleted ${selectedUsers.size} users`, 'Success')
+    } catch (error: any) {
+      toast.error('Failed to delete some users', 'Error')
+    }
+  }
+
+  const exportToCSV = () => {
+    const headers = ['Email', 'Username', 'Name', 'Role', 'Email Verified', 'Created At', 'Last Login']
+    const rows = users.map(u => [
+      u.email,
+      u.username || '',
+      u.name || '',
+      u.role,
+      u.emailVerified ? 'Yes' : 'No',
+      new Date(u.createdAt).toLocaleString(),
+      u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : 'Never'
+    ])
+
+    const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `animesenpai-users-${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success('Users exported to CSV', 'Exported')
+  }
+
+  const getFilteredAndSortedUsers = () => {
+    let filtered = [...users]
+
+    // Filter by verification status
+    if (verifiedFilter !== 'all') {
+      filtered = filtered.filter(u => 
+        verifiedFilter === 'verified' ? u.emailVerified : !u.emailVerified
+      )
+    }
+
+    // Sort users
+    filtered.sort((a, b) => {
+      let comparison = 0
+      
+      if (sortBy === 'email') {
+        comparison = a.email.localeCompare(b.email)
+      } else if (sortBy === 'createdAt') {
+        comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      } else if (sortBy === 'lastLoginAt') {
+        const aTime = a.lastLoginAt ? new Date(a.lastLoginAt).getTime() : 0
+        const bTime = b.lastLoginAt ? new Date(b.lastLoginAt).getTime() : 0
+        comparison = aTime - bTime
+      }
+
+      return sortOrder === 'asc' ? comparison : -comparison
+    })
+
+    return filtered
+  }
+
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'admin':
@@ -133,10 +237,21 @@ export function UsersTab() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-white mb-2">User Management</h2>
-        <p className="text-gray-400">Manage user accounts and permissions</p>
+      {/* Header with Refresh */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-2">User Management</h2>
+          <p className="text-gray-400">Manage user accounts and permissions</p>
+        </div>
+        <Button
+          onClick={loadUsers}
+          variant="outline"
+          size="sm"
+          className="border-white/20 text-white hover:bg-white/10"
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
       </div>
 
       {/* Search and Filters */}
@@ -170,13 +285,94 @@ export function UsersTab() {
           <option value="moderator">Moderators</option>
           <option value="admin">Admins</option>
         </select>
+        <select
+          value={verifiedFilter}
+          onChange={(e) => setVerifiedFilter(e.target.value as any)}
+          className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
+        >
+          <option value="all">All Status</option>
+          <option value="verified">Verified</option>
+          <option value="unverified">Unverified</option>
+        </select>
+      </div>
+
+      {/* Bulk Actions & Export */}
+      {selectedUsers.size > 0 && (
+        <div className="glass rounded-lg p-4 border border-primary-500/30 flex items-center justify-between">
+          <p className="text-white font-medium">
+            {selectedUsers.size} user{selectedUsers.size > 1 ? 's' : ''} selected
+          </p>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setSelectedUsers(new Set())}
+              variant="ghost"
+              size="sm"
+              className="text-gray-400 hover:text-white"
+            >
+              Clear Selection
+            </Button>
+            <Button
+              onClick={handleBulkDelete}
+              variant="outline"
+              size="sm"
+              className="border-error-500/30 text-error-300 hover:bg-error-500/20"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Selected
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Stats & Export */}
+      <div className="flex items-center justify-between">
+        <div className="flex gap-4 text-sm">
+          <span className="text-gray-400">
+            Total: <span className="text-white font-medium">{users.length}</span>
+          </span>
+          <span className="text-gray-400">
+            Verified: <span className="text-green-400 font-medium">{users.filter(u => u.emailVerified).length}</span>
+          </span>
+          <span className="text-gray-400">
+            Admins: <span className="text-yellow-400 font-medium">{users.filter(u => u.role === 'admin').length}</span>
+          </span>
+        </div>
+        <Button
+          onClick={exportToCSV}
+          variant="outline"
+          size="sm"
+          className="border-white/20 text-white hover:bg-white/10"
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Export CSV
+        </Button>
       </div>
 
       {/* Users Table */}
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="text-gray-400">Loading users...</div>
-        </div>
+        <LoadingState variant="inline" text="Loading users..." size="md" />
+      ) : users.length === 0 ? (
+        <EmptyState
+          icon={<Users className="h-10 w-10 text-gray-500" />}
+          title="No users found"
+          message={
+            searchQuery
+              ? `No users match "${searchQuery}". Try a different search term.`
+              : roleFilter !== 'all'
+              ? `No users with role "${roleFilter}". Try changing the filter.`
+              : 'No users registered yet.'
+          }
+          actionLabel={searchQuery || roleFilter !== 'all' ? 'Clear Filters' : undefined}
+          onAction={
+            searchQuery || roleFilter !== 'all'
+              ? () => {
+                  setSearchQuery('')
+                  setRoleFilter('all')
+                  loadUsers()
+                }
+              : undefined
+          }
+        />
       ) : (
         <>
           <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
@@ -184,19 +380,75 @@ export function UsersTab() {
               <table className="w-full">
                 <thead className="bg-white/5">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">User</th>
+                    <th className="px-4 py-3 text-left">
+                      <input
+                        type="checkbox"
+                        checked={selectedUsers.size === users.length && users.length > 0}
+                        onChange={toggleSelectAll}
+                        className="w-4 h-4 rounded border-white/20 bg-white/5 text-primary-500 focus:ring-2 focus:ring-primary-500/50"
+                      />
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white" onClick={() => {
+                      if (sortBy === 'email') {
+                        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+                      } else {
+                        setSortBy('email')
+                      }
+                    }}>
+                      <div className="flex items-center gap-1">
+                        User
+                        <ArrowUpDown className="h-3 w-3" />
+                      </div>
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Role</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Joined</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Last Login</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white" onClick={() => {
+                      if (sortBy === 'createdAt') {
+                        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+                      } else {
+                        setSortBy('createdAt')
+                      }
+                    }}>
+                      <div className="flex items-center gap-1">
+                        Joined
+                        <ArrowUpDown className="h-3 w-3" />
+                      </div>
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white" onClick={() => {
+                      if (sortBy === 'lastLoginAt') {
+                        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+                      } else {
+                        setSortBy('lastLoginAt')
+                      }
+                    }}>
+                      <div className="flex items-center gap-1">
+                        Last Login
+                        <ArrowUpDown className="h-3 w-3" />
+                      </div>
+                    </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/10">
-                  {users.map((user) => (
+                  {getFilteredAndSortedUsers().map((user) => (
                     <tr key={user.id} className="hover:bg-white/5 transition-colors">
+                      <td className="px-4 py-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.has(user.id)}
+                          onChange={() => toggleUserSelection(user.id)}
+                          className="w-4 h-4 rounded border-white/20 bg-white/5 text-primary-500 focus:ring-2 focus:ring-primary-500/50"
+                        />
+                      </td>
                       <td className="px-6 py-4">
                         <div>
-                          <p className="text-sm font-medium text-white">{user.name || user.username || 'Unknown'}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium text-white">{user.name || user.username || 'Unknown'}</p>
+                            {user.emailVerified ? (
+                              <CheckCircle className="h-3.5 w-3.5 text-green-400" title="Email Verified" />
+                            ) : (
+                              <AlertCircle className="h-3.5 w-3.5 text-warning-400" title="Email Not Verified" />
+                            )}
+                          </div>
                           <p className="text-xs text-gray-400">{user.email}</p>
                         </div>
                       </td>
@@ -291,7 +543,20 @@ export function UsersTab() {
               </div>
               <div>
                 <p className="text-sm text-gray-400 mb-1">Email</p>
-                <p className="text-white">{selectedUser.email}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-white">{selectedUser.email}</p>
+                  {selectedUser.emailVerified ? (
+                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Verified
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-warning-500/20 text-warning-400 border-warning-500/30 text-xs">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      Not Verified
+                    </Badge>
+                  )}
+                </div>
               </div>
               <div>
                 <p className="text-sm text-gray-400 mb-1">Role</p>
@@ -322,6 +587,48 @@ export function UsersTab() {
                   <p className="text-white">{(selectedUser as any)._count.userAnimeList}</p>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && userToDelete && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="glass rounded-2xl p-6 max-w-md w-full border border-error-500/30" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start gap-4 mb-6">
+              <div className="w-12 h-12 bg-error-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <AlertCircle className="h-6 w-6 text-error-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-white mb-2">Delete User?</h3>
+                <p className="text-gray-300 text-sm mb-3">
+                  Are you sure you want to delete <strong>{userToDelete.name || userToDelete.username || userToDelete.email}</strong>?
+                </p>
+                <div className="bg-error-500/10 border border-error-500/20 rounded-lg p-3 mb-4">
+                  <p className="text-error-300 text-xs font-semibold mb-1">⚠️ Warning</p>
+                  <p className="text-error-300/80 text-xs">
+                    This action cannot be undone. All user data, including their anime list, ratings, and activity, will be permanently deleted.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setShowDeleteConfirm(false)}
+                variant="outline"
+                className="flex-1 border-white/20 text-white hover:bg-white/10"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDeleteUser}
+                className="flex-1 bg-error-500 hover:bg-error-600 text-white"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete User
+              </Button>
             </div>
           </div>
         </div>

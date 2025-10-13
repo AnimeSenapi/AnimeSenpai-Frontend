@@ -13,12 +13,16 @@ interface MyListAnimeCardProps {
   anime: Anime & { listStatus: 'favorite' | 'watching' | 'completed' | 'plan-to-watch' }
   variant?: 'grid' | 'list'
   className?: string
+  onFavorite?: (animeId: string) => void
+  isFavorited?: boolean
 }
 
 export function MyListAnimeCard({ 
   anime, 
   variant = 'grid', 
-  className 
+  className,
+  onFavorite,
+  isFavorited = false
 }: MyListAnimeCardProps) {
   const router = useRouter()
   // Prefer English title over romanized Japanese
@@ -127,8 +131,34 @@ export function MyListAnimeCard({
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 text-warning-400 fill-warning-400" />
-                    <span className="text-white font-semibold">{anime.rating}</span>
+                    <span className="text-white font-semibold">
+                      {anime.rating && !isNaN(Number(anime.rating)) 
+                        ? Number(anime.rating).toFixed(1) 
+                        : anime.averageRating && !isNaN(Number(anime.averageRating))
+                        ? Number(anime.averageRating).toFixed(1)
+                        : 'N/A'}
+                    </span>
                   </div>
+                  {onFavorite && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        onFavorite(anime.id)
+                      }}
+                      className="p-2 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-sm transition-all"
+                      aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                    >
+                      <Star 
+                        className={cn(
+                          "h-4 w-4 transition-all",
+                          isFavorited 
+                            ? "fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" 
+                            : "text-white hover:text-yellow-400"
+                        )}
+                      />
+                    </button>
+                  )}
                   <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white hover:bg-white/10">
                     <MoreVertical className="h-4 w-4" />
                   </Button>
@@ -219,9 +249,37 @@ export function MyListAnimeCard({
           <div className="absolute top-3 left-3 z-10">
             <div className="bg-black/50 backdrop-blur-sm text-white text-sm px-2 py-1 rounded-lg flex items-center gap-1">
               <Star className="h-3 w-3 text-warning-400 fill-warning-400" />
-              <span className="font-semibold">{anime.rating}</span>
+              <span className="font-semibold">
+                {anime.rating && !isNaN(Number(anime.rating)) 
+                  ? Number(anime.rating).toFixed(1) 
+                  : anime.averageRating && !isNaN(Number(anime.averageRating))
+                  ? Number(anime.averageRating).toFixed(1)
+                  : 'N/A'}
+              </span>
             </div>
           </div>
+
+          {/* Favorite Star Button - Always Visible */}
+          {onFavorite && (
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onFavorite(anime.id)
+              }}
+              className="absolute top-3 right-3 z-10 p-2 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-sm transition-all touch-manipulation active:bg-black/80"
+              aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+            >
+              <Star 
+                className={cn(
+                  "h-5 w-5 transition-all",
+                  isFavorited 
+                    ? "fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" 
+                    : "text-white hover:text-yellow-400"
+                )}
+              />
+            </button>
+          )}
 
           {/* Action Buttons */}
           <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -232,13 +290,6 @@ export function MyListAnimeCard({
               >
                 <Play className="h-4 w-4 mr-1" />
                 Watch
-              </Button>
-              <Button 
-                size="sm" 
-                variant="ghost"
-                className="bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 border border-white/20"
-              >
-                <Bookmark className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -251,7 +302,14 @@ export function MyListAnimeCard({
           </h3>
           <div className="flex items-center justify-between text-xs text-gray-400">
             <span>{anime.year}</span>
-            <span>{anime.episodes} eps</span>
+            <div className="flex items-center gap-2">
+              {(anime as any).seasonCount && (anime as any).seasonCount > 1 && (
+                <span className="bg-primary-500/20 text-primary-300 px-2 py-0.5 rounded font-medium">
+                  {(anime as any).seasonCount} Seasons
+                </span>
+              )}
+              <span>{(anime as any).totalEpisodes || anime.episodes} eps</span>
+            </div>
           </div>
           
           {/* Tags - Clickable */}

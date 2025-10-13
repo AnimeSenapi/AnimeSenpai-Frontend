@@ -111,15 +111,16 @@ export function AnimeCard({
             <div className="absolute top-2 right-2 z-10">
               <Button 
                 size="sm" 
-                className="border-0 h-8 w-8 p-0 transition-all bg-black/50 hover:bg-black/70"
+                className="border-0 h-10 w-10 sm:h-8 sm:w-8 p-0 transition-all bg-black/50 hover:bg-black/70 active:bg-black/80 touch-manipulation"
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
                   onFavorite()
                 }}
+                aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
               >
                 <Star className={cn(
-                  "h-3.5 w-3.5 transition-all",
+                  "h-4 w-4 sm:h-3.5 sm:w-3.5 transition-all",
                   isFavorited 
                     ? "fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" 
                     : "text-white"

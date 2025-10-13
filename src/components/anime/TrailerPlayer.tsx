@@ -105,12 +105,13 @@ export function TrailerPlayer({ trailerUrl, title, className = '' }: TrailerPlay
             className="w-full h-full"
           />
           
-          {/* Close Button */}
+          {/* Close Button - Mobile Optimized */}
           <button
             onClick={() => setIsPlaying(false)}
-            className="absolute top-4 right-4 w-10 h-10 bg-black/80 hover:bg-black rounded-full flex items-center justify-center transition-colors z-10"
+            className="absolute top-2 right-2 sm:top-4 sm:right-4 w-12 h-12 sm:w-10 sm:h-10 bg-black/80 hover:bg-black active:bg-black/90 rounded-full flex items-center justify-center transition-colors z-10 touch-manipulation"
+            aria-label="Close trailer"
           >
-            <X className="h-5 w-5 text-white" />
+            <X className="h-6 w-6 sm:h-5 sm:w-5 text-white" />
           </button>
         </div>
       )}

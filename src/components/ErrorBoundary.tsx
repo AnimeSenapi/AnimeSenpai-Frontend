@@ -40,9 +40,29 @@ export class ErrorBoundary extends Component<Props, State> {
       errorInfo
     })
 
-    // Log to error tracking service (e.g., Sentry)
-    // if (typeof window !== 'undefined') {
-    //   Sentry.captureException(error, { contexts: { react: { componentStack: errorInfo.componentStack } } })
+    // Log to centralized error handler
+    if (typeof window !== 'undefined') {
+      const { errorHandler, ErrorType } = require('../lib/error-handler')
+      errorHandler.createError(
+        ErrorType.RENDER_ERROR,
+        error.message,
+        error,
+        {
+          componentStack: errorInfo.componentStack,
+          errorBoundary: true,
+        }
+      )
+    }
+
+    // TODO: Send to external error tracking service (e.g., Sentry)
+    // if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_SENTRY_DSN) {
+    //   Sentry.captureException(error, { 
+    //     contexts: { 
+    //       react: { 
+    //         componentStack: errorInfo.componentStack 
+    //       } 
+    //     } 
+    //   })
     // }
   }
 

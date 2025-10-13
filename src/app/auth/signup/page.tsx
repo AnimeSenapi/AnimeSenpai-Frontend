@@ -135,8 +135,18 @@ export default function SignUpPage() {
       })
       await new Promise(resolve => setTimeout(resolve, 100))
       
-      toast.success('Account created! Let\'s get you started.', 'Welcome to AnimeSenpai')
-      router.push('/onboarding')
+      // Show success message with email verification reminder
+      toast.success(
+        `Check your email (${formData.email}) to verify your account!`, 
+        'Account Created! 🎉'
+      )
+      
+      // Show secondary toast with next steps
+      setTimeout(() => {
+        toast.info('You can start exploring anime now, but verify your email to unlock all features!', 'Quick Tip')
+      }, 3000)
+      
+      router.push('/dashboard')
     } catch (err) {
       if (error) {
         toast.error(error, 'Sign Up Failed')

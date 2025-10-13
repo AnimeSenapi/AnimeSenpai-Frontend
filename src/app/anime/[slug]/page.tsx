@@ -12,9 +12,18 @@ import { Button } from '../../../components/ui/button'
 import { Badge } from '../../../components/ui/badge'
 import { BackButton } from '../../../components/ui/back-button'
 import { DetailHeroSkeleton, AnimeCardSkeleton } from '../../../components/ui/skeleton'
+import { LoadingState } from '../../../components/ui/loading-state'
+import { ErrorState } from '../../../components/ui/error-state'
+import { SEOHead } from '../../../components/SEOHead'
 import { useAuth } from '../../lib/auth-context'
 import { useToast } from '../../../lib/toast-context'
 import type { Anime } from '../../../types/anime'
+import { 
+  generateAnimeStructuredData,
+  generateAnimeMetaDescription,
+  generateAnimeKeywords,
+  generateCanonicalURL
+} from '../../../lib/seo-utils'
 import { 
   Play, 
   Bookmark, 
@@ -95,7 +104,7 @@ export default function AnimePage() {
       'Content-Type': 'application/json'
     }
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`
+      headers['Authorization'] = 'Bearer ' + token
     }
     return headers
   }
@@ -363,65 +372,36 @@ export default function AnimePage() {
   ].filter(p => p.available)
 
   if (isLoading) {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
-      {/* Animated Background Elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      </div>
-
-      <main className="container px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 lg:pb-20 relative z-10">
-          {/* Back Button Skeleton */}
-        <div className="mb-4 sm:mb-6 lg:mb-8">
-            <div className="h-8 sm:h-10 w-20 sm:w-24 bg-white/10 rounded-lg animate-pulse"></div>
-          </div>
-
-          {/* Detail Hero Skeleton */}
-          <DetailHeroSkeleton />
-
-          {/* Where to Watch Skeleton */}
-          <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8">
-            <div className="h-6 sm:h-8 w-36 sm:w-48 bg-white/10 rounded-lg mb-3 sm:mb-4 animate-pulse"></div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-14 sm:h-16 bg-white/10 rounded-xl animate-pulse"></div>
-              ))}
-            </div>
-          </div>
-
-          {/* Related Anime Skeleton */}
-          <div className="mb-8 sm:mb-10 lg:mb-12">
-            <div className="h-6 sm:h-8 w-44 sm:w-56 bg-white/10 rounded-lg mb-4 sm:mb-6 animate-pulse"></div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <AnimeCardSkeleton key={i} />
-              ))}
-            </div>
-          </div>
-        </main>
-      </div>
-    )
+    return <LoadingState variant="full" text="Loading anime details..." size="lg" />
   }
 
   if (error || !anime) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-white mb-4">Anime Not Found</h1>
-          <p className="text-gray-400 mb-8">The anime you're looking for doesn't exist.</p>
-          <Link href="/search">
-            <Button className="bg-primary-500 hover:bg-primary-600">
-              Browse Anime
-            </Button>
-          </Link>
-        </div>
+  return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 pt-32">
+        <ErrorState
+          variant="full"
+          title="Anime Not Found"
+          message={error || "The anime you're looking for doesn't exist or has been removed."}
+          showHome={true}
+          onHome={() => router.push('/search')}
+        />
       </div>
     )
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900">
+      {/* Dynamic SEO Meta Tags */}
+      <SEOHead
+        title={`${anime.titleEnglish || anime.title} | AnimeSenpai`}
+        description={generateAnimeMetaDescription(anime)}
+        keywords={generateAnimeKeywords(anime)}
+        canonical={generateCanonicalURL(`/anime/${anime.slug}`)}
+        ogImage={anime.bannerImage || anime.coverImage || undefined}
+        ogType="video.tv_show"
+        structuredData={generateAnimeStructuredData(anime)}
+      />
+      
       <main className="container px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 lg:pb-20">
         <div className="mb-4 sm:mb-6 lg:mb-8">
           <BackButton />
@@ -510,23 +490,23 @@ export default function AnimePage() {
 
           {/* Right: Content */}
             <div>
-            {/* Title - Prioritize English */}
-            <div className="mb-6">
-              <h1 className="text-5xl md:text-6xl font-bold text-white mb-3 leading-tight">
+            {/* Title - Prioritize English - Mobile Optimized */}
+            <div className="mb-4 sm:mb-6">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 sm:mb-3 leading-tight">
                 {seriesName || anime.titleEnglish || anime.title}
               </h1>
               {anime.titleEnglish && anime.title !== anime.titleEnglish && (
-                <p className="text-xl text-gray-400 mb-2">{anime.title}</p>
+                <p className="text-lg sm:text-xl text-gray-400 mb-2">{anime.title}</p>
               )}
               {anime.titleJapanese && anime.titleJapanese !== anime.title && (
                 <p className="text-sm text-gray-500">{anime.titleJapanese}</p>
               )}
             </div>
 
-            {/* Season Selector - Crunchyroll Style */}
+            {/* Season Selector - Crunchyroll Style - Mobile Optimized */}
             {seasons.length > 1 && (
-              <div className="glass rounded-xl p-4 mb-6">
-                <h3 className="text-sm text-gray-400 mb-3 uppercase tracking-wide">Seasons ({seasons.length})</h3>
+              <div className="glass rounded-lg sm:rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
+                <h3 className="text-xs sm:text-sm text-gray-400 mb-2 sm:mb-3 uppercase tracking-wide">Seasons ({seasons.length})</h3>
                 <div className="flex flex-wrap gap-2">
                   {seasons.map((season) => (
                     <button
@@ -535,15 +515,15 @@ export default function AnimePage() {
                         setSelectedSeason(season.slug)
                         router.push(`/anime/${season.slug}`)
                       }}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      className={`px-3 py-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-all touch-manipulation ${
                         season.slug === selectedSeason
                           ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
-                          : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white border border-white/10'
+                          : 'bg-white/5 text-gray-300 hover:bg-white/10 active:bg-white/15 hover:text-white border border-white/10'
                       }`}
                     >
-                      <div className="flex items-center gap-2">
-                        <span>{season.seasonName}</span>
-                        {season.year && <span className="text-xs opacity-70">({season.year})</span>}
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <span className="whitespace-nowrap">{season.seasonName}</span>
+                        {season.year && <span className="text-[10px] sm:text-xs opacity-70">({season.year})</span>}
                       </div>
                       {season.episodes && (
                         <div className="text-xs opacity-70 mt-0.5">{season.episodes} eps</div>

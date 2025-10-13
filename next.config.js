@@ -39,23 +39,88 @@ const nextConfig = {
         hostname: 'i.ytimg.com', // YouTube thumbnails
       },
     ],
-    formats: ['image/webp', 'image/avif'],
+    // Use modern image formats for better compression
+    formats: ['image/avif', 'image/webp'],
+    // Responsive image sizes
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60,
+    // Cache optimized images for 1 year
+    minimumCacheTTL: 31536000,
+    // Disable SVG for security
     dangerouslyAllowSVG: false,
+    // Enable unoptimized for development speed
+    unoptimized: process.env.NODE_ENV === 'development',
   },
   compiler: {
+    // Remove console.log in production
     removeConsole: process.env.NODE_ENV === 'production',
   },
+  
   // Performance optimizations
-  compress: true,
-  poweredByHeader: false,
+  compress: true, // Enable gzip compression
+  poweredByHeader: false, // Remove X-Powered-By header
   
   // Standalone output for better performance
   output: process.env.NODE_ENV === 'production' ? 'standalone' : undefined,
   
   outputFileTracingRoot: __dirname,
+  
+  // Headers for caching and security
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on'
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin'
+          },
+        ],
+      },
+      // Cache static assets
+      {
+        source: '/assets/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Cache API responses (short TTL)
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=60, stale-while-revalidate=300',
+          },
+        ],
+      },
+    ]
+  },
+  
+  // Redirects for performance
+  async redirects() {
+    return []
+  },
+  
+  // Rewrites for API optimization
+  async rewrites() {
+    return []
+  },
 }
 
 module.exports = nextConfig

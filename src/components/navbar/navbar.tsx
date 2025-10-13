@@ -30,7 +30,7 @@ export function Navbar() {
   return (
     <>
       <nav className="fixed top-2 sm:top-4 left-1/2 transform -translate-x-1/2 z-50 w-[96%] sm:w-[95%] max-w-7xl px-2 sm:px-0">
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl px-3 sm:px-6 lg:px-8 py-3 sm:py-4 overflow-visible transition-all duration-300">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl px-3 sm:px-6 lg:px-8 py-2 sm:py-2.5 lg:py-3 overflow-visible transition-all duration-300">
           <div className="flex items-center justify-between gap-2 sm:gap-4 lg:gap-6">
             {/* Logo Section - Responsive */}
             <Link href="/dashboard" className="flex items-center flex-shrink-0">
@@ -39,7 +39,7 @@ export function Navbar() {
                 alt="AnimeSenpai" 
                 width={450}
                 height={112}
-                className="h-8 sm:h-12 lg:h-14 w-auto invert"
+                className="h-12 sm:h-16 lg:h-20 xl:h-24 w-auto invert"
                 priority
               />
             </Link>

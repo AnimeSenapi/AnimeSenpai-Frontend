@@ -23,6 +23,7 @@ import type {
   FeatureAccess
 } from '../../types/anime'
 import { handleApiError, isAuthError, UserFriendlyError } from '../../lib/api-errors'
+import { clientCache, CacheTTL } from '../../lib/client-cache'
 
 type TRPCErrorShape = {
   message: string
@@ -42,18 +43,87 @@ type TRPCResponse<T> = { result: { data: T } } | { error: TRPCErrorShape }
 const TRPC_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
 
-// Debug: Log the API URL being used (only in browser)
-if (typeof window !== 'undefined') {
-  console.log('🔧 TRPC_URL:', TRPC_URL)
-  console.log('🔧 NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL)
-}
+// API URL configuration
+// TRPC_URL is set from environment variables
+
+// Track if we're currently refreshing to prevent multiple simultaneous refreshes
+let isRefreshing = false
+let refreshPromise: Promise<boolean> | null = null
 
 function getAuthHeaders(): Record<string, string> {
   if (typeof window === 'undefined') return {}
   
   // Check both localStorage (Remember Me) and sessionStorage (current session only)
   const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
-  return accessToken ? { Authorization: `Bearer ${accessToken}` } : {}
+  return accessToken ? { Authorization: 'Bearer ' + accessToken } : {}
+}
+
+// Refresh the access token using the refresh token
+async function refreshAccessToken(): Promise<boolean> {
+  if (typeof window === 'undefined') return false
+  
+  // If already refreshing, wait for that to complete
+  if (isRefreshing && refreshPromise) {
+    return refreshPromise
+  }
+  
+  isRefreshing = true
+  refreshPromise = (async () => {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken')
+      if (!refreshToken) {
+        return false
+      }
+      
+      const url = `${TRPC_URL}/auth.refreshToken`
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
+        credentials: 'include',
+      })
+      
+      if (!res.ok) {
+        // If refresh token is invalid/expired (401), clear all tokens
+        if (res.status === 401) {
+          localStorage.removeItem('accessToken')
+          localStorage.removeItem('refreshToken')
+          sessionStorage.removeItem('accessToken')
+          sessionStorage.removeItem('refreshToken')
+        }
+        return false
+      }
+      
+      const json = (await res.json()) as TRPCResponse<{
+        accessToken: string
+        refreshToken: string
+        expiresAt: string
+      }>
+      
+      if ('error' in json) {
+        return false
+      }
+      
+      const data = json.result.data
+      
+      // Store new tokens in the same storage that had the old refresh token
+      const storage = localStorage.getItem('refreshToken') ? localStorage : sessionStorage
+      storage.setItem('accessToken', data.accessToken)
+      storage.setItem('refreshToken', data.refreshToken)
+      
+      return true
+    } catch (error) {
+      console.error('❌ Token refresh failed:', error)
+      return false
+    } finally {
+      isRefreshing = false
+      refreshPromise = null
+    }
+  })()
+  
+  return refreshPromise
 }
 
 // Convert technical error codes to user-friendly messages
@@ -62,11 +132,8 @@ function getUserFriendlyError(code: string, message: string): string {
   return handleApiError({ error: { data: { code }, message } })
 }
 
-async function trpcQuery<TOutput>(path: string, init?: RequestInit): Promise<TOutput> {
+async function trpcQuery<TOutput>(path: string, init?: RequestInit, retryCount = 0): Promise<TOutput> {
   const url = `${TRPC_URL}/${path}`
-  
-  console.log('🔍 tRPC Query:', { url, method: 'GET' })
-  console.log('🔧 Full URL being fetched:', url)
   
   try {
     const res = await fetch(url, {
@@ -79,8 +146,6 @@ async function trpcQuery<TOutput>(path: string, init?: RequestInit): Promise<TOu
       ...init,
     })
 
-    console.log('📡 Response status:', res.status, res.statusText)
-
     if (!res.ok) {
       // Try to parse tRPC error
       let payload: TRPCResponse<unknown> | undefined
@@ -92,8 +157,15 @@ async function trpcQuery<TOutput>(path: string, init?: RequestInit): Promise<TOu
       const message = (payload && 'error' in payload) ? payload.error.message : 'Request failed'
       const code = (payload && 'error' in payload && payload.error.data?.code) || 'UNKNOWN_ERROR'
       
-      // Handle session expired errors gracefully
-      if (code === 'UNAUTHORIZED' || message.includes('session') || message.includes('expired')) {
+      // Try to refresh token on auth errors (only once)
+      if ((code === 'UNAUTHORIZED' || message.includes('session') || message.includes('expired') || message.includes('token')) && retryCount === 0) {
+        const refreshed = await refreshAccessToken()
+        if (refreshed) {
+          // Retry the request with new token
+          return trpcQuery<TOutput>(path, init, retryCount + 1)
+        }
+        
+        // If refresh failed, clear tokens
         if (typeof window !== 'undefined') {
           localStorage.removeItem('accessToken')
           localStorage.removeItem('refreshToken')
@@ -105,16 +177,21 @@ async function trpcQuery<TOutput>(path: string, init?: RequestInit): Promise<TOu
 
     const json = (await res.json()) as TRPCResponse<TOutput>
     
-    console.log('📦 GET Response:', { hasError: 'error' in json, hasResult: 'result' in json })
-    
     if ('error' in json) {
       const err = json.error
       const code = err.data?.code || 'UNKNOWN_ERROR'
       
       console.error('❌ tRPC GET Error:', { code, message: err.message })
       
-      // Handle session expired errors gracefully
-      if (code === 'UNAUTHORIZED' || err.message.includes('session') || err.message.includes('expired')) {
+      // Try to refresh token on auth errors (only once)
+      if ((code === 'UNAUTHORIZED' || err.message.includes('session') || err.message.includes('expired') || err.message.includes('token')) && retryCount === 0) {
+        const refreshed = await refreshAccessToken()
+        if (refreshed) {
+          // Retry the request with new token
+          return trpcQuery<TOutput>(path, init, retryCount + 1)
+        }
+        
+        // If refresh failed, clear tokens
         if (typeof window !== 'undefined') {
           localStorage.removeItem('accessToken')
           localStorage.removeItem('refreshToken')
@@ -124,7 +201,6 @@ async function trpcQuery<TOutput>(path: string, init?: RequestInit): Promise<TOu
       throw new Error(getUserFriendlyError(code, err.message))
     }
     
-    console.log('✅ tRPC GET Success')
     return json.result.data
   } catch (error: unknown) {
     console.error('❌ tRPC GET Failed:', error)
@@ -142,7 +218,7 @@ async function trpcQuery<TOutput>(path: string, init?: RequestInit): Promise<TOu
   }
 }
 
-async function trpcMutation<TInput, TOutput>(path: string, input?: TInput, init?: RequestInit): Promise<TOutput> {
+async function trpcMutation<TInput, TOutput>(path: string, input?: TInput, init?: RequestInit, retryCount = 0): Promise<TOutput> {
   const url = `${TRPC_URL}/${path}`
   
   try {
@@ -169,8 +245,15 @@ async function trpcMutation<TInput, TOutput>(path: string, input?: TInput, init?
       const message = (payload && 'error' in payload) ? payload.error.message : 'Request failed'
       const code = (payload && 'error' in payload && payload.error.data?.code) || 'UNKNOWN_ERROR'
       
-      // Handle session expired errors gracefully
-      if (code === 'UNAUTHORIZED' || message.includes('session') || message.includes('expired')) {
+      // Try to refresh token on auth errors (only once)
+      if ((code === 'UNAUTHORIZED' || message.includes('session') || message.includes('expired') || message.includes('token')) && retryCount === 0) {
+        const refreshed = await refreshAccessToken()
+        if (refreshed) {
+          // Retry the request with new token
+          return trpcMutation<TInput, TOutput>(path, input, init, retryCount + 1)
+        }
+        
+        // If refresh failed, clear tokens
         if (typeof window !== 'undefined') {
           localStorage.removeItem('accessToken')
           localStorage.removeItem('refreshToken')
@@ -185,8 +268,15 @@ async function trpcMutation<TInput, TOutput>(path: string, input?: TInput, init?
       const err = json.error
       const code = err.data?.code || 'UNKNOWN_ERROR'
       
-      // Handle session expired errors gracefully
-      if (code === 'UNAUTHORIZED' || err.message.includes('session') || err.message.includes('expired')) {
+      // Try to refresh token on auth errors (only once)
+      if ((code === 'UNAUTHORIZED' || err.message.includes('session') || err.message.includes('expired') || err.message.includes('token')) && retryCount === 0) {
+        const refreshed = await refreshAccessToken()
+        if (refreshed) {
+          // Retry the request with new token
+          return trpcMutation<TInput, TOutput>(path, input, init, retryCount + 1)
+        }
+        
+        // If refresh failed, clear tokens
         if (typeof window !== 'undefined') {
           localStorage.removeItem('accessToken')
           localStorage.removeItem('refreshToken')
@@ -253,7 +343,17 @@ export function clearSession() {
 }
 
 // Anime API calls
-export async function apiGetAllAnime() {
+export async function apiGetAllAnime(useCache: boolean = true) {
+  const cacheKey = 'anime:all:limit100'
+  
+  // Check cache first
+  if (useCache) {
+    const cached = clientCache.get<any>(cacheKey)
+    if (cached !== null) {
+      return cached
+    }
+  }
+  
   // Request reasonable limit to avoid API size limits (max 100)
   // With titleEnglish fields, large requests exceed 5MB response size
   const url = `${TRPC_URL}/anime.getAll?input=${encodeURIComponent(JSON.stringify({ limit: 100 }))}`
@@ -273,10 +373,25 @@ export async function apiGetAllAnime() {
   }
 
   const json = await response.json()
-  return json.result?.data || { anime: [], pagination: { page: 1, limit: 20, total: 0, pages: 0 } }
+  const result = json.result?.data || { anime: [], pagination: { page: 1, limit: 20, total: 0, pages: 0 } }
+  
+  // Cache for 5 minutes
+  clientCache.set(cacheKey, result, CacheTTL.FIVE_MINUTES)
+  
+  return result
 }
 
-export async function apiGetAllSeries() {
+export async function apiGetAllSeries(useCache: boolean = true) {
+  const cacheKey = 'anime:series:all:limit100'
+  
+  // Check cache first
+  if (useCache) {
+    const cached = clientCache.get<any>(cacheKey)
+    if (cached !== null) {
+      return cached
+    }
+  }
+  
   // Get anime grouped by series (Crunchyroll-style)
   const url = `${TRPC_URL}/anime.getAllSeries?input=${encodeURIComponent(JSON.stringify({ limit: 100 }))}`
   
@@ -295,14 +410,44 @@ export async function apiGetAllSeries() {
   }
 
   const json = await response.json()
-  return json.result?.data || { series: [], pagination: { page: 1, limit: 20, total: 0, pages: 0 } }
+  const result = json.result?.data || { series: [], pagination: { page: 1, limit: 20, total: 0, pages: 0 } }
+  
+  // Cache for 5 minutes
+  clientCache.set(cacheKey, result, CacheTTL.FIVE_MINUTES)
+  
+  return result
 }
 
-export async function apiGetTrending() {
-  return trpcQuery<Anime[]>('anime.getTrending')
+export async function apiGetTrending(useCache: boolean = true) {
+  const cacheKey = 'anime:trending'
+  
+  // Check cache first (cached for 10 minutes - trending changes frequently)
+  if (useCache) {
+    const cached = clientCache.get<Anime[]>(cacheKey)
+    if (cached !== null) {
+      return cached
+    }
+  }
+  
+  const result = await trpcQuery<Anime[]>('anime.getTrending')
+  
+  // Cache for 10 minutes
+  clientCache.set(cacheKey, result, CacheTTL.TEN_MINUTES)
+  
+  return result
 }
 
-export async function apiGetAnimeBySlug(slug: string) {
+export async function apiGetAnimeBySlug(slug: string, useCache: boolean = true) {
+  const cacheKey = `anime:slug:${slug}`
+  
+  // Check cache first (anime details rarely change - cache for 30 minutes)
+  if (useCache) {
+    const cached = clientCache.get<Anime>(cacheKey)
+    if (cached !== null) {
+      return cached
+    }
+  }
+  
   // For tRPC query with input, we need to pass it properly
   const url = `${TRPC_URL}/anime.getBySlug?input=${encodeURIComponent(JSON.stringify({ slug }))}`
   
@@ -326,7 +471,12 @@ export async function apiGetAnimeBySlug(slug: string) {
     throw new Error(getUserFriendlyError(code, message))
   }
 
-  return data.result.data
+  const result = data.result.data
+  
+  // Cache for 30 minutes
+  clientCache.set(cacheKey, result, CacheTTL.THIRTY_MINUTES)
+  
+  return result
 }
 
 export async function apiGetGenres() {
@@ -352,7 +502,6 @@ export async function apiSearchAnime(query: string): Promise<Anime[]> {
     }
   } catch (error) {
     // Fallback to client-side search if backend doesn't support it yet
-    console.log('ℹ️ Using client-side search (backend search not available)')
   }
 
   // Fallback: client-side search
@@ -701,6 +850,151 @@ export async function apiDeleteUser(userId: string) {
   if (!response.ok) {
     const error = await response.json().catch(() => ({}))
     throw new Error(error?.error?.message || 'Failed to delete user')
+  }
+
+  const data: TRPCResponse<any> = await response.json()
+  if ('error' in data) {
+    throw new Error(data.error.message)
+  }
+
+  return data.result.data
+}
+
+// Update Anime (Admin)
+export async function apiUpdateAnime(animeId: string, updateData: {
+  title?: string
+  titleEnglish?: string
+  titleJapanese?: string
+  synopsis?: string
+  year?: number
+  episodes?: number
+  status?: string
+  type?: string
+  rating?: string
+  coverImage?: string
+  bannerImage?: string
+  trailer?: string
+}) {
+  const url = `${TRPC_URL}/admin.updateAnime`
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    credentials: 'include',
+    body: JSON.stringify({ animeId, ...updateData }),
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to update anime')
+  }
+
+  const data: TRPCResponse<any> = await response.json()
+  if ('error' in data) {
+    throw new Error(data.error.message)
+  }
+
+  return data.result.data
+}
+
+// Delete Anime (Admin)
+export async function apiDeleteAnime(animeId: string) {
+  const url = `${TRPC_URL}/admin.deleteAnime`
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    credentials: 'include',
+    body: JSON.stringify({ animeId }),
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to delete anime')
+  }
+
+  const data: TRPCResponse<any> = await response.json()
+  if ('error' in data) {
+    throw new Error(data.error.message)
+  }
+
+  return data.result.data
+}
+
+// Get System Settings (Admin)
+export async function apiGetSettings() {
+  const url = `${TRPC_URL}/admin.getSettings`
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to fetch settings')
+  }
+
+  const data: TRPCResponse<any> = await response.json()
+  if ('error' in data) {
+    throw new Error(data.error.message)
+  }
+
+  return data.result.data
+}
+
+// Save System Settings (Admin)
+export async function apiSaveSettings(settings: {
+  general?: {
+    siteName: string
+    siteDescription: string
+    maintenanceMode: boolean
+    allowRegistration: boolean
+    requireEmailVerification: boolean
+  }
+  features?: {
+    enableRecommendations: boolean
+    enableSocialFeatures: boolean
+    enableAchievements: boolean
+    enableComments: boolean
+  }
+  security?: {
+    sessionTimeout: number
+    maxLoginAttempts: number
+    requireStrongPasswords: boolean
+    enableTwoFactor: boolean
+  }
+  notifications?: {
+    emailNotifications: boolean
+    newUserAlert: boolean
+    errorReporting: boolean
+  }
+  analytics?: {
+    googleAnalyticsId: string
+    enableTracking: boolean
+  }
+}) {
+  const url = `${TRPC_URL}/admin.saveSettings`
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    credentials: 'include',
+    body: JSON.stringify(settings),
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to save settings')
   }
 
   const data: TRPCResponse<any> = await response.json()

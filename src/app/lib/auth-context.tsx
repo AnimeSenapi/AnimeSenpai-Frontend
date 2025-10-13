@@ -95,6 +95,48 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       initAuth()
     }, [])
+    
+    // Proactive token refresh - refresh token every 45 minutes to prevent expiration
+    useEffect(() => {
+      if (!isAuthenticated) return
+      
+      const refreshInterval = 45 * 60 * 1000 // 45 minutes (tokens expire in 1 hour)
+      
+      const intervalId = setInterval(async () => {
+        const refreshToken = localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken')
+        if (refreshToken) {
+          try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+            const response = await fetch(apiUrl + '/auth.refreshToken', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ refreshToken }),
+              credentials: 'include',
+            })
+            
+            if (response.ok) {
+              const json = await response.json()
+              if ('result' in json && json.result?.data) {
+                const data = json.result.data
+                const storage = localStorage.getItem('refreshToken') ? localStorage : sessionStorage
+                storage.setItem('accessToken', data.accessToken)
+                storage.setItem('refreshToken', data.refreshToken)
+              }
+            } else if (response.status === 401) {
+              // Refresh token is invalid or expired - sign out user
+              clearInterval(intervalId)
+              signout()
+            }
+          } catch (error) {
+            // Network error - will retry at next interval
+          }
+        }
+      }, refreshInterval)
+      
+      return () => clearInterval(intervalId)
+    }, [isAuthenticated])
 
   // Removed unused checkAuth function
 
@@ -247,7 +289,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       'Content-Type': 'application/json'
     }
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`
+      headers['Authorization'] = 'Bearer ' + token
     }
     return headers
   }

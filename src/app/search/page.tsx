@@ -6,6 +6,8 @@ import { SearchAnimeCard } from '../../components/anime/SearchAnimeCard'
 import { Button } from '../../components/ui/button'
 import { Badge } from '../../components/ui/badge'
 import { AnimeCardSkeleton, SearchResultSkeleton } from '../../components/ui/skeleton'
+import { LoadingState } from '../../components/ui/loading-state'
+import { EmptyState } from '../../components/ui/error-state'
 import { Anime } from '../../types/anime'
 import { getTagById } from '../../types/tags'
 import { apiGetAllAnime, apiGetAllSeries } from '../lib/api'
@@ -14,12 +16,13 @@ import {
   Search, 
   Filter, 
   Grid, 
-  List, 
+  List as ListIcon, 
   Calendar,
   Building,
   Tag,
   Clock,
-  X
+  X,
+  Sparkles
 } from 'lucide-react'
 
 // Extended anime data with additional fields for search
@@ -208,13 +211,8 @@ export default function SearchPage() {
             seasons: series.seasons
           }))
           setAllAnime(animeList as any[])
-          console.log(`✅ Loaded ${animeList.length} anime from API`)
-          if (animeList.length > 0 && animeList[0]?.genres) {
-            console.log('Sample genres from first anime:', animeList[0].genres.map((g: any) => g.name))
-          }
         } else if (Array.isArray(data)) {
           setAllAnime(data)
-          console.log(`✅ Loaded ${data.length} anime from API`)
         }
       } catch (err) {
         console.error('❌ Failed to load anime from API:', err)
@@ -283,7 +281,6 @@ export default function SearchPage() {
 
     // Genre filter (case-insensitive)
     if (selectedGenres.length > 0) {
-      console.log('Filtering by genres:', selectedGenres)
       results = results.filter(anime => {
         const hasGenre = anime.genres && selectedGenres.some(genre => 
           anime.genres?.some((g: any) => {
@@ -293,7 +290,6 @@ export default function SearchPage() {
         )
         return hasGenre
       })
-      console.log(`Genre filter: ${results.length} anime match genres [${selectedGenres.join(', ')}]`)
     }
 
     // Studio filter (case-insensitive)
@@ -484,7 +480,7 @@ export default function SearchPage() {
                     : 'text-gray-400 hover:text-white hover:bg-white/10'
                 }`}
               >
-                <List className="h-4 w-4" />
+                <ListIcon className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -606,28 +602,19 @@ export default function SearchPage() {
           )
         ) : filteredAnime.length === 0 ? (
           /* Empty State */
-          <div className="text-center py-32">
-            <div className="w-24 h-24 bg-gradient-to-br from-white/5 to-white/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/10">
-              <Search className="h-10 w-10 text-gray-500" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-3">
-              No anime found
-            </h3>
-            <p className="text-gray-400 mb-8 max-w-md mx-auto">
-              {searchQuery 
-                ? `No results match "${searchQuery}"`
-                : 'Try adjusting your filters to find anime'
-              }
-            </p>
-            {(searchQuery || activeFiltersCount > 0) && (
-              <Button 
-                onClick={clearFilters}
-                className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 shadow-lg px-8 py-3"
-              >
-                Clear All Filters
-              </Button>
-            )}
-          </div>
+          <EmptyState
+            icon={<Search className="h-12 w-12 text-gray-500" />}
+            title="No anime found"
+            message={
+              searchQuery 
+                ? `No results match "${searchQuery}". Try different keywords or adjust your filters.`
+                : activeFiltersCount > 0
+                ? `No anime match your current filters (${activeFiltersCount} active). Try adjusting them to see more results.`
+                : 'The anime database is being populated. Check back soon for thousands of titles!'
+            }
+            actionLabel={(searchQuery || activeFiltersCount > 0) ? 'Clear All Filters' : undefined}
+            onAction={(searchQuery || activeFiltersCount > 0) ? clearFilters : undefined}
+          />
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
             {filteredAnime.map((anime) => (

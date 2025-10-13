@@ -45,6 +45,9 @@ export function AnimeTab() {
   const [total, setTotal] = useState(0)
   const [selectedAnime, setSelectedAnime] = useState<Anime | null>(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editFormData, setEditFormData] = useState<any>({})
+  const [isSaving, setIsSaving] = useState(false)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const limit = viewMode === 'grid' ? 12 : 20
 
@@ -86,7 +89,8 @@ export function AnimeTab() {
       }
     } catch (error: any) {
       console.error('Failed to load anime:', error)
-      alert('Failed to load anime. Please try again.')
+      // Error will be shown via error state, not alert
+      setAnime([])
     } finally {
       setLoading(false)
     }
@@ -133,20 +137,64 @@ export function AnimeTab() {
     setShowDetailsModal(true)
   }
 
+  const handleEditAnime = (anime: Anime) => {
+    setSelectedAnime(anime)
+    setEditFormData({
+      title: anime.title,
+      titleEnglish: anime.titleEnglish || '',
+      titleJapanese: anime.titleJapanese || '',
+      year: anime.year,
+      episodes: anime.episodes || '',
+      status: anime.status,
+      type: anime.type || '',
+      rating: anime.rating || '',
+    })
+    setShowEditModal(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!selectedAnime) return
+
+    setIsSaving(true)
+    try {
+      const { apiUpdateAnime } = await import('../../lib/api')
+      
+      // Prepare update data (only send changed fields)
+      const updateData: any = {}
+      if (editFormData.title !== selectedAnime.title) updateData.title = editFormData.title
+      if (editFormData.titleEnglish !== selectedAnime.titleEnglish) updateData.titleEnglish = editFormData.titleEnglish
+      if (editFormData.titleJapanese !== selectedAnime.titleJapanese) updateData.titleJapanese = editFormData.titleJapanese
+      if (editFormData.year !== selectedAnime.year) updateData.year = parseInt(editFormData.year)
+      if (editFormData.episodes !== selectedAnime.episodes) updateData.episodes = parseInt(editFormData.episodes)
+      if (editFormData.status !== selectedAnime.status) updateData.status = editFormData.status
+      if (editFormData.type !== selectedAnime.type) updateData.type = editFormData.type
+      if (editFormData.rating !== selectedAnime.rating) updateData.rating = editFormData.rating
+
+      await apiUpdateAnime(selectedAnime.id, updateData)
+      
+      setShowEditModal(false)
+      loadAnime()
+    } catch (error: any) {
+      // Error logging is handled by the API error handler
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const handleDeleteAnime = async (animeId: string, title: string) => {
+    // Will be handled by delete confirmation modal (to be implemented)
     if (!confirm(`Are you sure you want to delete "${title}"? This action cannot be undone!`)) {
       return
     }
 
     try {
-      // TODO: Implement delete endpoint
-      alert('Delete functionality will be implemented in the backend')
-      // After implementation:
-      // await apiDeleteAnime(animeId)
-      // loadAnime()
-      // alert('Anime deleted successfully!')
+      const { apiDeleteAnime } = await import('../../lib/api')
+      const { useToast } = await import('../../../lib/toast-context')
+      await apiDeleteAnime(animeId)
+      loadAnime()
+      // Toast notification would go here if we had access to toast context
     } catch (error: any) {
-      alert(error.message || 'Failed to delete anime')
+      // Error logging is handled by the API error handler
     }
   }
 
@@ -341,8 +389,8 @@ export function AnimeTab() {
                             <Film className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={() => alert('Edit functionality coming soon')}
-                            className="p-1.5 hover:bg-warning-500/20 rounded text-warning-400 hover:text-warning-300"
+                            onClick={() => handleEditAnime(item)}
+                            className="p-1.5 hover:bg-primary-500/20 rounded text-primary-400 hover:text-primary-300"
                             title="Edit"
                           >
                             <Edit className="h-4 w-4" />
@@ -581,8 +629,11 @@ export function AnimeTab() {
                   View Page
                 </Link>
                 <button
-                  onClick={() => alert('Edit functionality coming soon')}
-                  className="flex-1 px-4 py-2 bg-warning-500/20 border border-warning-500/30 text-warning-300 hover:bg-warning-500/30 rounded-lg font-medium flex items-center justify-center gap-2"
+                  onClick={() => {
+                    setShowDetailsModal(false)
+                    handleEditAnime(selectedAnime)
+                  }}
+                  className="flex-1 px-4 py-2 bg-primary-500/20 border border-primary-500/30 text-primary-300 hover:bg-primary-500/30 rounded-lg font-medium flex items-center justify-center gap-2"
                 >
                   <Edit className="h-4 w-4" />
                   Edit
@@ -596,6 +647,156 @@ export function AnimeTab() {
                 >
                   <Trash2 className="h-4 w-4" />
                   Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Anime Modal */}
+      {showEditModal && selectedAnime && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowEditModal(false)}>
+          <div className="glass rounded-2xl p-6 max-w-2xl w-full mx-4 border border-white/10 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-white flex items-center gap-3">
+                <Edit className="h-6 w-6 text-primary-400" />
+                Edit Anime
+              </h3>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-400" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Title (Romanized) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Title (Romanized)</label>
+                <input
+                  type="text"
+                  value={editFormData.title || ''}
+                  onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
+                />
+              </div>
+
+              {/* Title (English) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Title (English)</label>
+                <input
+                  type="text"
+                  value={editFormData.titleEnglish || ''}
+                  onChange={(e) => setEditFormData({...editFormData, titleEnglish: e.target.value})}
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
+                />
+              </div>
+
+              {/* Title (Japanese) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Title (Japanese)</label>
+                <input
+                  type="text"
+                  value={editFormData.titleJapanese || ''}
+                  onChange={(e) => setEditFormData({...editFormData, titleJapanese: e.target.value})}
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
+                />
+              </div>
+
+              {/* Year & Episodes */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Year</label>
+                  <input
+                    type="number"
+                    value={editFormData.year || ''}
+                    onChange={(e) => setEditFormData({...editFormData, year: e.target.value})}
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Episodes</label>
+                  <input
+                    type="number"
+                    value={editFormData.episodes || ''}
+                    onChange={(e) => setEditFormData({...editFormData, episodes: e.target.value})}
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
+                  />
+                </div>
+              </div>
+
+              {/* Status & Type */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Status</label>
+                  <select
+                    value={editFormData.status || ''}
+                    onChange={(e) => setEditFormData({...editFormData, status: e.target.value})}
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
+                  >
+                    <option value="Finished Airing">Finished Airing</option>
+                    <option value="Currently Airing">Currently Airing</option>
+                    <option value="Not yet aired">Not yet aired</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Type</label>
+                  <select
+                    value={editFormData.type || ''}
+                    onChange={(e) => setEditFormData({...editFormData, type: e.target.value})}
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
+                  >
+                    <option value="TV">TV</option>
+                    <option value="Movie">Movie</option>
+                    <option value="OVA">OVA</option>
+                    <option value="Special">Special</option>
+                    <option value="ONA">ONA</option>
+                    <option value="Music">Music</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Rating */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Rating</label>
+                <select
+                  value={editFormData.rating || ''}
+                  onChange={(e) => setEditFormData({...editFormData, rating: e.target.value})}
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
+                >
+                  <option value="">Select Rating</option>
+                  <option value="G">G - All Ages</option>
+                  <option value="PG">PG - Children</option>
+                  <option value="PG-13">PG-13 - Teens 13+</option>
+                  <option value="R">R - 17+ (violence & profanity)</option>
+                  <option value="R+">R+ - Mild Nudity</option>
+                </select>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 px-4 py-2 bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 rounded-lg font-medium"
+                  disabled={isSaving}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={isSaving}
+                  className="flex-1 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isSaving ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
                 </button>
               </div>
             </div>
