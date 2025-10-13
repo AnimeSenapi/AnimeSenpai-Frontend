@@ -387,12 +387,12 @@ export default function DashboardPage() {
                     titleSynonyms: series.titleSynonyms,
                     coverImage: series.coverImage ?? null,
                     year: series.year ?? null,
-                    averageRating: series.rating || series.averageRating,
+                    averageRating: series.rating || series.averageRating || null,
                     genres: series.genres || [],
                     seasonCount: series.seasonCount,
                     totalEpisodes: series.totalEpisodes
                   }
-                }))}
+                })) as any}
                 showReasons={false}
               />
             )}
@@ -536,12 +536,12 @@ export default function DashboardPage() {
                 titleSynonyms: series.titleSynonyms,
                 coverImage: series.coverImage ?? null,
                 year: series.year ?? null,
-                averageRating: series.rating || series.averageRating,
+                averageRating: series.rating || series.averageRating || null,
                 genres: series.genres || [],
                 seasonCount: series.seasonCount,
                 totalEpisodes: series.totalEpisodes
               }
-            }))}
+            })) as any}
             showReasons={false}
           />
         )}

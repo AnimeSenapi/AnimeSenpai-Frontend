@@ -496,7 +496,7 @@ export default function AnimePage() {
                 </Button>
               )}
               <div className="grid grid-cols-2 gap-2">
-                <ShareAnimeCard anime={anime} userRating={userRating} userStatus={listStatus.status} />
+                <ShareAnimeCard anime={anime as any} userRating={userRating} userStatus={listStatus.status} />
                 {anime.trailer && <TrailerButton trailerUrl={anime.trailer} title={anime.titleEnglish || anime.title} />}
               </div>
             </div>
@@ -709,8 +709,8 @@ export default function AnimePage() {
                     key={season.animeId || season.slug} 
                     anime={{
                       ...season,
-                      id: season.animeId,
-                      rating: season.averageRating,
+                      id: season.animeId || season.id,
+                      rating: season.averageRating || 0,
                       tags: [],
                       genres: season.genres || []
                     }} 

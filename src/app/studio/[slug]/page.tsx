@@ -297,7 +297,7 @@ export default function StudioPage({ params }: { params: Promise<{ slug: string 
             {filteredAnime.map((anime) => (
               <SearchAnimeCard
                 key={anime.id}
-                anime={anime}
+                anime={anime as any}
                 variant={viewMode}
               />
             ))}
