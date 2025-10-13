@@ -144,7 +144,8 @@ export function SettingsTab() {
         siteName: 'AnimeSenpai',
         siteDescription: 'Your ultimate anime companion',
         maintenanceMode: false,
-        allowSignups: true,
+        allowRegistration: true,
+        requireEmailVerification: false,
       },
       features: {
         enableSocialFeatures: true,
@@ -153,7 +154,6 @@ export function SettingsTab() {
         enableReviews: false,
       },
       security: {
-        requireEmailVerification: false,
         sessionTimeout: 30,
         maxLoginAttempts: 5,
         enableTwoFactor: false,
@@ -300,8 +300,8 @@ export function SettingsTab() {
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={settings.general.allowSignups}
-                      onChange={(e) => updateSetting('general', 'allowSignups', e.target.checked)}
+                      checked={settings.general.allowRegistration}
+                      onChange={(e) => updateSetting('general', 'allowRegistration', e.target.checked)}
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-success-500"></div>
@@ -418,8 +418,8 @@ export function SettingsTab() {
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={settings.security.requireEmailVerification}
-                      onChange={(e) => updateSetting('security', 'requireEmailVerification', e.target.checked)}
+                      checked={settings.general.requireEmailVerification}
+                      onChange={(e) => updateSetting('general', 'requireEmailVerification', e.target.checked)}
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
@@ -603,8 +603,8 @@ export function SettingsTab() {
                   </div>
                   <div className="p-4 bg-white/5 rounded-lg">
                     <p className="text-sm text-gray-400 mb-1">Email Verification</p>
-                    <p className={`text-sm font-bold ${settings.security.requireEmailVerification ? 'text-success-400' : 'text-error-400'}`}>
-                      {settings.security.requireEmailVerification ? 'Enabled' : 'Disabled'}
+                    <p className={`text-sm font-bold ${settings.general.requireEmailVerification ? 'text-success-400' : 'text-error-400'}`}>
+                      {settings.general.requireEmailVerification ? 'Enabled' : 'Disabled'}
                     </p>
                   </div>
                   <div className="p-4 bg-white/5 rounded-lg">
