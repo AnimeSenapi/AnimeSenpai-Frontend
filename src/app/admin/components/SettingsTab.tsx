@@ -121,7 +121,7 @@ export function SettingsTab() {
       setSaveStatus('saving')
       
       const { apiSaveSettings } = await import('../../lib/api')
-      await apiSaveSettings(settings)
+      await apiSaveSettings(settings as any)
       
       setSaveStatus('saved')
       setTimeout(() => setSaveStatus('idle'), 2000)

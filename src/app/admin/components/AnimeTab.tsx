@@ -24,6 +24,7 @@ interface Anime {
   slug: string
   title: string
   titleEnglish?: string
+  titleJapanese?: string
   year: number
   type?: string
   episodes?: number
@@ -141,8 +142,8 @@ export function AnimeTab() {
     setSelectedAnime(anime)
     setEditFormData({
       title: anime.title,
-      titleEnglish: (anime as any).titleEnglish || '',
-      titleJapanese: (anime as any).titleJapanese || '',
+      titleEnglish: anime.titleEnglish || '',
+      titleJapanese: anime.titleJapanese || '',
       year: anime.year,
       episodes: anime.episodes || '',
       status: anime.status,
@@ -162,8 +163,8 @@ export function AnimeTab() {
       // Prepare update data (only send changed fields)
       const updateData: any = {}
       if (editFormData.title !== selectedAnime.title) updateData.title = editFormData.title
-      if (editFormData.titleEnglish !== (selectedAnime as any).titleEnglish) updateData.titleEnglish = editFormData.titleEnglish
-      if (editFormData.titleJapanese !== (selectedAnime as any).titleJapanese) updateData.titleJapanese = editFormData.titleJapanese
+      if (editFormData.titleEnglish !== selectedAnime.titleEnglish) updateData.titleEnglish = editFormData.titleEnglish
+      if (editFormData.titleJapanese !== selectedAnime.titleJapanese) updateData.titleJapanese = editFormData.titleJapanese
       if (editFormData.year !== selectedAnime.year) updateData.year = parseInt(editFormData.year)
       if (editFormData.episodes !== selectedAnime.episodes) updateData.episodes = parseInt(editFormData.episodes)
       if (editFormData.status !== selectedAnime.status) updateData.status = editFormData.status
