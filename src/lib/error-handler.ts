@@ -3,6 +3,8 @@
  * Provides consistent error handling, logging, and user-friendly messages
  */
 
+import * as Sentry from '@sentry/nextjs'
+
 export enum ErrorType {
   // Network errors
   NETWORK_ERROR = 'NETWORK_ERROR',
@@ -182,34 +184,38 @@ class ErrorHandler {
       })
     }
 
-    // TODO: Send to error tracking service (Sentry, LogRocket, etc.)
-    // this.sendToErrorTracking(error)
+    // Send to Sentry for error tracking
+    this.sendToErrorTracking(error)
   }
 
   /**
-   * Send error to external error tracking service
+   * Send error to external error tracking service (Sentry)
    */
   private async sendToErrorTracking(error: AppError) {
-    // Only in production
-    if (process.env.NODE_ENV !== 'production') return
-
     try {
-      // Example: Send to your error tracking service
-      // await fetch('/api/errors', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     type: error.type,
-      //     message: error.message,
-      //     timestamp: error.timestamp,
-      //     context: error.context,
-      //     userAgent: navigator.userAgent,
-      //     url: window.location.href,
-      //   }),
-      // })
+      // Send to Sentry with context
+      Sentry.captureException(error.originalError || new Error(error.message), {
+        level: error.type === ErrorType.FATAL_ERROR ? 'fatal' : 'error',
+        tags: {
+          errorType: error.type,
+        },
+        contexts: {
+          error: {
+            type: error.type,
+            message: error.message,
+            timestamp: error.timestamp,
+            stack: error.stack,
+          },
+          ...(error.context && { custom: error.context }),
+        },
+        extra: {
+          userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+          url: typeof window !== 'undefined' ? window.location.href : 'unknown',
+        },
+      })
     } catch (trackingError) {
       // Fail silently - don't let error tracking break the app
-      console.error('Failed to send error to tracking service:', trackingError)
+      console.error('Failed to send error to Sentry:', trackingError)
     }
   }
 

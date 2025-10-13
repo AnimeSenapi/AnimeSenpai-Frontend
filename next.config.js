@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable instrumentation for Sentry
   experimental: {
+    instrumentationHook: true,
     optimizePackageImports: ['lucide-react', '@radix-ui/react-dropdown-menu', '@radix-ui/react-checkbox'],
   },
   images: {
