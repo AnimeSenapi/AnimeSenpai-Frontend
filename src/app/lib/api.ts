@@ -1005,4 +1005,33 @@ export async function apiSaveSettings(settings: {
   return data.result.data
 }
 
+// ============================================================================
+// Moderation API
+// ============================================================================
+
+export async function apiGetReviews(params?: { page?: number; limit?: number; filter?: string; search?: string }) {
+  const response = await apiCall('moderation.getReviews', params)
+  return response
+}
+
+export async function apiGetModerationStats() {
+  const response = await apiCall('moderation.getStats')
+  return response
+}
+
+export async function apiToggleReviewVisibility(reviewId: string, isPublic: boolean) {
+  const response = await apiCall('moderation.toggleReviewVisibility', { reviewId, isPublic })
+  return response
+}
+
+export async function apiDeleteReview(reviewId: string) {
+  const response = await apiCall('moderation.deleteReview', { reviewId })
+  return response
+}
+
+export async function apiGetFlaggedUsers() {
+  const response = await apiCall('moderation.getFlaggedUsers')
+  return response
+}
+
 
