@@ -3,6 +3,7 @@
  * Heavy components are loaded only when needed
  */
 
+import React from 'react'
 import dynamic from 'next/dynamic'
 import { LoadingState, Spinner } from './ui/loading-state'
 
@@ -48,7 +49,7 @@ export const DynamicFollowButton = dynamic(
 )
 
 export const DynamicFriendsWatching = dynamic(
-  () => import('./social/FriendsWatching'),
+  () => import('./social/FriendsWatching').then(mod => ({ default: mod.FriendsWatching })),
   { loading: LoadingFallback, ssr: false }
 )
 
@@ -90,7 +91,7 @@ export const DynamicCookieConsent = dynamic(
 export function createLazyComponent<T extends React.ComponentType<any>>(
   importFn: () => Promise<{ default: T }>,
   options?: {
-    loading?: () => JSX.Element
+    loading?: () => React.ReactElement
     ssr?: boolean
   }
 ) {
