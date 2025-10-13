@@ -444,7 +444,7 @@ export default function AnimePage() {
                   <Button 
                     onClick={() => {
                       if (listStatus.status) {
-                        setSelectedListStatus(listStatus.status as any)
+                        setSelectedListStatus(listStatus.status as 'watching' | 'completed' | 'plan-to-watch' | 'favorite')
                       }
                       setShowAddToListModal(true)
                     }}
@@ -710,7 +710,7 @@ export default function AnimePage() {
                       rating: season.averageRating,
                       tags: [],
                       genres: season.genres || []
-                    } as any} 
+                    }} 
                     variant="grid" 
                   />
                 ))}
@@ -748,7 +748,7 @@ export default function AnimePage() {
               ].map((option) => (
                 <button
                   key={option.value}
-                  onClick={() => setSelectedListStatus(option.value as any)}
+                  onClick={() => setSelectedListStatus(option.value as 'watching' | 'completed' | 'plan-to-watch' | 'favorite')}
                   className={`p-4 rounded-xl transition-all flex flex-col items-center gap-2 ${
                     selectedListStatus === option.value
                       ? 'bg-gradient-to-br from-primary-500/20 to-secondary-500/20 border-2 border-primary-400/50 shadow-lg shadow-primary-500/20'

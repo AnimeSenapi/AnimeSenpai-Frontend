@@ -50,3 +50,6 @@ next-env.d.ts
 .turbo
 .cache
 .parcel-cache
+
+# Sentry Config File
+.env.sentry-build-plugin

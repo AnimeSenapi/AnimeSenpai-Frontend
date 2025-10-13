@@ -210,7 +210,7 @@ export default function SearchPage() {
             totalEpisodes: series.totalEpisodes,
             seasons: series.seasons
           }))
-          setAllAnime(animeList as any[])
+          setAllAnime(animeList)
         } else if (Array.isArray(data)) {
           setAllAnime(data)
         }
@@ -451,7 +451,7 @@ export default function SearchPage() {
             {/* Sort Dropdown */}
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
+              onChange={(e) => setSortBy(e.target.value as 'relevance' | 'rating' | 'year' | 'popularity')}
               className="bg-white/5 border border-white/20 text-white rounded-xl px-4 py-2 text-sm hover:bg-white/10 transition-all cursor-pointer focus:outline-none focus:border-primary-400/50"
             >
               <option value="relevance">Sort: Relevance</option>

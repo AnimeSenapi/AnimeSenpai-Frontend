@@ -303,12 +303,12 @@ export function MyListAnimeCard({
           <div className="flex items-center justify-between text-xs text-gray-400">
             <span>{anime.year}</span>
             <div className="flex items-center gap-2">
-              {(anime as any).seasonCount && (anime as any).seasonCount > 1 && (
+              {anime.seasonCount && anime.seasonCount > 1 && (
                 <span className="bg-primary-500/20 text-primary-300 px-2 py-0.5 rounded font-medium">
-                  {(anime as any).seasonCount} Seasons
+                  {anime.seasonCount} Seasons
                 </span>
               )}
-              <span>{(anime as any).totalEpisodes || anime.episodes} eps</span>
+              <span>{anime.totalEpisodes || anime.episodes} eps</span>
             </div>
           </div>
           
