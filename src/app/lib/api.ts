@@ -1006,6 +1006,19 @@ export async function apiSaveSettings(settings: {
 }
 
 // ============================================================================
+// Generic API Call Helper
+// ============================================================================
+
+async function apiCall(path: string, input?: any): Promise<any> {
+  // If input is provided, it's a mutation (POST), otherwise it's a query (GET)
+  if (input !== undefined) {
+    return trpcMutation(path, input)
+  } else {
+    return trpcQuery(path)
+  }
+}
+
+// ============================================================================
 // Moderation API
 // ============================================================================
 
