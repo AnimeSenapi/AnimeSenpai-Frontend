@@ -257,7 +257,7 @@ export function InfiniteScroll({
           <div className="w-8 h-8 border-4 border-primary-400/30 border-t-primary-400 rounded-full animate-spin" />
         </div>
       )}
-      {!hasMore && items.length > 0 && (
+      {!hasMore && !loading && (
         <div className="text-center py-8 text-gray-500 text-sm">
           No more items to load
         </div>
