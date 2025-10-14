@@ -88,32 +88,12 @@ export default function MessagesPage() {
     loadConversations()
   }, [isAuthenticated])
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
-    return {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
-    }
-  }
-
   const loadConversations = async () => {
     try {
       setLoading(true)
       
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
-      const url = `${API_URL}/messaging.getConversations`
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: getAuthHeaders()
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to load conversations')
-      }
-      
-      const json = await response.json()
-      const data = json.result?.data
+      const { apiGetConversations } = await import('../lib/api')
+      const data = await apiGetConversations()
       
       if (data?.conversations) {
         setConversations(data.conversations)
@@ -121,6 +101,7 @@ export default function MessagesPage() {
     } catch (error) {
       console.error('Failed to load conversations:', error)
       toast.error('Failed to load conversations', 'Error')
+      setConversations([])
     } finally {
       setLoading(false)
     }
@@ -131,23 +112,8 @@ export default function MessagesPage() {
       setLoadingMessages(true)
       setSelectedConversation(userId)
       
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
-      const url = `${API_URL}/messaging.getMessages?input=${encodeURIComponent(JSON.stringify({
-        userId,
-        limit: 50
-      }))}`
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: getAuthHeaders()
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to load messages')
-      }
-      
-      const json = await response.json()
-      const data = json.result?.data
+      const { apiGetMessages } = await import('../lib/api')
+      const data = await apiGetMessages(userId, { limit: 50 })
       
       if (data?.messages) {
         setMessages(data.messages)
@@ -164,6 +130,7 @@ export default function MessagesPage() {
     } catch (error) {
       console.error('Failed to load messages:', error)
       toast.error('Failed to load messages', 'Error')
+      setMessages([])
     } finally {
       setLoadingMessages(false)
     }
@@ -175,23 +142,8 @@ export default function MessagesPage() {
     try {
       setSending(true)
       
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
-      
-      const response = await fetch(`${API_URL}/messaging.sendMessage`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          receiverId: selectedConversation,
-          content: newMessage
-        })
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to send message')
-      }
-      
-      const json = await response.json()
-      const data = json.result?.data
+      const { apiSendMessage } = await import('../lib/api')
+      const data = await apiSendMessage(selectedConversation, newMessage)
       
       if (data?.message) {
         setMessages(prev => [...prev, data.message])
@@ -205,6 +157,7 @@ export default function MessagesPage() {
               : conv
           )
         )
+        toast.success('Message sent!', 'Success')
       }
     } catch (error) {
       console.error('Failed to send message:', error)

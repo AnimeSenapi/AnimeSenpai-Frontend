@@ -44,37 +44,22 @@ export default function LeaderboardsPage() {
     try {
       setLoading(true)
       
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+      const { apiGetTopWatchers, apiGetTopReviewers, apiGetMostSocial } = await import('../lib/api')
       
       const [watchers, reviewers, social] = await Promise.all([
-        fetch(`${API_URL}/leaderboards.getTopWatchers?input=${encodeURIComponent(JSON.stringify({
-          limit: 50,
-          timeRange
-        }))}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
-        }).then(r => r.json()),
-        
-        fetch(`${API_URL}/leaderboards.getTopReviewers?input=${encodeURIComponent(JSON.stringify({
-          limit: 50
-        }))}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
-        }).then(r => r.json()),
-        
-        fetch(`${API_URL}/leaderboards.getMostSocial?input=${encodeURIComponent(JSON.stringify({
-          limit: 50
-        }))}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
-        }).then(r => r.json())
+        apiGetTopWatchers({ limit: 50, timeRange }),
+        apiGetTopReviewers({ limit: 50 }),
+        apiGetMostSocial({ limit: 50 })
       ])
       
-      setTopWatchers(watchers.result?.data?.leaderboard || [])
-      setTopReviewers(reviewers.result?.data?.leaderboard || [])
-      setMostSocial(social.result?.data?.leaderboard || [])
+      setTopWatchers(watchers?.leaderboard || [])
+      setTopReviewers(reviewers?.leaderboard || [])
+      setMostSocial(social?.leaderboard || [])
     } catch (error) {
       console.error('Failed to load leaderboards:', error)
+      setTopWatchers([])
+      setTopReviewers([])
+      setMostSocial([])
     } finally {
       setLoading(false)
     }

@@ -71,14 +71,6 @@ export default function ActivityFeedPage() {
     loadActivities()
   }, [isAuthenticated])
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
-    return {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
-    }
-  }
-
   const loadActivities = async (loadMore = false) => {
     try {
       if (loadMore) {
@@ -87,23 +79,11 @@ export default function ActivityFeedPage() {
         setLoading(true)
       }
       
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
-      const url = `${API_URL}/activity.getFriendActivities?input=${encodeURIComponent(JSON.stringify({
+      const { apiGetFriendActivities } = await import('../lib/api')
+      const data = await apiGetFriendActivities({
         limit: 20,
-        cursor: loadMore ? cursor : undefined
-      }))}`
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: getAuthHeaders()
+        cursor: loadMore ? cursor || undefined : undefined
       })
-      
-      if (!response.ok) {
-        throw new Error('Failed to load activities')
-      }
-      
-      const json = await response.json()
-      const data = json.result?.data
       
       if (data) {
         if (loadMore) {
@@ -116,6 +96,7 @@ export default function ActivityFeedPage() {
       }
     } catch (error) {
       console.error('Failed to load activities:', error)
+      setActivities([])
     } finally {
       setLoading(false)
       setLoadingMore(false)

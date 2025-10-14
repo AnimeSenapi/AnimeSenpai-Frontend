@@ -57,32 +57,12 @@ export default function AchievementsPage() {
     loadAchievements()
   }, [isAuthenticated])
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
-    return {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
-    }
-  }
-
   const loadAchievements = async () => {
     try {
       setLoading(true)
       
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
-      const url = `${API_URL}/achievements.getMyAchievements`
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: getAuthHeaders()
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to load achievements')
-      }
-      
-      const json = await response.json()
-      const data = json.result?.data
+      const { apiGetMyAchievements } = await import('../lib/api')
+      const data = await apiGetMyAchievements()
       
       if (data) {
         setAchievements(data.achievements || [])
@@ -95,6 +75,7 @@ export default function AchievementsPage() {
       }
     } catch (error) {
       console.error('Failed to load achievements:', error)
+      setAchievements([])
     } finally {
       setLoading(false)
     }
