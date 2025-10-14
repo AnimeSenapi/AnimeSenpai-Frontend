@@ -165,13 +165,18 @@ async function trpcQuery<TOutput>(path: string, init?: RequestInit, retryCount =
       const message = (payload && 'error' in payload) ? payload.error.message : 'Request failed'
       const code = (payload && 'error' in payload && payload.error.data?.code) || 'UNKNOWN_ERROR'
       
-      // Debug logging
-      console.error('❌ API Error Details:')
-      console.error('Path:', path)
-      console.error('Status:', res.status)
-      console.error('Code:', code)
-      console.error('Message:', message)
-      console.error('Full Payload:', JSON.stringify(payload, null, 2))
+      // Debug logging (skip for expected auth errors on optional endpoints)
+      const isOptionalAuthEndpoint = path.includes('notifications.getUnreadCount') || 
+                                      path.includes('social.getFriendRecommendations')
+      
+      if (!isOptionalAuthEndpoint || code !== 'UNAUTHORIZED') {
+        console.error('❌ API Error Details:')
+        console.error('Path:', path)
+        console.error('Status:', res.status)
+        console.error('Code:', code)
+        console.error('Message:', message)
+        console.error('Full Payload:', JSON.stringify(payload, null, 2))
+      }
       
       // Try to refresh token on auth errors (only once)
       if ((code === 'UNAUTHORIZED' || message.includes('session') || message.includes('expired') || message.includes('token')) && retryCount === 0) {
