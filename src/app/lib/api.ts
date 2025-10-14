@@ -1139,23 +1139,7 @@ export async function apiGetUserProfile(username: string) {
   return response
 }
 
-// Notifications
-export async function apiGetNotifications(page?: number, limit?: number, unreadOnly?: boolean) {
-  const response = await apiCall('social.getNotifications', { page, limit, unreadOnly })
-  return response
-}
-
-export async function apiMarkNotificationRead(notificationId: string) {
-  const response = await apiCall('social.markNotificationRead', { notificationId })
-  return response
-}
-
-export async function apiMarkAllNotificationsRead() {
-  const response = await apiCall('social.markAllNotificationsRead')
-  return response
-}
-
-// Privacy Settings
+// Privacy Settings (Phase 1 - deprecated, use Phase 2 enhanced versions)
 export async function apiGetPrivacySettings() {
   const response = await apiCall('social.getPrivacySettings')
   return response
@@ -1326,6 +1310,127 @@ export async function apiCanViewContent(targetUserId: string, contentType: 'prof
 // Friend Recommendations
 export async function apiGetFriendsAlsoWatched(animeId: string, limit: number = 10) {
   const response = await apiCall('recommendations.getFriendsAlsoWatched', { animeId, limit })
+  return response
+}
+
+// ============================================
+// Phase 3 Social Features API
+// ============================================
+
+// Messaging
+export async function apiSendMessage(receiverId: string, content: string, animeId?: string) {
+  const response = await apiCall('messaging.sendMessage', { receiverId, content, animeId })
+  return response
+}
+
+export async function apiGetConversations() {
+  const response = await apiCall('messaging.getConversations')
+  return response
+}
+
+export async function apiGetMessages(userId: string, params?: { limit?: number; cursor?: string }) {
+  const response = await apiCall('messaging.getMessages', { userId, ...params })
+  return response
+}
+
+export async function apiGetUnreadMessageCount() {
+  const response = await apiCall('messaging.getUnreadCount')
+  return response
+}
+
+export async function apiDeleteMessage(messageId: string) {
+  const response = await apiCall('messaging.deleteMessage', { messageId })
+  return response
+}
+
+// Achievements
+export async function apiGetAllAchievements() {
+  const response = await apiCall('achievements.getAll')
+  return response
+}
+
+export async function apiGetMyAchievements() {
+  const response = await apiCall('achievements.getMyAchievements')
+  return response
+}
+
+export async function apiCheckAndUnlockAchievements() {
+  const response = await apiCall('achievements.checkAndUnlock')
+  return response
+}
+
+// Leaderboards
+export async function apiGetTopWatchers(params?: { limit?: number; timeRange?: 'week' | 'month' | 'all' }) {
+  const response = await apiCall('leaderboards.getTopWatchers', params)
+  return response
+}
+
+export async function apiGetTopReviewers(params?: { limit?: number }) {
+  const response = await apiCall('leaderboards.getTopReviewers', params)
+  return response
+}
+
+export async function apiGetMostSocial(params?: { limit?: number }) {
+  const response = await apiCall('leaderboards.getMostSocial', params)
+  return response
+}
+
+export async function apiGetMyRank(category: 'watched' | 'reviews' | 'friends' | 'points') {
+  const response = await apiCall('leaderboards.getMyRank', { category })
+  return response
+}
+
+// Safety (Block/Report)
+export async function apiBlockUser(userId: string, reason?: string) {
+  const response = await apiCall('safety.blockUser', { userId, reason })
+  return response
+}
+
+export async function apiUnblockUser(userId: string) {
+  const response = await apiCall('safety.unblockUser', { userId })
+  return response
+}
+
+export async function apiGetBlockedUsers() {
+  const response = await apiCall('safety.getBlockedUsers')
+  return response
+}
+
+export async function apiReportUser(userId: string, reason: string, description: string) {
+  const response = await apiCall('safety.reportUser', { userId, reason, description })
+  return response
+}
+
+// List Tools
+export async function apiCompareListsWithFriend(friendId: string) {
+  const response = await apiCall('listTools.compareWithFriend', { friendId })
+  return response
+}
+
+export async function apiGetSharedLists() {
+  const response = await apiCall('listTools.getSharedLists')
+  return response
+}
+
+export async function apiCreateSharedList(params: {
+  name: string
+  description?: string
+  animeIds?: string[]
+  collaborators?: string[]
+  isPublic?: boolean
+}) {
+  const response = await apiCall('listTools.createSharedList', params)
+  return response
+}
+
+export async function apiUpdateSharedList(listId: string, params: {
+  name?: string
+  description?: string
+  animeIds?: string[]
+  collaborators?: string[]
+  isPublic?: boolean
+}) {
+  const response = await apiCall('listTools.updateSharedList', { listId, ...params })
   return response
 }
 

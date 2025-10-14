@@ -15,7 +15,9 @@ import {
   Search,
   Menu,
   X,
-  Activity
+  Activity,
+  MessageCircle,
+  Trophy
 } from 'lucide-react'
 
 export function Navbar() {
@@ -27,6 +29,8 @@ export function Navbar() {
     { name: 'Home', href: '/dashboard', icon: Home },
     { name: 'My List', href: '/mylist', icon: Bookmark },
     { name: 'Activity', href: '/activity', icon: Activity, authOnly: true },
+    { name: 'Messages', href: '/messages', icon: MessageCircle, authOnly: true },
+    { name: 'Achievements', href: '/achievements', icon: Trophy, authOnly: true },
     { name: 'Search', href: '/search', icon: Search },
   ]
 

@@ -15,8 +15,8 @@ import { EmptyState } from '@/components/ui/error-state'
 import { useAuth } from '@/app/lib/auth-context'
 import {
   apiGetNotifications,
-  apiMarkNotificationRead,
-  apiMarkAllNotificationsRead,
+  apiMarkNotificationAsRead,
+  apiMarkAllNotificationsAsRead,
   apiGetPendingFriendRequests,
   apiAcceptFriendRequest,
   apiDeclineFriendRequest
@@ -69,9 +69,9 @@ export default function NotificationsPage() {
   const loadNotifications = async () => {
     try {
       setLoading(true)
-      const data = await apiGetNotifications(1, 50, filter === 'unread')
+      const data = await apiGetNotifications({ limit: 50, unreadOnly: filter === 'unread' })
       setNotifications(data.notifications)
-      setUnreadCount(data.unreadCount)
+      setUnreadCount(data.notifications.filter((n: any) => !n.isRead).length)
     } catch (error) {
       console.error('Failed to load notifications:', error)
     } finally {
@@ -90,7 +90,7 @@ export default function NotificationsPage() {
 
   const handleMarkRead = async (notificationId: string) => {
     try {
-      await apiMarkNotificationRead(notificationId)
+      await apiMarkNotificationAsRead(notificationId)
       setNotifications(notifications.map(n => 
         n.id === notificationId ? { ...n, isRead: true } : n
       ))
@@ -102,7 +102,7 @@ export default function NotificationsPage() {
 
   const handleMarkAllRead = async () => {
     try {
-      await apiMarkAllNotificationsRead()
+      await apiMarkAllNotificationsAsRead()
       setNotifications(notifications.map(n => ({ ...n, isRead: true })))
       setUnreadCount(0)
     } catch (error) {

@@ -83,7 +83,7 @@ export class PushNotificationService {
         
         subscription = await this.registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey)
+          applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey) as BufferSource
         })
       }
 
@@ -141,8 +141,8 @@ export class PushNotificationService {
         body: JSON.stringify({
           endpoint: subscription.endpoint,
           keys: {
-            p256dh: this.arrayBufferToBase64(subscription.getKey('p256dh')),
-            auth: this.arrayBufferToBase64(subscription.getKey('auth'))
+            p256dh: this.arrayBufferToBase64(subscription.getKey('p256dh') as ArrayBuffer),
+            auth: this.arrayBufferToBase64(subscription.getKey('auth') as ArrayBuffer)
           },
           userAgent: navigator.userAgent
         })
@@ -199,9 +199,9 @@ export class PushNotificationService {
   /**
    * Helper: Convert ArrayBuffer to Base64
    */
-  private arrayBufferToBase64(buffer: ArrayBuffer | null): string {
+  private arrayBufferToBase64(buffer: ArrayBuffer | null | undefined): string {
     if (!buffer) return ''
-    const bytes = new Uint8Array(buffer)
+    const bytes = new Uint8Array(buffer as ArrayBuffer)
     let binary = ''
     for (let i = 0; i < bytes.byteLength; i++) {
       binary += String.fromCharCode(bytes[i])
@@ -222,7 +222,6 @@ export class PushNotificationService {
         await this.registration.showNotification(title, {
           icon: '/favicon.ico',
           badge: '/favicon.ico',
-          vibrate: [200, 100, 200],
           ...options
         })
       }

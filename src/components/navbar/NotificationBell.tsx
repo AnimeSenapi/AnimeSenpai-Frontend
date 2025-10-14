@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Bell } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
-import { apiGetNotifications } from '@/app/lib/api'
+import { apiGetUnreadNotificationCount } from '@/app/lib/api'
 
 export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0)
@@ -21,8 +21,8 @@ export function NotificationBell() {
 
   const loadNotifications = async () => {
     try {
-      const data = await apiGetNotifications(1, 1, true) // Just get count
-      setUnreadCount(data.unreadCount)
+      const data = await apiGetUnreadNotificationCount()
+      setUnreadCount(data.count)
     } catch (error) {
       // Silently fail - user might not be logged in
     } finally {
