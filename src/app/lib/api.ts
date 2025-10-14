@@ -135,11 +135,19 @@ function getUserFriendlyError(code: string, message: string): string {
 async function trpcQuery<TOutput>(path: string, init?: RequestInit, retryCount = 0): Promise<TOutput> {
   const url = `${TRPC_URL}/${path}`
   
+  // Debug: Check if we have auth token
+  const authHeaders = getAuthHeaders()
+  const hasToken = 'Authorization' in authHeaders
+  if (!hasToken && typeof window !== 'undefined') {
+    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
+    console.warn('⚠️ No auth token found for request:', path, 'Token exists:', !!token)
+  }
+  
   try {
     const res = await fetch(url, {
       method: 'GET',
       headers: {
-        ...getAuthHeaders(),
+        ...authHeaders,
         ...(init?.headers || {}),
       },
       credentials: 'include',
@@ -158,13 +166,12 @@ async function trpcQuery<TOutput>(path: string, init?: RequestInit, retryCount =
       const code = (payload && 'error' in payload && payload.error.data?.code) || 'UNKNOWN_ERROR'
       
       // Debug logging
-      console.error('❌ API Error Details:', {
-        path,
-        status: res.status,
-        code,
-        message,
-        fullError: payload
-      })
+      console.error('❌ API Error Details:')
+      console.error('Path:', path)
+      console.error('Status:', res.status)
+      console.error('Code:', code)
+      console.error('Message:', message)
+      console.error('Full Payload:', JSON.stringify(payload, null, 2))
       
       // Try to refresh token on auth errors (only once)
       if ((code === 'UNAUTHORIZED' || message.includes('session') || message.includes('expired') || message.includes('token')) && retryCount === 0) {

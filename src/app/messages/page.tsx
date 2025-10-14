@@ -67,7 +67,7 @@ interface Message {
 
 export default function MessagesPage() {
   const router = useRouter()
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated, user, isLoading: authLoading } = useAuth()
   const toast = useToast()
   
   const [conversations, setConversations] = useState<Conversation[]>([])
@@ -80,13 +80,21 @@ export default function MessagesPage() {
   const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    // Wait for auth to load
+    if (authLoading) {
+      return
+    }
+    
+    // Check if user is authenticated
+    if (!isAuthenticated || !user) {
+      console.log('❌ Not authenticated, redirecting to sign in')
       router.push('/auth/signin')
       return
     }
     
+    console.log('✅ User authenticated:', user.username)
     loadConversations()
-  }, [isAuthenticated])
+  }, [isAuthenticated, authLoading, user])
 
   const loadConversations = async () => {
     try {
