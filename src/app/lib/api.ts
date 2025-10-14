@@ -1183,4 +1183,150 @@ export async function apiUnhideAnimeFromList(animeId: string) {
   return response
 }
 
+// ============================================
+// Phase 2 Social Features API
+// ============================================
+
+// Activity Feed
+export async function apiGetFriendActivities(params?: { limit?: number; cursor?: string }) {
+  const response = await apiCall('activity.getFriendActivities', params)
+  return response
+}
+
+export async function apiGetMyActivities(params?: { limit?: number; cursor?: string }) {
+  const response = await apiCall('activity.getMyActivities', params)
+  return response
+}
+
+export async function apiGetActivityStats(params?: { userId?: string; timeRange?: 'week' | 'month' | 'year' | 'all' }) {
+  const response = await apiCall('activity.getActivityStats', params)
+  return response
+}
+
+// Review Interactions
+export async function apiLikeReview(reviewId: string) {
+  const response = await apiCall('reviewInteractions.likeReview', { reviewId })
+  return response
+}
+
+export async function apiUnlikeReview(reviewId: string) {
+  const response = await apiCall('reviewInteractions.unlikeReview', { reviewId })
+  return response
+}
+
+export async function apiGetReviewLikes(reviewId: string, params?: { limit?: number; cursor?: string }) {
+  const response = await apiCall('reviewInteractions.getReviewLikes', { reviewId, ...params })
+  return response
+}
+
+export async function apiAddReviewComment(reviewId: string, content: string) {
+  const response = await apiCall('reviewInteractions.addComment', { reviewId, content })
+  return response
+}
+
+export async function apiGetReviewComments(reviewId: string, params?: { limit?: number; cursor?: string }) {
+  const response = await apiCall('reviewInteractions.getComments', { reviewId, ...params })
+  return response
+}
+
+export async function apiDeleteReviewComment(commentId: string) {
+  const response = await apiCall('reviewInteractions.deleteComment', { commentId })
+  return response
+}
+
+export async function apiTagFriendsInReview(reviewId: string, userIds: string[]) {
+  const response = await apiCall('reviewInteractions.tagFriends', { reviewId, userIds })
+  return response
+}
+
+export async function apiGetTaggedUsers(reviewId: string) {
+  const response = await apiCall('reviewInteractions.getTaggedUsers', { reviewId })
+  return response
+}
+
+// Enhanced Notifications
+export async function apiSubscribeToPush(subscription: {
+  endpoint: string
+  keys: { p256dh: string; auth: string }
+  userAgent?: string
+}) {
+  const response = await apiCall('notifications.subscribeToPush', subscription)
+  return response
+}
+
+export async function apiUnsubscribeFromPush(endpoint: string) {
+  const response = await apiCall('notifications.unsubscribeFromPush', { endpoint })
+  return response
+}
+
+export async function apiGetMyPushSubscriptions() {
+  const response = await apiCall('notifications.getMySubscriptions')
+  return response
+}
+
+export async function apiGetNotifications(params?: { limit?: number; cursor?: string; unreadOnly?: boolean }) {
+  const response = await apiCall('notifications.getNotifications', params)
+  return response
+}
+
+export async function apiMarkNotificationAsRead(notificationId: string) {
+  const response = await apiCall('notifications.markAsRead', { notificationId })
+  return response
+}
+
+export async function apiMarkAllNotificationsAsRead() {
+  const response = await apiCall('notifications.markAllAsRead')
+  return response
+}
+
+export async function apiGetUnreadNotificationCount() {
+  const response = await apiCall('notifications.getUnreadCount')
+  return response
+}
+
+export async function apiDeleteNotification(notificationId: string) {
+  const response = await apiCall('notifications.deleteNotification', { notificationId })
+  return response
+}
+
+export async function apiClearReadNotifications() {
+  const response = await apiCall('notifications.clearReadNotifications')
+  return response
+}
+
+// Enhanced Privacy Settings
+export async function apiGetEnhancedPrivacySettings() {
+  const response = await apiCall('privacy.getSettings')
+  return response
+}
+
+export async function apiUpdateEnhancedPrivacySettings(settings: {
+  profileVisibility?: 'public' | 'friends' | 'private'
+  showAnimeList?: boolean
+  showReviews?: boolean
+  showActivity?: boolean
+  showFriends?: boolean
+  allowMessages?: boolean
+  allowFriendRequests?: boolean
+}) {
+  const response = await apiCall('privacy.updateSettings', settings)
+  return response
+}
+
+export async function apiApplyPrivacyPreset(preset: 'public' | 'friends_only' | 'private') {
+  const response = await apiCall('privacy.applyPreset', { preset })
+  return response
+}
+
+export async function apiCanViewContent(targetUserId: string, contentType: 'profile' | 'animeList' | 'reviews' | 'activity' | 'friends') {
+  const response = await apiCall('privacy.canView', { targetUserId, contentType })
+  return response
+}
+
+// Friend Recommendations
+export async function apiGetFriendsAlsoWatched(animeId: string, limit: number = 10) {
+  const response = await apiCall('recommendations.getFriendsAlsoWatched', { animeId, limit })
+  return response
+}
+
 

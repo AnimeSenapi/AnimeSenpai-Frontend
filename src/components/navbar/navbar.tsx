@@ -14,7 +14,8 @@ import {
   Bookmark,
   Search,
   Menu,
-  X
+  X,
+  Activity
 } from 'lucide-react'
 
 export function Navbar() {
@@ -25,6 +26,7 @@ export function Navbar() {
   const navItems = [
     { name: 'Home', href: '/dashboard', icon: Home },
     { name: 'My List', href: '/mylist', icon: Bookmark },
+    { name: 'Activity', href: '/activity', icon: Activity, authOnly: true },
     { name: 'Search', href: '/search', icon: Search },
   ]
 
@@ -47,19 +49,21 @@ export function Navbar() {
 
             {/* Navigation Items - Desktop */}
             <div className="hidden lg:flex items-center gap-2">
-              {navItems.map((item) => {
-                const Icon = item.icon
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className="flex items-center gap-2 px-4 xl:px-5 py-2.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span className="text-sm font-medium">{item.name}</span>
-                  </Link>
-                )
-              })}
+              {navItems
+                .filter(item => !item.authOnly || isAuthenticated)
+                .map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className="flex items-center gap-2 px-4 xl:px-5 py-2.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span className="text-sm font-medium">{item.name}</span>
+                    </Link>
+                  )
+                })}
             </div>
 
             {/* Enhanced Search Bar - Responsive */}
@@ -134,16 +138,18 @@ export function Navbar() {
 
             {/* Mobile Navigation */}
             <nav className="space-y-1" aria-label="Mobile menu navigation">
-              {navItems.map((item) => {
-                const Icon = item.icon
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 text-base font-medium"
-                    aria-label={`Go to ${item.name}`}
-                  >
+              {navItems
+                .filter(item => !item.authOnly || isAuthenticated)
+                .map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 text-base font-medium"
+                      aria-label={`Go to ${item.name}`}
+                    >
                     <Icon className="h-5 w-5" aria-hidden="true" />
                     <span>{item.name}</span>
                   </Link>

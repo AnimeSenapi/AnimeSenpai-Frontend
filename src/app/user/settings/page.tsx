@@ -9,6 +9,7 @@ import { EmailVerificationPrompt } from '../../../components/EmailVerificationBa
 import { RequireAuth } from '../../lib/protected-route'
 import { useAuth } from '../../lib/auth-context'
 import { useToast } from '../../../lib/toast-context'
+import { NotificationSettings } from '../../../components/settings/NotificationSettings'
 import { 
   Settings, 
   User, 
@@ -585,8 +586,11 @@ export default function UserSettingsPage() {
                     <p className="text-gray-400">Choose what notifications you want to receive</p>
                   </div>
 
+                  {/* Push Notifications (Full Width) */}
+                  <NotificationSettings />
+
                   {/* Notification Cards Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                     {/* Email Notifications */}
                     <div className="glass rounded-xl p-5 hover:bg-white/10 transition-all cursor-pointer group"
                          onClick={() => setPreferences({...preferences, emailNotifications: !preferences.emailNotifications})}>
@@ -602,22 +606,6 @@ export default function UserSettingsPage() {
                       </div>
                       <h3 className="text-white font-semibold mb-1">Email Notifications</h3>
                       <p className="text-gray-400 text-sm">Receive updates via email</p>
-                    </div>
-
-                    {/* Push Notifications */}
-                    <div className="glass rounded-xl p-5 hover:bg-white/10 transition-all cursor-pointer group opacity-50"
-                         title="Coming soon">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="w-12 h-12 rounded-xl bg-secondary-500/10 flex items-center justify-center">
-                          <Smartphone className="h-6 w-6 text-secondary-400" />
-                      </div>
-                      <Checkbox
-                          checked={false}
-                          disabled={true}
-                      />
-                      </div>
-                      <h3 className="text-white font-semibold mb-1">Push Notifications</h3>
-                      <p className="text-gray-400 text-sm">Coming soon</p>
                     </div>
 
                     {/* New Episodes */}
