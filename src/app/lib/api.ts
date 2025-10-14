@@ -157,6 +157,15 @@ async function trpcQuery<TOutput>(path: string, init?: RequestInit, retryCount =
       const message = (payload && 'error' in payload) ? payload.error.message : 'Request failed'
       const code = (payload && 'error' in payload && payload.error.data?.code) || 'UNKNOWN_ERROR'
       
+      // Debug logging
+      console.error('❌ API Error Details:', {
+        path,
+        status: res.status,
+        code,
+        message,
+        fullError: payload
+      })
+      
       // Try to refresh token on auth errors (only once)
       if ((code === 'UNAUTHORIZED' || message.includes('session') || message.includes('expired') || message.includes('token')) && retryCount === 0) {
         const refreshed = await refreshAccessToken()
