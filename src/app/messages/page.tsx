@@ -100,15 +100,31 @@ export default function MessagesPage() {
     try {
       setLoading(true)
       
+      // Check for auth token
+      const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
+      console.log('🔑 Auth token exists:', !!token)
+      
       const { apiGetConversations } = await import('../lib/api')
       const data = await apiGetConversations()
       
       if (data?.conversations) {
         setConversations(data.conversations)
+        console.log('✅ Loaded conversations:', data.conversations.length)
+      } else {
+        console.log('⚠️ No conversations data returned')
       }
-    } catch (error) {
-      console.error('Failed to load conversations:', error)
-      toast.error('Failed to load conversations', 'Error')
+    } catch (error: any) {
+      console.error('❌ Failed to load conversations:', error)
+      console.error('Error message:', error.message)
+      console.error('Error stack:', error.stack)
+      
+      // Check if it's an auth error
+      if (error.message?.includes('No authentication') || error.message?.includes('UNAUTHORIZED')) {
+        toast.error('Please sign in to view messages', 'Authentication Required')
+        router.push('/auth/signin')
+      } else {
+        toast.error(error.message || 'Failed to load conversations', 'Error')
+      }
       setConversations([])
     } finally {
       setLoading(false)
