@@ -202,7 +202,7 @@ export default function MessagesPage() {
     try {
       setLoadingFriends(true)
       const { apiGetFriends } = await import('../lib/api')
-      const data = await apiGetFriends()
+      const data = await apiGetFriends() as any
       setFriends(data?.friends || [])
     } catch (error) {
       console.error('Failed to load friends:', error)
