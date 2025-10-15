@@ -69,7 +69,7 @@ export default function NotificationsPage() {
   const loadNotifications = async () => {
     try {
       setLoading(true)
-      const data = await apiGetNotifications({ limit: 50, unreadOnly: filter === 'unread' })
+      const data = await apiGetNotifications({ limit: 50, unreadOnly: filter === 'unread' }) as any
       setNotifications(data.notifications)
       setUnreadCount(data.notifications.filter((n: any) => !n.isRead).length)
     } catch (error) {
@@ -81,7 +81,7 @@ export default function NotificationsPage() {
 
   const loadFriendRequests = async () => {
     try {
-      const data = await apiGetPendingFriendRequests()
+      const data = await apiGetPendingFriendRequests() as any
       setFriendRequests(data.requests)
     } catch (error) {
       console.error('Failed to load friend requests:', error)
