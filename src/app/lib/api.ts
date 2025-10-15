@@ -506,8 +506,8 @@ export async function apiGetAnimeBySlug(slug: string, useCache: boolean = true) 
 
   const result = data.result.data
   
-  // Cache for 30 minutes
-  clientCache.set(cacheKey, result, CacheTTL.THIRTY_MINUTES)
+  // Cache for 1 hour (using 'veryLong' TTL)
+  clientCache.set(cacheKey, result, CacheTTL.veryLong)
   
   return result
 }
