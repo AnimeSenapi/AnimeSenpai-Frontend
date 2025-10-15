@@ -1210,30 +1210,33 @@ export async function apiUnhideAnimeFromList(animeId: string) {
 
 // Activity Feed
 export async function apiGetFriendActivities(params?: { limit?: number; cursor?: string }) {
-  const queryParams = new URLSearchParams()
-  if (params?.limit) queryParams.set('limit', params.limit.toString())
-  if (params?.cursor) queryParams.set('cursor', params.cursor)
+  const inputData: any = {}
+  if (params?.limit) inputData.limit = params.limit
+  if (params?.cursor) inputData.cursor = params.cursor
   
-  const path = `activity.getFriendActivities${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-  return trpcQuery(path, params)
+  const input = JSON.stringify(inputData)
+  const path = `activity.getFriendActivities?input=${encodeURIComponent(input)}`
+  return trpcQuery(path)
 }
 
 export async function apiGetMyActivities(params?: { limit?: number; cursor?: string }) {
-  const queryParams = new URLSearchParams()
-  if (params?.limit) queryParams.set('limit', params.limit.toString())
-  if (params?.cursor) queryParams.set('cursor', params.cursor)
+  const inputData: any = {}
+  if (params?.limit) inputData.limit = params.limit
+  if (params?.cursor) inputData.cursor = params.cursor
   
-  const path = `activity.getMyActivities${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-  return trpcQuery(path, params)
+  const input = JSON.stringify(inputData)
+  const path = `activity.getMyActivities?input=${encodeURIComponent(input)}`
+  return trpcQuery(path)
 }
 
 export async function apiGetActivityStats(params?: { userId?: string; timeRange?: 'week' | 'month' | 'year' | 'all' }) {
-  const queryParams = new URLSearchParams()
-  if (params?.userId) queryParams.set('userId', params.userId)
-  if (params?.timeRange) queryParams.set('timeRange', params.timeRange)
+  const inputData: any = {}
+  if (params?.userId) inputData.userId = params.userId
+  if (params?.timeRange) inputData.timeRange = params.timeRange
   
-  const path = `activity.getActivityStats${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-  return trpcQuery(path, params)
+  const input = JSON.stringify(inputData)
+  const path = `activity.getActivityStats?input=${encodeURIComponent(input)}`
+  return trpcQuery(path)
 }
 
 // Review Interactions
@@ -1246,13 +1249,13 @@ export async function apiUnlikeReview(reviewId: string) {
 }
 
 export async function apiGetReviewLikes(reviewId: string, params?: { limit?: number; cursor?: string }) {
-  const queryParams = new URLSearchParams()
-  queryParams.set('reviewId', reviewId)
-  if (params?.limit) queryParams.set('limit', params.limit.toString())
-  if (params?.cursor) queryParams.set('cursor', params.cursor)
+  const inputData: any = { reviewId }
+  if (params?.limit) inputData.limit = params.limit
+  if (params?.cursor) inputData.cursor = params.cursor
   
-  const path = `reviewInteractions.getReviewLikes?${queryParams.toString()}`
-  return trpcQuery(path, { reviewId, ...params })
+  const input = JSON.stringify(inputData)
+  const path = `reviewInteractions.getReviewLikes?input=${encodeURIComponent(input)}`
+  return trpcQuery(path)
 }
 
 export async function apiAddReviewComment(reviewId: string, content: string) {
@@ -1260,13 +1263,13 @@ export async function apiAddReviewComment(reviewId: string, content: string) {
 }
 
 export async function apiGetReviewComments(reviewId: string, params?: { limit?: number; cursor?: string }) {
-  const queryParams = new URLSearchParams()
-  queryParams.set('reviewId', reviewId)
-  if (params?.limit) queryParams.set('limit', params.limit.toString())
-  if (params?.cursor) queryParams.set('cursor', params.cursor)
+  const inputData: any = { reviewId }
+  if (params?.limit) inputData.limit = params.limit
+  if (params?.cursor) inputData.cursor = params.cursor
   
-  const path = `reviewInteractions.getComments?${queryParams.toString()}`
-  return trpcQuery(path, { reviewId, ...params })
+  const input = JSON.stringify(inputData)
+  const path = `reviewInteractions.getComments?input=${encodeURIComponent(input)}`
+  return trpcQuery(path)
 }
 
 export async function apiDeleteReviewComment(commentId: string) {
@@ -1278,11 +1281,9 @@ export async function apiTagFriendsInReview(reviewId: string, userIds: string[])
 }
 
 export async function apiGetTaggedUsers(reviewId: string) {
-  const queryParams = new URLSearchParams()
-  queryParams.set('reviewId', reviewId)
-  
-  const path = `reviewInteractions.getTaggedUsers?${queryParams.toString()}`
-  return trpcQuery(path, { reviewId })
+  const input = JSON.stringify({ reviewId })
+  const path = `reviewInteractions.getTaggedUsers?input=${encodeURIComponent(input)}`
+  return trpcQuery(path)
 }
 
 // Enhanced Notifications
@@ -1303,13 +1304,14 @@ export async function apiGetMyPushSubscriptions() {
 }
 
 export async function apiGetNotifications(params?: { limit?: number; cursor?: string; unreadOnly?: boolean }) {
-  const queryParams = new URLSearchParams()
-  if (params?.limit) queryParams.set('limit', params.limit.toString())
-  if (params?.cursor) queryParams.set('cursor', params.cursor)
-  if (params?.unreadOnly) queryParams.set('unreadOnly', params.unreadOnly.toString())
+  const inputData: any = {}
+  if (params?.limit) inputData.limit = params.limit
+  if (params?.cursor) inputData.cursor = params.cursor
+  if (params?.unreadOnly) inputData.unreadOnly = params.unreadOnly
   
-  const path = `notifications.getNotifications${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-  return trpcQuery(path, params)
+  const input = JSON.stringify(inputData)
+  const path = `notifications.getNotifications?input=${encodeURIComponent(input)}`
+  return trpcQuery(path)
 }
 
 export async function apiMarkNotificationAsRead(notificationId: string) {
@@ -1354,22 +1356,16 @@ export async function apiApplyPrivacyPreset(preset: 'public' | 'friends_only' | 
 }
 
 export async function apiCanViewContent(targetUserId: string, contentType: 'profile' | 'animeList' | 'reviews' | 'activity' | 'friends') {
-  const queryParams = new URLSearchParams()
-  queryParams.set('targetUserId', targetUserId)
-  queryParams.set('contentType', contentType)
-  
-  const path = `privacy.canView?${queryParams.toString()}`
-  return trpcQuery(path, { targetUserId, contentType })
+  const input = JSON.stringify({ targetUserId, contentType })
+  const path = `privacy.canView?input=${encodeURIComponent(input)}`
+  return trpcQuery(path)
 }
 
 // Friend Recommendations
 export async function apiGetFriendsAlsoWatched(animeId: string, limit: number = 10) {
-  const queryParams = new URLSearchParams()
-  queryParams.set('animeId', animeId)
-  queryParams.set('limit', limit.toString())
-  
-  const path = `recommendations.getFriendsAlsoWatched?${queryParams.toString()}`
-  return trpcQuery(path, { animeId, limit })
+  const input = JSON.stringify({ animeId, limit })
+  const path = `recommendations.getFriendsAlsoWatched?input=${encodeURIComponent(input)}`
+  return trpcQuery(path)
 }
 
 // ============================================
@@ -1418,36 +1414,37 @@ export async function apiCheckAndUnlockAchievements() {
 
 // Leaderboards
 export async function apiGetTopWatchers(params?: { limit?: number; timeRange?: 'week' | 'month' | 'all' }) {
-  const queryParams = new URLSearchParams()
-  if (params?.limit) queryParams.set('limit', params.limit.toString())
-  if (params?.timeRange) queryParams.set('timeRange', params.timeRange)
+  const inputData: any = {}
+  if (params?.limit) inputData.limit = params.limit
+  if (params?.timeRange) inputData.timeRange = params.timeRange
   
-  const path = `leaderboards.getTopWatchers${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-  return trpcQuery(path, params)
+  const input = JSON.stringify(inputData)
+  const path = `leaderboards.getTopWatchers?input=${encodeURIComponent(input)}`
+  return trpcQuery(path)
 }
 
 export async function apiGetTopReviewers(params?: { limit?: number }) {
-  const queryParams = new URLSearchParams()
-  if (params?.limit) queryParams.set('limit', params.limit.toString())
+  const inputData: any = {}
+  if (params?.limit) inputData.limit = params.limit
   
-  const path = `leaderboards.getTopReviewers${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-  return trpcQuery(path, params)
+  const input = JSON.stringify(inputData)
+  const path = `leaderboards.getTopReviewers?input=${encodeURIComponent(input)}`
+  return trpcQuery(path)
 }
 
 export async function apiGetMostSocial(params?: { limit?: number }) {
-  const queryParams = new URLSearchParams()
-  if (params?.limit) queryParams.set('limit', params.limit.toString())
+  const inputData: any = {}
+  if (params?.limit) inputData.limit = params.limit
   
-  const path = `leaderboards.getMostSocial${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-  return trpcQuery(path, params)
+  const input = JSON.stringify(inputData)
+  const path = `leaderboards.getMostSocial?input=${encodeURIComponent(input)}`
+  return trpcQuery(path)
 }
 
 export async function apiGetMyRank(category: 'watched' | 'reviews' | 'friends' | 'points') {
-  const queryParams = new URLSearchParams()
-  queryParams.set('category', category)
-  
-  const path = `leaderboards.getMyRank?${queryParams.toString()}`
-  return trpcQuery(path, { category })
+  const input = JSON.stringify({ category })
+  const path = `leaderboards.getMyRank?input=${encodeURIComponent(input)}`
+  return trpcQuery(path)
 }
 
 // Safety (Block/Report)
@@ -1469,11 +1466,9 @@ export async function apiReportUser(userId: string, reason: string, description:
 
 // List Tools
 export async function apiCompareListsWithFriend(friendId: string) {
-  const queryParams = new URLSearchParams()
-  queryParams.set('friendId', friendId)
-  
-  const path = `listTools.compareWithFriend?${queryParams.toString()}`
-  return trpcQuery(path, { friendId })
+  const input = JSON.stringify({ friendId })
+  const path = `listTools.compareWithFriend?input=${encodeURIComponent(input)}`
+  return trpcQuery(path)
 }
 
 export async function apiGetSharedLists() {
