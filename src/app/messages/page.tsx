@@ -112,7 +112,7 @@ export default function MessagesPage() {
       console.log('🔑 Auth token exists:', !!token)
       
       const { apiGetConversations } = await import('../lib/api')
-      const data = await apiGetConversations()
+      const data = await apiGetConversations() as any
       
       if (data?.conversations) {
         setConversations(data.conversations)
