@@ -1043,14 +1043,15 @@ export async function apiSaveSettings(settings: {
 // ============================================================================
 
 export async function apiGetReviews(params?: { page?: number; limit?: number; filter?: string; search?: string }) {
-  const queryParams = new URLSearchParams()
-  if (params?.page) queryParams.set('page', params.page.toString())
-  if (params?.limit) queryParams.set('limit', params.limit.toString())
-  if (params?.filter) queryParams.set('filter', params.filter)
-  if (params?.search) queryParams.set('search', params.search)
+  const inputData: any = {}
+  if (params?.page) inputData.page = params.page
+  if (params?.limit) inputData.limit = params.limit
+  if (params?.filter) inputData.filter = params.filter
+  if (params?.search) inputData.search = params.search
   
-  const path = `moderation.getReviews${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-  return trpcQuery(path, params)
+  const input = JSON.stringify(inputData)
+  const path = `moderation.getReviews?input=${encodeURIComponent(input)}`
+  return trpcQuery(path)
 }
 
 export async function apiGetModerationStats() {
