@@ -126,8 +126,8 @@ export const AnimeCard = memo(function AnimeCard({
                     ? "fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" 
                     : "text-white"
                 )} />
-              </Button>
-            </div>
+            </Button>
+          </div>
           )}
           
           {/* Gradient fade overlay - focused on bottom */}
@@ -184,9 +184,9 @@ export const AnimeCard = memo(function AnimeCard({
           
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-300 drop-shadow-md">{year || 'TBA'}</span>
-            <span className="text-xs text-gray-400 drop-shadow-md truncate max-w-20">
+              <span className="text-xs text-gray-400 drop-shadow-md truncate max-w-20">
               {studio || ''}
-            </span>
+              </span>
           </div>
         </div>
       </div>

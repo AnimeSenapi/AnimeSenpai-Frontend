@@ -55,7 +55,7 @@ export function UsersTab() {
         page, 
         limit: 20,
         role: roleFilter === 'all' ? undefined : roleFilter 
-      })
+      }) as any
       setUsers(data.users)
       setTotalPages(data.pagination.pages)
     } catch (error: any) {
@@ -79,7 +79,7 @@ export function UsersTab() {
 
     try {
       setLoading(true)
-      const results = await apiAdminSearchUsers(searchQuery, 20)
+      const results = await apiAdminSearchUsers(searchQuery, 20) as any
       setUsers(results)
     } catch (error) {
       console.error('Search failed:', error)
@@ -121,7 +121,7 @@ export function UsersTab() {
 
   const handleViewDetails = async (user: User) => {
     try {
-      const details = await apiGetUserDetails(user.id)
+      const details = await apiGetUserDetails(user.id) as any
       setSelectedUser(details as UserDetails)
       setShowUserModal(true)
     } catch (error) {

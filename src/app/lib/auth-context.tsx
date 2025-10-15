@@ -275,7 +275,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const refreshUser = async () => {
     try {
-      const userData = await apiMe()
+      const userData = await apiMe() as any
       setUser(userData)
     } catch (err: unknown) {
       console.error('Failed to refresh user:', err)

@@ -109,7 +109,7 @@ export default function DashboardPage() {
       try {
         // Load ONLY essential data first for fast initial render
         // Other sections load lazily as user scrolls
-        const trending = await apiGetTrending()
+        const trending = await apiGetTrending() as any
         
         // Group trending anime into series
         const trendingList = Array.isArray(trending) ? trending : []

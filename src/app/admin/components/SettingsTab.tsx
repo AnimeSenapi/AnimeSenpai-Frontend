@@ -103,7 +103,7 @@ export function SettingsTab() {
       try {
         setLoading(true)
         const { apiGetSettings } = await import('../../lib/api')
-        const loadedSettings = await apiGetSettings()
+        const loadedSettings = await apiGetSettings() as any
         setSettings(loadedSettings)
       } catch (error: any) {
         console.error('Failed to load settings:', error)

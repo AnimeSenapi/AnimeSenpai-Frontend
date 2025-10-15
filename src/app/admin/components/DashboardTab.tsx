@@ -48,7 +48,7 @@ export function DashboardTab() {
   const loadStats = async () => {
     try {
       setLoading(true)
-      const data = await apiGetAdminStats()
+      const data = await apiGetAdminStats() as any
       setStats(data)
       setLastRefresh(new Date())
     } catch (error: any) {

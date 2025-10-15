@@ -27,7 +27,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const ids = await apiGetFavoritedAnimeIds()
+      const ids = await apiGetFavoritedAnimeIds() as any
       setFavoritedAnimeIds(ids)
     } catch (error) {
       console.error('Failed to load favorites:', error)
