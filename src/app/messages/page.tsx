@@ -174,7 +174,7 @@ export default function MessagesPage() {
       setSending(true)
       
       const { apiSendMessage } = await import('../lib/api')
-      const data = await apiSendMessage(selectedConversation, newMessage)
+      const data = await apiSendMessage(selectedConversation, newMessage) as any
       
       if (data?.message) {
         setMessages(prev => [...prev, data.message])
