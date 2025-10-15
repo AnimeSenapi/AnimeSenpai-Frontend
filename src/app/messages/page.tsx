@@ -144,7 +144,7 @@ export default function MessagesPage() {
       setSelectedConversation(userId)
       
       const { apiGetMessages } = await import('../lib/api')
-      const data = await apiGetMessages(userId, { limit: 50 })
+      const data = await apiGetMessages(userId, { limit: 50 }) as any
       
       if (data?.messages) {
         setMessages(data.messages)
