@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { clientCache, CacheTTL, generateCacheKey } from '../lib/client-cache'
+import { clientCache, CacheTTL } from '../lib/client-cache'
 
 interface UseCachedDataOptions<T> {
   cacheKey: string
@@ -89,7 +89,7 @@ export function useCachedData<T>({
   }, [fetchData])
 
   const invalidate = useCallback(() => {
-    clientCache.remove(cacheKey)
+    clientCache.delete(cacheKey)
     setData(null)
   }, [cacheKey])
 
@@ -111,7 +111,7 @@ export function usePrefetch() {
   const prefetch = useCallback(
     async <T,>(cacheKey: string, fetcher: () => Promise<T>, ttl?: number) => {
       // Check if already cached
-      if (clientCache.has(cacheKey)) {
+      if (clientCache.get(cacheKey) !== null) {
         return
       }
 
@@ -185,7 +185,7 @@ export function usePaginatedCache<T>({
   const invalidateAll = useCallback(() => {
     // Remove all pages from cache
     pages.forEach((_, page) => {
-      clientCache.remove(`${cacheKeyPrefix}:page:${page}`)
+      clientCache.delete(`${cacheKeyPrefix}:page:${page}`)
     })
     setPages(new Map())
   }, [pages, cacheKeyPrefix])
