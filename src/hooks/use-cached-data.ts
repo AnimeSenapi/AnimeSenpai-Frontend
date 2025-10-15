@@ -117,7 +117,7 @@ export function usePrefetch() {
 
       try {
         const data = await fetcher()
-        clientCache.set(cacheKey, data, ttl)
+        clientCache.set(cacheKey, data, ttl ?? CacheTTL.medium)
       } catch (error) {
         // Prefetch failures are silent
         console.error('Prefetch failed:', cacheKey, error)
