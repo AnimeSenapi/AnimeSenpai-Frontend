@@ -386,7 +386,7 @@ export default function UserSettingsPage() {
                         <div className="mt-2 flex items-center gap-2">
                           <div className="flex-1">
                             <p className="text-xs text-gray-400">Your profile URL:</p>
-                            <p className="text-xs text-primary-400 font-medium">animesenpai.com/users/@{username || 'username'}</p>
+                            <p className="text-xs text-primary-400 font-medium">animesenpai.com/user/@{username || 'username'}</p>
                           </div>
                           {username && username.length >= 3 && (
                             <div className="text-success-400 text-xs flex items-center gap-1">

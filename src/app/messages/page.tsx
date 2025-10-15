@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { createPortal } from 'react-dom'
 import { formatDistanceToNow } from 'date-fns'
 import { 
   MessageCircle, 
@@ -11,7 +12,10 @@ import {
   Loader2,
   ArrowLeft,
   Search,
-  Film
+  Film,
+  UserPlus,
+  X,
+  Users
 } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Badge } from '../../components/ui/badge'
@@ -78,6 +82,9 @@ export default function MessagesPage() {
   const [loadingMessages, setLoadingMessages] = useState(false)
   const [sending, setSending] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [showNewMessageModal, setShowNewMessageModal] = useState(false)
+  const [friends, setFriends] = useState<any[]>([])
+  const [loadingFriends, setLoadingFriends] = useState(false)
 
   useEffect(() => {
     // Wait for auth to load
@@ -191,6 +198,32 @@ export default function MessagesPage() {
     }
   }
 
+  const loadFriends = async () => {
+    try {
+      setLoadingFriends(true)
+      const { apiGetFriends } = await import('../lib/api')
+      const data = await apiGetFriends()
+      setFriends(data?.friends || [])
+    } catch (error) {
+      console.error('Failed to load friends:', error)
+      toast.error('Failed to load friends', 'Error')
+    } finally {
+      setLoadingFriends(false)
+    }
+  }
+
+  const startNewConversation = async (friendId: string) => {
+    setShowNewMessageModal(false)
+    setSelectedConversation(friendId)
+    await loadMessages(friendId)
+  }
+
+  useEffect(() => {
+    if (showNewMessageModal && friends.length === 0) {
+      loadFriends()
+    }
+  }, [showNewMessageModal])
+
   const filteredConversations = conversations.filter(conv =>
     conv.user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
     conv.user.name?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -206,14 +239,26 @@ export default function MessagesPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 text-white">
       <main className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 lg:pb-20">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-12 h-12 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-xl flex items-center justify-center">
-            <MessageCircle className="h-6 w-6 text-primary-400" />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-xl flex items-center justify-center">
+              <MessageCircle className="h-6 w-6 text-primary-400" />
+            </div>
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-white">Messages</h1>
+              <p className="text-gray-400">Chat with friends and share recommendations</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-white">Messages</h1>
-            <p className="text-gray-400">Chat with friends and share recommendations</p>
-          </div>
+          
+          {/* New Message Button */}
+          <Button
+            onClick={() => setShowNewMessageModal(true)}
+            className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600"
+          >
+            <UserPlus className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">New Message</span>
+            <span className="sm:hidden">New</span>
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-6 h-[calc(100vh-300px)] min-h-[500px]">
@@ -467,6 +512,86 @@ export default function MessagesPage() {
           )}
         </div>
       </main>
+
+      {/* New Message Modal */}
+      {showNewMessageModal && createPortal(
+        <div 
+          className="fixed inset-0 flex items-center justify-center p-3 sm:p-4 lg:p-6 bg-black/80 backdrop-blur-sm"
+          style={{ 
+            zIndex: 1000000,
+            position: 'fixed',
+            isolation: 'isolate'
+          }}
+        >
+          <div className="glass rounded-xl sm:rounded-2xl max-w-md w-full p-4 sm:p-6 relative border border-white/10 animate-in zoom-in-95 duration-200 max-h-[80vh] flex flex-col">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowNewMessageModal(false)}
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-white transition-colors w-8 h-8 flex items-center justify-center"
+              aria-label="Close new message modal"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            {/* Header */}
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2 pr-8">
+              <UserPlus className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400" />
+              New Message
+            </h3>
+
+            {/* Friends List */}
+            <div className="flex-1 overflow-y-auto -mx-4 px-4">
+              {loadingFriends ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary-400" />
+                </div>
+              ) : friends.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 text-gray-500 mx-auto mb-3" />
+                  <p className="text-gray-400 text-sm">No friends yet</p>
+                  <p className="text-gray-500 text-xs mt-1">Add friends to start chatting!</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {friends.map((friend: any) => (
+                    <button
+                      key={friend.id}
+                      onClick={() => startNewConversation(friend.id)}
+                      className="w-full flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors group"
+                    >
+                      {friend.avatar ? (
+                        <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                          <Image
+                            src={friend.avatar}
+                            alt={friend.username}
+                            width={40}
+                            height={40}
+                            className="object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 flex items-center justify-center flex-shrink-0">
+                          <Users className="h-5 w-5 text-primary-400" />
+                        </div>
+                      )}
+                      <div className="flex-1 text-left min-w-0">
+                        <p className="text-white font-medium text-sm truncate">
+                          {friend.name || friend.username}
+                        </p>
+                        <p className="text-gray-400 text-xs truncate">
+                          @{friend.username}
+                        </p>
+                      </div>
+                      <MessageCircle className="h-4 w-4 text-gray-400 group-hover:text-primary-400 transition-colors" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }

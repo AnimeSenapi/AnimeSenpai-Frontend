@@ -165,11 +165,26 @@ async function trpcQuery<TOutput>(path: string, init?: RequestInit, retryCount =
       const message = (payload && 'error' in payload) ? payload.error.message : 'Request failed'
       const code = (payload && 'error' in payload && payload.error.data?.code) || 'UNKNOWN_ERROR'
       
-      // Debug logging (skip for expected auth errors on optional endpoints)
-      const isOptionalAuthEndpoint = path.includes('notifications.getUnreadCount') || 
-                                      path.includes('social.getFriendRecommendations')
+      // Skip logging for expected errors on optional endpoints
+      // Auth-related codes that are expected when not logged in
+      const isExpectedAuthError = code === 'UNAUTHORIZED' || 
+                                   code === 'TOKEN_INVALID' || 
+                                   code === 'TOKEN_EXPIRED' ||
+                                   message.includes('session') ||
+                                   message.includes('token')
       
-      if (!isOptionalAuthEndpoint || code !== 'UNAUTHORIZED') {
+      // auth.me - skip all expected auth errors
+      const isAuthCheck = path.includes('auth.me')
+      
+      // Other optional endpoints - skip only auth errors
+      const isOtherOptionalEndpoint = path.includes('notifications.getUnreadCount') || 
+                                       path.includes('social.getFriendRecommendations') ||
+                                       path.includes('social.getRelationshipStatus')
+      
+      const shouldSkipLogging = (isAuthCheck && isExpectedAuthError) || 
+                                 (isOtherOptionalEndpoint && isExpectedAuthError)
+      
+      if (!shouldSkipLogging) {
         console.error('❌ API Error Details:')
         console.error('Path:', path)
         console.error('Status:', res.status)
@@ -318,10 +333,7 @@ async function trpcMutation<TInput, TOutput>(path: string, input?: TInput, init?
 
 // Auth API
 export async function apiSignup(input: SignupInput) {
-  const data = await trpcMutation<SignupInput & { confirmPassword: string }, AuthResponse>('auth.signup', {
-    ...input,
-    confirmPassword: input.password // Backend requires confirmPassword
-  })
+  const data = await trpcMutation<SignupInput, AuthResponse>('auth.signup', input)
   if (typeof window !== 'undefined') {
     localStorage.setItem('accessToken', data.accessToken)
     localStorage.setItem('refreshToken', data.refreshToken)
@@ -1027,45 +1039,34 @@ export async function apiSaveSettings(settings: {
 }
 
 // ============================================================================
-// Generic API Call Helper
-// ============================================================================
-
-async function apiCall(path: string, input?: any): Promise<any> {
-  // If input is provided, it's a mutation (POST), otherwise it's a query (GET)
-  if (input !== undefined) {
-    return trpcMutation(path, input)
-  } else {
-    return trpcQuery(path)
-  }
-}
-
-// ============================================================================
 // Moderation API
 // ============================================================================
 
 export async function apiGetReviews(params?: { page?: number; limit?: number; filter?: string; search?: string }) {
-  const response = await apiCall('moderation.getReviews', params)
-  return response
+  const queryParams = new URLSearchParams()
+  if (params?.page) queryParams.set('page', params.page.toString())
+  if (params?.limit) queryParams.set('limit', params.limit.toString())
+  if (params?.filter) queryParams.set('filter', params.filter)
+  if (params?.search) queryParams.set('search', params.search)
+  
+  const path = `moderation.getReviews${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+  return trpcQuery(path, params)
 }
 
 export async function apiGetModerationStats() {
-  const response = await apiCall('moderation.getStats')
-  return response
+  return trpcQuery('moderation.getStats')
 }
 
 export async function apiToggleReviewVisibility(reviewId: string, isPublic: boolean) {
-  const response = await apiCall('moderation.toggleReviewVisibility', { reviewId, isPublic })
-  return response
+  return trpcMutation('moderation.toggleReviewVisibility', { reviewId, isPublic })
 }
 
 export async function apiDeleteReview(reviewId: string) {
-  const response = await apiCall('moderation.deleteReview', { reviewId })
-  return response
+  return trpcMutation('moderation.deleteReview', { reviewId })
 }
 
 export async function apiGetFlaggedUsers() {
-  const response = await apiCall('moderation.getFlaggedUsers')
-  return response
+  return trpcQuery('moderation.getFlaggedUsers')
 }
 
 // ============================================================================
@@ -1073,23 +1074,19 @@ export async function apiGetFlaggedUsers() {
 // ============================================================================
 
 export async function apiExportUserData() {
-  const response = await apiCall('gdpr.exportUserData')
-  return response
+  return trpcQuery('gdpr.exportUserData')
 }
 
 export async function apiRequestAccountDeletion(password: string, reason?: string) {
-  const response = await apiCall('gdpr.requestAccountDeletion', { password, reason })
-  return response
+  return trpcMutation('gdpr.requestAccountDeletion', { password, reason })
 }
 
 export async function apiCancelAccountDeletion() {
-  const response = await apiCall('gdpr.cancelAccountDeletion')
-  return response
+  return trpcMutation('gdpr.cancelAccountDeletion', {})
 }
 
 export async function apiGetDataProcessingInfo() {
-  const response = await apiCall('gdpr.getDataProcessingInfo')
-  return response
+  return trpcQuery('gdpr.getDataProcessingInfo')
 }
 
 // ============================================================================
@@ -1098,72 +1095,93 @@ export async function apiGetDataProcessingInfo() {
 
 // Follow System
 export async function apiFollowUser(userId: string) {
-  const response = await apiCall('social.followUser', { userId })
-  return response
+  return trpcMutation('social.followUser', { userId })
 }
 
 export async function apiUnfollowUser(userId: string) {
-  const response = await apiCall('social.unfollowUser', { userId })
-  return response
+  return trpcMutation('social.unfollowUser', { userId })
 }
 
 // Friend System
 export async function apiSendFriendRequest(userId: string) {
-  const response = await apiCall('social.sendFriendRequest', { userId })
-  return response
+  return trpcMutation('social.sendFriendRequest', { userId })
 }
 
 export async function apiAcceptFriendRequest(requestId: string) {
-  const response = await apiCall('social.acceptFriendRequest', { requestId })
-  return response
+  return trpcMutation('social.acceptFriendRequest', { requestId })
 }
 
 export async function apiDeclineFriendRequest(requestId: string) {
-  const response = await apiCall('social.declineFriendRequest', { requestId })
-  return response
+  return trpcMutation('social.declineFriendRequest', { requestId })
 }
 
 export async function apiUnfriend(userId: string) {
-  const response = await apiCall('social.unfriend', { userId })
-  return response
+  return trpcMutation('social.unfriend', { userId })
 }
 
 // Relationships
 export async function apiGetRelationshipStatus(userId: string) {
-  const response = await apiCall('social.getRelationshipStatus', { userId })
-  return response
+  const input = JSON.stringify({ userId })
+  const path = `social.getRelationshipStatus?input=${encodeURIComponent(input)}`
+  return trpcQuery(path)
 }
 
 export async function apiGetFriends(userId?: string) {
-  const response = await apiCall('social.getFriends', userId ? { userId } : undefined)
-  return response
+  if (userId) {
+    const input = JSON.stringify({ userId })
+    const path = `social.getFriends?input=${encodeURIComponent(input)}`
+    return trpcQuery(path)
+  }
+  return trpcQuery('social.getFriends')
 }
 
 export async function apiGetPendingFriendRequests() {
-  const response = await apiCall('social.getPendingFriendRequests')
-  return response
+  return trpcQuery('social.getPendingFriendRequests')
 }
 
 export async function apiGetFollowers(userId?: string, page?: number, limit?: number) {
-  const response = await apiCall('social.getFollowers', { userId, page, limit })
-  return response
+  const params: any = {}
+  if (userId) params.userId = userId
+  if (page) params.page = page
+  if (limit) params.limit = limit
+  
+  if (Object.keys(params).length > 0) {
+    const input = JSON.stringify(params)
+    const path = `social.getFollowers?input=${encodeURIComponent(input)}`
+    return trpcQuery(path)
+  }
+  return trpcQuery('social.getFollowers')
 }
 
 export async function apiGetFollowing(userId?: string, page?: number, limit?: number) {
-  const response = await apiCall('social.getFollowing', { userId, page, limit })
-  return response
+  const params: any = {}
+  if (userId) params.userId = userId
+  if (page) params.page = page
+  if (limit) params.limit = limit
+  
+  if (Object.keys(params).length > 0) {
+    const input = JSON.stringify(params)
+    const path = `social.getFollowing?input=${encodeURIComponent(input)}`
+    return trpcQuery(path)
+  }
+  return trpcQuery('social.getFollowing')
 }
 
 // User Profiles
 export async function apiGetUserProfile(username: string) {
-  const response = await apiCall('social.getUserProfile', { username })
-  return response
+  // Strip @ symbol if present (defensive check)
+  const cleanUsername = username.startsWith('@') ? username.slice(1) : username
+  
+  // For tRPC GET requests, input must be in query params using 'input' parameter
+  const input = JSON.stringify({ username: cleanUsername })
+  const path = `social.getUserProfile?input=${encodeURIComponent(input)}`
+  
+  return trpcQuery(path)
 }
 
 // Privacy Settings (Phase 1 - deprecated, use Phase 2 enhanced versions)
 export async function apiGetPrivacySettings() {
-  const response = await apiCall('social.getPrivacySettings')
-  return response
+  return trpcQuery('social.getPrivacySettings')
 }
 
 export async function apiUpdatePrivacySettings(settings: {
@@ -1174,18 +1192,15 @@ export async function apiUpdatePrivacySettings(settings: {
   reviewsVisibility?: 'public' | 'friends' | 'private'
   hiddenAnimeIds?: string[]
 }) {
-  const response = await apiCall('social.updatePrivacySettings', settings)
-  return response
+  return trpcMutation('social.updatePrivacySettings', settings)
 }
 
 export async function apiHideAnimeFromList(animeId: string) {
-  const response = await apiCall('social.hideAnimeFromList', { animeId })
-  return response
+  return trpcMutation('social.hideAnimeFromList', { animeId })
 }
 
 export async function apiUnhideAnimeFromList(animeId: string) {
-  const response = await apiCall('social.unhideAnimeFromList', { animeId })
-  return response
+  return trpcMutation('social.unhideAnimeFromList', { animeId })
 }
 
 // ============================================
@@ -1194,59 +1209,79 @@ export async function apiUnhideAnimeFromList(animeId: string) {
 
 // Activity Feed
 export async function apiGetFriendActivities(params?: { limit?: number; cursor?: string }) {
-  const response = await apiCall('activity.getFriendActivities', params)
-  return response
+  const queryParams = new URLSearchParams()
+  if (params?.limit) queryParams.set('limit', params.limit.toString())
+  if (params?.cursor) queryParams.set('cursor', params.cursor)
+  
+  const path = `activity.getFriendActivities${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+  return trpcQuery(path, params)
 }
 
 export async function apiGetMyActivities(params?: { limit?: number; cursor?: string }) {
-  const response = await apiCall('activity.getMyActivities', params)
-  return response
+  const queryParams = new URLSearchParams()
+  if (params?.limit) queryParams.set('limit', params.limit.toString())
+  if (params?.cursor) queryParams.set('cursor', params.cursor)
+  
+  const path = `activity.getMyActivities${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+  return trpcQuery(path, params)
 }
 
 export async function apiGetActivityStats(params?: { userId?: string; timeRange?: 'week' | 'month' | 'year' | 'all' }) {
-  const response = await apiCall('activity.getActivityStats', params)
-  return response
+  const queryParams = new URLSearchParams()
+  if (params?.userId) queryParams.set('userId', params.userId)
+  if (params?.timeRange) queryParams.set('timeRange', params.timeRange)
+  
+  const path = `activity.getActivityStats${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+  return trpcQuery(path, params)
 }
 
 // Review Interactions
 export async function apiLikeReview(reviewId: string) {
-  const response = await apiCall('reviewInteractions.likeReview', { reviewId })
-  return response
+  return trpcMutation('reviewInteractions.likeReview', { reviewId })
 }
 
 export async function apiUnlikeReview(reviewId: string) {
-  const response = await apiCall('reviewInteractions.unlikeReview', { reviewId })
-  return response
+  return trpcMutation('reviewInteractions.unlikeReview', { reviewId })
 }
 
 export async function apiGetReviewLikes(reviewId: string, params?: { limit?: number; cursor?: string }) {
-  const response = await apiCall('reviewInteractions.getReviewLikes', { reviewId, ...params })
-  return response
+  const queryParams = new URLSearchParams()
+  queryParams.set('reviewId', reviewId)
+  if (params?.limit) queryParams.set('limit', params.limit.toString())
+  if (params?.cursor) queryParams.set('cursor', params.cursor)
+  
+  const path = `reviewInteractions.getReviewLikes?${queryParams.toString()}`
+  return trpcQuery(path, { reviewId, ...params })
 }
 
 export async function apiAddReviewComment(reviewId: string, content: string) {
-  const response = await apiCall('reviewInteractions.addComment', { reviewId, content })
-  return response
+  return trpcMutation('reviewInteractions.addComment', { reviewId, content })
 }
 
 export async function apiGetReviewComments(reviewId: string, params?: { limit?: number; cursor?: string }) {
-  const response = await apiCall('reviewInteractions.getComments', { reviewId, ...params })
-  return response
+  const queryParams = new URLSearchParams()
+  queryParams.set('reviewId', reviewId)
+  if (params?.limit) queryParams.set('limit', params.limit.toString())
+  if (params?.cursor) queryParams.set('cursor', params.cursor)
+  
+  const path = `reviewInteractions.getComments?${queryParams.toString()}`
+  return trpcQuery(path, { reviewId, ...params })
 }
 
 export async function apiDeleteReviewComment(commentId: string) {
-  const response = await apiCall('reviewInteractions.deleteComment', { commentId })
-  return response
+  return trpcMutation('reviewInteractions.deleteComment', { commentId })
 }
 
 export async function apiTagFriendsInReview(reviewId: string, userIds: string[]) {
-  const response = await apiCall('reviewInteractions.tagFriends', { reviewId, userIds })
-  return response
+  return trpcMutation('reviewInteractions.tagFriends', { reviewId, userIds })
 }
 
 export async function apiGetTaggedUsers(reviewId: string) {
-  const response = await apiCall('reviewInteractions.getTaggedUsers', { reviewId })
-  return response
+  const queryParams = new URLSearchParams()
+  queryParams.set('reviewId', reviewId)
+  
+  const path = `reviewInteractions.getTaggedUsers?${queryParams.toString()}`
+  return trpcQuery(path, { reviewId })
 }
 
 // Enhanced Notifications
@@ -1255,54 +1290,50 @@ export async function apiSubscribeToPush(subscription: {
   keys: { p256dh: string; auth: string }
   userAgent?: string
 }) {
-  const response = await apiCall('notifications.subscribeToPush', subscription)
-  return response
+  return trpcMutation('notifications.subscribeToPush', subscription)
 }
 
 export async function apiUnsubscribeFromPush(endpoint: string) {
-  const response = await apiCall('notifications.unsubscribeFromPush', { endpoint })
-  return response
+  return trpcMutation('notifications.unsubscribeFromPush', { endpoint })
 }
 
 export async function apiGetMyPushSubscriptions() {
-  const response = await apiCall('notifications.getMySubscriptions')
-  return response
+  return trpcQuery('notifications.getMySubscriptions')
 }
 
 export async function apiGetNotifications(params?: { limit?: number; cursor?: string; unreadOnly?: boolean }) {
-  const response = await apiCall('notifications.getNotifications', params)
-  return response
+  const queryParams = new URLSearchParams()
+  if (params?.limit) queryParams.set('limit', params.limit.toString())
+  if (params?.cursor) queryParams.set('cursor', params.cursor)
+  if (params?.unreadOnly) queryParams.set('unreadOnly', params.unreadOnly.toString())
+  
+  const path = `notifications.getNotifications${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+  return trpcQuery(path, params)
 }
 
 export async function apiMarkNotificationAsRead(notificationId: string) {
-  const response = await apiCall('notifications.markAsRead', { notificationId })
-  return response
+  return trpcMutation('notifications.markAsRead', { notificationId })
 }
 
 export async function apiMarkAllNotificationsAsRead() {
-  const response = await apiCall('notifications.markAllAsRead')
-  return response
+  return trpcMutation('notifications.markAllAsRead', {})
 }
 
 export async function apiGetUnreadNotificationCount() {
-  const response = await apiCall('notifications.getUnreadCount')
-  return response
+  return trpcQuery('notifications.getUnreadCount')
 }
 
 export async function apiDeleteNotification(notificationId: string) {
-  const response = await apiCall('notifications.deleteNotification', { notificationId })
-  return response
+  return trpcMutation('notifications.deleteNotification', { notificationId })
 }
 
 export async function apiClearReadNotifications() {
-  const response = await apiCall('notifications.clearReadNotifications')
-  return response
+  return trpcMutation('notifications.clearReadNotifications', {})
 }
 
 // Enhanced Privacy Settings
 export async function apiGetEnhancedPrivacySettings() {
-  const response = await apiCall('privacy.getSettings')
-  return response
+  return trpcQuery('privacy.getSettings')
 }
 
 export async function apiUpdateEnhancedPrivacySettings(settings: {
@@ -1314,24 +1345,30 @@ export async function apiUpdateEnhancedPrivacySettings(settings: {
   allowMessages?: boolean
   allowFriendRequests?: boolean
 }) {
-  const response = await apiCall('privacy.updateSettings', settings)
-  return response
+  return trpcMutation('privacy.updateSettings', settings)
 }
 
 export async function apiApplyPrivacyPreset(preset: 'public' | 'friends_only' | 'private') {
-  const response = await apiCall('privacy.applyPreset', { preset })
-  return response
+  return trpcMutation('privacy.applyPreset', { preset })
 }
 
 export async function apiCanViewContent(targetUserId: string, contentType: 'profile' | 'animeList' | 'reviews' | 'activity' | 'friends') {
-  const response = await apiCall('privacy.canView', { targetUserId, contentType })
-  return response
+  const queryParams = new URLSearchParams()
+  queryParams.set('targetUserId', targetUserId)
+  queryParams.set('contentType', contentType)
+  
+  const path = `privacy.canView?${queryParams.toString()}`
+  return trpcQuery(path, { targetUserId, contentType })
 }
 
 // Friend Recommendations
 export async function apiGetFriendsAlsoWatched(animeId: string, limit: number = 10) {
-  const response = await apiCall('recommendations.getFriendsAlsoWatched', { animeId, limit })
-  return response
+  const queryParams = new URLSearchParams()
+  queryParams.set('animeId', animeId)
+  queryParams.set('limit', limit.toString())
+  
+  const path = `recommendations.getFriendsAlsoWatched?${queryParams.toString()}`
+  return trpcQuery(path, { animeId, limit })
 }
 
 // ============================================
@@ -1340,97 +1377,106 @@ export async function apiGetFriendsAlsoWatched(animeId: string, limit: number = 
 
 // Messaging
 export async function apiSendMessage(receiverId: string, content: string, animeId?: string) {
-  const response = await apiCall('messaging.sendMessage', { receiverId, content, animeId })
-  return response
+  return trpcMutation('messaging.sendMessage', { receiverId, content, animeId })
 }
 
 export async function apiGetConversations() {
-  const response = await apiCall('messaging.getConversations')
-  return response
+  return trpcQuery('messaging.getConversations')
 }
 
 export async function apiGetMessages(userId: string, params?: { limit?: number; cursor?: string }) {
-  const response = await apiCall('messaging.getMessages', { userId, ...params })
-  return response
+  const inputData: any = { userId }
+  if (params?.limit) inputData.limit = params.limit
+  if (params?.cursor) inputData.cursor = params.cursor
+  
+  const input = JSON.stringify(inputData)
+  const path = `messaging.getMessages?input=${encodeURIComponent(input)}`
+  return trpcQuery(path)
 }
 
 export async function apiGetUnreadMessageCount() {
-  const response = await apiCall('messaging.getUnreadCount')
-  return response
+  return trpcQuery('messaging.getUnreadCount')
 }
 
 export async function apiDeleteMessage(messageId: string) {
-  const response = await apiCall('messaging.deleteMessage', { messageId })
-  return response
+  return trpcMutation('messaging.deleteMessage', { messageId })
 }
 
 // Achievements
 export async function apiGetAllAchievements() {
-  const response = await apiCall('achievements.getAll')
-  return response
+  return trpcQuery('achievements.getAll')
 }
 
 export async function apiGetMyAchievements() {
-  const response = await apiCall('achievements.getMyAchievements')
-  return response
+  return trpcQuery('achievements.getMyAchievements')
 }
 
 export async function apiCheckAndUnlockAchievements() {
-  const response = await apiCall('achievements.checkAndUnlock')
-  return response
+  return trpcMutation('achievements.checkAndUnlock', {})
 }
 
 // Leaderboards
 export async function apiGetTopWatchers(params?: { limit?: number; timeRange?: 'week' | 'month' | 'all' }) {
-  const response = await apiCall('leaderboards.getTopWatchers', params)
-  return response
+  const queryParams = new URLSearchParams()
+  if (params?.limit) queryParams.set('limit', params.limit.toString())
+  if (params?.timeRange) queryParams.set('timeRange', params.timeRange)
+  
+  const path = `leaderboards.getTopWatchers${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+  return trpcQuery(path, params)
 }
 
 export async function apiGetTopReviewers(params?: { limit?: number }) {
-  const response = await apiCall('leaderboards.getTopReviewers', params)
-  return response
+  const queryParams = new URLSearchParams()
+  if (params?.limit) queryParams.set('limit', params.limit.toString())
+  
+  const path = `leaderboards.getTopReviewers${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+  return trpcQuery(path, params)
 }
 
 export async function apiGetMostSocial(params?: { limit?: number }) {
-  const response = await apiCall('leaderboards.getMostSocial', params)
-  return response
+  const queryParams = new URLSearchParams()
+  if (params?.limit) queryParams.set('limit', params.limit.toString())
+  
+  const path = `leaderboards.getMostSocial${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+  return trpcQuery(path, params)
 }
 
 export async function apiGetMyRank(category: 'watched' | 'reviews' | 'friends' | 'points') {
-  const response = await apiCall('leaderboards.getMyRank', { category })
-  return response
+  const queryParams = new URLSearchParams()
+  queryParams.set('category', category)
+  
+  const path = `leaderboards.getMyRank?${queryParams.toString()}`
+  return trpcQuery(path, { category })
 }
 
 // Safety (Block/Report)
 export async function apiBlockUser(userId: string, reason?: string) {
-  const response = await apiCall('safety.blockUser', { userId, reason })
-  return response
+  return trpcMutation('safety.blockUser', { userId, reason })
 }
 
 export async function apiUnblockUser(userId: string) {
-  const response = await apiCall('safety.unblockUser', { userId })
-  return response
+  return trpcMutation('safety.unblockUser', { userId })
 }
 
 export async function apiGetBlockedUsers() {
-  const response = await apiCall('safety.getBlockedUsers')
-  return response
+  return trpcQuery('safety.getBlockedUsers')
 }
 
 export async function apiReportUser(userId: string, reason: string, description: string) {
-  const response = await apiCall('safety.reportUser', { userId, reason, description })
-  return response
+  return trpcMutation('safety.reportUser', { userId, reason, description })
 }
 
 // List Tools
 export async function apiCompareListsWithFriend(friendId: string) {
-  const response = await apiCall('listTools.compareWithFriend', { friendId })
-  return response
+  const queryParams = new URLSearchParams()
+  queryParams.set('friendId', friendId)
+  
+  const path = `listTools.compareWithFriend?${queryParams.toString()}`
+  return trpcQuery(path, { friendId })
 }
 
 export async function apiGetSharedLists() {
-  const response = await apiCall('listTools.getSharedLists')
-  return response
+  return trpcQuery('listTools.getSharedLists')
 }
 
 export async function apiCreateSharedList(params: {
@@ -1440,8 +1486,7 @@ export async function apiCreateSharedList(params: {
   collaborators?: string[]
   isPublic?: boolean
 }) {
-  const response = await apiCall('listTools.createSharedList', params)
-  return response
+  return trpcMutation('listTools.createSharedList', params)
 }
 
 export async function apiUpdateSharedList(listId: string, params: {
@@ -1451,8 +1496,7 @@ export async function apiUpdateSharedList(listId: string, params: {
   collaborators?: string[]
   isPublic?: boolean
 }) {
-  const response = await apiCall('listTools.updateSharedList', { listId, ...params })
-  return response
+  return trpcMutation('listTools.updateSharedList', { listId, ...params })
 }
 
 

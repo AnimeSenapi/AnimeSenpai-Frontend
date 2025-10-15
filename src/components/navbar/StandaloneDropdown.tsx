@@ -23,8 +23,7 @@ import {
   ShieldAlert,
   Activity,
   MessageCircle,
-  Trophy,
-  GitCompare
+  Trophy
 } from 'lucide-react'
 import { useAuth } from '../../app/lib/auth-context'
 
@@ -210,16 +209,6 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
                 >
                   <Trophy className="mr-3 h-4 w-4" />
                   <span className="text-sm">Achievements</span>
-                </button>
-                <button 
-                  className="w-full text-left text-gray-300 hover:text-white hover:bg-white/10 rounded-lg px-3 py-2.5 transition-all duration-200 flex items-center"
-                  onClick={() => {
-                    setIsOpen(false)
-                    router.push('/leaderboards')
-                  }}
-                >
-                  <GitCompare className="mr-3 h-4 w-4" />
-                  <span className="text-sm">Leaderboards</span>
                 </button>
                 {user.role === 'admin' && (
                   <>

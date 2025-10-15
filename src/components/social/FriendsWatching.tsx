@@ -11,7 +11,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL
 interface FriendRecommendation {
   anime: {
     id: string
-    slug: string
+    slug?: string
     title: string
     coverImage?: string
     year?: number
@@ -22,6 +22,21 @@ interface FriendRecommendation {
   averageFriendRating?: number
   friendNames: string[]
   reason: string
+}
+
+// Helper function to create slug from title or use ID
+function getAnimeSlug(anime: { slug?: string; title: string; id: string }): string {
+  if (anime.slug) return anime.slug
+  
+  // Generate slug from title
+  return anime.title
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '') // Remove special chars
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single
+    .trim()
+    .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+    || anime.id // Fallback to ID if slug generation fails
 }
 
 export function FriendsWatching() {
@@ -121,7 +136,7 @@ export function FriendsWatching() {
         {recommendations.map((rec) => (
           <Link
             key={rec.anime.id}
-            href={`/anime/${rec.anime.slug}`}
+            href={`/anime/${getAnimeSlug(rec.anime)}`}
             className="group relative"
           >
             {/* Anime Card */}

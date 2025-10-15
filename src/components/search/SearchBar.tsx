@@ -242,7 +242,7 @@ export function SearchBar({
       
       // Navigate based on search type
       if (type === 'user') {
-        router.push(`/users/${encodeURIComponent(value)}`)
+        router.push(`/user/${encodeURIComponent(value)}`)
       } else {
         router.push(`/search?${params.toString()}`)
       }
@@ -393,7 +393,7 @@ export function SearchBar({
                         <div 
                           key={user.id} 
                           onClick={() => {
-                            router.push(`/users/${user.username}`)
+                            router.push(`/user/${user.username}`)
                             setIsOpen(false)
                             setSearchQuery('')
                           }}

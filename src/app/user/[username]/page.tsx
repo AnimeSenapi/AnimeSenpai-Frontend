@@ -65,9 +65,12 @@ interface RelationshipStatus {
 }
 
 export default function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
-  const { username } = use(params)
+  const { username: rawUsername } = use(params)
   const router = useRouter()
   const { user: currentUser } = useAuth()
+  
+  // Strip @ symbol if present in the URL (UPDATED - Cache Bust v2)
+  const username = rawUsername.startsWith('@') ? rawUsername.slice(1) : rawUsername
   
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [relationship, setRelationship] = useState<RelationshipStatus | null>(null)
@@ -91,8 +94,14 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       
       // Get relationship status if logged in and not own profile
       if (currentUser && !isOwnProfile) {
-        const relationshipData = await apiGetRelationshipStatus(profileData.user.id)
-        setRelationship(relationshipData as RelationshipStatus)
+        try {
+          const relationshipData = await apiGetRelationshipStatus(profileData.user.id)
+          setRelationship(relationshipData as RelationshipStatus)
+        } catch (relErr) {
+          // Silently fail - relationship status is not critical
+          console.debug('Could not load relationship status:', relErr)
+          setRelationship(null)
+        }
       }
       
     } catch (err: any) {
@@ -110,17 +119,18 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       
       if (relationship?.isFollowing) {
         await apiUnfollowUser(profile.user.id)
-        setRelationship({ ...relationship, isFollowing: false })
+        setRelationship(relationship ? { ...relationship, isFollowing: false } : null)
       } else {
         await apiFollowUser(profile.user.id)
-        setRelationship({ ...relationship!, isFollowing: true })
+        setRelationship(relationship ? { ...relationship, isFollowing: true } : null)
       }
       
-      // Reload stats
+      // Reload profile to get fresh relationship status
       await loadProfile()
       
     } catch (err: any) {
       console.error('Follow action failed:', err)
+      alert('Failed to follow user. Please try again.')
     } finally {
       setActionLoading(false)
     }
@@ -136,11 +146,15 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
         // Unfriend
         if (confirm('Are you sure you want to unfriend this user?')) {
           await apiUnfriend(profile.user.id)
-          setRelationship({ ...relationship, isFriend: false })
+          setRelationship(relationship ? { ...relationship, isFriend: false } : null)
           await loadProfile()
+        } else {
+          setActionLoading(false)
+          return
         }
       } else if (relationship?.pendingFriendRequest) {
         // Can't do anything if request pending
+        setActionLoading(false)
         return
       } else {
         // Send request
@@ -150,6 +164,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       
     } catch (err: any) {
       console.error('Friend action failed:', err)
+      alert('Failed to send friend request. Please try again.')
     } finally {
       setActionLoading(false)
     }
@@ -238,54 +253,54 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                 </div>
 
                 {/* Action Buttons */}
-                {!isOwnProfile && currentUser && relationship && (
+                {!isOwnProfile && currentUser && (
                   <div className="flex gap-2">
                     {/* Follow Button */}
                     <Button
                       onClick={handleFollow}
                       disabled={actionLoading}
-                      variant={relationship.isFollowing ? 'outline' : 'default'}
+                      variant={relationship?.isFollowing ? 'outline' : 'default'}
                       className={cn(
-                        relationship.isFollowing
+                        relationship?.isFollowing
                           ? 'border-white/20 text-white hover:bg-white/10'
                           : 'bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600'
                       )}
                     >
                       {actionLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : relationship.isFollowing ? (
+                      ) : relationship?.isFollowing ? (
                         <UserMinus className="h-4 w-4 mr-2" />
                       ) : (
                         <UserPlus className="h-4 w-4 mr-2" />
                       )}
-                      {relationship.isFollowing ? 'Unfollow' : 'Follow'}
+                      {relationship?.isFollowing ? 'Unfollow' : 'Follow'}
                     </Button>
 
                     {/* Friend Button */}
                     <Button
                       onClick={handleFriendRequest}
-                      disabled={actionLoading || !!relationship.pendingFriendRequest}
-                      variant={relationship.isFriend ? 'outline' : 'default'}
+                      disabled={actionLoading || !!relationship?.pendingFriendRequest}
+                      variant={relationship?.isFriend ? 'outline' : 'default'}
                       className={cn(
-                        relationship.isFriend || relationship.pendingFriendRequest
+                        relationship?.isFriend || relationship?.pendingFriendRequest
                           ? 'border-white/20 text-white hover:bg-white/10'
                           : 'bg-gradient-to-r from-secondary-500 to-primary-500 hover:from-secondary-600 hover:to-primary-600'
                       )}
                     >
                       {actionLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : relationship.isFriend ? (
+                      ) : relationship?.isFriend ? (
                         <UserCheck className="h-4 w-4 mr-2" />
-                      ) : relationship.pendingFriendRequest ? (
+                      ) : relationship?.pendingFriendRequest ? (
                         <UserCheck className="h-4 w-4 mr-2" />
                       ) : (
                         <Users className="h-4 w-4 mr-2" />
                       )}
-                      {relationship.isFriend
+                      {relationship?.isFriend
                         ? 'Friends'
-                        : relationship.pendingFriendRequest?.sentByMe
+                        : relationship?.pendingFriendRequest?.sentByMe
                         ? 'Request Sent'
-                        : relationship.pendingFriendRequest
+                        : relationship?.pendingFriendRequest
                         ? 'Request Pending'
                         : 'Add Friend'}
                     </Button>

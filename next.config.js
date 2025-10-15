@@ -1,9 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable instrumentation for Sentry
+  // Enable optimizations
   experimental: {
-    instrumentationHook: true,
     optimizePackageImports: ['lucide-react', '@radix-ui/react-dropdown-menu', '@radix-ui/react-checkbox'],
+    // Optimize CSS
+    optimizeCss: true,
+  },
+  // Reduce bundle size
+  modularizeImports: {
+    'lucide-react': {
+      transform: 'lucide-react/dist/esm/icons/{{kebabCase member}}',
+      skipDefaultConversion: true,
+    },
   },
   images: {
     // Add your image CDN domains here

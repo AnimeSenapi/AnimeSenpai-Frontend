@@ -105,11 +105,8 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon-16x16.png',
-    apple: '/apple-touch-icon.png',
-  },
+  // Icons are automatically handled by Next.js 15 from app/icon.{png,svg}
+  // No need to specify them here
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,

@@ -84,10 +84,10 @@ export interface SignupInput {
   email: string
   username: string
   password: string
+  confirmPassword: string
   gdprConsent: boolean
   dataProcessingConsent: boolean
   marketingConsent?: boolean
-  confirmPassword?: string
 }
 
 // MyList Types (User Anime List)

@@ -139,7 +139,7 @@ export function FollowList({ userId, type, limit = 20 }: FollowListProps) {
           className="glass rounded-xl p-4 flex items-start gap-4 hover:bg-white/5 transition-colors"
         >
           {/* Avatar */}
-          <Link href={`/users/@${user.username}`}>
+          <Link href={`/user/@${user.username}`}>
             {user.avatar ? (
               <div className="relative w-12 h-12 rounded-xl overflow-hidden">
                 <Image
@@ -159,7 +159,7 @@ export function FollowList({ userId, type, limit = 20 }: FollowListProps) {
 
           {/* User Info */}
           <div className="flex-1 min-w-0">
-            <Link href={`/users/@${user.username}`}>
+            <Link href={`/user/@${user.username}`}>
               <h3 className="text-white font-semibold hover:text-primary-400 transition-colors truncate">
                 @{user.username}
               </h3>

@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -35,7 +36,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   'not-yet-aired': { label: 'Coming Soon', className: 'bg-gray-800/80 text-warning-400 border-warning-500/30' },
 }
 
-export function AnimeCard({
+export const AnimeCard = memo(function AnimeCard({
   anime,
   variant = 'featured',
   className,
@@ -376,4 +377,4 @@ export function AnimeCard({
           {renderVariant()}
         </Link>
       )
-}
+})

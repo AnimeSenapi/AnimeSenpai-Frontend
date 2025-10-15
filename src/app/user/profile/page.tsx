@@ -416,7 +416,7 @@ export default function ProfilePage() {
                         Edit Profile
                       </Button>
                     </Link>
-                    <Link href={`/users/@${user?.username}`}>
+                    <Link href={`/user/@${user?.username}`}>
                       <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
                         <Eye className="h-4 w-4 mr-2" />
                         View Public
