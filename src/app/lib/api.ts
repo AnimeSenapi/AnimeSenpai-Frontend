@@ -464,8 +464,8 @@ export async function apiGetTrending(useCache: boolean = true) {
   
   const result = await trpcQuery<Anime[]>('anime.getTrending')
   
-  // Cache for 10 minutes
-  clientCache.set(cacheKey, result, CacheTTL.TEN_MINUTES)
+  // Cache for 15 minutes (using 'long' TTL)
+  clientCache.set(cacheKey, result, CacheTTL.long)
   
   return result
 }
