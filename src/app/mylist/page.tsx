@@ -48,7 +48,7 @@ export default function MyListPage() {
       setIsLoading(true)
       setError(null)
       try {
-        const data = await apiGetUserList()
+        const data = await apiGetUserList() as any
         setUserList({
           items: data.items || [],
           total: data.pagination?.total || 0,

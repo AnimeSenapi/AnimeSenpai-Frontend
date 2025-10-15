@@ -76,7 +76,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (accessToken) {
           try {
             setIsLoading(true)
-            const userData = await apiMe()
+            const userData = await apiMe() as any
             setUser(userData)
           } catch (err: unknown) {
             // Only clear tokens if it's a token-related error, not a network error
@@ -150,7 +150,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await new Promise(resolve => setTimeout(resolve, 200))
       }
       
-      const data = await apiSignin({ email, password, rememberMe })
+      const data = await apiSignin({ email, password, rememberMe }) as any
       setUser(data.user)
       
       // Store tokens based on "Remember Me" preference
@@ -197,7 +197,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await new Promise(resolve => setTimeout(resolve, 200))
       }
       
-      const result = await apiSignup(data)
+      const result = await apiSignup(data) as any
       setUser(result.user)
       
       // Store tokens

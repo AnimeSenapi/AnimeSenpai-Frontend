@@ -49,7 +49,7 @@ export default function SignUpPage() {
     setUsernameStatus('checking')
     const timeoutId = setTimeout(async () => {
       try {
-        const result = await apiCheckUsernameAvailability(formData.username)
+        const result = await apiCheckUsernameAvailability(formData.username) as any
         setUsernameStatus(result.available ? 'available' : 'taken')
         if (!result.available) {
           setFormErrors(prev => ({ ...prev, username: 'Username is already taken' }))

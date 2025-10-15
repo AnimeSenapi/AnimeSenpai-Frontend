@@ -64,7 +64,7 @@ export default function SearchPage() {
     async function loadAnime() {
       setIsLoading(true)
       try {
-        const data = await apiGetAllSeries()
+        const data = await apiGetAllSeries() as any
         if (data && typeof data === 'object' && 'series' in data) {
           // Convert series to anime format with season metadata
           const seriesList = Array.isArray(data.series) ? data.series : []
