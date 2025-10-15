@@ -409,7 +409,7 @@ export async function apiGetAllAnime(useCache: boolean = true) {
   const result = json.result?.data || { anime: [], pagination: { page: 1, limit: 20, total: 0, pages: 0 } }
   
   // Cache for 5 minutes
-  clientCache.set(cacheKey, result, CacheTTL.FIVE_MINUTES)
+  clientCache.set(cacheKey, result, CacheTTL.medium)
   
   return result
 }
@@ -446,7 +446,7 @@ export async function apiGetAllSeries(useCache: boolean = true) {
   const result = json.result?.data || { series: [], pagination: { page: 1, limit: 20, total: 0, pages: 0 } }
   
   // Cache for 5 minutes
-  clientCache.set(cacheKey, result, CacheTTL.FIVE_MINUTES)
+  clientCache.set(cacheKey, result, CacheTTL.medium)
   
   return result
 }
