@@ -21,7 +21,7 @@ export function NotificationBell() {
 
   const loadNotifications = async () => {
     try {
-      const data = await apiGetUnreadNotificationCount()
+      const data = await apiGetUnreadNotificationCount() as any
       setUnreadCount(data.count)
     } catch (error) {
       // Silently fail - user might not be logged in
