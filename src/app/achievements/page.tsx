@@ -62,7 +62,7 @@ export default function AchievementsPage() {
       setLoading(true)
       
       const { apiGetMyAchievements } = await import('../lib/api')
-      const data = await apiGetMyAchievements()
+      const data = await apiGetMyAchievements() as any
       
       if (data) {
         setAchievements(data.achievements || [])
