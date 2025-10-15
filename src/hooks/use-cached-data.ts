@@ -26,14 +26,14 @@ interface UseCachedDataOptions<T> {
  * const { data, loading, error, refetch } = useCachedData({
  *   cacheKey: 'anime-trending',
  *   fetcher: () => apiGetTrending(),
- *   ttl: CacheTTL.FIVE_MINUTES,
+ *   ttl: CacheTTL.medium,
  * })
  * ```
  */
 export function useCachedData<T>({
   cacheKey,
   fetcher,
-  ttl = CacheTTL.FIVE_MINUTES,
+  ttl = CacheTTL.medium,
   enabled = true,
   onSuccess,
   onError,
@@ -141,7 +141,7 @@ interface UsePaginatedCacheOptions<T> {
 export function usePaginatedCache<T>({
   cacheKeyPrefix,
   fetcher,
-  ttl = CacheTTL.FIVE_MINUTES,
+  ttl = CacheTTL.medium,
 }: UsePaginatedCacheOptions<T>) {
   const [pages, setPages] = useState<Map<number, T[]>>(new Map())
   const [loading, setLoading] = useState(false)
