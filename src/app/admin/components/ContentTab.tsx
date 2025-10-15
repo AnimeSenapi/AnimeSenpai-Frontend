@@ -73,7 +73,7 @@ export function ContentTab() {
       const [reviewsData, statsData] = await Promise.all([
         apiGetReviews({ page, limit: 20, filter, search: searchQuery }),
         apiGetModerationStats()
-      ])
+      ]) as any[]
       
       setReviews(reviewsData.reviews || [])
       setTotalPages(reviewsData.pagination?.totalPages || 1)
