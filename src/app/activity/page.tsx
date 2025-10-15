@@ -83,7 +83,7 @@ export default function ActivityFeedPage() {
       const data = await apiGetFriendActivities({
         limit: 20,
         cursor: loadMore ? cursor || undefined : undefined
-      })
+      }) as any
       
       if (data) {
         if (loadMore) {
