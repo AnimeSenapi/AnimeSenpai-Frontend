@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation'
 import { Button } from '../../../components/ui/button'
 import { Checkbox } from '../../../components/ui/checkbox'
 import { Badge } from '../../../components/ui/badge'
+import { EmailVerificationPrompt } from '../../../components/EmailVerificationBanner'
 import { RequireAuth } from '../../lib/protected-route'
 import { useAuth } from '../../lib/auth-context'
 import { useToast } from '../../../lib/toast-context'
+import { NotificationSettings } from '../../../components/settings/NotificationSettings'
 import { 
   Settings, 
   User, 
@@ -70,7 +72,7 @@ export default function UserSettingsPage() {
       'Content-Type': 'application/json'
     }
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`
+      headers['Authorization'] = 'Bearer ' + token
     }
     return headers
   }
@@ -361,6 +363,11 @@ export default function UserSettingsPage() {
                         </p>
                       </div>
 
+                      {/* Email Verification Status */}
+                      {user && !user.emailVerified && (
+                        <EmailVerificationPrompt email={user.email} />
+                      )}
+
                       <div className="h-px bg-white/10"></div>
 
                       {/* Username */}
@@ -379,7 +386,7 @@ export default function UserSettingsPage() {
                         <div className="mt-2 flex items-center gap-2">
                           <div className="flex-1">
                             <p className="text-xs text-gray-400">Your profile URL:</p>
-                            <p className="text-xs text-primary-400 font-medium">animesenpai.com/users/@{username || 'username'}</p>
+                            <p className="text-xs text-primary-400 font-medium">animesenpai.com/user/@{username || 'username'}</p>
                           </div>
                           {username && username.length >= 3 && (
                             <div className="text-success-400 text-xs flex items-center gap-1">
@@ -514,7 +521,7 @@ export default function UserSettingsPage() {
                             <div className={`h-1 flex-1 rounded-full ${newPassword.length >= 8 ? 'bg-success-500' : 'bg-gray-700'}`}></div>
                             <div className={`h-1 flex-1 rounded-full ${newPassword.length >= 12 ? 'bg-success-500' : 'bg-gray-700'}`}></div>
                             <div className={`h-1 flex-1 rounded-full ${/[A-Z]/.test(newPassword) && /[0-9]/.test(newPassword) ? 'bg-success-500' : 'bg-gray-700'}`}></div>
-                          </div>
+                      </div>
                           <p className="mt-2 text-xs text-gray-400">
                             {newPassword.length >= 8 ? '✓ At least 8 characters' : '○ At least 8 characters'}
                           </p>
@@ -579,8 +586,11 @@ export default function UserSettingsPage() {
                     <p className="text-gray-400">Choose what notifications you want to receive</p>
                   </div>
 
+                  {/* Push Notifications (Full Width) */}
+                  <NotificationSettings />
+
                   {/* Notification Cards Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                     {/* Email Notifications */}
                     <div className="glass rounded-xl p-5 hover:bg-white/10 transition-all cursor-pointer group"
                          onClick={() => setPreferences({...preferences, emailNotifications: !preferences.emailNotifications})}>
@@ -596,22 +606,6 @@ export default function UserSettingsPage() {
                       </div>
                       <h3 className="text-white font-semibold mb-1">Email Notifications</h3>
                       <p className="text-gray-400 text-sm">Receive updates via email</p>
-                    </div>
-
-                    {/* Push Notifications */}
-                    <div className="glass rounded-xl p-5 hover:bg-white/10 transition-all cursor-pointer group opacity-50"
-                         title="Coming soon">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="w-12 h-12 rounded-xl bg-secondary-500/10 flex items-center justify-center">
-                          <Smartphone className="h-6 w-6 text-secondary-400" />
-                      </div>
-                      <Checkbox
-                          checked={false}
-                          disabled={true}
-                      />
-                      </div>
-                      <h3 className="text-white font-semibold mb-1">Push Notifications</h3>
-                      <p className="text-gray-400 text-sm">Coming soon</p>
                     </div>
 
                     {/* New Episodes */}

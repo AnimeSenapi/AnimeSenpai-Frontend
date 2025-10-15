@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -35,7 +36,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   'not-yet-aired': { label: 'Coming Soon', className: 'bg-gray-800/80 text-warning-400 border-warning-500/30' },
 }
 
-export function AnimeCard({
+export const AnimeCard = memo(function AnimeCard({
   anime,
   variant = 'featured',
   className,
@@ -111,21 +112,22 @@ export function AnimeCard({
             <div className="absolute top-2 right-2 z-10">
               <Button 
                 size="sm" 
-                className="border-0 h-8 w-8 p-0 transition-all bg-black/50 hover:bg-black/70"
+                className="border-0 h-10 w-10 sm:h-8 sm:w-8 p-0 transition-all bg-black/50 hover:bg-black/70 active:bg-black/80 touch-manipulation"
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
                   onFavorite()
                 }}
+                aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
               >
                 <Star className={cn(
-                  "h-3.5 w-3.5 transition-all",
+                  "h-4 w-4 sm:h-3.5 sm:w-3.5 transition-all",
                   isFavorited 
                     ? "fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" 
                     : "text-white"
                 )} />
-              </Button>
-            </div>
+            </Button>
+          </div>
           )}
           
           {/* Gradient fade overlay - focused on bottom */}
@@ -182,9 +184,9 @@ export function AnimeCard({
           
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-300 drop-shadow-md">{year || 'TBA'}</span>
-            <span className="text-xs text-gray-400 drop-shadow-md truncate max-w-20">
+              <span className="text-xs text-gray-400 drop-shadow-md truncate max-w-20">
               {studio || ''}
-            </span>
+              </span>
           </div>
         </div>
       </div>
@@ -375,4 +377,4 @@ export function AnimeCard({
           {renderVariant()}
         </Link>
       )
-}
+})

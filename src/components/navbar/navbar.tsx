@@ -7,6 +7,7 @@ import { Button } from '../ui/button'
 import { GuestAuth } from './GuestAuth'
 import { StandaloneDropdown } from './StandaloneDropdown'
 import { SearchBar } from '../search/SearchBar'
+import { NotificationBell } from './NotificationBell'
 import { useAuth } from '../../app/lib/auth-context'
 import {
   Home,
@@ -23,46 +24,48 @@ export function Navbar() {
 
   const navItems = [
     { name: 'Home', href: '/dashboard', icon: Home },
-    { name: 'My List', href: '/mylist', icon: Bookmark },
+    { name: 'My List', href: '/mylist', icon: Bookmark, authOnly: true },
     { name: 'Search', href: '/search', icon: Search },
   ]
 
   return (
     <>
-      <nav className="fixed top-2 sm:top-4 left-1/2 transform -translate-x-1/2 z-50 w-[96%] sm:w-[95%] max-w-7xl px-2 sm:px-0">
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl px-3 sm:px-6 lg:px-8 py-3 sm:py-4 overflow-visible transition-all duration-300">
+      <nav className="fixed top-2 sm:top-4 left-1/2 transform -translate-x-1/2 z-50 w-[96%] sm:w-[95%] max-w-7xl px-2 sm:px-0 safe-area-top" role="navigation" aria-label="Main navigation">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl px-3 sm:px-6 lg:px-8 py-2 sm:py-2.5 lg:py-3 overflow-visible transition-all duration-300 touch-manipulation">
           <div className="flex items-center justify-between gap-2 sm:gap-4 lg:gap-6">
             {/* Logo Section - Responsive */}
-            <Link href="/dashboard" className="flex items-center flex-shrink-0">
+            <Link href="/dashboard" className="flex items-center flex-shrink-0" aria-label="AnimeSenpai home">
               <Image 
                 src="/assets/logo/AnimeSenpai_Inline.svg" 
                 alt="AnimeSenpai" 
                 width={450}
                 height={112}
-                className="h-8 sm:h-12 lg:h-14 w-auto invert"
+                className="h-12 sm:h-16 lg:h-20 xl:h-24 w-auto invert"
                 priority
               />
             </Link>
 
             {/* Navigation Items - Desktop */}
             <div className="hidden lg:flex items-center gap-2">
-              {navItems.map((item) => {
-                const Icon = item.icon
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className="flex items-center gap-2 px-4 xl:px-5 py-2.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span className="text-sm font-medium">{item.name}</span>
-                  </Link>
-                )
-              })}
+              {navItems
+                .filter(item => !item.authOnly || isAuthenticated)
+                .map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className="flex items-center gap-2 px-4 xl:px-5 py-2.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span className="text-sm font-medium">{item.name}</span>
+                    </Link>
+                  )
+                })}
             </div>
 
             {/* Enhanced Search Bar - Responsive */}
-            <div className="hidden sm:block w-48 lg:w-56 xl:w-64 transition-all duration-300">
+            <div className="hidden sm:block w-48 lg:w-56 xl:w-64 transition-all duration-300" role="search" aria-label="Search anime" id="search">
               <SearchBar
                 placeholder="Search..."
                 showDropdown={true}
@@ -76,15 +79,21 @@ export function Navbar() {
               {isLoading ? (
                 <div className="w-8 h-8 bg-white/10 rounded-full animate-pulse"></div>
               ) : isAuthenticated && user ? (
-                <StandaloneDropdown
-                  user={{
-                    id: user.id,
-                    name: user.username || user.name || 'User',
-                    email: user.email,
-                    avatar: user.avatar,
-                    role: user.role
-                  }}
-                />
+                <>
+                  {/* Notification Bell */}
+                  <NotificationBell />
+                  
+                  {/* User Dropdown */}
+                  <StandaloneDropdown
+                    user={{
+                      id: user.id,
+                      name: user.username || user.name || 'User',
+                      email: user.email,
+                      avatar: user.avatar,
+                      role: user.role
+                    }}
+                  />
+                </>
               ) : (
                 <div className="hidden sm:block">
                   <GuestAuth />
@@ -94,8 +103,10 @@ export function Navbar() {
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden flex items-center justify-center w-10 h-10 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
-                aria-label="Toggle menu"
+                className="lg:hidden flex items-center justify-center w-10 h-10 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 touch-target"
+                aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+                aria-expanded={isMobileMenuOpen}
+                aria-controls="mobile-menu"
               >
                 {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
@@ -106,10 +117,15 @@ export function Navbar() {
 
       {/* Mobile Menu - Slide down */}
       {isMobileMenuOpen && (
-        <div className="fixed top-16 sm:top-20 left-1/2 transform -translate-x-1/2 z-40 w-[96%] sm:w-[95%] max-w-7xl px-2 sm:px-0 lg:hidden">
+        <div 
+          id="mobile-menu"
+          className="fixed top-16 sm:top-20 left-1/2 transform -translate-x-1/2 z-40 w-[96%] sm:w-[95%] max-w-7xl px-2 sm:px-0 lg:hidden"
+          role="dialog"
+          aria-label="Mobile navigation menu"
+        >
           <div className="bg-gray-900/95 backdrop-blur-xl border border-white/10 rounded-xl p-4 shadow-2xl animate-in slide-in-from-top-2 duration-200">
             {/* Mobile Search */}
-            <div className="mb-4 sm:hidden">
+            <div className="mb-4 sm:hidden" role="search" aria-label="Search anime">
               <SearchBar
                 placeholder="Search anime..."
                 showDropdown={true}
@@ -119,22 +135,25 @@ export function Navbar() {
             </div>
 
             {/* Mobile Navigation */}
-            <div className="space-y-1">
-              {navItems.map((item) => {
-                const Icon = item.icon
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 text-base font-medium"
-                  >
-                    <Icon className="h-5 w-5" />
+            <nav className="space-y-1" aria-label="Mobile menu navigation">
+              {navItems
+                .filter(item => !item.authOnly || isAuthenticated)
+                .map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 text-base font-medium"
+                      aria-label={`Go to ${item.name}`}
+                    >
+                    <Icon className="h-5 w-5" aria-hidden="true" />
                     <span>{item.name}</span>
                   </Link>
                 )
               })}
-            </div>
+            </nav>
 
             {/* Mobile Auth Buttons */}
             {!isAuthenticated && (

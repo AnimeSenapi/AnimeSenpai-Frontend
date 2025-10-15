@@ -11,12 +11,14 @@ import {
   Shield
 } from 'lucide-react'
 
-// Import tab components
-import { DashboardTab } from './components/DashboardTab'
-import { UsersTab } from './components/UsersTab'
+// Import tab components dynamically for code splitting (lazy load)
+import { 
+  DynamicDashboardTab, 
+  DynamicUsersTab, 
+  DynamicAnimeTab, 
+  DynamicSettingsTab 
+} from '../../components/DynamicComponents'
 import { ContentTab } from './components/ContentTab'
-import { AnimeTab } from './components/AnimeTab'
-import { SettingsTab } from './components/SettingsTab'
 
 type Tab = 'dashboard' | 'users' | 'content' | 'anime' | 'settings'
 
@@ -81,13 +83,13 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Tab Content - Responsive */}
+            {/* Tab Content - Responsive (lazy loaded for performance) */}
             <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10">
-              {activeTab === 'dashboard' && <DashboardTab />}
-              {activeTab === 'users' && <UsersTab />}
+              {activeTab === 'dashboard' && <DynamicDashboardTab />}
+              {activeTab === 'users' && <DynamicUsersTab />}
               {activeTab === 'content' && <ContentTab />}
-              {activeTab === 'anime' && <AnimeTab />}
-              {activeTab === 'settings' && <SettingsTab />}
+              {activeTab === 'anime' && <DynamicAnimeTab />}
+              {activeTab === 'settings' && <DynamicSettingsTab />}
             </div>
           </div>
         </div>

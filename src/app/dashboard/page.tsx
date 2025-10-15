@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { AnimeCard } from '../../components/anime/AnimeCard'
-import { RecommendationCarousel } from '../../components/recommendations/RecommendationCarousel'
-import { FriendsWatching } from '../../components/social/FriendsWatching'
+import { EmailVerificationBanner } from '../../components/EmailVerificationBanner'
 import { Button } from '../../components/ui/button'
 import { Badge } from '../../components/ui/badge'
-import { CarouselSkeleton } from '../../components/ui/skeleton'
+import { LoadingState } from '../../components/ui/loading-state'
+import { EmptyState, ErrorState } from '../../components/ui/error-state'
 import { 
   Sparkles, 
   TrendingUp, 
@@ -25,6 +26,22 @@ import { useAuth } from '../lib/auth-context'
 import { groupAnimeIntoSeries } from '../../lib/series-grouping'
 import type { Anime } from '../../types/anime'
 
+// Lazy load heavy components
+const RecommendationCarousel = dynamic(
+  () => import('../../components/recommendations/RecommendationCarousel').then(mod => ({ default: mod.RecommendationCarousel })),
+  { loading: () => <div className="h-64 animate-pulse bg-white/5 rounded-xl" /> }
+)
+
+const FriendsWatching = dynamic(
+  () => import('../../components/social/FriendsWatching').then(mod => ({ default: mod.FriendsWatching })),
+  { loading: () => <div className="h-48 animate-pulse bg-white/5 rounded-xl" /> }
+)
+
+const CarouselSkeleton = dynamic(
+  () => import('../../components/ui/skeleton').then(mod => ({ default: mod.CarouselSkeleton })),
+  { ssr: false }
+)
+
 export default function DashboardPage() {
   const router = useRouter()
   const { user, isAuthenticated } = useAuth()
@@ -39,9 +56,8 @@ export default function DashboardPage() {
   const [discoveryRecs, setDiscoveryRecs] = useState<any[]>([])
   const [continueWatching, setContinueWatching] = useState<any[]>([])
   const [newReleases, setNewReleases] = useState<any[]>([])
-  const [topRatedAnime, setTopRatedAnime] = useState<Anime[]>([])
   const [topRatedSeries, setTopRatedSeries] = useState<any[]>([]) // Grouped series
-  const [recentlyAddedAnime, setRecentlyAddedAnime] = useState<Anime[]>([])
+  const [recentlyAddedSeries, setRecentlyAddedSeries] = useState<any[]>([]) // Grouped series
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showOnboarding, setShowOnboarding] = useState(false)
@@ -54,7 +70,7 @@ export default function DashboardPage() {
       'Content-Type': 'application/json'
     }
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`
+      headers['Authorization'] = 'Bearer ' + token
     }
     return headers
   }
@@ -91,75 +107,33 @@ export default function DashboardPage() {
       setIsLoading(true)
       setError(null)
       try {
-        // Load basic trending/all anime (works for guests too)
-        const [trending, all, series] = await Promise.all([
-          apiGetTrending(),
-          apiGetAllAnime(),
-          apiGetAllSeries()
-        ])
+        // Load ONLY essential data first for fast initial render
+        // Other sections load lazily as user scrolls
+        const trending = await apiGetTrending() as any
         
         // Group trending anime into series
         const trendingList = Array.isArray(trending) ? trending : []
         const groupedTrending = groupAnimeIntoSeries(trendingList)
         setTrendingAnime(groupedTrending)
         
-        // Store series data
-        if (series && typeof series === 'object' && 'series' in series) {
-          const seriesList = Array.isArray(series.series) ? series.series : []
-          setAllSeries(seriesList)
-          
-          // Top Rated Series
-          const topRated = [...seriesList]
-            .filter(s => s.rating && s.rating > 0)
-            .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-            .slice(0, 20)
-          setTopRatedSeries(topRated)
-        }
+        setIsLoading(false)
         
-        if (all && typeof all === 'object' && 'anime' in all) {
-          const animeList = Array.isArray(all.anime) ? all.anime : []
-          setAllAnime(animeList)
-          
-          // Generate top rated and recently added from all anime
-          if (animeList.length > 0) {
-            // Top Rated: Sort by rating
-            const topRated = [...animeList]
-              .filter(anime => anime.rating && anime.rating > 0)
-              .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-              .slice(0, 20)
-            setTopRatedAnime(topRated)
-            
-            // Recently Added: Sort by ID (assuming higher ID = more recent)
-            const recentlyAdded = [...animeList]
-              .sort((a, b) => {
-                // If we have createdAt, use that, otherwise use ID
-                const aCreatedAt = (a as any).createdAt
-                const bCreatedAt = (b as any).createdAt
-                if (aCreatedAt && bCreatedAt) {
-                  return new Date(bCreatedAt).getTime() - new Date(aCreatedAt).getTime()
-                }
-                return parseInt(b.id) - parseInt(a.id)
-              })
-              .slice(0, 20)
-            setRecentlyAddedAnime(recentlyAdded)
-          }
-        } else if (Array.isArray(all)) {
-          setAllAnime(all)
-        } else {
-          setAllAnime([])
-        }
-
-        // Load personalized recommendations if authenticated
+        // Load secondary data in background (non-blocking)
+        setTimeout(() => {
+          loadSecondaryData()
+        }, 100)
+        
+        // Load personalized recommendations if authenticated (also background)
         if (isAuthenticated) {
-          loadPersonalizedRecommendations()
+          setTimeout(() => {
+            loadPersonalizedRecommendations()
+          }, 200)
         }
       } catch (err: unknown) {
         console.error('❌ Failed to load anime:', err)
         const errorMessage = err instanceof Error ? err.message : 'Failed to load anime data'
         setError(errorMessage)
         setTrendingAnime([])
-        setAllAnime([])
-      } finally {
         setIsLoading(false)
       }
     }
@@ -167,6 +141,50 @@ export default function DashboardPage() {
     loadAnime()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated])
+  
+  // Load secondary data (top rated, recently added) in background
+  async function loadSecondaryData() {
+    try {
+      const [all, series] = await Promise.all([
+        apiGetAllAnime(),
+        apiGetAllSeries()
+      ])
+      
+      // Store series data
+      if (series && typeof series === 'object' && 'series' in series) {
+        const seriesList = Array.isArray(series.series) ? series.series : []
+        setAllSeries(seriesList)
+        
+        // Top Rated Series
+        const topRated = [...seriesList]
+          .filter(s => s.rating && s.rating > 0)
+          .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+          .slice(0, 20)
+        setTopRatedSeries(topRated)
+      }
+      
+      if (all && typeof all === 'object' && 'anime' in all) {
+        const animeList = Array.isArray(all.anime) ? all.anime : []
+        setAllAnime(animeList)
+        
+        // Group all anime and generate sections
+        if (animeList.length > 0) {
+          const allGrouped = groupAnimeIntoSeries(animeList)
+          
+          // Recently Added: Sort by most recent year
+          const recentlyAdded = [...allGrouped]
+            .sort((a, b) => {
+              // Sort by most recent year
+              return (b.year || 0) - (a.year || 0)
+            })
+            .slice(0, 20)
+          setRecentlyAddedSeries(recentlyAdded)
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load secondary data:', err)
+    }
+  }
 
   async function loadPersonalizedRecommendations() {
     try {
@@ -236,6 +254,25 @@ export default function DashboardPage() {
   }
 
   if (isLoading) {
+    return <LoadingState variant="full" text="Loading your personalized dashboard..." size="lg" />
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 pt-32">
+        <ErrorState
+          variant="full"
+          error={error}
+          title="Failed to load dashboard"
+          onRetry={() => window.location.reload()}
+          showHome={false}
+        />
+      </div>
+    )
+  }
+
+  // Old loading skeleton (kept as fallback)
+  if (false) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
         {/* Background Elements */}
@@ -276,6 +313,11 @@ export default function DashboardPage() {
       </div>
 
       <main className="container px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 lg:pb-20 relative z-10">
+        {/* Email Verification Banner */}
+        {isAuthenticated && user && !user.emailVerified && (
+          <EmailVerificationBanner email={user.email} />
+        )}
+
         {/* Onboarding Banner - Responsive */}
         {showOnboarding && isAuthenticated && (
           <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 border-2 border-primary-500/30">
@@ -371,12 +413,12 @@ export default function DashboardPage() {
                     titleSynonyms: series.titleSynonyms,
                     coverImage: series.coverImage ?? null,
                     year: series.year ?? null,
-                    averageRating: series.rating || series.averageRating,
+                    averageRating: series.rating || series.averageRating || null,
                     genres: series.genres || [],
                     seasonCount: series.seasonCount,
                     totalEpisodes: series.totalEpisodes
                   }
-                }))}
+                })) as any}
                 showReasons={false}
               />
             )}
@@ -468,23 +510,25 @@ export default function DashboardPage() {
               />
             )}
 
-          {/* Recently Added */}
-            {recentlyAddedAnime.length > 0 && (
+          {/* Recently Added - Grouped Series */}
+            {recentlyAddedSeries.length > 0 && (
               <RecommendationCarousel
                 title="Recently Added"
                 icon={<Calendar className="h-5 w-5 text-success-400" />}
-                recommendations={recentlyAddedAnime.map(anime => ({
+                recommendations={recentlyAddedSeries.map(series => ({
                   anime: {
-                    id: anime.id,
-                    slug: anime.slug,
-                    title: anime.title,
-                    titleEnglish: (anime as any).titleEnglish,
-                    titleJapanese: (anime as any).titleJapanese,
-                    titleSynonyms: (anime as any).titleSynonyms,
-                    coverImage: anime.coverImage ?? null,
-                    year: anime.year ?? null,
-                    averageRating: anime.rating ?? null,
-                    genres: anime.genres || []
+                    id: series.id,
+                    slug: series.slug,
+                    title: series.title,
+                    titleEnglish: series.titleEnglish || series.displayTitle,
+                    titleJapanese: series.titleJapanese,
+                    titleSynonyms: series.titleSynonyms,
+                    coverImage: series.coverImage ?? null,
+                    year: series.year ?? null,
+                    averageRating: series.rating ?? null,
+                    seasonCount: series.seasonCount,
+                    totalEpisodes: series.totalEpisodes,
+                    genres: series.genres || []
                   }
                 }))}
                 showReasons={false}
@@ -518,12 +562,12 @@ export default function DashboardPage() {
                 titleSynonyms: series.titleSynonyms,
                 coverImage: series.coverImage ?? null,
                 year: series.year ?? null,
-                averageRating: series.rating || series.averageRating,
+                averageRating: series.rating || series.averageRating || null,
                 genres: series.genres || [],
                 seasonCount: series.seasonCount,
                 totalEpisodes: series.totalEpisodes
               }
-            }))}
+            })) as any}
             showReasons={false}
           />
         )}
@@ -555,17 +599,13 @@ export default function DashboardPage() {
 
         {/* Empty State for Guests */}
         {!isAuthenticated && trendingAnime.length === 0 && allAnime.length === 0 && (
-          <div className="glass rounded-2xl p-12 text-center">
-            <div className="text-6xl mb-4">🎬</div>
-            <h3 className="text-2xl font-bold text-white mb-2">No Anime Yet</h3>
-            <p className="text-gray-400 mb-6">The anime database is being populated. Check back soon!</p>
-            <Button
-              onClick={() => router.push('/auth/signin')}
-              className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600"
-            >
-              Sign In for Personalized Recommendations
-            </Button>
-          </div>
+          <EmptyState
+            icon={<Sparkles className="h-12 w-12 text-gray-500" />}
+            title="No Anime Yet"
+            message="The anime database is being populated. Check back soon for thousands of titles!"
+            actionLabel="Sign In for Personalized Recommendations"
+            onAction={() => router.push('/auth/signin')}
+          />
         )}
       </main>
     </div>

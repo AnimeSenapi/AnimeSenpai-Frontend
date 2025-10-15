@@ -17,12 +17,13 @@ import {
   User, 
   Settings, 
   LogOut, 
-  Bookmark,
-  Star,
   Shield,
   ShieldCheck,
   Crown,
-  ShieldAlert
+  ShieldAlert,
+  Activity,
+  MessageCircle,
+  Trophy
 } from 'lucide-react'
 import { useAuth } from '../../app/lib/auth-context'
 
@@ -183,21 +184,31 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
                   className="w-full text-left text-gray-300 hover:text-white hover:bg-white/10 rounded-lg px-3 py-2.5 transition-all duration-200 flex items-center"
                   onClick={() => {
                     setIsOpen(false)
-                    router.push('/mylist')
+                    router.push('/activity')
                   }}
                 >
-                  <Bookmark className="mr-3 h-4 w-4" />
-                  <span className="text-sm">My List</span>
+                  <Activity className="mr-3 h-4 w-4" />
+                  <span className="text-sm">Activity Feed</span>
                 </button>
                 <button 
                   className="w-full text-left text-gray-300 hover:text-white hover:bg-white/10 rounded-lg px-3 py-2.5 transition-all duration-200 flex items-center"
                   onClick={() => {
                     setIsOpen(false)
-                    router.push('/mylist?filter=favorites')
+                    router.push('/messages')
                   }}
                 >
-                  <Star className="mr-3 h-4 w-4" />
-                  <span className="text-sm">Favorites</span>
+                  <MessageCircle className="mr-3 h-4 w-4" />
+                  <span className="text-sm">Messages</span>
+                </button>
+                <button 
+                  className="w-full text-left text-gray-300 hover:text-white hover:bg-white/10 rounded-lg px-3 py-2.5 transition-all duration-200 flex items-center"
+                  onClick={() => {
+                    setIsOpen(false)
+                    router.push('/achievements')
+                  }}
+                >
+                  <Trophy className="mr-3 h-4 w-4" />
+                  <span className="text-sm">Achievements</span>
                 </button>
                 {user.role === 'admin' && (
                   <>

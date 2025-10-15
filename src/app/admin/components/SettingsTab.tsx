@@ -22,32 +22,38 @@ interface SiteSettings {
     siteName: string
     siteDescription: string
     maintenanceMode: boolean
-    allowSignups: boolean
+    allowRegistration: boolean
+    requireEmailVerification: boolean
   }
   features: {
     enableSocialFeatures: boolean
     enableRecommendations: boolean
     enableComments: boolean
     enableReviews: boolean
+    enableAchievements?: boolean
   }
   security: {
-    requireEmailVerification: boolean
     sessionTimeout: number
     maxLoginAttempts: number
+    requireStrongPasswords?: boolean
     enableTwoFactor: boolean
   }
   notifications: {
-    enableEmailNotifications: boolean
-    emailProvider: string
-    smtpHost: string
-    smtpPort: number
-    smtpUser: string
-    smtpPassword: string
+    emailNotifications?: boolean
+    enableEmailNotifications?: boolean
+    emailProvider?: string
+    smtpHost?: string
+    smtpPort?: number
+    smtpUser?: string
+    smtpPassword?: string
+    newUserAlert?: boolean
+    errorReporting?: boolean
   }
   analytics: {
-    enableAnalytics: boolean
+    enableAnalytics?: boolean
+    enableTracking?: boolean
     googleAnalyticsId: string
-    enableErrorTracking: boolean
+    enableErrorTracking?: boolean
   }
 }
 
@@ -57,7 +63,8 @@ export function SettingsTab() {
       siteName: 'AnimeSenpai',
       siteDescription: 'Your ultimate anime companion',
       maintenanceMode: false,
-      allowSignups: true,
+      allowRegistration: true,
+      requireEmailVerification: false,
     },
     features: {
       enableSocialFeatures: true,
@@ -66,7 +73,6 @@ export function SettingsTab() {
       enableReviews: false,
     },
     security: {
-      requireEmailVerification: false,
       sessionTimeout: 30,
       maxLoginAttempts: 5,
       enableTwoFactor: false,
@@ -91,20 +97,36 @@ export function SettingsTab() {
   const [activeSection, setActiveSection] = useState<'general' | 'features' | 'security' | 'notifications' | 'analytics'>('general')
   const [showPassword, setShowPassword] = useState(false)
 
+  // Load settings from backend
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        setLoading(true)
+        const { apiGetSettings } = await import('../../lib/api')
+        const loadedSettings = await apiGetSettings() as any
+        setSettings(loadedSettings)
+      } catch (error: any) {
+        console.error('Failed to load settings:', error)
+        // Keep default settings if loading fails
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadSettings()
+  }, [])
+
   const handleSave = async () => {
     try {
       setSaveStatus('saving')
       
-      // TODO: Implement backend endpoint to save settings
-      // await apiSaveSettings(settings)
-      
-      // Simulate API call for now
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const { apiSaveSettings } = await import('../../lib/api')
+      await apiSaveSettings(settings as any)
       
       setSaveStatus('saved')
       setTimeout(() => setSaveStatus('idle'), 2000)
       
-      alert('Settings saved successfully! (Backend implementation pending)')
+      alert('Settings saved successfully!')
     } catch (error: any) {
       setSaveStatus('error')
       alert(error.message || 'Failed to save settings')
@@ -122,7 +144,8 @@ export function SettingsTab() {
         siteName: 'AnimeSenpai',
         siteDescription: 'Your ultimate anime companion',
         maintenanceMode: false,
-        allowSignups: true,
+        allowRegistration: true,
+        requireEmailVerification: false,
       },
       features: {
         enableSocialFeatures: true,
@@ -131,7 +154,6 @@ export function SettingsTab() {
         enableReviews: false,
       },
       security: {
-        requireEmailVerification: false,
         sessionTimeout: 30,
         maxLoginAttempts: 5,
         enableTwoFactor: false,
@@ -278,8 +300,8 @@ export function SettingsTab() {
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={settings.general.allowSignups}
-                      onChange={(e) => updateSetting('general', 'allowSignups', e.target.checked)}
+                      checked={settings.general.allowRegistration}
+                      onChange={(e) => updateSetting('general', 'allowRegistration', e.target.checked)}
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-success-500"></div>
@@ -396,8 +418,8 @@ export function SettingsTab() {
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={settings.security.requireEmailVerification}
-                      onChange={(e) => updateSetting('security', 'requireEmailVerification', e.target.checked)}
+                      checked={settings.general.requireEmailVerification}
+                      onChange={(e) => updateSetting('general', 'requireEmailVerification', e.target.checked)}
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
@@ -581,8 +603,8 @@ export function SettingsTab() {
                   </div>
                   <div className="p-4 bg-white/5 rounded-lg">
                     <p className="text-sm text-gray-400 mb-1">Email Verification</p>
-                    <p className={`text-sm font-bold ${settings.security.requireEmailVerification ? 'text-success-400' : 'text-error-400'}`}>
-                      {settings.security.requireEmailVerification ? 'Enabled' : 'Disabled'}
+                    <p className={`text-sm font-bold ${settings.general.requireEmailVerification ? 'text-success-400' : 'text-error-400'}`}>
+                      {settings.general.requireEmailVerification ? 'Enabled' : 'Disabled'}
                     </p>
                   </div>
                   <div className="p-4 bg-white/5 rounded-lg">

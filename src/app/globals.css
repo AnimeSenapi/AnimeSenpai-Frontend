@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile Touch Optimization */
+@import '../styles/mobile-touch.css';
+
+/* Accessibility Enhancements */
+@import '../styles/accessibility.css';
+
 @layer base {
   :root {
     /* Cyberpunk Theme - Original Look */
@@ -239,6 +245,15 @@
   }
 }
 
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
@@ -249,4 +264,8 @@
 
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;
+}
+
+.animate-shimmer {
+  animation: shimmer 3s ease-in-out infinite;
 }

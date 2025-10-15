@@ -3,6 +3,7 @@
 import React, { Component, ReactNode } from 'react'
 import { Button } from './ui/button'
 import { RefreshCw, Home, AlertTriangle } from 'lucide-react'
+import * as Sentry from '@sentry/nextjs'
 
 interface Props {
   children: ReactNode
@@ -40,10 +41,28 @@ export class ErrorBoundary extends Component<Props, State> {
       errorInfo
     })
 
-    // Log to error tracking service (e.g., Sentry)
-    // if (typeof window !== 'undefined') {
-    //   Sentry.captureException(error, { contexts: { react: { componentStack: errorInfo.componentStack } } })
-    // }
+    // Log to centralized error handler
+    if (typeof window !== 'undefined') {
+      const { errorHandler, ErrorType } = require('../lib/error-handler')
+      errorHandler.createError(
+        ErrorType.RENDER_ERROR,
+        error.message,
+        error,
+        {
+          componentStack: errorInfo.componentStack,
+          errorBoundary: true,
+        }
+      )
+    }
+
+    // Send to Sentry for error tracking
+    Sentry.captureException(error, { 
+      contexts: { 
+        react: { 
+          componentStack: errorInfo.componentStack 
+        } 
+      } 
+    })
   }
 
   handleReset = () => {

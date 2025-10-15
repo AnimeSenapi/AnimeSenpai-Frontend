@@ -150,15 +150,16 @@ export function RecommendationCarousel({
                 id: anime.id,
                 slug: anime.slug,
                 title: anime.title,
-                titleEnglish: anime.titleEnglish,
-                titleJapanese: anime.titleJapanese,
-                titleSynonyms: anime.titleSynonyms,
+                titleEnglish: anime.titleEnglish || undefined,
+                titleJapanese: anime.titleJapanese || undefined,
+                titleSynonyms: anime.titleSynonyms || undefined,
                 coverImage: anime.coverImage || undefined,
                 year: anime.year || 0,
                 rating: anime.averageRating || 0,
+                status: 'trending' as const,
                 tags: [],
                 genres: anime.genres.map(g => ({ ...g, slug: g.id }))
-              } as any}
+              }}
               variant="featured"
               onFavorite={() => handleFavorite(anime.id, anime.titleEnglish || anime.title)}
               isFavorited={isFavorited(anime.id)}

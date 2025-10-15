@@ -11,6 +11,8 @@ import { useAuth } from '../../lib/auth-context'
 import { useToast } from '../../../lib/toast-context'
 import { AnimeCard } from '../../../components/anime/AnimeCard'
 import { ProfileHeaderSkeleton, StatsCardSkeleton, AnimeCardSkeleton } from '../../../components/ui/skeleton'
+import { LoadingState } from '../../../components/ui/loading-state'
+import { EmptyState } from '../../../components/ui/error-state'
 import { AchievementsShowcase } from '../../../components/achievements/AchievementsShowcase'
 import { ACHIEVEMENTS, calculateAchievements } from '../../../lib/achievements'
 import { 
@@ -78,7 +80,7 @@ export default function ProfilePage() {
       'Content-Type': 'application/json'
     }
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`
+      headers['Authorization'] = 'Bearer ' + token
     }
     return headers
   }
@@ -248,6 +250,15 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <RequireAuth>
+        <LoadingState variant="full" text="Loading your profile..." size="lg" />
+      </RequireAuth>
+    )
+  }
+
+  // Old loading skeleton (kept as fallback)
+  if (false) {
+    return (
+      <RequireAuth>
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
           {/* Background Effects */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -405,7 +416,7 @@ export default function ProfilePage() {
                         Edit Profile
                       </Button>
                     </Link>
-                    <Link href={`/users/@${user?.username}`}>
+                    <Link href={`/user/@${user?.username}`}>
                       <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
                         <Eye className="h-4 w-4 mr-2" />
                         View Public
@@ -537,16 +548,14 @@ export default function ProfilePage() {
               </div>
               
                 {favoriteAnime.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Heart className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400 mb-2">No favorites yet</p>
-                    <p className="text-gray-500 text-sm mb-4">Mark anime as favorite to see them here</p>
-                    <Link href="/search">
-                      <Button className="bg-gradient-to-r from-error-500 to-error-600 hover:from-error-600 hover:to-error-700">
-                        Find Favorites
-                      </Button>
-                    </Link>
-                  </div>
+                  <EmptyState
+                    icon={<Heart className="h-10 w-10 text-gray-500" />}
+                    title="No favorites yet"
+                    message="Mark anime as favorite to see them here. Click the star icon on any anime card!"
+                    actionLabel="Find Favorites"
+                    onAction={() => router.push('/search')}
+                    className="py-8"
+                  />
                 ) : (
                   <div className="grid grid-cols-2 gap-4">
                     {favoriteAnime.map((anime) => (

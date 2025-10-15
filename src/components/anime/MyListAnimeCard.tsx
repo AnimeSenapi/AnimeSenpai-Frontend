@@ -10,20 +10,32 @@ import { Heart, Play, CheckCircle, Star, MoreVertical, Bookmark } from 'lucide-r
 import { Button } from '../ui/button'
 
 interface MyListAnimeCardProps {
-  anime: Anime & { listStatus: 'favorite' | 'watching' | 'completed' | 'plan-to-watch' }
+  anime: Anime & { 
+    listStatus: 'favorite' | 'watching' | 'completed' | 'plan-to-watch'
+    progress?: number
+  }
   variant?: 'grid' | 'list'
   className?: string
+  onFavorite?: (animeId: string) => void
+  isFavorited?: boolean
+  onProgressUpdate?: (animeId: string, progress: number) => void
 }
 
 export function MyListAnimeCard({ 
   anime, 
   variant = 'grid', 
-  className 
+  className,
+  onFavorite,
+  isFavorited = false,
+  onProgressUpdate
 }: MyListAnimeCardProps) {
   const router = useRouter()
   // Prefer English title over romanized Japanese
   const displayTitle = anime.titleEnglish || anime.title
   const tag = anime.tags && anime.tags.length > 0 ? getTagById(anime.tags[0]) : null
+  const progress = anime.progress || 0
+  const totalEpisodes = anime.totalEpisodes || anime.episodes || 0
+  const progressPercent = totalEpisodes > 0 ? (progress / totalEpisodes) * 100 : 0
   
   const getStatusConfig = () => {
     switch (anime.listStatus) {
@@ -123,12 +135,54 @@ export function MyListAnimeCard({
                     <span>•</span>
                     <span>{anime.studio}</span>
                   </div>
+                  
+                  {/* Episode Progress */}
+                  {totalEpisodes > 0 && (
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
+                        <span>Progress</span>
+                        <span>{progress} / {totalEpisodes} episodes</span>
+                      </div>
+                      <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
+                        <div 
+                          className="bg-gradient-to-r from-primary-500 to-primary-400 h-full transition-all duration-300"
+                          style={{ width: `${Math.min(100, progressPercent)}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 text-warning-400 fill-warning-400" />
-                    <span className="text-white font-semibold">{anime.rating}</span>
+                    <span className="text-white font-semibold">
+                      {anime.rating && !isNaN(Number(anime.rating)) 
+                        ? Number(anime.rating).toFixed(1) 
+                        : anime.averageRating && !isNaN(Number(anime.averageRating))
+                        ? Number(anime.averageRating).toFixed(1)
+                        : 'N/A'}
+                    </span>
                   </div>
+                  {onFavorite && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        onFavorite(anime.id)
+                      }}
+                      className="p-2 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-sm transition-all"
+                      aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                    >
+                      <Star 
+                        className={cn(
+                          "h-4 w-4 transition-all",
+                          isFavorited 
+                            ? "fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" 
+                            : "text-white hover:text-yellow-400"
+                        )}
+                      />
+                    </button>
+                  )}
                   <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white hover:bg-white/10">
                     <MoreVertical className="h-4 w-4" />
                   </Button>
@@ -157,18 +211,18 @@ export function MyListAnimeCard({
                 )}
               </div>
 
-              {/* Progress Bar (for watching anime) */}
-              {anime.listStatus === 'watching' && (
+              {/* Episode Progress */}
+              {totalEpisodes > 0 && (
                 <div className="w-full">
                   <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
                     <span>Progress</span>
-                    <span>5 / {anime.episodes || '?'}</span>
+                    <span>{progress} / {totalEpisodes} eps</span>
                   </div>
-                  <div className="w-full bg-gray-700 rounded-full h-1.5">
+                  <div className="w-full bg-gray-700/50 rounded-full h-1.5 overflow-hidden">
                     <div 
                       className="bg-gradient-to-r from-primary-500 to-secondary-500 h-1.5 rounded-full transition-all duration-300"
-                      style={{ width: `${anime.episodes ? (5 / anime.episodes) * 100 : 0}%` }}
-                    ></div>
+                      style={{ width: `${Math.min(100, progressPercent)}%` }}
+                    />
                   </div>
                 </div>
               )}
@@ -219,9 +273,37 @@ export function MyListAnimeCard({
           <div className="absolute top-3 left-3 z-10">
             <div className="bg-black/50 backdrop-blur-sm text-white text-sm px-2 py-1 rounded-lg flex items-center gap-1">
               <Star className="h-3 w-3 text-warning-400 fill-warning-400" />
-              <span className="font-semibold">{anime.rating}</span>
+              <span className="font-semibold">
+                {anime.rating && !isNaN(Number(anime.rating)) 
+                  ? Number(anime.rating).toFixed(1) 
+                  : anime.averageRating && !isNaN(Number(anime.averageRating))
+                  ? Number(anime.averageRating).toFixed(1)
+                  : 'N/A'}
+              </span>
             </div>
           </div>
+
+          {/* Favorite Star Button - Always Visible */}
+          {onFavorite && (
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onFavorite(anime.id)
+              }}
+              className="absolute top-3 right-3 z-10 p-2 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-sm transition-all touch-manipulation active:bg-black/80"
+              aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+            >
+              <Star 
+                className={cn(
+                  "h-5 w-5 transition-all",
+                  isFavorited 
+                    ? "fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" 
+                    : "text-white hover:text-yellow-400"
+                )}
+              />
+            </button>
+          )}
 
           {/* Action Buttons */}
           <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -233,13 +315,6 @@ export function MyListAnimeCard({
                 <Play className="h-4 w-4 mr-1" />
                 Watch
               </Button>
-              <Button 
-                size="sm" 
-                variant="ghost"
-                className="bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 border border-white/20"
-              >
-                <Bookmark className="h-4 w-4" />
-              </Button>
             </div>
           </div>
         </div>
@@ -249,13 +324,36 @@ export function MyListAnimeCard({
           <h3 className="text-white font-bold text-sm mb-1 group-hover:text-primary-400 transition-colors line-clamp-2">
             {displayTitle}
           </h3>
-          <div className="flex items-center justify-between text-xs text-gray-400">
+          <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
             <span>{anime.year}</span>
-            <span>{anime.episodes} eps</span>
+            <div className="flex items-center gap-2">
+              {anime.seasonCount && anime.seasonCount > 1 && (
+                <span className="bg-primary-500/20 text-primary-300 px-2 py-0.5 rounded font-medium">
+                  {anime.seasonCount} Seasons
+                </span>
+              )}
+              <span>{anime.totalEpisodes || anime.episodes} eps</span>
+            </div>
           </div>
           
+          {/* Episode Progress Bar */}
+          {totalEpisodes > 0 && (
+            <div className="mb-2">
+              <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
+                <span>Progress</span>
+                <span className="font-medium">{progress}/{totalEpisodes}</span>
+              </div>
+              <div className="w-full bg-gray-700/50 rounded-full h-1.5 overflow-hidden">
+                <div 
+                  className="bg-gradient-to-r from-primary-500 to-secondary-500 h-1.5 rounded-full transition-all duration-300"
+                  style={{ width: `${Math.min(100, progressPercent)}%` }}
+                />
+              </div>
+            </div>
+          )}
+          
           {/* Tags - Clickable */}
-          <div className="flex items-center gap-1 mt-2">
+          <div className="flex items-center gap-1">
             {anime.tags && anime.tags.length > 0 ? (
               anime.tags.slice(0, 2).map((tagId) => {
                 const tag = getTagById(tagId)

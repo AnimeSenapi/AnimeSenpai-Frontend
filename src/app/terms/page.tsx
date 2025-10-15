@@ -582,7 +582,7 @@ export default function TermsPage() {
               <p className="text-center text-gray-500 text-sm mt-6">
                 Questions? Contact us at <a href="mailto:contact@animesenpai.app" className="text-primary-400 hover:text-primary-300 transition-colors">legal@animesenpai.app</a>
               </p>
-            </div>
+              </div>
             </div>
           </div>
         </div>

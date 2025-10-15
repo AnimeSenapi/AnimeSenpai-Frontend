@@ -21,6 +21,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -31,10 +34,13 @@
     "@radix-ui/react-select": "^2.2.5",
     "@radix-ui/react-separator": "^1.1.7",
     "@radix-ui/react-slot": "^1.2.3",
+    "@sentry/nextjs": "^10",
     "@vercel/analytics": "^1.1.1",
     "@vercel/speed-insights": "^1.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "critters": "^0.0.25",
+    "date-fns": "^4.1.0",
     "lucide-react": "^0.525.0",
     "next": "^15.0.0",
     "react": "^19",

@@ -1,8 +1,9 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { Navbar } from '../components/navbar/navbar'
 import { Providers } from './providers'
 import { CookieConsent } from '../components/CookieConsent'
+import { SkipNav } from '../components/SkipNav'
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import './globals.css'
@@ -13,14 +14,21 @@ const siteUrl = 'https://animesenpai.app'
 const siteName = 'AnimeSenpai'
 const siteDescription = 'Discover, track, and explore your favorite anime. Get personalized recommendations, connect with fellow fans, and build your ultimate anime collection.'
 
+// Viewport configuration (Next.js 15+)
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: 'cover', // Enable safe area for iPhone notch/dynamic island
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0f' },
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' }
+  ],
+}
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 5,
-    userScalable: true,
-  },
   title: {
     default: 'AnimeSenpai - Track, Discover & Watch Anime | Free Anime Tracker',
     template: '%s | AnimeSenpai'
@@ -97,15 +105,16 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon-16x16.png',
-    apple: '/apple-touch-icon.png',
+  // Icons are automatically handled by Next.js 15 from app/icon.{png,svg}
+  // No need to specify them here
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'AnimeSenpai',
   },
-  manifest: '/site.webmanifest',
   verification: {
-    // Add these later when you have the codes
-    // google: 'your-google-verification-code',
+    google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION || '',
     // yandex: 'your-yandex-verification-code',
     // bing: 'your-bing-verification-code',
   },
@@ -120,12 +129,85 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  // Structured data for organization
+  const organizationData = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'AnimeSenpai',
+    url: siteUrl,
+    logo: `${siteUrl}/assets/logo/AnimeSenpai_Inline.svg`,
+    description: siteDescription,
+    sameAs: [
+      'https://www.tiktok.com/@animesenpai.app',
+    ],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      email: 'contact@animesenpai.app',
+      contactType: 'Customer Support',
+    },
+  }
+
+  // Structured data for website search
+  const searchData = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'AnimeSenpai',
+    url: siteUrl,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${siteUrl}/search?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  }
+
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
+      <head>
+        {/* Structured Data - Organization */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationData) }}
+        />
+        {/* Structured Data - Website Search */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(searchData) }}
+        />
+      </head>
       <body className={inter.className}>
         <Providers>
+          {/* Skip Navigation Links for Screen Readers */}
+          <SkipNav />
+          
+          {/* Alpha Badge - Simple & Clean */}
+          <div className="fixed top-3 left-3 sm:top-4 sm:left-4 z-[999] pointer-events-none animate-in fade-in duration-700" aria-hidden="true">
+            <div className="relative">
+              {/* Subtle glow */}
+              <div className="absolute -inset-0.5 bg-violet-500/20 rounded-lg blur-sm"></div>
+              
+              {/* Badge container */}
+              <div className="relative flex items-center gap-2 bg-black/50 backdrop-blur-sm border border-white/10 rounded-lg px-3 py-1.5 shadow-lg">
+                {/* Pulse dot */}
+                <div className="relative flex items-center justify-center">
+                  <span className="animate-ping absolute h-2 w-2 rounded-full bg-violet-400 opacity-75"></span>
+                  <span className="relative block h-1.5 w-1.5 rounded-full bg-violet-400"></span>
+                </div>
+                
+                {/* Text */}
+                <span className="text-[11px] sm:text-xs font-bold text-violet-300 uppercase tracking-wide">
+                  Alpha
+                </span>
+              </div>
+            </div>
+          </div>
+          
           <Navbar />
-          {children}
+          <main id="main-content" role="main">
+            {children}
+          </main>
           <CookieConsent />
         </Providers>
         <Analytics />

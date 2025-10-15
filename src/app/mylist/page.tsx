@@ -7,9 +7,15 @@ import { MyListAnimeCard } from '../../components/anime/MyListAnimeCard'
 import { Button } from '../../components/ui/button'
 import { Anime, AnimeListItem, UserListResponse } from '../../types/anime'
 import { useAuth } from '../lib/auth-context'
+import { useFavorites } from '../lib/favorites-context'
 import { apiGetUserList } from '../lib/api'
+import { groupAnimeIntoSeries } from '../../lib/series-grouping'
 import { StatsCardSkeleton, AnimeCardSkeleton, ListItemSkeleton } from '../../components/ui/skeleton'
-import { Bookmark, Heart, Grid, List, Clock, Star, CheckCircle, Play, Plus, Lock, Loader2, Search, X, RefreshCw, TrendingUp } from 'lucide-react'
+import { LoadingState } from '../../components/ui/loading-state'
+import { EmptyState, ErrorState } from '../../components/ui/error-state'
+import { VerificationGuard } from '../../lib/verification-guard'
+import { VirtualGrid, VirtualList } from '../../components/VirtualList'
+import { Bookmark, Heart, Grid, List as ListIcon, Clock, Star, CheckCircle, Play, Plus, Lock, Loader2, Search, X, RefreshCw, TrendingUp } from 'lucide-react'
 
 // Sort options
 type SortOption = 'title' | 'rating' | 'year' | 'recent' | 'episodes'
@@ -21,117 +27,10 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'episodes', label: 'Most Episodes' }
 ]
 
-// Legacy sample data - will be replaced with API data
-const myListAnimeFallback: (Anime & { listStatus: 'favorite' | 'watching' | 'completed' | 'plan-to-watch' })[] = [
-  {
-    id: '1',
-    slug: 'attack-on-titan',
-    title: 'Attack on Titan',
-    year: 2023,
-    rating: 9.2,
-    status: 'new',
-    tags: ['action', 'drama', 'supernatural'],
-    episodes: 25,
-    duration: 24,
-    studio: 'Wit Studio',
-    listStatus: 'favorite'
-  },
-  {
-    id: '2',
-    slug: 'demon-slayer',
-    title: 'Demon Slayer',
-    year: 2023,
-    rating: 9.1,
-    status: 'trending',
-    tags: ['action', 'supernatural', 'shounen'],
-    episodes: 26,
-    duration: 23,
-    studio: 'Ufotable',
-    listStatus: 'watching'
-  },
-  {
-    id: '4',
-    slug: 'fullmetal-alchemist',
-    title: 'Fullmetal Alchemist',
-    year: 2009,
-    rating: 9.3,
-    status: 'classic',
-    tags: ['action', 'fantasy', 'drama'],
-    episodes: 64,
-    duration: 24,
-    studio: 'Bones',
-    listStatus: 'completed'
-  },
-  {
-    id: '5',
-    slug: 'jujutsu-kaisen',
-    title: 'Jujutsu Kaisen',
-    year: 2023,
-    rating: 8.9,
-    status: 'trending',
-    tags: ['action', 'supernatural', 'school'],
-    episodes: 24,
-    duration: 24,
-    studio: 'MAPPA',
-    listStatus: 'watching'
-  },
-  {
-    id: '7',
-    slug: 'chainsaw-man',
-    title: 'Chainsaw Man',
-    year: 2022,
-    rating: 8.8,
-    status: 'trending',
-    tags: ['action', 'supernatural', 'seinen'],
-    episodes: 12,
-    duration: 24,
-    studio: 'MAPPA',
-    listStatus: 'plan-to-watch'
-  },
-  {
-    id: '8',
-    slug: 'spy-x-family',
-    title: 'Spy x Family',
-    year: 2022,
-    rating: 8.7,
-    status: 'trending',
-    tags: ['comedy', 'action', 'family'],
-    episodes: 25,
-    duration: 24,
-    studio: 'Wit Studio',
-    listStatus: 'completed'
-  },
-  {
-    id: '9',
-    slug: 'mob-psycho-100',
-    title: 'Mob Psycho 100',
-    year: 2022,
-    rating: 8.9,
-    status: 'trending',
-    tags: ['action', 'supernatural', 'comedy'],
-    episodes: 12,
-    duration: 24,
-    studio: 'Bones',
-    listStatus: 'favorite'
-  },
-  {
-    id: '10',
-    slug: 'vinland-saga',
-    title: 'Vinland Saga',
-    year: 2022,
-    rating: 9.0,
-    status: 'trending',
-    tags: ['action', 'historical', 'drama'],
-    episodes: 24,
-    duration: 24,
-    studio: 'Wit Studio',
-    listStatus: 'plan-to-watch'
-  }
-]
-
 export default function MyListPage() {
   const searchParams = useSearchParams()
   const { isAuthenticated, isLoading: authLoading } = useAuth()
+  const { toggleFavorite, isFavorited } = useFavorites()
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [selectedCategory, setSelectedCategory] = useState<string>(searchParams?.get('filter') || 'all')
   const [isLoading, setIsLoading] = useState(false)
@@ -149,7 +48,7 @@ export default function MyListPage() {
       setIsLoading(true)
       setError(null)
       try {
-        const data = await apiGetUserList()
+        const data = await apiGetUserList() as any
         setUserList({
           items: data.items || [],
           total: data.pagination?.total || 0,
@@ -222,30 +121,62 @@ export default function MyListPage() {
   }
 
   // Convert backend format to display format
-  const myListAnime = userList?.items
+  const myListAnimeRaw = userList?.items
     .filter(item => item.anime) // Only include items with anime data
     .map(item => ({
       ...item.anime!,
-      listStatus: item.listStatus as 'favorite' | 'watching' | 'completed' | 'plan-to-watch'
+      listStatus: item.listStatus as 'favorite' | 'watching' | 'completed' | 'plan-to-watch',
+      // Include progress for episode tracking
+      progress: item.progress || 0,
+      // Ensure rating field exists for grouping
+      rating: item.anime!.averageRating || item.anime!.rating || 0,
+      averageRating: item.anime!.averageRating || item.anime!.rating || 0,
     })) || []
 
-  // Calculate stats from items
-  const favorites = myListAnime.filter(anime => anime.listStatus === 'favorite')
-  const watching = myListAnime.filter(anime => anime.listStatus === 'watching')
-  const completed = myListAnime.filter(anime => anime.listStatus === 'completed')
-  const planToWatch = myListAnime.filter(anime => anime.listStatus === 'plan-to-watch')
+  // Group anime into series
+  const myListAnime = groupAnimeIntoSeries(myListAnimeRaw).map(series => ({
+    ...series,
+    // Preserve list status from the first season (or most recent)
+    listStatus: series.seasons?.[0]?.listStatus || myListAnimeRaw.find(a => a.id === series.id)?.listStatus || 'plan-to-watch',
+    // Sum progress across all seasons for series
+    progress: series.seasons?.reduce((sum: number, season: any) => sum + (season.progress || 0), 0) || myListAnimeRaw.find(a => a.id === series.id)?.progress || 0,
+    // Use English title if available
+    title: series.titleEnglish || series.displayTitle || series.title,
+    titleEnglish: series.titleEnglish || series.displayTitle,
+    // Ensure rating is a number
+    rating: Number(series.rating) || series.averageRating || 0,
+    averageRating: Number(series.rating) || series.averageRating || 0,
+  }))
+
+  // Calculate stats from items (before grouping for accurate counts)
+  const favorites = myListAnimeRaw.filter(anime => anime.listStatus === 'favorite')
+  const watching = myListAnimeRaw.filter(anime => anime.listStatus === 'watching')
+  const completed = myListAnimeRaw.filter(anime => anime.listStatus === 'completed')
+  const planToWatch = myListAnimeRaw.filter(anime => anime.listStatus === 'plan-to-watch')
 
   // Filter anime based on selected category
   const getCategoryFilteredAnime = () => {
     switch (selectedCategory) {
       case 'favorites':
-        return favorites
+        return myListAnime.filter(anime => 
+          anime.listStatus === 'favorite' || 
+          anime.seasons?.some((s: any) => s.listStatus === 'favorite')
+        )
       case 'watching':
-        return watching
+        return myListAnime.filter(anime => 
+          anime.listStatus === 'watching' || 
+          anime.seasons?.some((s: any) => s.listStatus === 'watching')
+        )
       case 'completed':
-        return completed
+        return myListAnime.filter(anime => 
+          anime.listStatus === 'completed' || 
+          anime.seasons?.some((s: any) => s.listStatus === 'completed')
+        )
       case 'plan-to-watch':
-        return planToWatch
+        return myListAnime.filter(anime => 
+          anime.listStatus === 'plan-to-watch' || 
+          anime.seasons?.some((s: any) => s.listStatus === 'plan-to-watch')
+        )
       default:
         return myListAnime
     }
@@ -258,6 +189,8 @@ export default function MyListPage() {
     const query = searchQuery.toLowerCase()
     return animeList.filter(anime => 
       anime.title.toLowerCase().includes(query) ||
+      anime.titleEnglish?.toLowerCase().includes(query) ||
+      anime.titleJapanese?.toLowerCase().includes(query) ||
       anime.studio?.toLowerCase().includes(query)
     )
   }
@@ -268,7 +201,11 @@ export default function MyListPage() {
     
     switch (sortBy) {
       case 'title':
-        return sorted.sort((a, b) => a.title.localeCompare(b.title))
+        return sorted.sort((a, b) => {
+          const aTitle = a.titleEnglish || a.title
+          const bTitle = b.titleEnglish || b.title
+          return aTitle.localeCompare(bTitle)
+        })
       case 'rating':
         return sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0))
       case 'year':
@@ -295,6 +232,28 @@ export default function MyListPage() {
 
   // Show loading state
   if (authLoading || isLoading) {
+    return (
+      <LoadingState variant="full" text="Loading your anime list..." size="lg" />
+    )
+  }
+
+  // Show error state if needed
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden pt-32">
+        <ErrorState
+          variant="full"
+          error={error}
+          title="Failed to load your list"
+          onRetry={() => window.location.reload()}
+          showHome={true}
+        />
+      </div>
+    )
+  }
+
+  // Original loading skeleton code (fallback)
+  if (false) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
         {/* Background Elements */}
@@ -437,20 +396,21 @@ export default function MyListPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+    <VerificationGuard requireVerification={false}>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
-      <main className="container pt-32 pb-20 relative z-10">
-        {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+      <main className="container px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 lg:pb-20 relative z-10">
+        {/* Header Section - Mobile Optimized */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-white via-primary-400 to-secondary-400 bg-clip-text text-transparent">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-white via-primary-400 to-secondary-400 bg-clip-text text-transparent">
                 My List
               </h1>
               <p className="text-lg text-gray-300 flex items-center gap-2">
@@ -678,7 +638,7 @@ export default function MyListPage() {
                     : 'text-white hover:bg-white/10'
                 }`}
               >
-                <List className="h-4 w-4" />
+                <ListIcon className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -686,54 +646,120 @@ export default function MyListPage() {
 
         {/* Anime Display */}
         {viewMode === 'grid' ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {filteredAnime.map((anime) => (
-              <MyListAnimeCard
-                key={anime.id}
-                anime={anime}
-                variant="grid"
-              />
-            ))}
-          </div>
+          // Use virtual scrolling for grid view (optimal for 100+ items)
+          filteredAnime.length > 50 ? (
+            <VirtualGrid
+              items={filteredAnime}
+              itemWidth={220}
+              itemHeight={360}
+              columns={5}
+              gap={24}
+              height={800}
+              className="pb-8"
+              renderItem={(anime) => (
+                <MyListAnimeCard
+                  key={anime.id}
+                  anime={anime}
+                  variant="grid"
+                  onFavorite={toggleFavorite}
+                  isFavorited={isFavorited(anime.id)}
+                />
+              )}
+            />
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              {filteredAnime.map((anime) => (
+                <MyListAnimeCard
+                  key={anime.id}
+                  anime={anime}
+                  variant="grid"
+                  onFavorite={toggleFavorite}
+                  isFavorited={isFavorited(anime.id)}
+                />
+              ))}
+            </div>
+          )
         ) : (
-          <div className="space-y-4">
-            {filteredAnime.map((anime) => (
-              <MyListAnimeCard
-                key={anime.id}
-                anime={anime}
-                variant="list"
-              />
-            ))}
-          </div>
+          // Use virtual scrolling for list view (optimal for 100+ items)
+          filteredAnime.length > 50 ? (
+            <VirtualList
+              items={filteredAnime}
+              itemHeight={120}
+              height={800}
+              gap={16}
+              className="pb-8"
+              renderItem={(anime) => (
+                <MyListAnimeCard
+                  key={anime.id}
+                  anime={anime}
+                  variant="list"
+                  onFavorite={toggleFavorite}
+                  isFavorited={isFavorited(anime.id)}
+                />
+              )}
+            />
+          ) : (
+            <div className="space-y-4">
+              {filteredAnime.map((anime) => (
+                <MyListAnimeCard
+                  key={anime.id}
+                  anime={anime}
+                  variant="list"
+                  onFavorite={toggleFavorite}
+                  isFavorited={isFavorited(anime.id)}
+                />
+              ))}
+            </div>
+          )
         )}
 
-        {/* Empty State */}
+        {/* Empty State - Enhanced with helpful suggestions */}
         {filteredAnime.length === 0 && (
-          <div className="text-center py-24">
-            <div className="w-24 h-24 bg-gradient-to-br from-gray-800 to-gray-900 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl">
-              <Bookmark className="h-10 w-10 text-gray-400" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-4">
-              {selectedCategory === 'all' 
+          <EmptyState
+            icon={
+              selectedCategory === 'favorites' ? <Heart className="h-12 w-12 text-gray-500" /> :
+              selectedCategory === 'watching' ? <Play className="h-12 w-12 text-gray-500" /> :
+              selectedCategory === 'completed' ? <CheckCircle className="h-12 w-12 text-gray-500" /> :
+              selectedCategory === 'plan-to-watch' ? <Clock className="h-12 w-12 text-gray-500" /> :
+              <Bookmark className="h-12 w-12 text-gray-500" />
+            }
+            title={
+              selectedCategory === 'all' 
                 ? 'Your list is empty' 
-                : `No ${selectedCategory.replace('-', ' ')} anime found`
-              }
-            </h3>
-            <p className="text-gray-400 mb-8 max-w-lg mx-auto text-lg">
-              {selectedCategory === 'all' 
-                ? 'Start building your anime collection by adding shows you love or want to watch'
-                : `Try selecting a different category or add some anime to your ${selectedCategory.replace('-', ' ')} list`
-              }
-            </p>
-            <Link href="/search">
-              <Button className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 shadow-lg shadow-brand-primary-500/25 px-8 py-3 text-lg font-semibold">
-                <Plus className="h-5 w-5 mr-2" />
-                Discover Anime
-              </Button>
-            </Link>
-          </div>
+                : searchQuery
+                ? 'No results found'
+                : `No ${selectedCategory.replace('-', ' ')} anime`
+            }
+            message={
+              selectedCategory === 'all' 
+                ? 'Start building your anime collection by adding shows you love or want to watch!'
+                : searchQuery
+                ? `No anime matching "${searchQuery}" in your ${selectedCategory.replace('-', ' ')} list`
+                : `Add some anime to your ${selectedCategory.replace('-', ' ')} list to see them here`
+            }
+            suggestions={
+              selectedCategory === 'all' && !searchQuery
+                ? [
+                    'Browse our full anime catalog in the Search page',
+                    'Check out trending anime on the Dashboard',
+                    'Use filters to find anime by genre, year, or studio'
+                  ]
+                : searchQuery
+                ? [
+                    'Check your spelling',
+                    'Try different keywords',
+                    'Clear filters and search again'
+                  ]
+                : undefined
+            }
+            actionLabel={searchQuery ? 'Clear Search' : 'Discover Anime'}
+            onAction={() => searchQuery ? setSearchQuery('') : window.location.href = '/search'}
+            secondaryActionLabel={!searchQuery ? 'View Trending' : undefined}
+            onSecondaryAction={!searchQuery ? () => window.location.href = '/dashboard' : undefined}
+          />
         )}
       </main>
     </div>
+    </VerificationGuard>
   )
 }

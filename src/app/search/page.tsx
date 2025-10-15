@@ -6,173 +6,25 @@ import { SearchAnimeCard } from '../../components/anime/SearchAnimeCard'
 import { Button } from '../../components/ui/button'
 import { Badge } from '../../components/ui/badge'
 import { AnimeCardSkeleton, SearchResultSkeleton } from '../../components/ui/skeleton'
+import { LoadingState } from '../../components/ui/loading-state'
+import { EmptyState } from '../../components/ui/error-state'
 import { Anime } from '../../types/anime'
 import { getTagById } from '../../types/tags'
 import { apiGetAllAnime, apiGetAllSeries } from '../lib/api'
 import { useFavorites } from '../lib/favorites-context'
+import { VirtualGrid, VirtualList } from '../../components/VirtualList'
 import { 
   Search, 
   Filter, 
   Grid, 
-  List, 
+  List as ListIcon, 
   Calendar,
   Building,
   Tag,
   Clock,
-  X
+  X,
+  Sparkles
 } from 'lucide-react'
-
-// Extended anime data with additional fields for search
-const searchAnime: (Anime & { 
-  listStatus?: 'favorite' | 'watching' | 'completed' | 'plan-to-watch',
-  studios: string[],
-  seasons: string[],
-  popularity: number,
-  releaseDate: string
-})[] = [
-  {
-    id: '1',
-    slug: 'attack-on-titan',
-    title: 'Attack on Titan',
-    year: 2023,
-    rating: 9.2,
-    status: 'new',
-    tags: ['action', 'drama', 'supernatural'],
-    episodes: 25,
-    duration: 24,
-    studio: 'Wit Studio',
-    studios: ['Wit Studio'],
-    seasons: ['Spring 2023'],
-    popularity: 95,
-    releaseDate: '2023-04-01',
-    listStatus: 'favorite'
-  },
-  {
-    id: '2',
-    slug: 'demon-slayer',
-    title: 'Demon Slayer',
-    year: 2023,
-    rating: 9.1,
-    status: 'trending',
-    tags: ['action', 'supernatural', 'shounen'],
-    episodes: 26,
-    duration: 23,
-    studio: 'Ufotable',
-    studios: ['Ufotable'],
-    seasons: ['Spring 2023'],
-    popularity: 92,
-    releaseDate: '2023-04-15',
-    listStatus: 'watching'
-  },
-  {
-    id: '3',
-    slug: 'one-piece',
-    title: 'One Piece',
-    year: 2023,
-    rating: 9.5,
-    status: 'hot',
-    tags: ['adventure', 'comedy', 'shounen'],
-    episodes: 1000,
-    duration: 24,
-    studio: 'Toei Animation',
-    studios: ['Toei Animation'],
-    seasons: ['Ongoing'],
-    popularity: 98,
-    releaseDate: '1999-10-20',
-    listStatus: 'completed'
-  },
-  {
-    id: '4',
-    slug: 'fullmetal-alchemist',
-    title: 'Fullmetal Alchemist',
-    year: 2009,
-    rating: 9.3,
-    status: 'classic',
-    tags: ['action', 'fantasy', 'drama'],
-    episodes: 64,
-    duration: 24,
-    studio: 'Bones',
-    studios: ['Bones'],
-    seasons: ['Fall 2009'],
-    popularity: 94,
-    releaseDate: '2009-04-05',
-    listStatus: 'completed'
-  },
-  {
-    id: '5',
-    slug: 'jujutsu-kaisen',
-    title: 'Jujutsu Kaisen',
-    year: 2023,
-    rating: 8.9,
-    status: 'trending',
-    tags: ['action', 'supernatural', 'school'],
-    episodes: 24,
-    duration: 24,
-    studio: 'MAPPA',
-    studios: ['MAPPA'],
-    seasons: ['Fall 2023'],
-    popularity: 89,
-    releaseDate: '2023-10-01',
-    listStatus: 'watching'
-  },
-  {
-    id: '6',
-    slug: 'my-hero-academia',
-    title: 'My Hero Academia',
-    year: 2023,
-    rating: 8.7,
-    status: 'hot',
-    tags: ['action', 'school', 'shounen'],
-    episodes: 138,
-    duration: 24,
-    studio: 'Bones',
-    studios: ['Bones'],
-    seasons: ['Spring 2023'],
-    popularity: 87,
-    releaseDate: '2023-04-01',
-    listStatus: 'plan-to-watch'
-  },
-  {
-    id: '7',
-    slug: 'chainsaw-man',
-    title: 'Chainsaw Man',
-    year: 2022,
-    rating: 8.8,
-    status: 'trending',
-    tags: ['action', 'supernatural', 'seinen'],
-    episodes: 12,
-    duration: 24,
-    studio: 'MAPPA',
-    studios: ['MAPPA'],
-    seasons: ['Fall 2022'],
-    popularity: 88,
-    releaseDate: '2022-10-11',
-    listStatus: 'favorite'
-  },
-  {
-    id: '8',
-    slug: 'spy-x-family',
-    title: 'Spy x Family',
-    year: 2022,
-    rating: 8.7,
-    status: 'trending',
-    tags: ['comedy', 'action', 'family'],
-    episodes: 25,
-    duration: 24,
-    studio: 'Wit Studio',
-    studios: ['Wit Studio'],
-    seasons: ['Spring 2022'],
-    popularity: 85,
-    releaseDate: '2022-04-09',
-    listStatus: 'completed'
-  }
-]
-
-// Available filters
-const genres = ['Action', 'Comedy', 'Drama', 'Fantasy', 'Supernatural', 'School', 'Shounen', 'Seinen', 'Adventure', 'Family', 'Military']
-const studios = ['Wit Studio', 'Ufotable', 'Toei Animation', 'Bones', 'MAPPA']
-const seasons = ['Spring 2023', 'Fall 2023', 'Spring 2022', 'Fall 2022', 'Fall 2009', 'Ongoing']
-const years = ['2023', '2022', '2009', '1999']
 
 export default function SearchPage() {
   const searchParams = useSearchParams()
@@ -190,16 +42,33 @@ export default function SearchPage() {
   const [filteredAnime, setFilteredAnime] = useState<Anime[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
+  // Compute unique values for filters from all anime
+  const genres = Array.from(new Set(
+    allAnime.flatMap(anime => anime.genres?.map((g: any) => g.name || g.slug || g) || [])
+  )).sort()
+  
+  const studios = Array.from(new Set(
+    allAnime.map(anime => anime.studio).filter(Boolean)
+  )).sort() as string[]
+  
+  const seasons = Array.from(new Set(
+    allAnime.map(anime => anime.season).filter(Boolean)
+  )).sort() as string[]
+  
+  const years = Array.from(new Set(
+    allAnime.map(anime => anime.year).filter((y): y is number => y !== null && y !== undefined)
+  )).sort((a, b) => b - a).map(String)
+
   // Load anime from API (use series grouping)
   useEffect(() => {
     async function loadAnime() {
       setIsLoading(true)
       try {
-        const data = await apiGetAllSeries()
+        const data = await apiGetAllSeries() as any
         if (data && typeof data === 'object' && 'series' in data) {
           // Convert series to anime format with season metadata
           const seriesList = Array.isArray(data.series) ? data.series : []
-          const animeList = seriesList.map(series => ({
+          const animeList = seriesList.map((series: any) => ({
             ...series,
             titleEnglish: series.titleEnglish || series.displayTitle,
             // Add series metadata
@@ -207,14 +76,9 @@ export default function SearchPage() {
             totalEpisodes: series.totalEpisodes,
             seasons: series.seasons
           }))
-          setAllAnime(animeList as any[])
-          console.log(`✅ Loaded ${animeList.length} anime from API`)
-          if (animeList.length > 0 && animeList[0]?.genres) {
-            console.log('Sample genres from first anime:', animeList[0].genres.map((g: any) => g.name))
-          }
+          setAllAnime(animeList)
         } else if (Array.isArray(data)) {
           setAllAnime(data)
-          console.log(`✅ Loaded ${data.length} anime from API`)
         }
       } catch (err) {
         console.error('❌ Failed to load anime from API:', err)
@@ -283,7 +147,6 @@ export default function SearchPage() {
 
     // Genre filter (case-insensitive)
     if (selectedGenres.length > 0) {
-      console.log('Filtering by genres:', selectedGenres)
       results = results.filter(anime => {
         const hasGenre = anime.genres && selectedGenres.some(genre => 
           anime.genres?.some((g: any) => {
@@ -293,7 +156,6 @@ export default function SearchPage() {
         )
         return hasGenre
       })
-      console.log(`Genre filter: ${results.length} anime match genres [${selectedGenres.join(', ')}]`)
     }
 
     // Studio filter (case-insensitive)
@@ -455,7 +317,7 @@ export default function SearchPage() {
             {/* Sort Dropdown */}
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
+              onChange={(e) => setSortBy(e.target.value as 'relevance' | 'rating' | 'year' | 'popularity')}
               className="bg-white/5 border border-white/20 text-white rounded-xl px-4 py-2 text-sm hover:bg-white/10 transition-all cursor-pointer focus:outline-none focus:border-primary-400/50"
             >
               <option value="relevance">Sort: Relevance</option>
@@ -484,7 +346,7 @@ export default function SearchPage() {
                     : 'text-gray-400 hover:text-white hover:bg-white/10'
                 }`}
               >
-                <List className="h-4 w-4" />
+                <ListIcon className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -606,52 +468,97 @@ export default function SearchPage() {
           )
         ) : filteredAnime.length === 0 ? (
           /* Empty State */
-          <div className="text-center py-32">
-            <div className="w-24 h-24 bg-gradient-to-br from-white/5 to-white/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/10">
-              <Search className="h-10 w-10 text-gray-500" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-3">
-              No anime found
-            </h3>
-            <p className="text-gray-400 mb-8 max-w-md mx-auto">
-              {searchQuery 
-                ? `No results match "${searchQuery}"`
-                : 'Try adjusting your filters to find anime'
-              }
-            </p>
-            {(searchQuery || activeFiltersCount > 0) && (
-              <Button 
-                onClick={clearFilters}
-                className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 shadow-lg px-8 py-3"
-              >
-                Clear All Filters
-              </Button>
-            )}
-          </div>
+          <EmptyState
+            icon={<Search className="h-12 w-12 text-gray-500" />}
+            title="No anime found"
+            message={
+              searchQuery 
+                ? `No results match "${searchQuery}". Try different keywords or adjust your filters.`
+                : activeFiltersCount > 0
+                ? `No anime match your current filters (${activeFiltersCount} active). Try adjusting them to see more results.`
+                : 'The anime database is being populated. Check back soon for thousands of titles!'
+            }
+            suggestions={
+              searchQuery || activeFiltersCount > 0
+                ? [
+                    'Check your spelling and try again',
+                    'Use broader search terms (e.g., "action" instead of "action comedy")',
+                    'Remove some filters to see more results',
+                    'Try searching by genre or year instead'
+                  ]
+                : undefined
+            }
+            actionLabel={(searchQuery || activeFiltersCount > 0) ? 'Clear All Filters' : undefined}
+            onAction={(searchQuery || activeFiltersCount > 0) ? clearFilters : undefined}
+            secondaryActionLabel={searchQuery || activeFiltersCount > 0 ? 'Browse All' : undefined}
+            onSecondaryAction={searchQuery || activeFiltersCount > 0 ? () => { clearFilters(); setSearchQuery('') } : undefined}
+          />
         ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
-            {filteredAnime.map((anime) => (
-              <SearchAnimeCard
-                key={anime.id}
-                anime={anime}
-                variant="grid"
-                onFavorite={() => toggleFavorite(anime.id)}
-                isFavorited={isFavorited(anime.id)}
-              />
-            ))}
-          </div>
+          // Use virtual scrolling for large result sets (100+ items)
+          filteredAnime.length > 100 ? (
+            <VirtualGrid
+              items={filteredAnime}
+              itemWidth={200}
+              itemHeight={340}
+              columns={6}
+              gap={20}
+              height={900}
+              className="pb-8"
+              renderItem={(anime) => (
+                <SearchAnimeCard
+                  key={anime.id}
+                  anime={anime}
+                  variant="grid"
+                  onFavorite={() => toggleFavorite(anime.id)}
+                  isFavorited={isFavorited(anime.id)}
+                />
+              )}
+            />
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
+              {filteredAnime.map((anime) => (
+                <SearchAnimeCard
+                  key={anime.id}
+                  anime={anime}
+                  variant="grid"
+                  onFavorite={() => toggleFavorite(anime.id)}
+                  isFavorited={isFavorited(anime.id)}
+                />
+              ))}
+            </div>
+          )
         ) : (
-          <div className="space-y-3">
-            {filteredAnime.map((anime) => (
-              <SearchAnimeCard
-                key={anime.id}
-                anime={anime}
-                variant="list"
-                onFavorite={() => toggleFavorite(anime.id)}
-                isFavorited={isFavorited(anime.id)}
-              />
-            ))}
-          </div>
+          // Use virtual scrolling for list view with large results
+          filteredAnime.length > 100 ? (
+            <VirtualList
+              items={filteredAnime}
+              itemHeight={110}
+              height={900}
+              gap={12}
+              className="pb-8"
+              renderItem={(anime) => (
+                <SearchAnimeCard
+                  key={anime.id}
+                  anime={anime}
+                  variant="list"
+                  onFavorite={() => toggleFavorite(anime.id)}
+                  isFavorited={isFavorited(anime.id)}
+                />
+              )}
+            />
+          ) : (
+            <div className="space-y-3">
+              {filteredAnime.map((anime) => (
+                <SearchAnimeCard
+                  key={anime.id}
+                  anime={anime}
+                  variant="list"
+                  onFavorite={() => toggleFavorite(anime.id)}
+                  isFavorited={isFavorited(anime.id)}
+                />
+              ))}
+            </div>
+          )
         )}
       </main>
     </div>

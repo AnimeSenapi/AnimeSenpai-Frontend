@@ -49,7 +49,7 @@ export function SearchBar({
   useEffect(() => {
     const loadPopularAnime = async () => {
       try {
-        const trending = await apiGetTrending()
+        const trending = await apiGetTrending() as any
         setPopularAnime(trending.slice(0, 3))
       } catch (error) {
         // Gracefully handle backend not running - just don't show popular anime
@@ -76,7 +76,7 @@ export function SearchBar({
           const username = query.slice(1).trim()
           if (username.length >= 2) {
             try {
-              const users = await apiSearchUsers(username, 5)
+              const users = await apiSearchUsers(username, 5) as any
               setUserResults(users)
               setFilteredSuggestions([])
             } catch (error) {
@@ -90,7 +90,7 @@ export function SearchBar({
           setSearchType('anime')
           setUserResults([])
           try {
-            const results = await apiSearchAnime(query)
+            const results = await apiSearchAnime(query) as any
             setFilteredSuggestions(results.slice(0, 5))
           } catch (error) {
             setFilteredSuggestions([])
@@ -242,7 +242,7 @@ export function SearchBar({
       
       // Navigate based on search type
       if (type === 'user') {
-        router.push(`/users/${encodeURIComponent(value)}`)
+        router.push(`/user/${encodeURIComponent(value)}`)
       } else {
         router.push(`/search?${params.toString()}`)
       }
@@ -393,7 +393,7 @@ export function SearchBar({
                         <div 
                           key={user.id} 
                           onClick={() => {
-                            router.push(`/users/${user.username}`)
+                            router.push(`/user/${user.username}`)
                             setIsOpen(false)
                             setSearchQuery('')
                           }}

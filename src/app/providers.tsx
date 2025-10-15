@@ -5,18 +5,21 @@ import ThemeProvider from '../components/ThemeProvider'
 import { ToastProvider } from '../lib/toast-context'
 import { AuthProvider } from './lib/auth-context'
 import { FavoritesProvider } from './lib/favorites-context'
+import { ErrorBoundary } from '../components/ErrorBoundary'
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <ThemeProvider>
-      <ToastProvider>
-        <AuthProvider>
-          <FavoritesProvider>
-            {children}
-          </FavoritesProvider>
-        </AuthProvider>
-      </ToastProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <FavoritesProvider>
+              {children}
+            </FavoritesProvider>
+          </AuthProvider>
+        </ToastProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   )
 }
 

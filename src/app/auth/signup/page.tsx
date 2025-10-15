@@ -49,7 +49,7 @@ export default function SignUpPage() {
     setUsernameStatus('checking')
     const timeoutId = setTimeout(async () => {
       try {
-        const result = await apiCheckUsernameAvailability(formData.username)
+        const result = await apiCheckUsernameAvailability(formData.username) as any
         setUsernameStatus(result.available ? 'available' : 'taken')
         if (!result.available) {
           setFormErrors(prev => ({ ...prev, username: 'Username is already taken' }))
@@ -96,8 +96,8 @@ export default function SignUpPage() {
       errors.password = 'Password is required'
     } else if (formData.password.length < 8) {
       errors.password = 'Password must be at least 8 characters'
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      errors.password = 'Password must contain uppercase, lowercase, and numbers'
+    } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/.test(formData.password)) {
+      errors.password = 'Password must contain uppercase, lowercase, number, and special character'
     }
     
     if (!formData.confirmPassword) {
@@ -135,8 +135,18 @@ export default function SignUpPage() {
       })
       await new Promise(resolve => setTimeout(resolve, 100))
       
-      toast.success('Account created! Let\'s get you started.', 'Welcome to AnimeSenpai')
-      router.push('/onboarding')
+      // Show success message with email verification reminder
+      toast.success(
+        `Check your email (${formData.email}) to verify your account!`, 
+        'Account Created! 🎉'
+      )
+      
+      // Show secondary toast with next steps
+      setTimeout(() => {
+        toast.info('You can start exploring anime now, but verify your email to unlock all features!', 'Quick Tip')
+      }, 3000)
+      
+      router.push('/dashboard')
     } catch (err) {
       if (error) {
         toast.error(error, 'Sign Up Failed')
@@ -150,6 +160,7 @@ export default function SignUpPage() {
     uppercase: /[A-Z]/.test(formData.password),
     lowercase: /[a-z]/.test(formData.password),
     number: /\d/.test(formData.password),
+    special: /[@$!%*?&]/.test(formData.password),
   }
   const isPasswordMatch = formData.password === formData.confirmPassword && formData.confirmPassword.length > 0
 
@@ -308,22 +319,29 @@ export default function SignUpPage() {
                 
                 {/* Password Requirements */}
                 {formData.password && (
-                  <div className="mt-2 grid grid-cols-2 gap-1.5">
-                    <div className={`flex items-center gap-1.5 text-xs ${passwordChecks.length ? 'text-green-400' : 'text-gray-500'}`}>
-                      {passwordChecks.length ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
-                      <span>8+ characters</span>
-                    </div>
-                    <div className={`flex items-center gap-1.5 text-xs ${passwordChecks.uppercase ? 'text-green-400' : 'text-gray-500'}`}>
-                      {passwordChecks.uppercase ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
-                      <span>Uppercase</span>
-                    </div>
-                    <div className={`flex items-center gap-1.5 text-xs ${passwordChecks.lowercase ? 'text-green-400' : 'text-gray-500'}`}>
-                      {passwordChecks.lowercase ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
-                      <span>Lowercase</span>
-                    </div>
-                    <div className={`flex items-center gap-1.5 text-xs ${passwordChecks.number ? 'text-green-400' : 'text-gray-500'}`}>
-                      {passwordChecks.number ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
-                      <span>Number</span>
+                  <div className="mt-3 p-3 bg-white/5 border border-white/10 rounded-lg">
+                    <p className="text-xs font-medium text-gray-400 mb-2">Password must contain:</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className={`flex items-center gap-1.5 text-xs ${passwordChecks.length ? 'text-green-400' : 'text-gray-400'}`}>
+                        {passwordChecks.length ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                        <span>8+ characters</span>
+                      </div>
+                      <div className={`flex items-center gap-1.5 text-xs ${passwordChecks.uppercase ? 'text-green-400' : 'text-gray-400'}`}>
+                        {passwordChecks.uppercase ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                        <span>Uppercase letter</span>
+                      </div>
+                      <div className={`flex items-center gap-1.5 text-xs ${passwordChecks.lowercase ? 'text-green-400' : 'text-gray-400'}`}>
+                        {passwordChecks.lowercase ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                        <span>Lowercase letter</span>
+                      </div>
+                      <div className={`flex items-center gap-1.5 text-xs ${passwordChecks.number ? 'text-green-400' : 'text-gray-400'}`}>
+                        {passwordChecks.number ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                        <span>Number</span>
+                      </div>
+                      <div className={`flex items-center gap-1.5 text-xs col-span-2 ${passwordChecks.special ? 'text-green-400' : 'text-gray-400'}`}>
+                        {passwordChecks.special ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                        <span>Special character (@$!%*?&)</span>
+                      </div>
                     </div>
                   </div>
                 )}

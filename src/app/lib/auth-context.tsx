@@ -76,7 +76,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (accessToken) {
           try {
             setIsLoading(true)
-            const userData = await apiMe()
+            const userData = await apiMe() as any
             setUser(userData)
           } catch (err: unknown) {
             // Only clear tokens if it's a token-related error, not a network error
@@ -95,6 +95,48 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       initAuth()
     }, [])
+    
+    // Proactive token refresh - refresh token every 45 minutes to prevent expiration
+    useEffect(() => {
+      if (!isAuthenticated) return
+      
+      const refreshInterval = 45 * 60 * 1000 // 45 minutes (tokens expire in 1 hour)
+      
+      const intervalId = setInterval(async () => {
+        const refreshToken = localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken')
+        if (refreshToken) {
+          try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+            const response = await fetch(apiUrl + '/auth.refreshToken', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ refreshToken }),
+              credentials: 'include',
+            })
+            
+            if (response.ok) {
+              const json = await response.json()
+              if ('result' in json && json.result?.data) {
+                const data = json.result.data
+                const storage = localStorage.getItem('refreshToken') ? localStorage : sessionStorage
+                storage.setItem('accessToken', data.accessToken)
+                storage.setItem('refreshToken', data.refreshToken)
+              }
+            } else if (response.status === 401) {
+              // Refresh token is invalid or expired - sign out user
+              clearInterval(intervalId)
+              signout()
+            }
+          } catch (error) {
+            // Network error - will retry at next interval
+          }
+        }
+      }, refreshInterval)
+      
+      return () => clearInterval(intervalId)
+    }, [isAuthenticated])
 
   // Removed unused checkAuth function
 
@@ -108,7 +150,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await new Promise(resolve => setTimeout(resolve, 200))
       }
       
-      const data = await apiSignin({ email, password, rememberMe })
+      const data = await apiSignin({ email, password, rememberMe }) as any
       setUser(data.user)
       
       // Store tokens based on "Remember Me" preference
@@ -155,7 +197,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await new Promise(resolve => setTimeout(resolve, 200))
       }
       
-      const result = await apiSignup(data)
+      const result = await apiSignup(data) as any
       setUser(result.user)
       
       // Store tokens
@@ -233,7 +275,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const refreshUser = async () => {
     try {
-      const userData = await apiMe()
+      const userData = await apiMe() as any
       setUser(userData)
     } catch (err: unknown) {
       console.error('Failed to refresh user:', err)
@@ -247,7 +289,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       'Content-Type': 'application/json'
     }
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`
+      headers['Authorization'] = 'Bearer ' + token
     }
     return headers
   }

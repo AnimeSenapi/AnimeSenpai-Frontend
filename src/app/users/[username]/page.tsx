@@ -100,7 +100,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       'Content-Type': 'application/json'
     }
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`
+      headers['Authorization'] = 'Bearer ' + token
     }
     return headers
   }
