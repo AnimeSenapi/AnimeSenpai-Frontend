@@ -89,7 +89,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
       setLoading(true)
       setError(null)
       
-      const profileData = await apiGetUserProfile(username)
+      const profileData = await apiGetUserProfile(username) as any
       setProfile(profileData as UserProfile)
       
       // Get relationship status if logged in and not own profile
