@@ -158,7 +158,7 @@ export function UsersTab() {
       setShowUserModal(false)
       setShowDeleteConfirm(false)
       setUserToDelete(null)
-      toast.success('User deleted successfully', 'Deleted')
+      toast.success(`User ${userToDelete.name || userToDelete.email} deleted successfully`, 'Deleted')
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete user', 'Error')
     }
@@ -183,10 +183,6 @@ export function UsersTab() {
   }
 
   const handleSendPasswordReset = async (user: User) => {
-    if (!confirm(`Send password reset email to ${user.email}?`)) {
-      return
-    }
-
     try {
       await apiSendPasswordResetEmail(user.id)
       toast.success(`Password reset email sent to ${user.email}`, 'Email Sent')
@@ -197,10 +193,7 @@ export function UsersTab() {
 
   const handleToggleEmailVerification = async (user: User) => {
     const action = user.emailVerified ? 'unverify' : 'verify'
-    if (!confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} email for ${user.email}?`)) {
-      return
-    }
-
+    
     try {
       await apiToggleEmailVerification(user.id, !user.emailVerified)
       loadUsers()
@@ -312,10 +305,6 @@ export function UsersTab() {
   const handleBulkDelete = async () => {
     if (selectedUsers.size === 0) return
     
-    if (!confirm(`Delete ${selectedUsers.size} selected users? This cannot be undone!`)) {
-      return
-    }
-
     try {
       for (const userId of selectedUsers) {
         await apiDeleteUser(userId)
