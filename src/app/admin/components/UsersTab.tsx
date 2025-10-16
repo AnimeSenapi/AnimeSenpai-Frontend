@@ -586,7 +586,7 @@ export function UsersTab() {
                       <td className="px-6 py-4">
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium text-white">{user.name || user.username || 'Unknown'}</p>
+                            <p className="text-sm font-medium text-white">{user.name || user.username || user.email}</p>
                             {user.emailVerified ? (
                               <CheckCircle className="h-3.5 w-3.5 text-green-400" />
                             ) : (
@@ -683,7 +683,7 @@ export function UsersTab() {
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-semibold text-white">{user.name || user.username || 'Unknown'}</p>
+                        <p className="text-sm font-semibold text-white">{user.name || user.username || user.email}</p>
                         {user.emailVerified ? (
                           <CheckCircle className="h-4 w-4 text-green-400 flex-shrink-0" />
                         ) : (
@@ -826,7 +826,7 @@ export function UsersTab() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-400 mb-1">Name</p>
-                    <p className="text-white">{selectedUser.name || selectedUser.username || 'Unknown'}</p>
+                    <p className="text-white">{selectedUser.name || selectedUser.username || selectedUser.email}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-400 mb-1">Username</p>
