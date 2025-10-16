@@ -126,7 +126,7 @@ export function RecommendationCarousel({
         className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide scroll-smooth pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory touch-pan-x"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {recommendations.slice(0, 20).map(({ anime, reason }) => (
+        {recommendations.slice(0, 20).filter(rec => rec && rec.anime && rec.anime.slug).map(({ anime, reason }) => (
           <div 
             key={anime.id}
             className="flex-shrink-0 w-36 sm:w-44 lg:w-48 relative group/card snap-start"
