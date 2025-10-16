@@ -294,6 +294,19 @@ async function trpcMutation<TInput, TOutput>(path: string, input?: TInput, init?
       const message = (payload && 'error' in payload) ? payload.error.message : 'Request failed'
       const code = (payload && 'error' in payload && payload.error.data?.code) || 'UNKNOWN_ERROR'
       
+      // Log mutation errors for debugging
+      logger.error('tRPC mutation error', {
+        path,
+        status: res.status,
+        code,
+        message,
+        payload: JSON.stringify(payload)
+      })
+      captureException(new Error(`tRPC mutation failed: ${code}`), {
+        context: { path, code, message, status: res.status },
+        tags: { operation: 'trpc_mutation' }
+      })
+      
       // Try to refresh token on auth errors (only once)
       if ((code === 'UNAUTHORIZED' || message.includes('session') || message.includes('expired') || message.includes('token')) && retryCount === 0) {
         const refreshed = await refreshAccessToken()
@@ -316,6 +329,18 @@ async function trpcMutation<TInput, TOutput>(path: string, input?: TInput, init?
     if ('error' in json) {
       const err = json.error
       const code = err.data?.code || 'UNKNOWN_ERROR'
+      
+      // Log mutation errors for debugging
+      logger.error('tRPC mutation error in response', {
+        path,
+        code,
+        message: err.message,
+        data: err.data
+      })
+      captureException(new Error(`tRPC mutation failed: ${code}`), {
+        context: { path, code, message: err.message },
+        tags: { operation: 'trpc_mutation' }
+      })
       
       // Try to refresh token on auth errors (only once)
       if ((code === 'UNAUTHORIZED' || err.message.includes('session') || err.message.includes('expired') || err.message.includes('token')) && retryCount === 0) {
