@@ -18,6 +18,7 @@ import { Button } from '../../../components/ui/button'
 import { LoadingState } from '../../../components/ui/loading-state'
 import { EmptyState } from '../../../components/ui/error-state'
 import { Badge } from '../../../components/ui/badge'
+import { Checkbox } from '../../../components/ui/checkbox'
 import { useToast } from '../../../lib/toast-context'
 
 interface User {
@@ -528,11 +529,9 @@ export function UsersTab() {
                 <thead className="bg-white/5">
                   <tr>
                     <th className="px-4 py-3 text-left">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={selectedUsers.size === users.length && users.length > 0}
-                        onChange={toggleSelectAll}
-                        className="w-4 h-4 rounded border-white/20 bg-white/5 text-primary-500 focus:ring-2 focus:ring-primary-500/50"
+                        onCheckedChange={toggleSelectAll}
                       />
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white" onClick={() => {
@@ -579,11 +578,9 @@ export function UsersTab() {
                   {getFilteredAndSortedUsers().map((user) => (
                     <tr key={user.id} className="hover:bg-white/5 transition-colors">
                       <td className="px-4 py-4">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={selectedUsers.has(user.id)}
-                          onChange={() => toggleUserSelection(user.id)}
-                          className="w-4 h-4 rounded border-white/20 bg-white/5 text-primary-500 focus:ring-2 focus:ring-primary-500/50"
+                          onCheckedChange={() => toggleUserSelection(user.id)}
                         />
                       </td>
                       <td className="px-6 py-4">
@@ -679,11 +676,10 @@ export function UsersTab() {
               <div key={user.id} className="glass rounded-xl p-4 border border-white/10">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-start gap-3 flex-1">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={selectedUsers.has(user.id)}
-                      onChange={() => toggleUserSelection(user.id)}
-                      className="w-4 h-4 mt-1 rounded border-white/20 bg-white/5 text-primary-500 focus:ring-2 focus:ring-primary-500/50"
+                      onCheckedChange={() => toggleUserSelection(user.id)}
+                      className="mt-1"
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
