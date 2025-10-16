@@ -5,26 +5,43 @@ import Link from 'next/link'
 import { Bell } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
 import { apiGetUnreadNotificationCount } from '@/app/lib/api'
+import { useAuth } from '@/app/lib/auth-context'
 
 export function NotificationBell() {
+  const { isAuthenticated } = useAuth()
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Only load notifications if user is authenticated
+    if (!isAuthenticated) {
+      setLoading(false)
+      setUnreadCount(0)
+      return
+    }
+
     loadNotifications()
     
-    // Poll for new notifications every 30 seconds
+    // Poll for new notifications every 30 seconds (only when authenticated)
     const interval = setInterval(loadNotifications, 30000)
     
     return () => clearInterval(interval)
-  }, [])
+  }, [isAuthenticated])
 
   const loadNotifications = async () => {
+    // Double-check authentication before making API call
+    if (!isAuthenticated) {
+      setUnreadCount(0)
+      setLoading(false)
+      return
+    }
+
     try {
       const data = await apiGetUnreadNotificationCount() as any
-      setUnreadCount(data.count)
+      setUnreadCount(data.count || 0)
     } catch (error) {
-      // Silently fail - user might not be logged in
+      // Silently fail - might be auth error
+      setUnreadCount(0)
     } finally {
       setLoading(false)
     }

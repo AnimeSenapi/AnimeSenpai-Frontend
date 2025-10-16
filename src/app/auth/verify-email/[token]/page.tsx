@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '../../../../components/ui/button'
-import { RequireGuest } from '../../../lib/protected-route'
 import { useAuth } from '../../../lib/auth-context'
 import { LoadingState } from '../../../../components/ui/loading-state'
 import { 
@@ -26,7 +25,7 @@ interface VerifyEmailPageProps {
 export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
   const router = useRouter()
   const [token, setToken] = useState<string>('')
-  const { verifyEmail } = useAuth()
+  const { verifyEmail, isAuthenticated, refreshUser } = useAuth()
 
   useEffect(() => {
     params.then(({ token }) => setToken(token))
@@ -45,6 +44,12 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
       try {
         setIsLoading(true)
         await verifyEmail(token)
+        
+        // If user is already signed in, refresh their user data to show verified status
+        if (isAuthenticated) {
+          await refreshUser()
+        }
+        
         setIsSuccess(true)
       } catch (error: any) {
         setIsError(true)
@@ -55,7 +60,7 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
     }
     
     verifyEmailToken()
-  }, [token, verifyEmail])
+  }, [token, verifyEmail, isAuthenticated, refreshUser])
 
   // Auto-redirect countdown after successful verification
   useEffect(() => {
@@ -64,7 +69,8 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          router.push('/dashboard')
+          // If user is signed in, go to dashboard. Otherwise, go to signin
+          router.push(isAuthenticated ? '/dashboard' : '/auth/signin')
           return 0
         }
         return prev - 1
@@ -72,7 +78,7 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [isSuccess, router])
+  }, [isSuccess, isAuthenticated, router])
 
   if (isLoading) {
     return <LoadingState variant="full" text="Verifying your email address..." size="lg" />
@@ -134,8 +140,7 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
   }
 
   return (
-    <RequireGuest>
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4">
         <div className="absolute inset-0 overflow-hidden opacity-30">
           <div className="absolute top-0 -right-40 w-96 h-96 bg-green-500/30 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 -left-40 w-96 h-96 bg-primary-500/30 rounded-full blur-3xl"></div>
@@ -170,7 +175,10 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
             </p>
             
             <p className="text-sm text-gray-500 mb-6">
-              You now have full access to AnimeSenpai features
+              {isAuthenticated 
+                ? "You're all set! Redirecting you to your dashboard..."
+                : "Please sign in to access your account"
+              }
             </p>
 
             {/* Auto-redirect countdown */}
@@ -178,24 +186,24 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
               <div className="flex items-center justify-center gap-2 text-primary-300">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <p className="text-sm">
-                  Redirecting to dashboard in <span className="font-bold text-primary-400">{countdown}s</span>
+                  Redirecting to {isAuthenticated ? 'dashboard' : 'sign in'} in <span className="font-bold text-primary-400">{countdown}s</span>
                 </p>
               </div>
             </div>
 
             <div className="space-y-3">
               <Button
-                onClick={() => router.push('/dashboard')}
+                onClick={() => router.push(isAuthenticated ? '/dashboard' : '/auth/signin')}
                 className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3.5 shadow-lg shadow-green-500/25"
               >
-                Go to Dashboard Now
+                {isAuthenticated ? 'Go to Dashboard Now' : 'Sign In Now'}
               </Button>
               <Button
                 variant="outline"
-                onClick={() => router.push('/auth/signin')}
+                onClick={() => router.push('/')}
                 className="w-full border-white/20 text-white hover:bg-white/10 py-3.5"
               >
-                Sign In Instead
+                Go to Home
               </Button>
             </div>
 
@@ -205,7 +213,6 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
             </div>
           </div>
         </div>
-      </div>
-    </RequireGuest>
+    </div>
   )
 }
