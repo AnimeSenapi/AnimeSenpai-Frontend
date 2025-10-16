@@ -125,7 +125,7 @@ const DISCOVERY_MODES = [
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const [step, setStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -236,7 +236,10 @@ export default function OnboardingPage() {
         return
       }
 
-      // Success! Redirect to dashboard
+      // Success! Refresh user data to update onboarding status
+      await refreshUser()
+      
+      // Then redirect to dashboard
       router.push('/dashboard')
     } catch (err) {
       setError('Something went wrong. Please try again.')
@@ -252,8 +255,12 @@ export default function OnboardingPage() {
         headers: getAuthHeaders()
       })
 
+      // Refresh user data to update onboarding status
+      await refreshUser()
       router.push('/dashboard')
     } catch (err) {
+      // Even if skip fails, refresh and redirect
+      await refreshUser()
       router.push('/dashboard')
     }
   }
