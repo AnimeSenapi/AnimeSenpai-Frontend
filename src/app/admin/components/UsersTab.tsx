@@ -19,6 +19,7 @@ import { LoadingState } from '../../../components/ui/loading-state'
 import { EmptyState } from '../../../components/ui/error-state'
 import { Badge } from '../../../components/ui/badge'
 import { Checkbox } from '../../../components/ui/checkbox'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../../components/ui/tooltip'
 import { useToast } from '../../../lib/toast-context'
 
 interface User {
@@ -609,59 +610,92 @@ export function UsersTab() {
                         {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Never'}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5 flex-wrap">
-                          <button
-                            onClick={() => handleViewDetails(user)}
-                            className="p-1.5 hover:bg-primary-500/20 rounded text-primary-400 hover:text-primary-300 transition-colors"
-                            title="View Details & Activity"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleEditUser(user)}
-                            className="p-1.5 hover:bg-blue-500/20 rounded text-blue-400 hover:text-blue-300 transition-colors"
-                            title="Edit User"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleSendPasswordReset(user)}
-                            className="p-1.5 hover:bg-orange-500/20 rounded text-orange-400 hover:text-orange-300 transition-colors"
-                            title="Send Password Reset"
-                          >
-                            <KeyRound className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleToggleEmailVerification(user)}
-                            className={`p-1.5 rounded transition-colors ${user.emailVerified ? 'hover:bg-warning-500/20 text-warning-400 hover:text-warning-300' : 'hover:bg-success-500/20 text-success-400 hover:text-success-300'}`}
-                            title={user.emailVerified ? 'Unverify Email' : 'Verify Email'}
-                          >
-                            {user.emailVerified ? <AlertCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
-                          </button>
-                          <button
-                            onClick={() => handleSendCustomEmail(user)}
-                            className="p-1.5 hover:bg-purple-500/20 rounded text-purple-400 hover:text-purple-300 transition-colors"
-                            title="Send Custom Email"
-                          >
-                            <MailOpen className="h-4 w-4" />
-                          </button>
-                          <select
-                            value={user.role}
-                            onChange={(e) => handleRoleChange(user.id, e.target.value as 'user' | 'moderator' | 'admin')}
-                            className="px-2 py-1 text-xs bg-white/5 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500/50 transition-colors"
-                          >
-                            <option value="user">User</option>
-                            <option value="moderator">Moderator</option>
-                            <option value="admin">Admin</option>
-                          </select>
-                          <button
-                            onClick={() => handleDeleteUser(user.id)}
-                            className="p-1.5 hover:bg-error-500/20 rounded text-error-400 hover:text-error-300 transition-colors"
-                            title="Delete User"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
+                        <TooltipProvider>
+                          <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => handleViewDetails(user)}
+                                  className="p-1.5 hover:bg-primary-500/20 rounded text-primary-400 hover:text-primary-300 transition-colors"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>View Details & Activity</TooltipContent>
+                            </Tooltip>
+
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => handleEditUser(user)}
+                                  className="p-1.5 hover:bg-blue-500/20 rounded text-blue-400 hover:text-blue-300 transition-colors"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>Edit User</TooltipContent>
+                            </Tooltip>
+
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => handleSendPasswordReset(user)}
+                                  className="p-1.5 hover:bg-orange-500/20 rounded text-orange-400 hover:text-orange-300 transition-colors"
+                                >
+                                  <KeyRound className="h-4 w-4" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>Send Password Reset</TooltipContent>
+                            </Tooltip>
+
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => handleToggleEmailVerification(user)}
+                                  className={`p-1.5 rounded transition-colors ${user.emailVerified ? 'hover:bg-warning-500/20 text-warning-400 hover:text-warning-300' : 'hover:bg-success-500/20 text-success-400 hover:text-success-300'}`}
+                                >
+                                  {user.emailVerified ? <AlertCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>{user.emailVerified ? 'Unverify Email' : 'Verify Email'}</TooltipContent>
+                            </Tooltip>
+
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => handleSendCustomEmail(user)}
+                                  className="p-1.5 hover:bg-purple-500/20 rounded text-purple-400 hover:text-purple-300 transition-colors"
+                                >
+                                  <MailOpen className="h-4 w-4" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>Send Custom Email</TooltipContent>
+                            </Tooltip>
+
+                            <select
+                              value={user.role}
+                              onChange={(e) => handleRoleChange(user.id, e.target.value as 'user' | 'moderator' | 'admin')}
+                              className="px-2 py-1 text-xs bg-white/5 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500/50 transition-colors"
+                              title="Change Role"
+                            >
+                              <option value="user">User</option>
+                              <option value="moderator">Moderator</option>
+                              <option value="admin">Admin</option>
+                            </select>
+
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => handleDeleteUser(user.id)}
+                                  className="p-1.5 hover:bg-error-500/20 rounded text-error-400 hover:text-error-300 transition-colors"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>Delete User</TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </TooltipProvider>
                       </td>
                     </tr>
                   ))}
