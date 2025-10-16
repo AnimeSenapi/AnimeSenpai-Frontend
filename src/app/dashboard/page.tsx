@@ -190,31 +190,31 @@ export default function DashboardPage() {
     try {
       const headers = getAuthHeaders()
       const [forYou, fansLikeYou, friendRecs, hiddenGems, discovery, continueWatch, newAnime] = await Promise.all([
-        fetch(`${API_URL}/recommendations.getForYou`, {
+        fetch(`${API_URL}/recommendations.getForYou?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`, {
           method: 'GET',
           headers
         }).then(r => r.json()),
-        fetch(`${API_URL}/recommendations.getFansLikeYou`, {
+        fetch(`${API_URL}/recommendations.getFansLikeYou?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`, {
           method: 'GET',
           headers
         }).then(r => r.json()),
-        fetch(`${API_URL}/social.getFriendRecommendations`, {
+        fetch(`${API_URL}/social.getFriendRecommendations?input=${encodeURIComponent(JSON.stringify({ limit: 12 }))}`, {
           method: 'GET',
           headers
         }).then(r => r.json()),
-        fetch(`${API_URL}/recommendations.getHiddenGems`, {
+        fetch(`${API_URL}/recommendations.getHiddenGems?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`, {
           method: 'GET',
           headers
         }).then(r => r.json()),
-        fetch(`${API_URL}/recommendations.getDiscovery`, {
+        fetch(`${API_URL}/recommendations.getDiscovery?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`, {
           method: 'GET',
           headers
         }).then(r => r.json()),
-        fetch(`${API_URL}/recommendations.getContinueWatching`, {
+        fetch(`${API_URL}/recommendations.getContinueWatching?input=${encodeURIComponent(JSON.stringify({ limit: 10 }))}`, {
           method: 'GET',
           headers
         }).then(r => r.json()),
-        fetch(`${API_URL}/recommendations.getNewReleases`, {
+        fetch(`${API_URL}/recommendations.getNewReleases?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`, {
           method: 'GET',
           headers
         }).then(r => r.json())
