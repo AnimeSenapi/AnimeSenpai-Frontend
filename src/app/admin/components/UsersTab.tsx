@@ -586,14 +586,14 @@ export function UsersTab() {
                       <td className="px-6 py-4">
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium text-white">{user.username || 'Not set'}</p>
+                            <p className="text-sm font-medium text-white">{user.username || user.name || user.email}</p>
                             {user.emailVerified ? (
                               <CheckCircle className="h-3.5 w-3.5 text-green-400" />
                             ) : (
                               <AlertCircle className="h-3.5 w-3.5 text-warning-400" />
                             )}
                           </div>
-                          <p className="text-xs text-gray-400">{user.email}</p>
+                          {user.username && <p className="text-xs text-gray-400">{user.email}</p>}
                         </div>
                       </td>
                       <td className="px-6 py-4">
