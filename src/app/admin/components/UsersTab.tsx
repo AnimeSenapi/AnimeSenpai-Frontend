@@ -223,8 +223,32 @@ export function UsersTab() {
   const handleSaveEdit = async () => {
     if (!userToEdit) return
 
+    // Validate inputs
+    if (editForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.email)) {
+      toast.error('Please enter a valid email address', 'Invalid Email')
+      return
+    }
+
+    if (editForm.username && (editForm.username.length < 3 || editForm.username.length > 30)) {
+      toast.error('Username must be between 3 and 30 characters', 'Invalid Username')
+      return
+    }
+
+    // Check if anything changed
+    if (editForm.name === (userToEdit.name || '') && 
+        editForm.username === (userToEdit.username || '') && 
+        editForm.email === userToEdit.email) {
+      toast.error('No changes detected', 'No Changes')
+      return
+    }
+
     try {
-      await apiUpdateUserDetails(userToEdit.id, editForm)
+      const updates: any = {}
+      if (editForm.name !== (userToEdit.name || '')) updates.name = editForm.name || undefined
+      if (editForm.username !== (userToEdit.username || '')) updates.username = editForm.username || undefined
+      if (editForm.email !== userToEdit.email) updates.email = editForm.email
+
+      await apiUpdateUserDetails(userToEdit.id, updates)
       loadUsers()
       setShowEditModal(false)
       setUserToEdit(null)
@@ -508,7 +532,8 @@ export function UsersTab() {
         />
       ) : (
         <>
-          <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+          {/* Desktop Table View */}
+          <div className="hidden lg:block bg-white/5 border border-white/10 rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-white/5">
@@ -601,35 +626,35 @@ export function UsersTab() {
                         <div className="flex items-center justify-end gap-1.5 flex-wrap">
                           <button
                             onClick={() => handleViewDetails(user)}
-                            className="p-1.5 hover:bg-primary-500/20 rounded text-primary-400 hover:text-primary-300"
+                            className="p-1.5 hover:bg-primary-500/20 rounded text-primary-400 hover:text-primary-300 transition-colors"
                             title="View Details & Activity"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleEditUser(user)}
-                            className="p-1.5 hover:bg-blue-500/20 rounded text-blue-400 hover:text-blue-300"
+                            className="p-1.5 hover:bg-blue-500/20 rounded text-blue-400 hover:text-blue-300 transition-colors"
                             title="Edit User"
                           >
                             <Edit className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleSendPasswordReset(user)}
-                            className="p-1.5 hover:bg-orange-500/20 rounded text-orange-400 hover:text-orange-300"
+                            className="p-1.5 hover:bg-orange-500/20 rounded text-orange-400 hover:text-orange-300 transition-colors"
                             title="Send Password Reset"
                           >
                             <KeyRound className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleToggleEmailVerification(user)}
-                            className={`p-1.5 rounded ${user.emailVerified ? 'hover:bg-warning-500/20 text-warning-400 hover:text-warning-300' : 'hover:bg-success-500/20 text-success-400 hover:text-success-300'}`}
+                            className={`p-1.5 rounded transition-colors ${user.emailVerified ? 'hover:bg-warning-500/20 text-warning-400 hover:text-warning-300' : 'hover:bg-success-500/20 text-success-400 hover:text-success-300'}`}
                             title={user.emailVerified ? 'Unverify Email' : 'Verify Email'}
                           >
                             {user.emailVerified ? <AlertCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
                           </button>
                           <button
                             onClick={() => handleSendCustomEmail(user)}
-                            className="p-1.5 hover:bg-purple-500/20 rounded text-purple-400 hover:text-purple-300"
+                            className="p-1.5 hover:bg-purple-500/20 rounded text-purple-400 hover:text-purple-300 transition-colors"
                             title="Send Custom Email"
                           >
                             <MailOpen className="h-4 w-4" />
@@ -637,7 +662,7 @@ export function UsersTab() {
                           <select
                             value={user.role}
                             onChange={(e) => handleRoleChange(user.id, e.target.value as 'user' | 'moderator' | 'admin')}
-                            className="px-2 py-1 text-xs bg-white/5 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500/50"
+                            className="px-2 py-1 text-xs bg-white/5 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500/50 transition-colors"
                           >
                             <option value="user">User</option>
                             <option value="moderator">Moderator</option>
@@ -645,7 +670,7 @@ export function UsersTab() {
                           </select>
                           <button
                             onClick={() => handleDeleteUser(user.id)}
-                            className="p-1.5 hover:bg-error-500/20 rounded text-error-400 hover:text-error-300"
+                            className="p-1.5 hover:bg-error-500/20 rounded text-error-400 hover:text-error-300 transition-colors"
                             title="Delete User"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -657,6 +682,116 @@ export function UsersTab() {
                 </tbody>
               </table>
             </div>
+          </div>
+
+          {/* Mobile/Tablet Card View */}
+          <div className="lg:hidden space-y-4">
+            {getFilteredAndSortedUsers().map((user) => (
+              <div key={user.id} className="glass rounded-xl p-4 border border-white/10">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start gap-3 flex-1">
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.has(user.id)}
+                      onChange={() => toggleUserSelection(user.id)}
+                      className="w-4 h-4 mt-1 rounded border-white/20 bg-white/5 text-primary-500 focus:ring-2 focus:ring-primary-500/50"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-sm font-semibold text-white">{user.name || user.username || 'Unknown'}</p>
+                        {user.emailVerified ? (
+                          <CheckCircle className="h-4 w-4 text-green-400 flex-shrink-0" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4 text-warning-400 flex-shrink-0" />
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-400 break-all">{user.email}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-xs font-medium ${getRoleColor(user.role)}`}>
+                          {getRoleIcon(user.role)}
+                          <span className="capitalize">{user.role}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs mb-3 pb-3 border-b border-white/10">
+                  <div>
+                    <p className="text-gray-400">Joined</p>
+                    <p className="text-white">{new Date(user.createdAt).toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400">Last Login</p>
+                    <p className="text-white">{user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Never'}</p>
+                  </div>
+                </div>
+
+                {/* Mobile Actions */}
+                <div className="grid grid-cols-4 gap-2">
+                  <button
+                    onClick={() => handleViewDetails(user)}
+                    className="flex flex-col items-center gap-1 p-2 hover:bg-primary-500/20 rounded text-primary-400 hover:text-primary-300 transition-colors"
+                    title="View Details"
+                  >
+                    <Eye className="h-4 w-4" />
+                    <span className="text-[10px]">View</span>
+                  </button>
+                  <button
+                    onClick={() => handleEditUser(user)}
+                    className="flex flex-col items-center gap-1 p-2 hover:bg-blue-500/20 rounded text-blue-400 hover:text-blue-300 transition-colors"
+                    title="Edit"
+                  >
+                    <Edit className="h-4 w-4" />
+                    <span className="text-[10px]">Edit</span>
+                  </button>
+                  <button
+                    onClick={() => handleSendPasswordReset(user)}
+                    className="flex flex-col items-center gap-1 p-2 hover:bg-orange-500/20 rounded text-orange-400 hover:text-orange-300 transition-colors"
+                    title="Password"
+                  >
+                    <KeyRound className="h-4 w-4" />
+                    <span className="text-[10px]">Reset</span>
+                  </button>
+                  <button
+                    onClick={() => handleToggleEmailVerification(user)}
+                    className={`flex flex-col items-center gap-1 p-2 rounded transition-colors ${user.emailVerified ? 'hover:bg-warning-500/20 text-warning-400 hover:text-warning-300' : 'hover:bg-success-500/20 text-success-400 hover:text-success-300'}`}
+                    title={user.emailVerified ? 'Unverify' : 'Verify'}
+                  >
+                    {user.emailVerified ? <AlertCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                    <span className="text-[10px]">{user.emailVerified ? 'Unverify' : 'Verify'}</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  <button
+                    onClick={() => handleSendCustomEmail(user)}
+                    className="flex flex-col items-center gap-1 p-2 hover:bg-purple-500/20 rounded text-purple-400 hover:text-purple-300 transition-colors"
+                    title="Email"
+                  >
+                    <MailOpen className="h-4 w-4" />
+                    <span className="text-[10px]">Email</span>
+                  </button>
+                  <select
+                    value={user.role}
+                    onChange={(e) => handleRoleChange(user.id, e.target.value as 'user' | 'moderator' | 'admin')}
+                    className="px-2 py-1.5 text-xs bg-white/5 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500/50 transition-colors"
+                  >
+                    <option value="user">User</option>
+                    <option value="moderator">Moderator</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                  <button
+                    onClick={() => handleDeleteUser(user.id)}
+                    className="flex flex-col items-center gap-1 p-2 hover:bg-error-500/20 rounded text-error-400 hover:text-error-300 transition-colors"
+                    title="Delete"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="text-[10px]">Delete</span>
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Pagination */}
