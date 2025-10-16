@@ -948,6 +948,135 @@ export async function apiDeleteUser(userId: string) {
   return data.result.data
 }
 
+// Send Password Reset Email (Admin)
+export async function apiSendPasswordResetEmail(userId: string) {
+  const url = `${TRPC_URL}/admin.sendPasswordResetEmail`
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    credentials: 'include',
+    body: JSON.stringify({ userId }),
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to send password reset email')
+  }
+
+  const data: TRPCResponse<any> = await response.json()
+  if ('error' in data) {
+    throw new Error(data.error.message)
+  }
+
+  return data.result.data
+}
+
+// Toggle Email Verification (Admin)
+export async function apiToggleEmailVerification(userId: string, verified: boolean) {
+  const url = `${TRPC_URL}/admin.toggleEmailVerification`
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    credentials: 'include',
+    body: JSON.stringify({ userId, verified }),
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to toggle email verification')
+  }
+
+  const data: TRPCResponse<any> = await response.json()
+  if ('error' in data) {
+    throw new Error(data.error.message)
+  }
+
+  return data.result.data
+}
+
+// Update User Details (Admin)
+export async function apiUpdateUserDetails(userId: string, updates: { name?: string; username?: string; email?: string }) {
+  const url = `${TRPC_URL}/admin.updateUserDetails`
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    credentials: 'include',
+    body: JSON.stringify({ userId, ...updates }),
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to update user details')
+  }
+
+  const data: TRPCResponse<any> = await response.json()
+  if ('error' in data) {
+    throw new Error(data.error.message)
+  }
+
+  return data.result.data
+}
+
+// Get User Activity (Admin)
+export async function apiGetUserActivity(userId: string) {
+  const url = `${TRPC_URL}/admin.getUserActivity?input=${encodeURIComponent(JSON.stringify({ userId }))}`
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to fetch user activity')
+  }
+
+  const data: TRPCResponse<any> = await response.json()
+  if ('error' in data) {
+    throw new Error(data.error.message)
+  }
+
+  return data.result.data
+}
+
+// Send Custom Email (Admin)
+export async function apiSendCustomEmail(userId: string, subject: string, message: string) {
+  const url = `${TRPC_URL}/admin.sendCustomEmail`
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    credentials: 'include',
+    body: JSON.stringify({ userId, subject, message }),
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to send email')
+  }
+
+  const data: TRPCResponse<any> = await response.json()
+  if ('error' in data) {
+    throw new Error(data.error.message)
+  }
+
+  return data.result.data
+}
+
 // Update Anime (Admin)
 export async function apiUpdateAnime(animeId: string, updateData: {
   title?: string

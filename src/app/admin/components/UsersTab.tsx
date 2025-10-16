@@ -1,8 +1,19 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { apiGetAllUsers, apiAdminSearchUsers, apiUpdateUserRole, apiDeleteUser, apiGetUserDetails } from '../../lib/api'
-import { Search, ChevronLeft, ChevronRight, Shield, ShieldCheck, Crown, Trash2, Ban, Eye, X, RefreshCw, Mail, CheckCircle, AlertCircle, Download, ArrowUpDown, Check, Users } from 'lucide-react'
+import { 
+  apiGetAllUsers, 
+  apiAdminSearchUsers, 
+  apiUpdateUserRole, 
+  apiDeleteUser, 
+  apiGetUserDetails,
+  apiSendPasswordResetEmail,
+  apiToggleEmailVerification,
+  apiUpdateUserDetails,
+  apiGetUserActivity,
+  apiSendCustomEmail
+} from '../../lib/api'
+import { Search, ChevronLeft, ChevronRight, Shield, ShieldCheck, Crown, Trash2, Ban, Eye, X, RefreshCw, Mail, CheckCircle, AlertCircle, Download, ArrowUpDown, Check, Users, KeyRound, Edit, Send, Activity, MailOpen } from 'lucide-react'
 import { Button } from '../../../components/ui/button'
 import { LoadingState } from '../../../components/ui/loading-state'
 import { EmptyState } from '../../../components/ui/error-state'
@@ -26,6 +37,30 @@ interface UserDetails extends User {
   }
 }
 
+interface UserActivity {
+  user: {
+    id: string
+    email: string
+    name: string | null
+    username: string | null
+    createdAt: string
+    lastLoginAt: string | null
+  }
+  stats: {
+    animeList: number
+    reviews: number
+    friends: number
+    followers: number
+  }
+  recentActivity: Array<{
+    id: string
+    eventType: string
+    createdAt: string
+    ipAddress: string | null
+    userAgent: string | null
+  }>
+}
+
 export function UsersTab() {
   const toast = useToast()
   const [users, setUsers] = useState<User[]>([])
@@ -42,6 +77,16 @@ export function UsersTab() {
   const [sortBy, setSortBy] = useState<'createdAt' | 'lastLoginAt' | 'email'>('createdAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [verifiedFilter, setVerifiedFilter] = useState<'all' | 'verified' | 'unverified'>('all')
+  
+  // New modals
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [userToEdit, setUserToEdit] = useState<User | null>(null)
+  const [editForm, setEditForm] = useState({ name: '', username: '', email: '' })
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [emailForm, setEmailForm] = useState({ subject: '', message: '' })
+  const [userToEmail, setUserToEmail] = useState<User | null>(null)
+  const [userActivity, setUserActivity] = useState<UserActivity | null>(null)
+  const [loadingActivity, setLoadingActivity] = useState(false)
 
   useEffect(() => {
     loadUsers()
@@ -121,11 +166,93 @@ export function UsersTab() {
 
   const handleViewDetails = async (user: User) => {
     try {
-      const details = await apiGetUserDetails(user.id) as any
+      setLoadingActivity(true)
+      const [details, activity] = await Promise.all([
+        apiGetUserDetails(user.id) as any,
+        apiGetUserActivity(user.id) as any
+      ])
       setSelectedUser(details as UserDetails)
+      setUserActivity(activity as UserActivity)
       setShowUserModal(true)
     } catch (error) {
       console.error('Failed to load user details:', error)
+      toast.error('Failed to load user details', 'Error')
+    } finally {
+      setLoadingActivity(false)
+    }
+  }
+
+  const handleSendPasswordReset = async (user: User) => {
+    if (!confirm(`Send password reset email to ${user.email}?`)) {
+      return
+    }
+
+    try {
+      await apiSendPasswordResetEmail(user.id)
+      toast.success(`Password reset email sent to ${user.email}`, 'Email Sent')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send password reset email', 'Error')
+    }
+  }
+
+  const handleToggleEmailVerification = async (user: User) => {
+    const action = user.emailVerified ? 'unverify' : 'verify'
+    if (!confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} email for ${user.email}?`)) {
+      return
+    }
+
+    try {
+      await apiToggleEmailVerification(user.id, !user.emailVerified)
+      loadUsers()
+      toast.success(`Email ${action}ed successfully`, 'Success')
+    } catch (error: any) {
+      toast.error(error.message || `Failed to ${action} email`, 'Error')
+    }
+  }
+
+  const handleEditUser = (user: User) => {
+    setUserToEdit(user)
+    setEditForm({
+      name: user.name || '',
+      username: user.username || '',
+      email: user.email
+    })
+    setShowEditModal(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!userToEdit) return
+
+    try {
+      await apiUpdateUserDetails(userToEdit.id, editForm)
+      loadUsers()
+      setShowEditModal(false)
+      setUserToEdit(null)
+      toast.success('User details updated successfully', 'Success')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update user details', 'Error')
+    }
+  }
+
+  const handleSendCustomEmail = (user: User) => {
+    setUserToEmail(user)
+    setEmailForm({ subject: '', message: '' })
+    setShowEmailModal(true)
+  }
+
+  const handleSendEmail = async () => {
+    if (!userToEmail || !emailForm.subject || !emailForm.message) {
+      toast.error('Please fill in all fields', 'Error')
+      return
+    }
+
+    try {
+      await apiSendCustomEmail(userToEmail.id, emailForm.subject, emailForm.message)
+      setShowEmailModal(false)
+      setUserToEmail(null)
+      toast.success('Email sent successfully', 'Success')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send email', 'Error')
     }
   }
 
@@ -471,13 +598,41 @@ export function UsersTab() {
                         {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Never'}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5 flex-wrap">
                           <button
                             onClick={() => handleViewDetails(user)}
                             className="p-1.5 hover:bg-primary-500/20 rounded text-primary-400 hover:text-primary-300"
-                            title="View Details"
+                            title="View Details & Activity"
                           >
                             <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleEditUser(user)}
+                            className="p-1.5 hover:bg-blue-500/20 rounded text-blue-400 hover:text-blue-300"
+                            title="Edit User"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleSendPasswordReset(user)}
+                            className="p-1.5 hover:bg-orange-500/20 rounded text-orange-400 hover:text-orange-300"
+                            title="Send Password Reset"
+                          >
+                            <KeyRound className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleToggleEmailVerification(user)}
+                            className={`p-1.5 rounded ${user.emailVerified ? 'hover:bg-warning-500/20 text-warning-400 hover:text-warning-300' : 'hover:bg-success-500/20 text-success-400 hover:text-success-300'}`}
+                            title={user.emailVerified ? 'Unverify Email' : 'Verify Email'}
+                          >
+                            {user.emailVerified ? <AlertCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                          </button>
+                          <button
+                            onClick={() => handleSendCustomEmail(user)}
+                            className="p-1.5 hover:bg-purple-500/20 rounded text-purple-400 hover:text-purple-300"
+                            title="Send Custom Email"
+                          >
+                            <MailOpen className="h-4 w-4" />
                           </button>
                           <select
                             value={user.role}
@@ -531,10 +686,10 @@ export function UsersTab() {
 
       {/* User Details Modal */}
       {showUserModal && selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowUserModal(false)}>
-          <div className="glass rounded-2xl p-6 max-w-md w-full mx-4 border border-white/10" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowUserModal(false)}>
+          <div className="glass rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-white/10" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white">User Details</h3>
+              <h3 className="text-xl font-bold text-white">User Details & Activity</h3>
               <button
                 onClick={() => setShowUserModal(false)}
                 className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white"
@@ -542,58 +697,110 @@ export function UsersTab() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Name</p>
-                <p className="text-white">{selectedUser.name || selectedUser.username || 'Unknown'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Email</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-white">{selectedUser.email}</p>
-                  {selectedUser.emailVerified ? (
-                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Verified
-                    </Badge>
-                  ) : (
-                    <Badge className="bg-warning-500/20 text-warning-400 border-warning-500/30 text-xs">
-                      <AlertCircle className="h-3 w-3 mr-1" />
-                      Not Verified
-                    </Badge>
-                  )}
+
+            {loadingActivity ? (
+              <LoadingState variant="inline" text="Loading activity..." size="sm" />
+            ) : (
+              <div className="space-y-6">
+                {/* Basic Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-400 mb-1">Name</p>
+                    <p className="text-white">{selectedUser.name || selectedUser.username || 'Unknown'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400 mb-1">Username</p>
+                    <p className="text-white">{selectedUser.username || 'Not set'}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className="text-sm text-gray-400 mb-1">Email</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-white">{selectedUser.email}</p>
+                      {selectedUser.emailVerified ? (
+                        <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Verified
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-warning-500/20 text-warning-400 border-warning-500/30 text-xs">
+                          <AlertCircle className="h-3 w-3 mr-1" />
+                          Not Verified
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400 mb-1">Role</p>
+                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium ${getRoleColor(selectedUser.role)}`}>
+                      {getRoleIcon(selectedUser.role)}
+                      <span className="capitalize">{selectedUser.role}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400 mb-1">Joined</p>
+                    <p className="text-white">{new Date(selectedUser.createdAt).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400 mb-1">Last Login</p>
+                    <p className="text-white">
+                      {selectedUser.lastLoginAt ? new Date(selectedUser.lastLoginAt).toLocaleString() : 'Never'}
+                    </p>
+                  </div>
                 </div>
+
+                {/* Stats */}
+                {userActivity && (
+                  <>
+                    <div className="border-t border-white/10 pt-4">
+                      <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                        <Activity className="h-4 w-4 text-primary-400" />
+                        User Statistics
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                          <p className="text-xs text-gray-400 mb-1">Anime List</p>
+                          <p className="text-xl font-bold text-white">{userActivity.stats.animeList}</p>
+                        </div>
+                        <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                          <p className="text-xs text-gray-400 mb-1">Reviews</p>
+                          <p className="text-xl font-bold text-white">{userActivity.stats.reviews}</p>
+                        </div>
+                        <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                          <p className="text-xs text-gray-400 mb-1">Friends</p>
+                          <p className="text-xl font-bold text-white">{userActivity.stats.friends}</p>
+                        </div>
+                        <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                          <p className="text-xs text-gray-400 mb-1">Followers</p>
+                          <p className="text-xl font-bold text-white">{userActivity.stats.followers}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Recent Activity */}
+                    {userActivity.recentActivity.length > 0 && (
+                      <div className="border-t border-white/10 pt-4">
+                        <h4 className="text-sm font-semibold text-white mb-3">Recent Security Events</h4>
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                          {userActivity.recentActivity.map((event) => (
+                            <div key={event.id} className="bg-white/5 rounded-lg p-3 border border-white/10 text-sm">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-white font-medium">{event.eventType.replace(/_/g, ' ').toUpperCase()}</span>
+                                <span className="text-xs text-gray-400">
+                                  {new Date(event.createdAt).toLocaleString()}
+                                </span>
+                              </div>
+                              {event.ipAddress && (
+                                <p className="text-xs text-gray-400">IP: {event.ipAddress}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Role</p>
-                <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium ${getRoleColor(selectedUser.role)}`}>
-                  {getRoleIcon(selectedUser.role)}
-                  <span className="capitalize">{selectedUser.role}</span>
-                </div>
-              </div>
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Joined</p>
-                <p className="text-white">{new Date(selectedUser.createdAt).toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Last Login</p>
-                <p className="text-white">
-                  {selectedUser.lastLoginAt ? new Date(selectedUser.lastLoginAt).toLocaleString() : 'Never'}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Email Verified</p>
-                <p className={selectedUser.emailVerified ? 'text-success-400' : 'text-error-400'}>
-                  {selectedUser.emailVerified ? 'Yes' : 'No'}
-                </p>
-              </div>
-              {selectedUser._count && (
-                <div>
-                  <p className="text-sm text-gray-400 mb-1">Anime List Entries</p>
-                  <p className="text-white">{selectedUser._count.userAnimeList}</p>
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
       )}
@@ -634,6 +841,153 @@ export function UsersTab() {
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete User
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {showEditModal && userToEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowEditModal(false)}>
+          <div className="glass rounded-2xl p-6 max-w-md w-full border border-white/10" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <Edit className="h-5 w-5 text-blue-400" />
+                Edit User Details
+              </h3>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Name</label>
+                <input
+                  type="text"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
+                  placeholder="User's display name"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Username</label>
+                <input
+                  type="text"
+                  value={editForm.username}
+                  onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
+                  placeholder="Unique username"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Email</label>
+                <input
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
+                  placeholder="user@example.com"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  ⚠️ Changing email will mark it as unverified
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <Button
+                onClick={() => setShowEditModal(false)}
+                variant="outline"
+                className="flex-1 border-white/20 text-white hover:bg-white/10"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveEdit}
+                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+              >
+                <Check className="h-4 w-4 mr-2" />
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Email Modal */}
+      {showEmailModal && userToEmail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowEmailModal(false)}>
+          <div className="glass rounded-2xl p-6 max-w-lg w-full border border-white/10" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <MailOpen className="h-5 w-5 text-purple-400" />
+                Send Custom Email
+              </h3>
+              <button
+                onClick={() => setShowEmailModal(false)}
+                className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="mb-4 bg-white/5 rounded-lg p-3 border border-white/10">
+              <p className="text-sm text-gray-400">Sending to:</p>
+              <p className="text-white font-medium">{userToEmail.name || userToEmail.username || 'Unknown'}</p>
+              <p className="text-sm text-gray-400">{userToEmail.email}</p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Subject *</label>
+                <input
+                  type="text"
+                  value={emailForm.subject}
+                  onChange={(e) => setEmailForm({ ...emailForm, subject: e.target.value })}
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
+                  placeholder="Email subject"
+                  maxLength={200}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Message *</label>
+                <textarea
+                  value={emailForm.message}
+                  onChange={(e) => setEmailForm({ ...emailForm, message: e.target.value })}
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50 min-h-[150px] resize-y"
+                  placeholder="Your message to the user..."
+                  maxLength={5000}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {emailForm.message.length}/5000 characters
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <Button
+                onClick={() => setShowEmailModal(false)}
+                variant="outline"
+                className="flex-1 border-white/20 text-white hover:bg-white/10"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSendEmail}
+                className="flex-1 bg-purple-500 hover:bg-purple-600 text-white"
+                disabled={!emailForm.subject || !emailForm.message}
+              >
+                <Send className="h-4 w-4 mr-2" />
+                Send Email
               </Button>
             </div>
           </div>
