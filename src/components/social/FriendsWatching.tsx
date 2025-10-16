@@ -133,7 +133,7 @@ export function FriendsWatching() {
 
       {/* Anime Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-        {recommendations.map((rec) => (
+        {recommendations.filter(rec => rec && rec.anime && rec.anime.id).map((rec) => (
           <Link
             key={rec.anime.id}
             href={`/anime/${getAnimeSlug(rec.anime)}`}
