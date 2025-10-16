@@ -24,6 +24,7 @@ import type {
 } from '../../types/anime'
 import { handleApiError, isAuthError, UserFriendlyError } from '../../lib/api-errors'
 import { clientCache, CacheTTL } from '../../lib/client-cache'
+import { logger, captureException } from '../../lib/logger'
 
 type TRPCErrorShape = {
   message: string
@@ -115,7 +116,8 @@ async function refreshAccessToken(): Promise<boolean> {
       
       return true
     } catch (error) {
-      console.error('❌ Token refresh failed:', error)
+      logger.error('Token refresh failed', { error: error instanceof Error ? error.message : String(error) })
+      captureException(error, { context: { operation: 'token_refresh' } })
       return false
     } finally {
       isRefreshing = false
@@ -239,10 +241,15 @@ async function trpcQuery<TOutput>(path: string, init?: RequestInit, retryCount =
     
     return json.result.data
   } catch (error: unknown) {
-    console.error('❌ tRPC GET Failed:', error)
-    console.error('❌ Failed URL was:', url)
-    console.error('❌ TRPC_URL constant is:', TRPC_URL)
-    console.error('❌ Backend should be at: http://localhost:3003/api/trpc')
+    logger.error('tRPC GET request failed', { 
+      url, 
+      trpcUrl: TRPC_URL,
+      error: error instanceof Error ? error.message : String(error)
+    })
+    captureException(error, { 
+      context: { url, endpoint: path },
+      tags: { operation: 'trpc_query' }
+    })
     
     // Handle network errors
     if (error instanceof Error && error.message.includes('fetch')) {
@@ -323,6 +330,16 @@ async function trpcMutation<TInput, TOutput>(path: string, input?: TInput, init?
     }
     return json.result.data
   } catch (error: unknown) {
+    logger.error('tRPC mutation failed', { 
+      path, 
+      trpcUrl: TRPC_URL,
+      error: error instanceof Error ? error.message : String(error)
+    })
+    captureException(error, { 
+      context: { path, input },
+      tags: { operation: 'trpc_mutation' }
+    })
+    
     // Handle network errors
     if (error instanceof Error && error.message.includes('fetch')) {
       throw new Error(getUserFriendlyError('NETWORK_ERROR', 'Unable to connect to the server'))

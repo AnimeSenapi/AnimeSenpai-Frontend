@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { apiMe, clearSession, apiSignin, apiSignup, apiForgotPassword, apiResetPassword, apiVerifyEmail } from './api'
+import { logger, captureException } from '../../lib/logger'
 
 export interface User {
   id: string
@@ -278,7 +279,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const userData = await apiMe() as any
       setUser(userData)
     } catch (err: unknown) {
-      console.error('Failed to refresh user:', err)
+      logger.error('Failed to refresh user data', { 
+        error: err instanceof Error ? err.message : String(err)
+      })
+      captureException(err, { context: { operation: 'refresh_user' } })
       signout()
     }
   }
