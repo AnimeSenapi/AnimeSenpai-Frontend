@@ -542,7 +542,7 @@ export function UsersTab() {
                       }
                     }}>
                       <div className="flex items-center gap-1">
-                        Username
+                        User
                         <ArrowUpDown className="h-3 w-3" />
                       </div>
                     </th>
