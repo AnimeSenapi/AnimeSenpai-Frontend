@@ -586,14 +586,14 @@ export function UsersTab() {
                       <td className="px-6 py-4">
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium text-white">{user.name || user.username || user.email}</p>
+                            <p className="text-sm font-medium text-white">{user.username || user.name || user.email}</p>
                             {user.emailVerified ? (
                               <CheckCircle className="h-3.5 w-3.5 text-green-400" />
                             ) : (
                               <AlertCircle className="h-3.5 w-3.5 text-warning-400" />
                             )}
                           </div>
-                          <p className="text-xs text-gray-400">{user.email}</p>
+                          {user.username && <p className="text-xs text-gray-400">{user.email}</p>}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -683,14 +683,14 @@ export function UsersTab() {
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-semibold text-white">{user.name || user.username || user.email}</p>
+                        <p className="text-sm font-semibold text-white">{user.username || user.name || user.email}</p>
                         {user.emailVerified ? (
                           <CheckCircle className="h-4 w-4 text-green-400 flex-shrink-0" />
                         ) : (
                           <AlertCircle className="h-4 w-4 text-warning-400 flex-shrink-0" />
                         )}
                       </div>
-                      <p className="text-xs text-gray-400 break-all">{user.email}</p>
+                      {user.username && <p className="text-xs text-gray-400 break-all">{user.email}</p>}
                       <div className="flex items-center gap-2 mt-2">
                         <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-xs font-medium ${getRoleColor(user.role)}`}>
                           {getRoleIcon(user.role)}
