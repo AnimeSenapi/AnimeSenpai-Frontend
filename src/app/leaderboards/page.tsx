@@ -50,7 +50,7 @@ export default function LeaderboardsPage() {
         apiGetTopWatchers({ limit: 50, timeRange }),
         apiGetTopReviewers({ limit: 50 }),
         apiGetMostSocial({ limit: 50 })
-      ])
+      ]) as any[]
       
       setTopWatchers(watchers?.leaderboard || [])
       setTopReviewers(reviewers?.leaderboard || [])
