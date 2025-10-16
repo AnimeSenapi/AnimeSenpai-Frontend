@@ -239,7 +239,13 @@ async function trpcQuery<TOutput>(path: string, init?: RequestInit, retryCount =
       throw new Error(getUserFriendlyError(code, err.message))
     }
     
-    return json.result.data
+    // Filter out any undefined/null items from array responses
+    const data = json.result.data
+    if (Array.isArray(data)) {
+      return data.filter(item => item != null) as TOutput
+    }
+    
+    return data
   } catch (error: unknown) {
     logger.error('tRPC GET request failed', { 
       url, 
@@ -328,7 +334,14 @@ async function trpcMutation<TInput, TOutput>(path: string, input?: TInput, init?
       
       throw new Error(getUserFriendlyError(code, err.message))
     }
-    return json.result.data
+    
+    // Filter out any undefined/null items from array responses
+    const data = json.result.data
+    if (Array.isArray(data)) {
+      return data.filter(item => item != null) as TOutput
+    }
+    
+    return data
   } catch (error: unknown) {
     logger.error('tRPC mutation failed', { 
       path, 
