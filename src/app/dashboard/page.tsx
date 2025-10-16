@@ -25,6 +25,7 @@ import { apiGetAllAnime, apiGetAllSeries, apiGetTrending } from '../lib/api'
 import { useAuth } from '../lib/auth-context'
 import { groupAnimeIntoSeries } from '../../lib/series-grouping'
 import type { Anime } from '../../types/anime'
+import { logger, captureException } from '../../lib/logger'
 
 // Lazy load heavy components
 const RecommendationCarousel = dynamic(
@@ -220,14 +221,31 @@ export default function DashboardPage() {
         }).then(r => r.json())
       ])
 
-      setForYouRecs(forYou.result?.data?.recommendations || [])
-      setFansLikeYouRecs(fansLikeYou.result?.data?.recommendations || [])
-      setFriendRecs(friendRecs.result?.data?.recommendations || [])
-      setHiddenGemsRecs(hiddenGems.result?.data?.recommendations || [])
-      setDiscoveryRecs(discovery.result?.data?.recommendations || [])
-      setContinueWatching(continueWatch.result?.data?.recommendations || [])
-      setNewReleases(newAnime.result?.data?.recommendations || [])
+      // Filter out any undefined/null items and ensure anime object exists
+      const filterValidRecs = (recs: any[]) => {
+        return (recs || []).filter(r => r && r.anime && r.anime.slug)
+      }
+
+      setForYouRecs(filterValidRecs(forYou.result?.data?.recommendations))
+      setFansLikeYouRecs(filterValidRecs(fansLikeYou.result?.data?.recommendations))
+      setFriendRecs(filterValidRecs(friendRecs.result?.data?.recommendations))
+      setHiddenGemsRecs(filterValidRecs(hiddenGems.result?.data?.recommendations))
+      setDiscoveryRecs(filterValidRecs(discovery.result?.data?.recommendations))
+      setContinueWatching(filterValidRecs(continueWatch.result?.data?.recommendations))
+      setNewReleases(filterValidRecs(newAnime.result?.data?.recommendations))
     } catch (err) {
+      // Log error to help debug recommendation loading issues
+      logger.error('Failed to load personalized recommendations', {
+        error: err instanceof Error ? err.message : String(err),
+        userId: isAuthenticated ? 'authenticated' : 'guest'
+      })
+      captureException(err, {
+        context: { 
+          operation: 'load_personalized_recommendations',
+          isAuthenticated 
+        },
+        tags: { feature: 'recommendations' }
+      })
       // Non-critical, just won't show personalized recommendations
     }
   }
@@ -403,7 +421,7 @@ export default function DashboardPage() {
               <RecommendationCarousel
                 title="Trending Now"
                 icon={<TrendingUp className="h-5 w-5 text-secondary-400" />}
-                recommendations={trendingAnime.map(series => ({
+                recommendations={trendingAnime.filter(series => series && series.slug).map(series => ({
                   anime: {
                     id: series.id,
                     slug: series.slug,
@@ -431,7 +449,7 @@ export default function DashboardPage() {
               <RecommendationCarousel
                 title="Popular Anime"
                 icon={<Sparkles className="h-5 w-5 text-primary-400" />}
-                recommendations={allSeries.slice(0, 20).map(series => ({
+                recommendations={allSeries.slice(0, 20).filter(series => series && series.slug).map(series => ({
                   anime: {
                     id: series.id,
                     slug: series.slug,
@@ -479,7 +497,7 @@ export default function DashboardPage() {
               <RecommendationCarousel
                 title="Top Rated Anime"
                 icon={<Star className="h-5 w-5 text-warning-400" />}
-                recommendations={topRatedSeries.map(series => ({
+                recommendations={topRatedSeries.filter(series => series && series.slug).map(series => ({
                   anime: {
                     id: series.id,
                     slug: series.slug,
@@ -515,7 +533,7 @@ export default function DashboardPage() {
               <RecommendationCarousel
                 title="Recently Added"
                 icon={<Calendar className="h-5 w-5 text-success-400" />}
-                recommendations={recentlyAddedSeries.map(series => ({
+                recommendations={recentlyAddedSeries.filter(series => series && series.slug).map(series => ({
                   anime: {
                     id: series.id,
                     slug: series.slug,
@@ -552,7 +570,7 @@ export default function DashboardPage() {
           <RecommendationCarousel
             title="Trending Now"
             icon={<TrendingUp className="h-5 w-5 text-primary-400" />}
-            recommendations={trendingAnime.map(series => ({
+            recommendations={trendingAnime.filter(series => series && series.slug).map(series => ({
               anime: {
                 id: series.id,
                 slug: series.slug,
@@ -577,7 +595,7 @@ export default function DashboardPage() {
           <RecommendationCarousel
             title="Popular Anime"
             icon={<Sparkles className="h-5 w-5 text-primary-400" />}
-            recommendations={allSeries.slice(0, 20).map(series => ({
+            recommendations={allSeries.slice(0, 20).filter(series => series && series.slug).map(series => ({
               anime: {
                 id: series.id,
                 slug: series.slug,

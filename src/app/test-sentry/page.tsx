@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { captureException, captureMessage, logger } from '@/lib/logger'
 import * as Sentry from '@sentry/nextjs'
+import Link from 'next/link'
 
 /**
  * Test page for Sentry error tracking
@@ -139,12 +140,12 @@ export default function TestSentryPage() {
           </div>
 
           <div className="mt-6 text-center">
-            <a 
+            <Link 
               href="/"
               className="text-gray-400 hover:text-white transition-colors"
             >
               ← Back to Home
-            </a>
+            </Link>
           </div>
         </div>
       </div>
