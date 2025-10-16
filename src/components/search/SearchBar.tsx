@@ -50,7 +50,9 @@ export function SearchBar({
     const loadPopularAnime = async () => {
       try {
         const trending = await apiGetTrending() as any
-        setPopularAnime(trending.slice(0, 3))
+        // Filter out any undefined/null items or items without slugs before slicing
+        const validTrending = (trending || []).filter((anime: any) => anime && anime.slug)
+        setPopularAnime(validTrending.slice(0, 3))
       } catch (error) {
         // Gracefully handle backend not running - just don't show popular anime
         // Silent fail - no console spam
@@ -91,7 +93,9 @@ export function SearchBar({
           setUserResults([])
           try {
             const results = await apiSearchAnime(query) as any
-            setFilteredSuggestions(results.slice(0, 5))
+            // Filter out any undefined/null items or items without slugs
+            const validResults = (results || []).filter((anime: any) => anime && anime.slug)
+            setFilteredSuggestions(validResults.slice(0, 5))
           } catch (error) {
             setFilteredSuggestions([])
           }
