@@ -57,7 +57,7 @@ function getErrorIcon(error?: AppError | Error | string | null): ReactNode {
 }
 
 /**
- * Get error message
+ * Get error message and helpful suggestions
  */
 function getErrorMessage(error?: AppError | Error | string | null): string {
   if (!error) return 'Something went wrong'
@@ -68,6 +68,70 @@ function getErrorMessage(error?: AppError | Error | string | null): string {
   if ('message' in error) return error.message
   
   return 'Something went wrong'
+}
+
+/**
+ * Get helpful suggestions based on error type
+ */
+function getErrorSuggestions(error?: AppError | Error | string | null): string[] {
+  if (!error) return []
+  
+  const errorMessage = typeof error === 'string' ? error : 
+                      ('userMessage' in error ? error.userMessage : 
+                       ('message' in error ? error.message : ''))
+  
+  const suggestions: string[] = []
+  
+  // Network errors
+  if (errorMessage.includes('network') || errorMessage.includes('connection') || errorMessage.includes('offline')) {
+    suggestions.push('Check your internet connection')
+    suggestions.push('Try refreshing the page')
+    suggestions.push('Check if other websites are working')
+  }
+  
+  // Authentication errors
+  if (errorMessage.includes('sign in') || errorMessage.includes('session') || errorMessage.includes('expired')) {
+    suggestions.push('Try signing in again')
+    suggestions.push('Clear your browser cache')
+    suggestions.push('Check if cookies are enabled')
+  }
+  
+  // Not found errors
+  if (errorMessage.includes('not found')) {
+    suggestions.push('Check if the URL is correct')
+    suggestions.push('The item may have been deleted')
+    suggestions.push('Try searching for it instead')
+  }
+  
+  // Permission errors
+  if (errorMessage.includes('permission') || errorMessage.includes('forbidden') || errorMessage.includes('blocked')) {
+    suggestions.push('You may not have permission to perform this action')
+    suggestions.push('Try signing in with a different account')
+    suggestions.push('Contact support if you believe this is an error')
+  }
+  
+  // Server errors
+  if (errorMessage.includes('server') || errorMessage.includes('temporarily unavailable')) {
+    suggestions.push('Our servers may be experiencing issues')
+    suggestions.push('Please try again in a few minutes')
+    suggestions.push('Check our status page for updates')
+  }
+  
+  // Validation errors
+  if (errorMessage.includes('invalid') || errorMessage.includes('check your input')) {
+    suggestions.push('Double-check your input')
+    suggestions.push('Make sure all required fields are filled')
+    suggestions.push('Check for any formatting errors')
+  }
+  
+  // Rate limiting
+  if (errorMessage.includes('too many requests')) {
+    suggestions.push('Please wait a moment before trying again')
+    suggestions.push('You\'re making requests too quickly')
+    suggestions.push('Slow down and try again in a minute')
+  }
+  
+  return suggestions
 }
 
 /**
@@ -89,6 +153,7 @@ export function ErrorState({
   const errorIcon = icon || getErrorIcon(error)
   const errorMessage = message || getErrorMessage(error)
   const errorTitle = title || 'Oops! Something went wrong'
+  const suggestions = getErrorSuggestions(error)
 
   // Full page error
   if (variant === 'full') {
@@ -109,7 +174,22 @@ export function ErrorState({
 
             {/* Content */}
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">{errorTitle}</h1>
-            <p className="text-gray-400 text-lg mb-8 max-w-md mx-auto">{errorMessage}</p>
+            <p className="text-gray-400 text-lg mb-4 max-w-md mx-auto">{errorMessage}</p>
+
+            {/* Suggestions */}
+            {suggestions.length > 0 && (
+              <div className="mb-8 max-w-md mx-auto">
+                <p className="text-sm text-gray-500 mb-2">Try these:</p>
+                <ul className="text-left text-sm text-gray-400 space-y-1">
+                  {suggestions.map((suggestion, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <span className="text-primary-400 mt-0.5">•</span>
+                      <span>{suggestion}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -170,7 +250,22 @@ export function ErrorState({
 
         {/* Content */}
         <h3 className="text-xl font-bold text-white mb-2">{errorTitle}</h3>
-        <p className="text-gray-400 mb-6">{errorMessage}</p>
+        <p className="text-gray-400 mb-4">{errorMessage}</p>
+
+        {/* Suggestions */}
+        {suggestions.length > 0 && (
+          <div className="mb-6">
+            <p className="text-xs text-gray-500 mb-2">Try these:</p>
+            <ul className="text-left text-xs text-gray-400 space-y-1">
+              {suggestions.slice(0, 3).map((suggestion, index) => (
+                <li key={index} className="flex items-start gap-2">
+                  <span className="text-primary-400 mt-0.5">•</span>
+                  <span>{suggestion}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
