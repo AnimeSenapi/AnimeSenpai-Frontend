@@ -41,7 +41,7 @@ export function Navbar() {
                 alt="AnimeSenpai" 
                 width={450}
                 height={112}
-                className="h-9 sm:h-16 lg:h-20 xl:h-24 w-auto invert drop-shadow-lg"
+                className="h-12 sm:h-20 lg:h-24 xl:h-28 w-auto invert drop-shadow-lg"
                 priority
               />
             </Link>
