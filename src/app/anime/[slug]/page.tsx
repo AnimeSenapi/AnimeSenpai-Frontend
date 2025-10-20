@@ -658,7 +658,7 @@ export default function AnimePage() {
                       {(anime as AnimeDetail).studios!.map((studio, index) => (
                         <span key={index}>
                           <Link 
-                            href={`/studio/${studio.toLowerCase().replace(/\s+/g, '-')}`}
+                            href={`/studio/${studio.replace(/\s+/g, '-')}`}
                             className="hover:text-primary-400 transition-colors"
                           >
                             {studio}
