@@ -654,7 +654,19 @@ export default function AnimePage() {
                 {(anime as AnimeDetail).studios && (anime as AnimeDetail).studios!.length > 0 && (
                   <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10 md:col-span-2">
                     <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">Studios</div>
-                    <div className="text-sm text-white font-medium">{(anime as AnimeDetail).studios!.join(', ')}</div>
+                    <div className="text-sm text-white font-medium flex flex-wrap gap-2">
+                      {(anime as AnimeDetail).studios!.map((studio, index) => (
+                        <span key={index}>
+                          <Link 
+                            href={`/studio/${studio.toLowerCase().replace(/\s+/g, '-')}`}
+                            className="hover:text-primary-400 transition-colors"
+                          >
+                            {studio}
+                          </Link>
+                          {index < (anime as AnimeDetail).studios!.length - 1 && <span>, </span>}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
                 {(anime as AnimeDetail).producers && (anime as AnimeDetail).producers!.length > 0 && (
@@ -667,22 +679,22 @@ export default function AnimePage() {
                   <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10 md:col-span-2">
                     <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">Licensors</div>
                     <div className="text-sm text-white font-medium">{(anime as AnimeDetail).licensors!.join(', ')}</div>
-                  </div>
+                </div>
                 )}
                 {(anime as AnimeDetail).themes && (anime as AnimeDetail).themes!.length > 0 && (
                   <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10 md:col-span-2">
                     <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">Themes</div>
                     <div className="text-sm text-white font-medium">{(anime as AnimeDetail).themes!.join(', ')}</div>
-                  </div>
+              </div>
                 )}
                 {(anime as AnimeDetail).demographics && (anime as AnimeDetail).demographics!.length > 0 && (
                   <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10 md:col-span-2">
                     <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">Demographic</div>
                     <div className="text-sm text-white font-medium">{(anime as AnimeDetail).demographics!.join(', ')}</div>
-                  </div>
+                </div>
                 )}
               </div>
-            </div>
+                </div>
 
           {/* Recommendations */}
           {relatedSeasons.length > 1 && (
