@@ -7,7 +7,7 @@ import { Button } from '../ui/button'
 import { GuestAuth } from './GuestAuth'
 import { StandaloneDropdown } from './StandaloneDropdown'
 import { SearchBar } from '../search/SearchBar'
-import { NotificationBell } from './NotificationBell'
+import { NotificationsDropdown } from './NotificationsDropdown'
 import { useAuth } from '../../app/lib/auth-context'
 import {
   Home,
@@ -80,8 +80,8 @@ export function Navbar() {
                 <div className="w-8 h-8 bg-white/10 rounded-full animate-pulse"></div>
               ) : isAuthenticated && user ? (
                 <>
-                  {/* Notification Bell */}
-                  <NotificationBell />
+                  {/* Notifications Dropdown/Drawer */}
+                  <NotificationsDropdown />
                   
                   {/* User Dropdown */}
                   <StandaloneDropdown
