@@ -32,7 +32,7 @@ export function Navbar() {
   return (
     <>
       <nav className="fixed top-2 sm:top-4 left-1/2 transform -translate-x-1/2 z-50 w-[96%] sm:w-[95%] max-w-7xl px-2 sm:px-0 safe-area-top" role="navigation" aria-label="Main navigation">
-        <div className="bg-gray-950/95 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl px-3 sm:px-6 lg:px-8 py-3 sm:py-2.5 lg:py-3 overflow-visible transition-all duration-300 touch-manipulation shadow-2xl">
+        <div className="bg-gray-950/95 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl px-3 sm:px-6 lg:px-8 py-2 sm:py-2 lg:py-2.5 overflow-visible transition-all duration-300 touch-manipulation shadow-2xl">
           <div className="flex items-center justify-between gap-2 sm:gap-4 lg:gap-6">
             {/* Logo Section - Responsive */}
             <Link href="/dashboard" className="flex items-center flex-shrink-0" aria-label="AnimeSenpai home">
