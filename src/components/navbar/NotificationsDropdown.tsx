@@ -402,6 +402,7 @@ export function NotificationsDropdown() {
           </DrawerTrigger>
           <DrawerContent>
             <DrawerHeader className="p-0">
+              <DrawerTitle className="sr-only">Notifications</DrawerTitle>
               <NotificationsContent />
             </DrawerHeader>
           </DrawerContent>
