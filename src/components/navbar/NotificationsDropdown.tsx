@@ -186,7 +186,7 @@ export function NotificationsDropdown() {
   const NotificationsContent = () => (
     <div className="w-full sm:w-96 max-h-[600px] flex flex-col bg-gray-950">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-white/10 bg-gradient-to-r from-gray-900/50 to-gray-950">
+      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-900/50 to-gray-950">
         <div>
           <h3 className="text-base font-bold text-white flex items-center gap-2">
             <Bell className="h-4 w-4 text-primary-400" />
@@ -223,7 +223,7 @@ export function NotificationsDropdown() {
           <>
             {/* Friend Requests */}
             {friendRequests.length > 0 && (
-              <div className="p-4 border-b border-white/10 bg-success-500/5">
+              <div className="p-4 bg-success-500/5">
                 <h4 className="text-xs font-semibold text-success-400 mb-3 flex items-center gap-2 uppercase tracking-wider">
                   <UserPlus className="h-3.5 w-3.5" />
                   Friend Requests ({friendRequests.length})
@@ -232,7 +232,7 @@ export function NotificationsDropdown() {
                   {friendRequests.map((request) => (
                     <div
                       key={request.id}
-                      className="rounded-lg p-3 bg-white/5 border border-success-500/30 hover:border-success-500/50 transition-colors"
+                      className="rounded-lg p-3 bg-white/5 hover:bg-white/10 transition-colors"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -300,8 +300,8 @@ export function NotificationsDropdown() {
                     className={cn(
                       "rounded-lg p-3 cursor-pointer transition-all group",
                       notification.isRead
-                        ? 'hover:bg-white/5 border border-transparent'
-                        : 'bg-primary-500/10 border border-primary-500/30 hover:border-primary-500/50'
+                        ? 'hover:bg-white/5'
+                        : 'bg-primary-500/10 hover:bg-primary-500/15'
                     )}
                     onClick={() => {
                       if (!notification.isRead) {
@@ -342,7 +342,7 @@ export function NotificationsDropdown() {
       </div>
 
       {/* Footer */}
-      <div className="p-3 border-t border-white/10 bg-gray-900/50">
+      <div className="p-3 bg-gray-900/50">
         <Link
           href="/notifications"
           className="block w-full text-center text-xs font-medium text-primary-400 hover:text-primary-300 transition-colors py-2 rounded-lg hover:bg-white/5"
