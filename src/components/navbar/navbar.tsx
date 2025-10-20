@@ -9,6 +9,7 @@ import { StandaloneDropdown } from './StandaloneDropdown'
 import { SearchBar } from '../search/SearchBar'
 import { NotificationsDropdown } from './NotificationsDropdown'
 import { useAuth } from '../../app/lib/auth-context'
+import { cn } from '../../app/lib/utils'
 import {
   Home,
   Bookmark,
