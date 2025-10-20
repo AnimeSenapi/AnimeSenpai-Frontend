@@ -102,21 +102,21 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
           <Button
             ref={buttonRef}
             variant="ghost"
-            className="relative h-9 w-9 rounded-full p-0 hover:bg-white/10 transition-all duration-200 focus:ring-2 focus:ring-brand-primary-400/50"
+            className="relative h-9 w-9 rounded-full p-0 hover:bg-white/10 transition-all duration-200 focus:ring-2 focus:ring-brand-primary-400/50 overflow-hidden"
           >
             {user.avatar && !avatarError ? (
-              <div className="relative w-8 h-8 rounded-full ring-2 ring-white/20 hover:ring-white/40 transition-all duration-200 overflow-hidden">
+              <div className="relative w-full h-full rounded-full ring-2 ring-white/20 hover:ring-white/40 transition-all duration-200 overflow-hidden">
                 <Image 
                   src={user.avatar} 
                   alt={displayName}
                   fill
-                  className="object-cover"
-                  sizes="32px"
+                  className="object-cover rounded-full"
+                  sizes="36px"
                   onError={() => setAvatarError(true)}
                 />
               </div>
             ) : (
-              <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full flex items-center justify-center ring-2 ring-white/20 hover:ring-white/40 transition-all duration-200">
+              <div className="w-full h-full bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full flex items-center justify-center ring-2 ring-white/20 hover:ring-white/40 transition-all duration-200">
                 <span className="text-white font-bold text-xs">{displayInitial}</span>
               </div>
             )}
