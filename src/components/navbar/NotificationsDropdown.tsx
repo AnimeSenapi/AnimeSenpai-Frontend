@@ -63,7 +63,8 @@ export function NotificationsDropdown() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
   const [loading, setLoading] = useState(true)
-  const [open, setOpen] = useState(false)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -81,11 +82,11 @@ export function NotificationsDropdown() {
   }, [isAuthenticated])
 
   useEffect(() => {
-    if (open && isAuthenticated) {
+    if ((dropdownOpen || drawerOpen) && isAuthenticated) {
       loadNotifications()
       loadFriendRequests()
     }
-  }, [open, isAuthenticated])
+  }, [dropdownOpen, drawerOpen, isAuthenticated])
 
   const loadUnreadCount = async () => {
     if (!isAuthenticated) return
@@ -334,7 +335,10 @@ export function NotificationsDropdown() {
         <Link
           href="/notifications"
           className="block w-full text-center text-sm text-primary-400 hover:text-primary-300 transition-colors"
-          onClick={() => setOpen(false)}
+          onClick={() => {
+            setDropdownOpen(false)
+            setDrawerOpen(false)
+          }}
         >
           View all notifications
         </Link>
@@ -346,7 +350,7 @@ export function NotificationsDropdown() {
     <>
       {/* Desktop Dropdown */}
       <div className="hidden sm:block">
-        <DropdownMenu open={open} onOpenChange={setOpen}>
+        <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <button
               className={cn(
@@ -377,7 +381,7 @@ export function NotificationsDropdown() {
 
       {/* Mobile Drawer */}
       <div className="sm:hidden">
-        <Drawer open={open} onOpenChange={setOpen}>
+        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           <DrawerTrigger asChild>
             <button
               className={cn(
