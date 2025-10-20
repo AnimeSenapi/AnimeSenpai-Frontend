@@ -330,7 +330,7 @@ export default function DashboardPage() {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
-      <main className="container px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 lg:pb-20 relative z-10">
+      <main className="container px-3 sm:px-6 lg:px-8 pt-20 sm:pt-28 lg:pt-32 pb-8 sm:pb-16 lg:pb-20 relative z-10">
         {/* Email Verification Banner */}
         {isAuthenticated && user && !user.emailVerified && (
           <EmailVerificationBanner email={user.email} />
@@ -338,17 +338,17 @@ export default function DashboardPage() {
 
         {/* Onboarding Banner - Responsive */}
         {showOnboarding && isAuthenticated && (
-          <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 border-2 border-primary-500/30">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="glass rounded-xl sm:rounded-2xl p-3 sm:p-6 mb-4 sm:mb-8 border-2 border-primary-500/30">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
               <div className="flex items-start sm:items-center gap-3 sm:gap-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary-500/30">
                   <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
           </div>
                 <div>
-                  <h3 className="text-lg sm:text-xl font-bold text-white mb-1">
+                  <h3 className="text-base sm:text-xl font-bold text-white mb-1">
                     Get Personalized Recommendations!
                   </h3>
-                  <p className="text-sm sm:text-base text-gray-300">
+                  <p className="text-xs sm:text-base text-gray-300">
                     Tell us what you like and Senpai will find your perfect anime match ✨
           </p>
         </div>
@@ -357,33 +357,33 @@ export default function DashboardPage() {
                 <Button
                   onClick={() => setShowOnboarding(false)}
                   variant="outline"
-                  className="border-white/20 text-white hover:bg-white/10 flex-1 sm:flex-initial"
+                  className="border-white/20 text-white hover:bg-white/10 flex-1 sm:flex-initial text-sm sm:text-base"
                 >
                   Later
                 </Button>
                 <Button
                   onClick={() => router.push('/onboarding')}
-                  className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 flex-1 sm:flex-initial"
+                  className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 flex-1 sm:flex-initial text-sm sm:text-base shadow-lg shadow-primary-500/30"
                 >
                   Let's Go!
                 </Button>
               </div>
             </div>
-              </div>
-            )}
+          </div>
+        )}
 
         {/* Hero Section - Responsive */}
-        <div className="mb-8 sm:mb-10 lg:mb-12 text-center">
-          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-4 sm:mb-6">
+        <div className="mb-6 sm:mb-10 lg:mb-12 text-center">
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-3 sm:mb-6">
             <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary-400" />
             <span className="text-xs sm:text-sm text-gray-300">
               {isAuthenticated ? 'Your Personalized Dashboard' : 'Discover Your Next Obsession'}
             </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-white via-primary-400 to-secondary-400 bg-clip-text text-transparent px-4">
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold mb-2 sm:mb-4 bg-gradient-to-r from-white via-primary-400 to-secondary-400 bg-clip-text text-transparent px-4">
             {isAuthenticated ? `Welcome Back${user?.name ? `, ${user.name}` : ''}!` : 'Discover Amazing Anime'}
           </h1>
-          <p className="text-base sm:text-lg lg:text-xl text-gray-300 max-w-2xl mx-auto px-4">
+          <p className="text-sm sm:text-lg lg:text-xl text-gray-300 max-w-2xl mx-auto px-4">
             {isAuthenticated 
               ? 'Here are anime recommendations just for you'
               : 'Personalized recommendations powered by your taste'
