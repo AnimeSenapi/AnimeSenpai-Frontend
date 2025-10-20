@@ -33,8 +33,7 @@ import {
   Check,
   Plus,
   X,
-  Loader2,
-  ExternalLink
+  Loader2
 } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/trpc'
@@ -680,19 +679,6 @@ export default function AnimePage() {
                     <span className="text-gray-500">Season</span>
                     <span className="text-white font-medium capitalize">{anime.season} {anime.year}</span>
               </div>
-                )}
-                {(anime as AnimeDetail).malId && (
-                  <div className="flex justify-between col-span-full">
-                    <span className="text-gray-500">MAL ID</span>
-                    <a 
-                      href={`https://myanimelist.net/anime/${(anime as AnimeDetail).malId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary-400 hover:text-primary-300 font-medium"
-                    >
-                      #{(anime as AnimeDetail).malId} →
-                    </a>
-                </div>
                 )}
               </div>
                 </div>
