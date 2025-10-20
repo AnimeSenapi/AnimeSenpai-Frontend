@@ -621,64 +621,64 @@ export default function AnimePage() {
             )}
 
             {/* Additional Info */}
-            <div className="glass rounded-2xl p-6 mb-6">
-              <h3 className="text-base font-bold text-white mb-5 flex items-center gap-2">
-                <div className="h-1 w-8 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full"></div>
+            <div className="glass rounded-xl p-4 mb-6">
+              <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                <div className="h-0.5 w-6 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full"></div>
                 Additional Information
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                 {(anime as AnimeDetail).source && (
-                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-                    <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide">Source</div>
-                    <div className="text-white font-medium">{(anime as AnimeDetail).source}</div>
+                  <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10">
+                    <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">Source</div>
+                    <div className="text-sm text-white font-medium">{(anime as AnimeDetail).source}</div>
                   </div>
                 )}
                 {(anime as AnimeDetail).aired && (
-                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-                    <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide">Aired</div>
-                    <div className="text-white font-medium">{(anime as AnimeDetail).aired}</div>
+                  <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10">
+                    <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">Aired</div>
+                    <div className="text-sm text-white font-medium">{(anime as AnimeDetail).aired}</div>
                   </div>
                 )}
                 {(anime as AnimeDetail).broadcast && (
-                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-                    <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide">Broadcast</div>
-                    <div className="text-white font-medium">{(anime as AnimeDetail).broadcast}</div>
+                  <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10">
+                    <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">Broadcast</div>
+                    <div className="text-sm text-white font-medium">{(anime as AnimeDetail).broadcast}</div>
                   </div>
                 )}
                 {anime.season && (
-                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-                    <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide">Season</div>
-                    <div className="text-white font-medium capitalize">{anime.season} {anime.year}</div>
+                  <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10">
+                    <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">Season</div>
+                    <div className="text-sm text-white font-medium capitalize">{anime.season} {anime.year}</div>
                   </div>
                 )}
                 {(anime as AnimeDetail).studios && (anime as AnimeDetail).studios!.length > 0 && (
-                  <div className="bg-white/5 rounded-lg p-3 border border-white/10 md:col-span-2">
-                    <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide">Studios</div>
-                    <div className="text-white font-medium">{(anime as AnimeDetail).studios!.join(', ')}</div>
+                  <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10 md:col-span-2">
+                    <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">Studios</div>
+                    <div className="text-sm text-white font-medium">{(anime as AnimeDetail).studios!.join(', ')}</div>
                   </div>
                 )}
                 {(anime as AnimeDetail).producers && (anime as AnimeDetail).producers!.length > 0 && (
-                  <div className="bg-white/5 rounded-lg p-3 border border-white/10 md:col-span-2">
-                    <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide">Producers</div>
-                    <div className="text-white font-medium">{(anime as AnimeDetail).producers!.join(', ')}</div>
+                  <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10 md:col-span-2">
+                    <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">Producers</div>
+                    <div className="text-sm text-white font-medium">{(anime as AnimeDetail).producers!.join(', ')}</div>
                   </div>
                 )}
                 {(anime as AnimeDetail).licensors && (anime as AnimeDetail).licensors!.length > 0 && (
-                  <div className="bg-white/5 rounded-lg p-3 border border-white/10 md:col-span-2">
-                    <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide">Licensors</div>
-                    <div className="text-white font-medium">{(anime as AnimeDetail).licensors!.join(', ')}</div>
+                  <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10 md:col-span-2">
+                    <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">Licensors</div>
+                    <div className="text-sm text-white font-medium">{(anime as AnimeDetail).licensors!.join(', ')}</div>
                   </div>
                 )}
                 {(anime as AnimeDetail).themes && (anime as AnimeDetail).themes!.length > 0 && (
-                  <div className="bg-white/5 rounded-lg p-3 border border-white/10 md:col-span-2">
-                    <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide">Themes</div>
-                    <div className="text-white font-medium">{(anime as AnimeDetail).themes!.join(', ')}</div>
+                  <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10 md:col-span-2">
+                    <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">Themes</div>
+                    <div className="text-sm text-white font-medium">{(anime as AnimeDetail).themes!.join(', ')}</div>
                   </div>
                 )}
                 {(anime as AnimeDetail).demographics && (anime as AnimeDetail).demographics!.length > 0 && (
-                  <div className="bg-white/5 rounded-lg p-3 border border-white/10 md:col-span-2">
-                    <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide">Demographic</div>
-                    <div className="text-white font-medium">{(anime as AnimeDetail).demographics!.join(', ')}</div>
+                  <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10 md:col-span-2">
+                    <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">Demographic</div>
+                    <div className="text-sm text-white font-medium">{(anime as AnimeDetail).demographics!.join(', ')}</div>
                   </div>
                 )}
               </div>
