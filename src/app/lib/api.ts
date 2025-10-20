@@ -567,8 +567,23 @@ export async function apiGetAnimeBySlug(slug: string, useCache: boolean = true) 
   return result
 }
 
-export async function apiGetGenres() {
-  return trpcQuery<string[]>('anime.getGenres')
+export async function apiGetGenres(useCache: boolean = true) {
+  const cacheKey = 'anime:genres'
+  
+  // Check cache first
+  if (useCache) {
+    const cached = clientCache.get<string[]>(cacheKey)
+    if (cached !== null) {
+      return cached
+    }
+  }
+  
+  const result = await trpcQuery<string[]>('anime.getGenres')
+  
+  // Cache for 1 hour (genres rarely change)
+  clientCache.set(cacheKey, result, CacheTTL.veryLong)
+  
+  return result
 }
 
 export async function apiSearchAnime(query: string): Promise<Anime[]> {
@@ -645,10 +660,25 @@ export async function apiToggleFavoriteByAnimeId(animeId: string): Promise<{ isF
 }
 
 // Get user's favorited anime IDs
-export async function apiGetFavoritedAnimeIds(): Promise<string[]> {
+export async function apiGetFavoritedAnimeIds(useCache: boolean = true): Promise<string[]> {
+  const cacheKey = 'user:favoritedAnimeIds'
+  
+  // Check cache first
+  if (useCache) {
+    const cached = clientCache.get<string[]>(cacheKey)
+    if (cached !== null) {
+      return cached
+    }
+  }
+  
   try {
     const result = await trpcQuery<{ animeIds: string[] }>('user.getFavoritedAnimeIds')
-    return result.animeIds || []
+    const animeIds = result.animeIds || []
+    
+    // Cache for 1 minute (favorites change frequently)
+    clientCache.set(cacheKey, animeIds, CacheTTL.short)
+    
+    return animeIds
   } catch (error) {
     console.error('Failed to fetch favorited anime IDs:', error)
     return []
@@ -695,7 +725,17 @@ export async function apiGetAllFeatures(): Promise<FeatureFlag[]> {
 }
 
 // User Profile by Username
-export async function apiGetUserByUsername(username: string): Promise<any> {
+export async function apiGetUserByUsername(username: string, useCache: boolean = true): Promise<any> {
+  const cacheKey = `user:profile:${username}`
+  
+  // Check cache first
+  if (useCache) {
+    const cached = clientCache.get<any>(cacheKey)
+    if (cached !== null) {
+      return cached
+    }
+  }
+  
   const url = `${TRPC_URL}/user.getUserByUsername?input=${encodeURIComponent(JSON.stringify({ username }))}`
   const response = await fetch(url, {
     method: 'GET',
@@ -714,7 +754,12 @@ export async function apiGetUserByUsername(username: string): Promise<any> {
     throw new Error(data.error.message)
   }
 
-  return data.result.data
+  const result = data.result.data
+  
+  // Cache for 5 minutes (user profiles change occasionally)
+  clientCache.set(cacheKey, result, CacheTTL.medium)
+  
+  return result
 }
 
 // Check Username Availability
@@ -1353,15 +1398,29 @@ export async function apiGetFollowing(userId?: string, page?: number, limit?: nu
 }
 
 // User Profiles
-export async function apiGetUserProfile(username: string) {
+export async function apiGetUserProfile(username: string, useCache: boolean = true) {
   // Strip @ symbol if present (defensive check)
   const cleanUsername = username.startsWith('@') ? username.slice(1) : username
+  const cacheKey = `social:userProfile:${cleanUsername}`
+  
+  // Check cache first
+  if (useCache) {
+    const cached = clientCache.get<any>(cacheKey)
+    if (cached !== null) {
+      return cached
+    }
+  }
   
   // For tRPC GET requests, input must be in query params using 'input' parameter
   const input = JSON.stringify({ username: cleanUsername })
   const path = `social.getUserProfile?input=${encodeURIComponent(input)}`
   
-  return trpcQuery(path)
+  const result = await trpcQuery(path)
+  
+  // Cache for 5 minutes (user profiles change occasionally)
+  clientCache.set(cacheKey, result, CacheTTL.medium)
+  
+  return result
 }
 
 // Privacy Settings (Phase 1 - deprecated, use Phase 2 enhanced versions)
