@@ -31,7 +31,7 @@ export function Navbar() {
   return (
     <>
       <nav className="fixed top-2 sm:top-4 left-1/2 transform -translate-x-1/2 z-50 w-[96%] sm:w-[95%] max-w-7xl px-2 sm:px-0 safe-area-top" role="navigation" aria-label="Main navigation">
-        <div className="bg-gray-950/95 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl px-3 sm:px-6 lg:px-8 py-2.5 sm:py-2.5 lg:py-3 overflow-visible transition-all duration-300 touch-manipulation">
+        <div className="bg-gray-950/95 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl px-3 sm:px-6 lg:px-8 py-3 sm:py-2.5 lg:py-3 overflow-visible transition-all duration-300 touch-manipulation shadow-2xl">
           <div className="flex items-center justify-between gap-2 sm:gap-4 lg:gap-6">
             {/* Logo Section - Responsive */}
             <Link href="/dashboard" className="flex items-center flex-shrink-0" aria-label="AnimeSenpai home">
@@ -40,7 +40,7 @@ export function Navbar() {
                 alt="AnimeSenpai" 
                 width={450}
                 height={112}
-                className="h-10 sm:h-16 lg:h-20 xl:h-24 w-auto invert"
+                className="h-9 sm:h-16 lg:h-20 xl:h-24 w-auto invert drop-shadow-lg"
                 priority
               />
             </Link>
@@ -81,7 +81,9 @@ export function Navbar() {
               ) : isAuthenticated && user ? (
                 <>
                   {/* Notifications Dropdown/Drawer */}
-                  <NotificationsDropdown />
+                  <div className="hidden sm:block">
+                    <NotificationsDropdown />
+                  </div>
                   
                   {/* User Dropdown */}
                   <StandaloneDropdown
@@ -103,7 +105,12 @@ export function Navbar() {
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden flex items-center justify-center w-10 h-10 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 touch-manipulation active:scale-95"
+                className={cn(
+                  "lg:hidden flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 touch-manipulation active:scale-95",
+                  isMobileMenuOpen 
+                    ? "bg-primary-500/20 text-primary-400" 
+                    : "text-gray-300 hover:text-white hover:bg-white/10"
+                )}
                 aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
                 aria-expanded={isMobileMenuOpen}
                 aria-controls="mobile-menu"
@@ -123,9 +130,9 @@ export function Navbar() {
           role="dialog"
           aria-label="Mobile navigation menu"
         >
-          <div className="bg-gray-950/95 backdrop-blur-xl border border-white/10 rounded-xl p-4 shadow-2xl animate-in slide-in-from-top-2 duration-200">
+          <div className="bg-gray-950/95 backdrop-blur-xl border border-white/10 rounded-xl p-4 shadow-2xl animate-in slide-in-from-top-2 duration-200 space-y-3">
             {/* Mobile Search */}
-            <div className="mb-4 sm:hidden" role="search" aria-label="Search anime">
+            <div className="sm:hidden" role="search" aria-label="Search anime">
               <SearchBar
                 placeholder="Search anime..."
                 showDropdown={true}
@@ -135,7 +142,7 @@ export function Navbar() {
             </div>
 
             {/* Mobile Navigation */}
-            <nav className="space-y-1" aria-label="Mobile menu navigation">
+            <nav className="space-y-1.5" aria-label="Mobile menu navigation">
               {navItems
                 .filter(item => !item.authOnly || isAuthenticated)
                 .map((item) => {
@@ -145,19 +152,29 @@ export function Navbar() {
                       key={item.name}
                       href={item.href}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 active:bg-white/15 transition-all duration-200 text-base font-medium touch-manipulation"
+                      className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 active:bg-white/15 transition-all duration-200 text-base font-medium touch-manipulation group"
                       aria-label={`Go to ${item.name}`}
                     >
-                    <Icon className="h-5 w-5" aria-hidden="true" />
+                    <Icon className="h-5 w-5 group-hover:scale-110 transition-transform" aria-hidden="true" />
                     <span>{item.name}</span>
                   </Link>
                 )
               })}
             </nav>
 
+            {/* Mobile Notifications */}
+            {isAuthenticated && (
+              <div className="sm:hidden pt-2 border-t border-white/10">
+                <div className="px-4 py-2 text-xs text-gray-400 font-medium uppercase tracking-wider">
+                  Quick Actions
+                </div>
+                <NotificationsDropdown />
+              </div>
+            )}
+
             {/* Mobile Auth Buttons */}
             {!isAuthenticated && (
-              <div className="mt-4 pt-4 border-t border-white/10 sm:hidden">
+              <div className="pt-2 border-t border-white/10 sm:hidden">
                 <GuestAuth />
               </div>
             )}
