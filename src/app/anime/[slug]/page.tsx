@@ -601,8 +601,6 @@ export default function AnimePage() {
             <div className="mb-6">
               <StreamingLinks 
                 animeTitle={anime.titleEnglish || anime.title}
-                malId={anime.malId}
-                anilistId={anime.anilistId}
               />
             </div>
 
