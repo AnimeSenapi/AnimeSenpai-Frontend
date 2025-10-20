@@ -415,15 +415,15 @@ export default function AnimePage() {
         structuredData={generateAnimeStructuredData(anime)}
       />
       
-      <main className="container px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 lg:pb-20">
-        <div className="mb-4 sm:mb-6 lg:mb-8">
+      <main className="container px-3 sm:px-6 lg:px-8 pt-20 sm:pt-28 lg:pt-32 pb-8 sm:pb-16 lg:pb-20">
+        <div className="mb-3 sm:mb-6 lg:mb-8">
           <BackButton />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] xl:grid-cols-[320px_1fr] gap-6 lg:gap-8 xl:gap-10 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] xl:grid-cols-[320px_1fr] gap-4 sm:gap-6 lg:gap-8 xl:gap-10 max-w-7xl mx-auto">
           {/* Left: Poster & Actions */}
           <div className="lg:sticky lg:top-24 self-start">
-            <div className="glass rounded-xl sm:rounded-2xl p-2 mb-4 sm:mb-6">
+            <div className="glass rounded-xl sm:rounded-2xl p-1.5 sm:p-2 mb-3 sm:mb-6">
               <div className="aspect-[2/3] rounded-lg sm:rounded-xl overflow-hidden relative">
                 {(anime.coverImage || anime.imageUrl) ? (
                   <Image 
@@ -443,7 +443,7 @@ export default function AnimePage() {
                   </div>
 
             {/* Actions */}
-            <div className="space-y-3 mb-6">
+            <div className="space-y-2.5 sm:space-y-3 mb-4 sm:mb-6">
               {listStatus.inList ? (
                 <>
                   <Button 
@@ -504,15 +504,15 @@ export default function AnimePage() {
           {/* Right: Content */}
             <div>
             {/* Title - Prioritize English - Mobile Optimized */}
-            <div className="mb-4 sm:mb-6">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 sm:mb-3 leading-tight">
+            <div className="mb-3 sm:mb-6">
+              <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-1.5 sm:mb-3 leading-tight">
                 {seriesName || anime.titleEnglish || anime.title}
               </h1>
               {anime.titleEnglish && anime.title !== anime.titleEnglish && (
-                <p className="text-lg sm:text-xl text-gray-400 mb-2">{anime.title}</p>
+                <p className="text-base sm:text-xl text-gray-400 mb-1.5">{anime.title}</p>
               )}
               {anime.titleJapanese && anime.titleJapanese !== anime.title && (
-                <p className="text-sm text-gray-500">{anime.titleJapanese}</p>
+                <p className="text-xs sm:text-sm text-gray-500">{anime.titleJapanese}</p>
               )}
             </div>
 
@@ -548,7 +548,7 @@ export default function AnimePage() {
             )}
 
             {/* Meta Info Bar */}
-            <div className="glass rounded-xl p-5 mb-6">
+            <div className="glass rounded-xl p-3 sm:p-5 mb-4 sm:mb-6">
               <div className="flex flex-wrap items-center gap-6">
                 <div className="flex items-center gap-2">
                   <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
@@ -577,7 +577,7 @@ export default function AnimePage() {
 
             {/* Genres */}
             {anime.genres && anime.genres.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-6">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-4 sm:mb-6">
                 {anime.genres.map((genre: any, index: number) => {
                   const genreName = genre.name || genre.slug || genre;
                   return (
@@ -598,7 +598,7 @@ export default function AnimePage() {
 
             {/* Where to Watch */}
             {/* Streaming Platform Links */}
-            <div className="mb-6">
+            <div className="mb-4 sm:mb-6">
               <StreamingLinks 
                 animeTitle={anime.titleEnglish || anime.title}
               />
@@ -606,22 +606,22 @@ export default function AnimePage() {
 
             {/* Synopsis */}
             {anime.synopsis && (
-              <div className="glass rounded-2xl p-6 mb-6">
-                <h2 className="text-xl font-bold text-white mb-3">Synopsis</h2>
-                <p className="text-gray-300 leading-relaxed text-lg">{anime.synopsis}</p>
+              <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">Synopsis</h2>
+                <p className="text-sm sm:text-lg text-gray-300 leading-relaxed">{anime.synopsis}</p>
                 </div>
             )}
 
             {/* Background */}
             {anime.background && (
-              <div className="glass rounded-2xl p-6 mb-6">
-                <h2 className="text-xl font-bold text-white mb-3">Background</h2>
-                <p className="text-gray-300 leading-relaxed">{anime.background}</p>
+              <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">Background</h2>
+                <p className="text-sm text-gray-300 leading-relaxed">{anime.background}</p>
               </div>
             )}
 
             {/* Additional Info */}
-            <div className="glass rounded-xl p-4 mb-6">
+            <div className="glass rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
               <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
                 <div className="h-0.5 w-6 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full"></div>
                 Additional Information
@@ -698,8 +698,8 @@ export default function AnimePage() {
 
           {/* Recommendations */}
           {relatedSeasons.length > 1 && (
-            <div className="mt-12">
-              <h2 className="text-2xl font-bold text-white mb-6">More from this Series</h2>
+            <div className="mt-8 sm:mt-12">
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">More from this Series</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {relatedSeasons
                   .filter((season) => season.slug !== slug)
@@ -721,8 +721,8 @@ export default function AnimePage() {
           )}
 
           {similarAnime.length > 0 && (
-            <div className="mt-12">
-              <h2 className="text-2xl font-bold text-white mb-6">You Might Also Like</h2>
+            <div className="mt-8 sm:mt-12">
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">You Might Also Like</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {similarAnime.map((similar) => (
                   <AnimeCard key={similar.id} anime={similar} variant="grid" />
