@@ -31,7 +31,7 @@ export function Navbar() {
   return (
     <>
       <nav className="fixed top-2 sm:top-4 left-1/2 transform -translate-x-1/2 z-50 w-[96%] sm:w-[95%] max-w-7xl px-2 sm:px-0 safe-area-top" role="navigation" aria-label="Main navigation">
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl px-3 sm:px-6 lg:px-8 py-2 sm:py-2.5 lg:py-3 overflow-visible transition-all duration-300 touch-manipulation">
+        <div className="bg-gray-950/95 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl px-3 sm:px-6 lg:px-8 py-2.5 sm:py-2.5 lg:py-3 overflow-visible transition-all duration-300 touch-manipulation">
           <div className="flex items-center justify-between gap-2 sm:gap-4 lg:gap-6">
             {/* Logo Section - Responsive */}
             <Link href="/dashboard" className="flex items-center flex-shrink-0" aria-label="AnimeSenpai home">
@@ -40,7 +40,7 @@ export function Navbar() {
                 alt="AnimeSenpai" 
                 width={450}
                 height={112}
-                className="h-12 sm:h-16 lg:h-20 xl:h-24 w-auto invert"
+                className="h-10 sm:h-16 lg:h-20 xl:h-24 w-auto invert"
                 priority
               />
             </Link>
@@ -103,7 +103,7 @@ export function Navbar() {
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden flex items-center justify-center w-10 h-10 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 touch-target"
+                className="lg:hidden flex items-center justify-center w-10 h-10 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 touch-manipulation active:scale-95"
                 aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
                 aria-expanded={isMobileMenuOpen}
                 aria-controls="mobile-menu"
@@ -123,7 +123,7 @@ export function Navbar() {
           role="dialog"
           aria-label="Mobile navigation menu"
         >
-          <div className="bg-gray-900/95 backdrop-blur-xl border border-white/10 rounded-xl p-4 shadow-2xl animate-in slide-in-from-top-2 duration-200">
+          <div className="bg-gray-950/95 backdrop-blur-xl border border-white/10 rounded-xl p-4 shadow-2xl animate-in slide-in-from-top-2 duration-200">
             {/* Mobile Search */}
             <div className="mb-4 sm:hidden" role="search" aria-label="Search anime">
               <SearchBar
@@ -145,7 +145,7 @@ export function Navbar() {
                       key={item.name}
                       href={item.href}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 text-base font-medium"
+                      className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 active:bg-white/15 transition-all duration-200 text-base font-medium touch-manipulation"
                       aria-label={`Go to ${item.name}`}
                     >
                     <Icon className="h-5 w-5" aria-hidden="true" />
