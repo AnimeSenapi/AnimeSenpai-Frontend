@@ -12,16 +12,13 @@ import { MyListAnimeCard } from './anime/MyListAnimeCard'
  * Memoized AnimeCard
  * Only re-renders when props actually change
  */
-export const MemoizedAnimeCard = memo(
-  AnimeCard,
-  (prevProps, nextProps) => {
-    return (
-      prevProps.anime.id === nextProps.anime.id &&
-      prevProps.isFavorited === nextProps.isFavorited &&
-      prevProps.variant === nextProps.variant
-    )
-  }
-)
+export const MemoizedAnimeCard = memo(AnimeCard, (prevProps, nextProps) => {
+  return (
+    prevProps.anime.id === nextProps.anime.id &&
+    prevProps.isFavorited === nextProps.isFavorited &&
+    prevProps.variant === nextProps.variant
+  )
+})
 
 MemoizedAnimeCard.displayName = 'MemoizedAnimeCard'
 
@@ -29,16 +26,13 @@ MemoizedAnimeCard.displayName = 'MemoizedAnimeCard'
  * Memoized SearchAnimeCard
  * Optimized for search results rendering
  */
-export const MemoizedSearchAnimeCard = memo(
-  SearchAnimeCard,
-  (prevProps, nextProps) => {
-    return (
-      prevProps.anime.id === nextProps.anime.id &&
-      prevProps.isFavorited === nextProps.isFavorited &&
-      prevProps.variant === nextProps.variant
-    )
-  }
-)
+export const MemoizedSearchAnimeCard = memo(SearchAnimeCard, (prevProps, nextProps) => {
+  return (
+    prevProps.anime.id === nextProps.anime.id &&
+    prevProps.isFavorited === nextProps.isFavorited &&
+    prevProps.variant === nextProps.variant
+  )
+})
 
 MemoizedSearchAnimeCard.displayName = 'MemoizedSearchAnimeCard'
 
@@ -46,18 +40,15 @@ MemoizedSearchAnimeCard.displayName = 'MemoizedSearchAnimeCard'
  * Memoized MyListAnimeCard
  * Optimized for my list rendering
  */
-export const MemoizedMyListAnimeCard = memo(
-  MyListAnimeCard,
-  (prevProps, nextProps) => {
-    return (
-      prevProps.anime.id === nextProps.anime.id &&
-      prevProps.anime.listStatus === nextProps.anime.listStatus &&
-      prevProps.anime.progress === nextProps.anime.progress &&
-      prevProps.isFavorited === nextProps.isFavorited &&
-      prevProps.variant === nextProps.variant
-    )
-  }
-)
+export const MemoizedMyListAnimeCard = memo(MyListAnimeCard, (prevProps, nextProps) => {
+  return (
+    prevProps.anime.id === nextProps.anime.id &&
+    prevProps.anime.listStatus === nextProps.anime.listStatus &&
+    prevProps.anime.progress === nextProps.anime.progress &&
+    prevProps.isFavorited === nextProps.isFavorited &&
+    prevProps.variant === nextProps.variant
+  )
+})
 
 MemoizedMyListAnimeCard.displayName = 'MemoizedMyListAnimeCard'
 
@@ -70,4 +61,3 @@ export function createMemoized<P extends object>(
 ) {
   return memo(Component, compare)
 }
-

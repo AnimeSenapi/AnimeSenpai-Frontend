@@ -4,38 +4,28 @@ import { use, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { 
-  GitCompare, 
-  Check, 
-  X, 
-  Star,
-  ArrowRight,
-  TrendingUp,
-  Heart
-} from 'lucide-react'
-import { Button } from '../../../components/ui/button'
+import { GitCompare, Check, Star, ArrowRight, Heart } from 'lucide-react'
 import { Badge } from '../../../components/ui/badge'
 import { LoadingState } from '../../../components/ui/loading-state'
 import { useAuth } from '../../lib/auth-context'
-import { useToast } from '../../../lib/toast-context'
-import { cn } from '../../lib/utils'
+import { useToast } from '../../../components/ui/toast'
 
 export default function CompareListsPage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = use(params)
   const router = useRouter()
   const { isAuthenticated } = useAuth()
   const toast = useToast()
-  
+
   const [comparison, setComparison] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [friendId, setFriendId] = useState<string | null>(null)
+  const [_friendId, setFriendId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.push('/auth/signin')
       return
     }
-    
+
     loadFriend()
   }, [isAuthenticated, username])
 
@@ -43,24 +33,25 @@ export default function CompareListsPage({ params }: { params: Promise<{ usernam
     const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
     return {
       'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
+      ...(token && { Authorization: `Bearer ${token}` }),
     }
   }
 
   const loadFriend = async () => {
     try {
       // Get friend ID from username
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
       const url = `${API_URL}/social.getUserProfile?input=${encodeURIComponent(JSON.stringify({ username }))}`
-      
+
       const response = await fetch(url, {
         method: 'GET',
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       })
-      
+
       const json = await response.json()
       const userId = json.result?.data?.user?.id
-      
+
       if (userId) {
         setFriendId(userId)
         loadComparison(userId)
@@ -75,24 +66,27 @@ export default function CompareListsPage({ params }: { params: Promise<{ usernam
   const loadComparison = async (userId: string) => {
     try {
       setLoading(true)
-      
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
-      const url = `${API_URL}/listTools.compareWithFriend?input=${encodeURIComponent(JSON.stringify({
-        friendId: userId
-      }))}`
-      
+
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+      const url = `${API_URL}/listTools.compareWithFriend?input=${encodeURIComponent(
+        JSON.stringify({
+          friendId: userId,
+        })
+      )}`
+
       const response = await fetch(url, {
         method: 'GET',
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       })
-      
+
       if (!response.ok) {
         throw new Error('Failed to load comparison')
       }
-      
+
       const json = await response.json()
       const data = json.result?.data
-      
+
       if (data) {
         setComparison(data)
       }
@@ -163,8 +157,8 @@ export default function CompareListsPage({ params }: { params: Promise<{ usernam
                   <div className="glass rounded-xl overflow-hidden border border-white/10 hover:border-primary-500/50 transition-all">
                     <div className="aspect-[2/3] relative">
                       {item.anime.coverImage ? (
-                        <Image 
-                          src={item.anime.coverImage} 
+                        <Image
+                          src={item.anime.coverImage}
                           alt={item.anime.title}
                           fill
                           className="object-cover"
@@ -178,9 +172,7 @@ export default function CompareListsPage({ params }: { params: Promise<{ usernam
                       {item.scoreDifference !== null && (
                         <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-sm px-2 py-1 rounded flex items-center gap-1">
                           <Star className="h-3 w-3 text-yellow-400" />
-                          <span className="text-xs font-bold">
-                            ±{item.scoreDifference}
-                          </span>
+                          <span className="text-xs font-bold">±{item.scoreDifference}</span>
                         </div>
                       )}
                     </div>
@@ -223,8 +215,8 @@ export default function CompareListsPage({ params }: { params: Promise<{ usernam
                   <div className="glass rounded-xl overflow-hidden border border-white/10 hover:border-primary-500/50 transition-all group">
                     <div className="aspect-[2/3] relative">
                       {item.anime.coverImage ? (
-                        <Image 
-                          src={item.anime.coverImage} 
+                        <Image
+                          src={item.anime.coverImage}
                           alt={item.anime.title}
                           fill
                           className="object-cover group-hover:scale-105 transition-transform"
@@ -267,8 +259,8 @@ export default function CompareListsPage({ params }: { params: Promise<{ usernam
                   <div className="glass rounded-xl overflow-hidden border border-white/10 hover:border-error-500/50 transition-all group">
                     <div className="aspect-[2/3] relative">
                       {item.anime.coverImage ? (
-                        <Image 
-                          src={item.anime.coverImage} 
+                        <Image
+                          src={item.anime.coverImage}
                           alt={item.anime.title}
                           fill
                           className="object-cover group-hover:scale-105 transition-transform"
@@ -301,4 +293,3 @@ export default function CompareListsPage({ params }: { params: Promise<{ usernam
     </div>
   )
 }
-

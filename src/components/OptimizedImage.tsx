@@ -1,159 +1,251 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image, { ImageProps } from 'next/image'
-import { cn } from '../lib/utils'
+import { useIntersectionObserver } from '../hooks/use-performance'
 
-interface OptimizedImageProps extends Omit<ImageProps, 'src' | 'alt'> {
-  src: string
-  alt: string
-  fallbackSrc?: string
-  aspectRatio?: 'square' | 'video' | 'poster' | 'banner'
-  blur?: boolean
-  priority?: boolean
+interface OptimizedImageProps extends Omit<ImageProps, 'onLoad'> {
+  /**
+   * Enable lazy loading with Intersection Observer
+   */
+  lazy?: boolean
+
+  /**
+   * Intersection threshold (0-1)
+   */
+  threshold?: number
+
+  /**
+   * Root margin for lazy loading (e.g., "200px" to load 200px before entering viewport)
+   */
+  rootMargin?: string
+
+  /**
+   * Placeholder type
+   */
+  placeholderType?: 'blur' | 'skeleton' | 'none'
+
+  /**
+   * Custom skeleton color
+   */
+  skeletonColor?: string
+
+  /**
+   * Callback when image loads
+   */
+  onLoad?: () => void
+
+  /**
+   * Callback when image errors
+   */
+  onError?: () => void
 }
 
 /**
  * Optimized Image Component
- * 
  * Features:
- * - Automatic WebP conversion
- * - Lazy loading by default
- * - Blur placeholder
- * - Error fallback
- * - Responsive sizing
- * - Aspect ratio presets
+ * - Lazy loading with Intersection Observer
+ * - Automatic blur placeholder
+ * - Skeleton loading state
+ * - Error handling with fallback
+ * - Performance optimizations
  */
 export function OptimizedImage({
   src,
   alt,
-  fallbackSrc = '/assets/placeholder-anime.jpg',
-  aspectRatio,
-  blur = true,
-  priority = false,
-  className,
+  lazy = true,
+  threshold = 0.1,
+  rootMargin = '200px',
+  placeholderType = 'skeleton',
+  skeletonColor = 'rgba(255, 255, 255, 0.05)',
+  onLoad,
+  onError,
+  className = '',
   ...props
 }: OptimizedImageProps) {
-  const [imgSrc, setImgSrc] = useState(src)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoaded, setIsLoaded] = useState(false)
   const [hasError, setHasError] = useState(false)
+  const [shouldLoad, setShouldLoad] = useState(!lazy)
 
-  // Aspect ratio classes
-  const aspectRatioClasses = {
-    square: 'aspect-square',
-    video: 'aspect-video',
-    poster: 'aspect-[2/3]', // Common anime poster ratio
-    banner: 'aspect-[16/9]',
-  }
+  // Intersection Observer for lazy loading
+  const { ref, isIntersecting } = useIntersectionObserver({
+    threshold,
+    rootMargin,
+  })
+
+  // Trigger loading when image enters viewport
+  useEffect(() => {
+    if (lazy && isIntersecting && !shouldLoad) {
+      setShouldLoad(true)
+    }
+  }, [isIntersecting, lazy, shouldLoad])
 
   // Handle image load
   const handleLoad = () => {
-    setIsLoading(false)
-    setHasError(false)
+    setIsLoaded(true)
+    onLoad?.()
   }
 
   // Handle image error
   const handleError = () => {
-    setIsLoading(false)
     setHasError(true)
-    if (imgSrc !== fallbackSrc) {
-      setImgSrc(fallbackSrc)
-    }
+    setIsLoaded(true)
+    onError?.()
   }
 
   return (
     <div
-      className={cn(
-        'relative overflow-hidden bg-gray-800/50',
-        aspectRatio && aspectRatioClasses[aspectRatio],
-        className
-      )}
+      ref={ref as any}
+      className={`relative overflow-hidden ${className}`}
+      style={props.fill ? undefined : { width: props.width, height: props.height }}
     >
-      <Image
-        src={imgSrc}
-        alt={alt}
-        fill={!props.width && !props.height}
-        sizes={props.sizes || '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'}
-        quality={85}
-        loading={priority ? undefined : 'lazy'}
-        priority={priority}
-        placeholder={blur ? 'blur' : undefined}
-        blurDataURL={blur ? 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==' : undefined}
-        onLoad={handleLoad}
-        onError={handleError}
-        className={cn(
-          'object-cover transition-all duration-300',
-          isLoading && 'scale-110 blur-md',
-          !isLoading && 'scale-100 blur-0',
-          hasError && 'opacity-50'
-        )}
-        {...props}
-      />
-
-      {/* Loading skeleton */}
-      {isLoading && (
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 animate-pulse" />
+      {/* Skeleton/Placeholder */}
+      {!isLoaded && placeholderType !== 'none' && (
+        <div
+          className="absolute inset-0 animate-pulse"
+          style={{
+            backgroundColor: skeletonColor,
+          }}
+          aria-hidden="true"
+        />
       )}
 
-      {/* Error indicator */}
+      {/* Error Fallback */}
       {hasError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80">
-          <p className="text-xs text-gray-500">Image unavailable</p>
+        <div
+          className="absolute inset-0 flex items-center justify-center bg-gray-800/50 text-gray-400 text-xs"
+          role="img"
+          aria-label={`Failed to load: ${alt}`}
+        >
+          <div className="text-center p-2">
+            <svg
+              className="w-8 h-8 mx-auto mb-1 opacity-30"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            <span className="text-[10px]">Image unavailable</span>
+          </div>
         </div>
+      )}
+
+      {/* Actual Image */}
+      {shouldLoad && !hasError && (
+        <Image
+          src={src}
+          alt={alt}
+          onLoad={handleLoad}
+          onError={handleError}
+          className={`transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+          loading={lazy ? 'lazy' : 'eager'}
+          quality={90}
+          {...props}
+        />
       )}
     </div>
   )
 }
 
 /**
- * Anime Cover Image - Preset for anime covers
+ * Optimized Background Image Component
+ * For hero sections, banners, etc.
  */
-export function AnimeCoverImage({
-  src,
-  alt,
-  priority = false,
-  className,
-}: {
+interface OptimizedBackgroundImageProps {
   src: string
   alt: string
-  priority?: boolean
   className?: string
-}) {
+  overlay?: boolean
+  overlayOpacity?: number
+  children?: React.ReactNode
+  lazy?: boolean
+}
+
+export function OptimizedBackgroundImage({
+  src,
+  alt,
+  className = '',
+  overlay = true,
+  overlayOpacity = 0.6,
+  children,
+  lazy = true,
+}: OptimizedBackgroundImageProps) {
   return (
-    <OptimizedImage
-      src={src}
-      alt={alt}
-      aspectRatio="poster"
-      priority={priority}
-      className={cn('rounded-lg', className)}
-      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-    />
+    <div className={`relative ${className}`}>
+      <OptimizedImage
+        src={src}
+        alt={alt}
+        fill
+        style={{ objectFit: 'cover' }}
+        lazy={lazy}
+        placeholderType="blur"
+        priority={!lazy}
+      />
+
+      {overlay && (
+        <div
+          className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent"
+          style={{ opacity: overlayOpacity }}
+          aria-hidden="true"
+        />
+      )}
+
+      {children && <div className="relative z-10">{children}</div>}
+    </div>
   )
 }
 
 /**
- * Anime Banner Image - Preset for banners
+ * Avatar Image with fallback
  */
-export function AnimeBannerImage({
+interface AvatarImageProps {
+  src?: string | null
+  alt: string
+  size?: number
+  className?: string
+  fallbackText?: string
+}
+
+export function AvatarImage({
   src,
   alt,
-  priority = false,
-  className,
-}: {
-  src: string
-  alt: string
-  priority?: boolean
-  className?: string
-}) {
+  size = 40,
+  className = '',
+  fallbackText,
+}: AvatarImageProps) {
+  const [hasError, setHasError] = useState(false)
+
+  const initials = fallbackText || alt.charAt(0).toUpperCase()
+
+  if (!src || hasError) {
+    return (
+      <div
+        className={`flex items-center justify-center bg-gradient-to-br from-primary-500/20 to-secondary-500/20 text-white font-semibold ${className}`}
+        style={{ width: size, height: size }}
+        role="img"
+        aria-label={alt}
+      >
+        {initials}
+      </div>
+    )
+  }
+
   return (
     <OptimizedImage
       src={src}
       alt={alt}
-      aspectRatio="banner"
-      priority={priority}
-      className={cn('rounded-xl', className)}
-      sizes="100vw"
+      width={size}
+      height={size}
+      className={`object-cover ${className}`}
+      onError={() => setHasError(true)}
+      lazy={false}
+      placeholderType="none"
     />
   )
 }
-

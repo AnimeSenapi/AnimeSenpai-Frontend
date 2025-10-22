@@ -5,17 +5,35 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { MyListAnimeCard } from '../../components/anime/MyListAnimeCard'
 import { Button } from '../../components/ui/button'
-import { Anime, AnimeListItem, UserListResponse } from '../../types/anime'
+import { UserListResponse } from '../../types/anime'
 import { useAuth } from '../lib/auth-context'
 import { useFavorites } from '../lib/favorites-context'
 import { apiGetUserList } from '../lib/api'
 import { groupAnimeIntoSeries } from '../../lib/series-grouping'
-import { StatsCardSkeleton, AnimeCardSkeleton, ListItemSkeleton } from '../../components/ui/skeleton'
+import {
+  StatsCardSkeleton,
+  AnimeCardSkeleton,
+} from '../../components/ui/skeleton'
 import { LoadingState } from '../../components/ui/loading-state'
 import { EmptyState, ErrorState } from '../../components/ui/error-state'
 import { VerificationGuard } from '../../lib/verification-guard'
 import { VirtualGrid, VirtualList } from '../../components/VirtualList'
-import { Bookmark, Heart, Grid, List as ListIcon, Clock, Star, CheckCircle, Play, Plus, Lock, Loader2, Search, X, RefreshCw, TrendingUp } from 'lucide-react'
+import {
+  Bookmark,
+  Heart,
+  Grid,
+  List as ListIcon,
+  Clock,
+  Star,
+  CheckCircle,
+  Play,
+  Lock,
+  Search,
+  X,
+  RefreshCw,
+  TrendingUp,
+} from 'lucide-react'
+import { SEOMetadata } from '../../components/SEOMetadata'
 
 // Sort options
 type SortOption = 'title' | 'rating' | 'year' | 'recent' | 'episodes'
@@ -24,7 +42,7 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'title', label: 'Title (A-Z)' },
   { value: 'rating', label: 'Highest Rating' },
   { value: 'year', label: 'Release Year' },
-  { value: 'episodes', label: 'Most Episodes' }
+  { value: 'episodes', label: 'Most Episodes' },
 ]
 
 export default function MyListPage() {
@@ -32,7 +50,9 @@ export default function MyListPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const { toggleFavorite, isFavorited } = useFavorites()
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [selectedCategory, setSelectedCategory] = useState<string>(searchParams?.get('filter') || 'all')
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    searchParams?.get('filter') || 'all'
+  )
   const [isLoading, setIsLoading] = useState(false)
   const [userList, setUserList] = useState<UserListResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -48,7 +68,7 @@ export default function MyListPage() {
       setIsLoading(true)
       setError(null)
       try {
-        const data = await apiGetUserList() as any
+        const data = (await apiGetUserList()) as any
         setUserList({
           items: data.items || [],
           total: data.pagination?.total || 0,
@@ -58,18 +78,17 @@ export default function MyListPage() {
             planToWatch: 0,
             onHold: 0,
             dropped: 0,
-            favorites: 0
-          }
+            favorites: 0,
+          },
         })
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load your list'
         console.error('Failed to load list:', err)
         setError(null) // Don't show error, just use empty list
         // Use empty list
         setUserList({
           items: [],
           total: 0,
-          stats: { watching: 0, completed: 0, planToWatch: 0, onHold: 0, dropped: 0, favorites: 0 }
+          stats: { watching: 0, completed: 0, planToWatch: 0, onHold: 0, dropped: 0, favorites: 0 },
         })
       } finally {
         setIsLoading(false)
@@ -81,7 +100,7 @@ export default function MyListPage() {
 
   // Close sort menu when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (_event: MouseEvent) => {
       if (showSortMenu) {
         setShowSortMenu(false)
       }
@@ -91,11 +110,12 @@ export default function MyListPage() {
       document.addEventListener('click', handleClickOutside)
       return () => document.removeEventListener('click', handleClickOutside)
     }
+    return undefined
   }, [showSortMenu])
 
   const refreshList = async () => {
     if (!isAuthenticated) return
-    
+
     setIsLoading(true)
     setError(null)
     try {
@@ -109,8 +129,8 @@ export default function MyListPage() {
           planToWatch: 0,
           onHold: 0,
           dropped: 0,
-          favorites: 0
-        }
+          favorites: 0,
+        },
       })
     } catch (err) {
       console.error('Failed to refresh list:', err)
@@ -121,25 +141,43 @@ export default function MyListPage() {
   }
 
   // Convert backend format to display format
-  const myListAnimeRaw = userList?.items
-    .filter(item => item.anime) // Only include items with anime data
-    .map(item => ({
-      ...item.anime!,
-      listStatus: item.listStatus as 'favorite' | 'watching' | 'completed' | 'plan-to-watch',
-      // Include progress for episode tracking
-      progress: item.progress || 0,
-      // Ensure rating field exists for grouping
-      rating: item.anime!.averageRating || item.anime!.rating || 0,
-      averageRating: item.anime!.averageRating || item.anime!.rating || 0,
-    })) || []
+  const myListAnimeRaw =
+    userList?.items
+      .filter((item) => item.anime) // Only include items with anime data
+      .map((item) => ({
+        ...item.anime!,
+        listStatus: item.listStatus as
+          | 'watching'
+          | 'completed'
+          | 'plan-to-watch'
+          | 'on-hold'
+          | 'dropped',
+        isFavorite: 'isFavorite' in item ? item.isFavorite! : false, // Include favorite flag, safe check for missing field
+        // Include progress for episode tracking
+        progress: 'progress' in item && typeof item.progress === 'number' ? item.progress : 0,
+        // Ensure rating field exists for grouping
+        rating: (item.anime && (item.anime.averageRating ?? item.anime.rating)) || 0,
+        averageRating: item.anime!.averageRating || item.anime!.rating || 0,
+      })) || []
 
   // Group anime into series
-  const myListAnime = groupAnimeIntoSeries(myListAnimeRaw).map(series => ({
+  const myListAnime = groupAnimeIntoSeries(myListAnimeRaw).map((series) => ({
     ...series,
     // Preserve list status from the first season (or most recent)
-    listStatus: series.seasons?.[0]?.listStatus || myListAnimeRaw.find(a => a.id === series.id)?.listStatus || 'plan-to-watch',
+    listStatus:
+      series.seasons?.[0]?.listStatus ||
+      myListAnimeRaw.find((a) => a.id === series.id)?.listStatus ||
+      'plan-to-watch',
+    // Preserve favorite flag - true if ANY season is favorited
+    isFavorite:
+      series.seasons?.some((s: any) => s.isFavorite) ||
+      myListAnimeRaw.find((a) => a.id === series.id)?.isFavorite ||
+      false,
     // Sum progress across all seasons for series
-    progress: series.seasons?.reduce((sum: number, season: any) => sum + (season.progress || 0), 0) || myListAnimeRaw.find(a => a.id === series.id)?.progress || 0,
+    progress:
+      series.seasons?.reduce((sum: number, season: any) => sum + (season.progress || 0), 0) ||
+      myListAnimeRaw.find((a) => a.id === series.id)?.progress ||
+      0,
     // Use English title if available
     title: series.titleEnglish || series.displayTitle || series.title,
     titleEnglish: series.titleEnglish || series.displayTitle,
@@ -149,33 +187,36 @@ export default function MyListPage() {
   }))
 
   // Calculate stats from items (before grouping for accurate counts)
-  const favorites = myListAnimeRaw.filter(anime => anime.listStatus === 'favorite')
-  const watching = myListAnimeRaw.filter(anime => anime.listStatus === 'watching')
-  const completed = myListAnimeRaw.filter(anime => anime.listStatus === 'completed')
-  const planToWatch = myListAnimeRaw.filter(anime => anime.listStatus === 'plan-to-watch')
+  const favorites = myListAnimeRaw.filter((anime) => anime.isFavorite === true)
+  const watching = myListAnimeRaw.filter((anime) => anime.listStatus === 'watching')
+  const completed = myListAnimeRaw.filter((anime) => anime.listStatus === 'completed')
+  const planToWatch = myListAnimeRaw.filter((anime) => anime.listStatus === 'plan-to-watch')
 
   // Filter anime based on selected category
   const getCategoryFilteredAnime = () => {
     switch (selectedCategory) {
       case 'favorites':
-        return myListAnime.filter(anime => 
-          anime.listStatus === 'favorite' || 
-          anime.seasons?.some((s: any) => s.listStatus === 'favorite')
+        return myListAnime.filter(
+          (anime) =>
+            anime.isFavorite === true || anime.seasons?.some((s: any) => s.isFavorite === true)
         )
       case 'watching':
-        return myListAnime.filter(anime => 
-          anime.listStatus === 'watching' || 
-          anime.seasons?.some((s: any) => s.listStatus === 'watching')
+        return myListAnime.filter(
+          (anime) =>
+            anime.listStatus === 'watching' ||
+            anime.seasons?.some((s: any) => s.listStatus === 'watching')
         )
       case 'completed':
-        return myListAnime.filter(anime => 
-          anime.listStatus === 'completed' || 
-          anime.seasons?.some((s: any) => s.listStatus === 'completed')
+        return myListAnime.filter(
+          (anime) =>
+            anime.listStatus === 'completed' ||
+            anime.seasons?.some((s: any) => s.listStatus === 'completed')
         )
       case 'plan-to-watch':
-        return myListAnime.filter(anime => 
-          anime.listStatus === 'plan-to-watch' || 
-          anime.seasons?.some((s: any) => s.listStatus === 'plan-to-watch')
+        return myListAnime.filter(
+          (anime) =>
+            anime.listStatus === 'plan-to-watch' ||
+            anime.seasons?.some((s: any) => s.listStatus === 'plan-to-watch')
         )
       default:
         return myListAnime
@@ -185,20 +226,21 @@ export default function MyListPage() {
   // Apply search filter
   const getSearchFilteredAnime = (animeList: typeof myListAnime) => {
     if (!searchQuery.trim()) return animeList
-    
+
     const query = searchQuery.toLowerCase()
-    return animeList.filter(anime => 
-      anime.title.toLowerCase().includes(query) ||
-      anime.titleEnglish?.toLowerCase().includes(query) ||
-      anime.titleJapanese?.toLowerCase().includes(query) ||
-      anime.studio?.toLowerCase().includes(query)
+    return animeList.filter(
+      (anime) =>
+        anime.title.toLowerCase().includes(query) ||
+        anime.titleEnglish?.toLowerCase().includes(query) ||
+        anime.titleJapanese?.toLowerCase().includes(query) ||
+        anime.studio?.toLowerCase().includes(query)
     )
   }
 
   // Apply sorting
   const getSortedAnime = (animeList: typeof myListAnime) => {
     const sorted = [...animeList]
-    
+
     switch (sortBy) {
       case 'title':
         return sorted.sort((a, b) => {
@@ -219,7 +261,7 @@ export default function MyListPage() {
   }
 
   const filteredAnime = getSortedAnime(getSearchFilteredAnime(getCategoryFilteredAnime()))
-  
+
   // Calculate stats
   const stats = {
     favorites: favorites.length,
@@ -227,14 +269,12 @@ export default function MyListPage() {
     completed: completed.length,
     planToWatch: planToWatch.length,
     onHold: 0,
-    dropped: 0
+    dropped: 0,
   }
 
   // Show loading state
   if (authLoading || isLoading) {
-    return (
-      <LoadingState variant="full" text="Loading your anime list..." size="lg" />
-    )
+    return <LoadingState variant="full" text="Loading your anime list..." size="lg" />
   }
 
   // Show error state if needed
@@ -272,7 +312,7 @@ export default function MyListPage() {
               </div>
               <div className="h-10 w-10 bg-white/10 rounded-lg animate-pulse"></div>
             </div>
-            
+
             {/* Stats Grid Skeleton */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               <StatsCardSkeleton />
@@ -349,13 +389,14 @@ export default function MyListPage() {
               <div className="w-20 h-20 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Lock className="h-10 w-10 text-primary-400" />
               </div>
-              
+
               <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-white via-primary-400 to-secondary-400 bg-clip-text text-transparent">
                 Sign In to View Your List
               </h1>
-              
+
               <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-                Create an account or sign in to track your favorite anime, manage your watchlist, and never miss an episode.
+                Create an account or sign in to track your favorite anime, manage your watchlist,
+                and never miss an episode.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
@@ -365,8 +406,8 @@ export default function MyListPage() {
                   </Button>
                 </Link>
                 <Link href="/auth/signup">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="border-white/20 text-white hover:bg-white/10 font-semibold px-8 py-6 text-lg rounded-xl"
                   >
                     Create Account
@@ -397,369 +438,388 @@ export default function MyListPage() {
 
   return (
     <VerificationGuard requireVerification={false}>
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
-      </div>
+      <>
+        {/* SEO Metadata */}
+        <SEOMetadata
+          title="My Anime List"
+          description="Track and manage your anime watchlist. Organize your favorite anime by status and rating."
+          keywords={['my anime list', 'watchlist', 'anime tracking', 'anime management']}
+          noindex={true}
+          nofollow={true}
+        />
 
-      <main className="container px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 lg:pb-20 relative z-10">
-        {/* Header Section - Mobile Optimized */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
-            <div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-white via-primary-400 to-secondary-400 bg-clip-text text-transparent">
-                My List
-              </h1>
-              <p className="text-lg text-gray-300 flex items-center gap-2">
-                {myListAnime.length} anime in your collection
-                {myListAnime.length > 0 && searchQuery && (
-                  <span className="text-sm text-gray-500">({filteredAnime.length} shown)</span>
-                )}
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={refreshList}
-              disabled={isLoading}
-              className="border-white/20 text-white hover:bg-white/10"
-            >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </Button>
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
+          {/* Animated Background Elements */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
           </div>
-          
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="glass rounded-xl p-4 hover:bg-white/10 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-error-500/20 rounded-lg flex items-center justify-center">
-                  <Heart className="h-5 w-5 text-error-400" />
-                </div>
-                <div>
-                  <div className="text-xl font-bold text-white">{stats.favorites}</div>
-                  <div className="text-xs text-gray-400">Favorites</div>
-                </div>
-              </div>
-            </div>
-            <div className="glass rounded-xl p-4 hover:bg-white/10 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary-500/20 rounded-lg flex items-center justify-center">
-                  <Play className="h-5 w-5 text-primary-400" />
-                </div>
-                <div>
-                  <div className="text-xl font-bold text-white">{stats.watching}</div>
-                  <div className="text-xs text-gray-400">Watching</div>
-                </div>
-              </div>
-            </div>
-            <div className="glass rounded-xl p-4 hover:bg-white/10 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-success-500/20 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="h-5 w-5 text-success-400" />
-                </div>
-                <div>
-                  <div className="text-xl font-bold text-white">{stats.completed}</div>
-                  <div className="text-xs text-gray-400">Completed</div>
-                </div>
-              </div>
-            </div>
-            <div className="glass rounded-xl p-4 hover:bg-white/10 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-warning-500/20 rounded-lg flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-warning-400" />
-                </div>
-                <div>
-                  <div className="text-xl font-bold text-white">{stats.planToWatch}</div>
-                  <div className="text-xs text-gray-400">Plan to Watch</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Category Filter */}
-        <div className="glass rounded-2xl p-4 mb-8">
-          <div className="flex items-center gap-3 overflow-x-auto pb-2">
-            <Button
-              variant={selectedCategory === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedCategory('all')}
-              className={`whitespace-nowrap transition-all duration-200 ${
-                selectedCategory === 'all' 
-                  ? 'bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 shadow-lg shadow-brand-primary-500/25' 
-                  : 'border-white/20 text-white hover:bg-white/10 hover:border-white/30'
-              }`}
-            >
-              <Bookmark className="h-4 w-4 mr-2" />
-              All ({myListAnime.length})
-            </Button>
-            <Button
-              variant={selectedCategory === 'favorites' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedCategory('favorites')}
-              className={`whitespace-nowrap transition-all duration-200 ${
-                selectedCategory === 'favorites' 
-                  ? 'bg-secondary-500 hover:bg-secondary-600 shadow-lg shadow-brand-secondary-500/25' 
-                  : 'border-white/20 text-white hover:bg-white/10 hover:border-white/30'
-              }`}
-            >
-              <Heart className="h-4 w-4 mr-2" />
-              Favorites ({favorites.length})
-            </Button>
-            <Button
-              variant={selectedCategory === 'watching' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedCategory('watching')}
-              className={`whitespace-nowrap transition-all duration-200 ${
-                selectedCategory === 'watching' 
-                  ? 'bg-primary-500 hover:bg-primary-600 shadow-lg shadow-brand-primary-500/25' 
-                  : 'border-white/20 text-white hover:bg-white/10 hover:border-white/30'
-              }`}
-            >
-              <Play className="h-4 w-4 mr-2" />
-              Watching ({watching.length})
-            </Button>
-            <Button
-              variant={selectedCategory === 'completed' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedCategory('completed')}
-              className={`whitespace-nowrap transition-all duration-200 ${
-                selectedCategory === 'completed' 
-                  ? 'bg-success-500 hover:bg-success-600 shadow-lg shadow-success-500/25' 
-                  : 'border-white/20 text-white hover:bg-white/10 hover:border-white/30'
-              }`}
-            >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Completed ({completed.length})
-            </Button>
-            <Button
-              variant={selectedCategory === 'plan-to-watch' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedCategory('plan-to-watch')}
-              className={`whitespace-nowrap transition-all duration-200 ${
-                selectedCategory === 'plan-to-watch' 
-                  ? 'bg-planning-500 hover:bg-planning-600 shadow-lg shadow-planning-500/25' 
-                  : 'border-white/20 text-white hover:bg-white/10 hover:border-white/30'
-              }`}
-            >
-              <Star className="h-4 w-4 mr-2" />
-              Plan to Watch ({planToWatch.length})
-            </Button>
-          </div>
-        </div>
-
-        {/* Search and Controls */}
-        <div className="mb-8 space-y-4">
-          {/* Search Bar */}
-          <div className="glass rounded-xl p-1">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search anime by title or studio..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-10 py-3 bg-transparent text-white placeholder-gray-500 focus:outline-none"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+          <main className="container px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 lg:pb-20 relative z-10">
+            {/* Header Section - Mobile Optimized */}
+            <div className="mb-6 sm:mb-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+                <div>
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-white via-primary-400 to-secondary-400 bg-clip-text text-transparent">
+                    My List
+                  </h1>
+                  <p className="text-lg text-gray-300 flex items-center gap-2">
+                    {myListAnime.length} anime in your collection
+                    {myListAnime.length > 0 && searchQuery && (
+                      <span className="text-sm text-gray-500">({filteredAnime.length} shown)</span>
+                    )}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={refreshList}
+                  disabled={isLoading}
+                  className="border-white/20 text-white hover:bg-white/10"
                 >
-                  <X className="h-5 w-5" />
-                </button>
-              )}
-            </div>
-          </div>
+                  <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
 
-          {/* Controls Row */}
-          <div className="flex items-center justify-between gap-4">
-            {/* Sort Dropdown */}
-            <div className="relative">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setShowSortMenu(!showSortMenu)
-                }}
-                className="border-white/20 text-white hover:bg-white/10"
-              >
-                <TrendingUp className="h-4 w-4 mr-2" />
-                {SORT_OPTIONS.find(opt => opt.value === sortBy)?.label}
-              </Button>
-              
-              {showSortMenu && (
-                <div className="absolute top-full left-0 mt-2 glass rounded-xl p-2 min-w-[200px] z-10 border border-white/10">
-                  {SORT_OPTIONS.map((option) => (
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="glass rounded-xl p-4 hover:bg-white/10 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-error-500/20 rounded-lg flex items-center justify-center">
+                      <Heart className="h-5 w-5 text-error-400" />
+                    </div>
+                    <div>
+                      <div className="text-xl font-bold text-white">{stats.favorites}</div>
+                      <div className="text-xs text-gray-400">Favorites</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="glass rounded-xl p-4 hover:bg-white/10 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary-500/20 rounded-lg flex items-center justify-center">
+                      <Play className="h-5 w-5 text-primary-400" />
+                    </div>
+                    <div>
+                      <div className="text-xl font-bold text-white">{stats.watching}</div>
+                      <div className="text-xs text-gray-400">Watching</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="glass rounded-xl p-4 hover:bg-white/10 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-success-500/20 rounded-lg flex items-center justify-center">
+                      <CheckCircle className="h-5 w-5 text-success-400" />
+                    </div>
+                    <div>
+                      <div className="text-xl font-bold text-white">{stats.completed}</div>
+                      <div className="text-xs text-gray-400">Completed</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="glass rounded-xl p-4 hover:bg-white/10 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-warning-500/20 rounded-lg flex items-center justify-center">
+                      <Clock className="h-5 w-5 text-warning-400" />
+                    </div>
+                    <div>
+                      <div className="text-xl font-bold text-white">{stats.planToWatch}</div>
+                      <div className="text-xs text-gray-400">Plan to Watch</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Category Filter */}
+            <div className="glass rounded-2xl p-4 mb-8">
+              <div className="flex items-center gap-3 overflow-x-auto pb-2">
+                <Button
+                  variant={selectedCategory === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedCategory('all')}
+                  className={`whitespace-nowrap transition-all duration-200 ${
+                    selectedCategory === 'all'
+                      ? 'bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 shadow-lg shadow-brand-primary-500/25'
+                      : 'border-white/20 text-white hover:bg-white/10 hover:border-white/30'
+                  }`}
+                >
+                  <Bookmark className="h-4 w-4 mr-2" />
+                  All ({myListAnime.length})
+                </Button>
+                <Button
+                  variant={selectedCategory === 'favorites' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedCategory('favorites')}
+                  className={`whitespace-nowrap transition-all duration-200 ${
+                    selectedCategory === 'favorites'
+                      ? 'bg-secondary-500 hover:bg-secondary-600 shadow-lg shadow-brand-secondary-500/25'
+                      : 'border-white/20 text-white hover:bg-white/10 hover:border-white/30'
+                  }`}
+                >
+                  <Heart className="h-4 w-4 mr-2" />
+                  Favorites ({favorites.length})
+                </Button>
+                <Button
+                  variant={selectedCategory === 'watching' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedCategory('watching')}
+                  className={`whitespace-nowrap transition-all duration-200 ${
+                    selectedCategory === 'watching'
+                      ? 'bg-primary-500 hover:bg-primary-600 shadow-lg shadow-brand-primary-500/25'
+                      : 'border-white/20 text-white hover:bg-white/10 hover:border-white/30'
+                  }`}
+                >
+                  <Play className="h-4 w-4 mr-2" />
+                  Watching ({watching.length})
+                </Button>
+                <Button
+                  variant={selectedCategory === 'completed' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedCategory('completed')}
+                  className={`whitespace-nowrap transition-all duration-200 ${
+                    selectedCategory === 'completed'
+                      ? 'bg-success-500 hover:bg-success-600 shadow-lg shadow-success-500/25'
+                      : 'border-white/20 text-white hover:bg-white/10 hover:border-white/30'
+                  }`}
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Completed ({completed.length})
+                </Button>
+                <Button
+                  variant={selectedCategory === 'plan-to-watch' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedCategory('plan-to-watch')}
+                  className={`whitespace-nowrap transition-all duration-200 ${
+                    selectedCategory === 'plan-to-watch'
+                      ? 'bg-planning-500 hover:bg-planning-600 shadow-lg shadow-planning-500/25'
+                      : 'border-white/20 text-white hover:bg-white/10 hover:border-white/30'
+                  }`}
+                >
+                  <Star className="h-4 w-4 mr-2" />
+                  Plan to Watch ({planToWatch.length})
+                </Button>
+              </div>
+            </div>
+
+            {/* Search and Controls */}
+            <div className="mb-8 space-y-4">
+              {/* Search Bar */}
+              <div className="glass rounded-xl p-1">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search anime by title or studio..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-12 pr-10 py-3 bg-transparent text-white placeholder-gray-500 focus:outline-none"
+                  />
+                  {searchQuery && (
                     <button
-                      key={option.value}
-                      onClick={() => {
-                        setSortBy(option.value)
-                        setShowSortMenu(false)
-                      }}
-                      className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                        sortBy === option.value
-                          ? 'bg-primary-500/20 text-primary-400'
-                          : 'text-white hover:bg-white/10'
-                      }`}
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                     >
-                      {option.label}
+                      <X className="h-5 w-5" />
                     </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Controls Row */}
+              <div className="flex items-center justify-between gap-4">
+                {/* Sort Dropdown */}
+                <div className="relative">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowSortMenu(!showSortMenu)
+                    }}
+                    className="border-white/20 text-white hover:bg-white/10"
+                  >
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    {SORT_OPTIONS.find((opt) => opt.value === sortBy)?.label}
+                  </Button>
+
+                  {showSortMenu && (
+                    <div className="absolute top-full left-0 mt-2 glass rounded-xl p-2 min-w-[200px] z-10 border border-white/10">
+                      {SORT_OPTIONS.map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => {
+                            setSortBy(option.value)
+                            setShowSortMenu(false)
+                          }}
+                          className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                            sortBy === option.value
+                              ? 'bg-primary-500/20 text-primary-400'
+                              : 'text-white hover:bg-white/10'
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* View Mode Toggle */}
+                <div className="flex items-center gap-1 glass rounded-xl p-1">
+                  <Button
+                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                    className={`transition-all ${
+                      viewMode === 'grid'
+                        ? 'bg-gradient-to-r from-primary-500 to-secondary-500'
+                        : 'text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <Grid className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                    className={`transition-all ${
+                      viewMode === 'list'
+                        ? 'bg-gradient-to-r from-primary-500 to-secondary-500'
+                        : 'text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <ListIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Anime Display */}
+            {viewMode === 'grid' ? (
+              // Use virtual scrolling for grid view (optimal for 100+ items)
+              filteredAnime.length > 50 ? (
+                <VirtualGrid
+                  items={filteredAnime}
+                  itemWidth={220}
+                  itemHeight={360}
+                  columns={5}
+                  gap={24}
+                  height={800}
+                  className="pb-8"
+                  renderItem={(anime) => (
+                    <MyListAnimeCard
+                      key={anime.id}
+                      anime={anime}
+                      variant="grid"
+                      onFavorite={toggleFavorite}
+                      isFavorited={isFavorited(anime.id)}
+                    />
+                  )}
+                />
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                  {filteredAnime.map((anime) => (
+                    <MyListAnimeCard
+                      key={anime.id}
+                      anime={anime}
+                      variant="grid"
+                      onFavorite={toggleFavorite}
+                      isFavorited={isFavorited(anime.id)}
+                    />
                   ))}
                 </div>
-              )}
-            </div>
+              )
+            ) : // Use virtual scrolling for list view (optimal for 100+ items)
+            filteredAnime.length > 50 ? (
+              <VirtualList
+                items={filteredAnime}
+                itemHeight={120}
+                height={800}
+                gap={16}
+                className="pb-8"
+                renderItem={(anime) => (
+                  <MyListAnimeCard
+                    key={anime.id}
+                    anime={anime}
+                    variant="list"
+                    onFavorite={toggleFavorite}
+                    isFavorited={isFavorited(anime.id)}
+                  />
+                )}
+              />
+            ) : (
+              <div className="space-y-4">
+                {filteredAnime.map((anime) => (
+                  <MyListAnimeCard
+                    key={anime.id}
+                    anime={anime}
+                    variant="list"
+                    onFavorite={toggleFavorite}
+                    isFavorited={isFavorited(anime.id)}
+                  />
+                ))}
+              </div>
+            )}
 
-            {/* View Mode Toggle */}
-            <div className="flex items-center gap-1 glass rounded-xl p-1">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-                className={`transition-all ${
-                  viewMode === 'grid'
-                    ? 'bg-gradient-to-r from-primary-500 to-secondary-500'
-                    : 'text-white hover:bg-white/10'
-                }`}
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className={`transition-all ${
-                  viewMode === 'list'
-                    ? 'bg-gradient-to-r from-primary-500 to-secondary-500'
-                    : 'text-white hover:bg-white/10'
-                }`}
-              >
-                <ListIcon className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+            {/* Empty State - Enhanced with helpful suggestions */}
+            {filteredAnime.length === 0 && (
+              <EmptyState
+                icon={
+                  selectedCategory === 'favorites' ? (
+                    <Heart className="h-12 w-12 text-gray-500" />
+                  ) : selectedCategory === 'watching' ? (
+                    <Play className="h-12 w-12 text-gray-500" />
+                  ) : selectedCategory === 'completed' ? (
+                    <CheckCircle className="h-12 w-12 text-gray-500" />
+                  ) : selectedCategory === 'plan-to-watch' ? (
+                    <Clock className="h-12 w-12 text-gray-500" />
+                  ) : (
+                    <Bookmark className="h-12 w-12 text-gray-500" />
+                  )
+                }
+                title={
+                  selectedCategory === 'all'
+                    ? 'Your list is empty'
+                    : searchQuery
+                      ? 'No results found'
+                      : `No ${selectedCategory.replace('-', ' ')} anime`
+                }
+                message={
+                  selectedCategory === 'all'
+                    ? 'Start building your anime collection by adding shows you love or want to watch!'
+                    : searchQuery
+                      ? `No anime matching "${searchQuery}" in your ${selectedCategory.replace('-', ' ')} list`
+                      : `Add some anime to your ${selectedCategory.replace('-', ' ')} list to see them here`
+                }
+                suggestions={
+                  selectedCategory === 'all' && !searchQuery
+                    ? [
+                        'Browse our full anime catalog in the Search page',
+                        'Check out trending anime on the Dashboard',
+                        'Use filters to find anime by genre, year, or studio',
+                      ]
+                    : searchQuery
+                      ? [
+                          'Check your spelling',
+                          'Try different keywords',
+                          'Clear filters and search again',
+                        ]
+                      : undefined
+                }
+                actionLabel={searchQuery ? 'Clear Search' : 'Discover Anime'}
+                onAction={() =>
+                  searchQuery ? setSearchQuery('') : (window.location.href = '/search')
+                }
+                secondaryActionLabel={!searchQuery ? 'View Trending' : undefined}
+                onSecondaryAction={
+                  !searchQuery ? () => (window.location.href = '/dashboard') : undefined
+                }
+              />
+            )}
+          </main>
         </div>
-
-        {/* Anime Display */}
-        {viewMode === 'grid' ? (
-          // Use virtual scrolling for grid view (optimal for 100+ items)
-          filteredAnime.length > 50 ? (
-            <VirtualGrid
-              items={filteredAnime}
-              itemWidth={220}
-              itemHeight={360}
-              columns={5}
-              gap={24}
-              height={800}
-              className="pb-8"
-              renderItem={(anime) => (
-                <MyListAnimeCard
-                  key={anime.id}
-                  anime={anime}
-                  variant="grid"
-                  onFavorite={toggleFavorite}
-                  isFavorited={isFavorited(anime.id)}
-                />
-              )}
-            />
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-              {filteredAnime.map((anime) => (
-                <MyListAnimeCard
-                  key={anime.id}
-                  anime={anime}
-                  variant="grid"
-                  onFavorite={toggleFavorite}
-                  isFavorited={isFavorited(anime.id)}
-                />
-              ))}
-            </div>
-          )
-        ) : (
-          // Use virtual scrolling for list view (optimal for 100+ items)
-          filteredAnime.length > 50 ? (
-            <VirtualList
-              items={filteredAnime}
-              itemHeight={120}
-              height={800}
-              gap={16}
-              className="pb-8"
-              renderItem={(anime) => (
-                <MyListAnimeCard
-                  key={anime.id}
-                  anime={anime}
-                  variant="list"
-                  onFavorite={toggleFavorite}
-                  isFavorited={isFavorited(anime.id)}
-                />
-              )}
-            />
-          ) : (
-            <div className="space-y-4">
-              {filteredAnime.map((anime) => (
-                <MyListAnimeCard
-                  key={anime.id}
-                  anime={anime}
-                  variant="list"
-                  onFavorite={toggleFavorite}
-                  isFavorited={isFavorited(anime.id)}
-                />
-              ))}
-            </div>
-          )
-        )}
-
-        {/* Empty State - Enhanced with helpful suggestions */}
-        {filteredAnime.length === 0 && (
-          <EmptyState
-            icon={
-              selectedCategory === 'favorites' ? <Heart className="h-12 w-12 text-gray-500" /> :
-              selectedCategory === 'watching' ? <Play className="h-12 w-12 text-gray-500" /> :
-              selectedCategory === 'completed' ? <CheckCircle className="h-12 w-12 text-gray-500" /> :
-              selectedCategory === 'plan-to-watch' ? <Clock className="h-12 w-12 text-gray-500" /> :
-              <Bookmark className="h-12 w-12 text-gray-500" />
-            }
-            title={
-              selectedCategory === 'all' 
-                ? 'Your list is empty' 
-                : searchQuery
-                ? 'No results found'
-                : `No ${selectedCategory.replace('-', ' ')} anime`
-            }
-            message={
-              selectedCategory === 'all' 
-                ? 'Start building your anime collection by adding shows you love or want to watch!'
-                : searchQuery
-                ? `No anime matching "${searchQuery}" in your ${selectedCategory.replace('-', ' ')} list`
-                : `Add some anime to your ${selectedCategory.replace('-', ' ')} list to see them here`
-            }
-            suggestions={
-              selectedCategory === 'all' && !searchQuery
-                ? [
-                    'Browse our full anime catalog in the Search page',
-                    'Check out trending anime on the Dashboard',
-                    'Use filters to find anime by genre, year, or studio'
-                  ]
-                : searchQuery
-                ? [
-                    'Check your spelling',
-                    'Try different keywords',
-                    'Clear filters and search again'
-                  ]
-                : undefined
-            }
-            actionLabel={searchQuery ? 'Clear Search' : 'Discover Anime'}
-            onAction={() => searchQuery ? setSearchQuery('') : window.location.href = '/search'}
-            secondaryActionLabel={!searchQuery ? 'View Trending' : undefined}
-            onSecondaryAction={!searchQuery ? () => window.location.href = '/dashboard' : undefined}
-          />
-        )}
-      </main>
-    </div>
+      </>
     </VerificationGuard>
   )
 }

@@ -1,24 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { 
-  MessageSquare, 
-  Flag, 
-  Eye, 
-  EyeOff, 
-  Trash2, 
-  Search, 
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  RefreshCw 
-} from 'lucide-react'
+import { MessageSquare, Flag, Eye, EyeOff, Trash2, Search, RefreshCw } from 'lucide-react'
 import { Button } from '../../../components/ui/button'
-import { 
-  apiGetReviews, 
-  apiGetModerationStats, 
-  apiToggleReviewVisibility, 
-  apiDeleteReview 
+import {
+  apiGetReviews,
+  apiGetModerationStats,
+  apiToggleReviewVisibility,
+  apiDeleteReview,
 } from '../../lib/api'
 
 interface Review {
@@ -70,11 +59,11 @@ export function ContentTab() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [reviewsData, statsData] = await Promise.all([
+      const [reviewsData, statsData] = (await Promise.all([
         apiGetReviews({ page, limit: 20, filter, search: searchQuery }),
-        apiGetModerationStats()
-      ]) as any[]
-      
+        apiGetModerationStats(),
+      ])) as any[]
+
       setReviews(reviewsData.reviews || [])
       setTotalPages(reviewsData.pagination?.totalPages || 1)
       setStats(statsData)
@@ -183,7 +172,10 @@ export function ContentTab() {
           <Button
             variant={filter === 'all' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => { setFilter('all'); setPage(1) }}
+            onClick={() => {
+              setFilter('all')
+              setPage(1)
+            }}
             className="border-white/20"
           >
             All Reviews
@@ -191,7 +183,10 @@ export function ContentTab() {
           <Button
             variant={filter === 'public' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => { setFilter('public'); setPage(1) }}
+            onClick={() => {
+              setFilter('public')
+              setPage(1)
+            }}
             className="border-white/20"
           >
             Public
@@ -199,7 +194,10 @@ export function ContentTab() {
           <Button
             variant={filter === 'hidden' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => { setFilter('hidden'); setPage(1) }}
+            onClick={() => {
+              setFilter('hidden')
+              setPage(1)
+            }}
             className="border-white/20"
           >
             Hidden
@@ -207,7 +205,10 @@ export function ContentTab() {
           <Button
             variant={filter === 'recent' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => { setFilter('recent'); setPage(1) }}
+            onClick={() => {
+              setFilter('recent')
+              setPage(1)
+            }}
             className="border-white/20"
           >
             Recent
@@ -267,24 +268,18 @@ export function ContentTab() {
                         {review.anime.titleEnglish || review.anime.title}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-gray-500">
-                          by {review.user.username}
-                        </span>
+                        <span className="text-xs text-gray-500">by {review.user.username}</span>
                         <span className="text-xs text-gray-500">•</span>
                         <span className="text-xs text-gray-500">
                           {new Date(review.createdAt).toLocaleDateString()}
                         </span>
                         <span className="text-xs text-gray-500">•</span>
-                        <span className="text-xs text-warning-400">
-                          Score: {review.score}/10
-                        </span>
+                        <span className="text-xs text-warning-400">Score: {review.score}/10</span>
                       </div>
                     </div>
                   </div>
 
-                  <p className="text-gray-300 text-sm line-clamp-3 mb-3">
-                    {review.content}
-                  </p>
+                  <p className="text-gray-300 text-sm line-clamp-3 mb-3">{review.content}</p>
 
                   <div className="flex items-center gap-4 text-sm">
                     {review.isSpoiler && (
@@ -292,19 +287,17 @@ export function ContentTab() {
                         Spoiler
                       </span>
                     )}
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      review.isPublic 
-                        ? 'bg-success-500/20 text-success-400' 
-                        : 'bg-error-500/20 text-error-400'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded text-xs ${
+                        review.isPublic
+                          ? 'bg-success-500/20 text-success-400'
+                          : 'bg-error-500/20 text-error-400'
+                      }`}
+                    >
                       {review.isPublic ? 'Public' : 'Hidden'}
                     </span>
-                    <span className="text-gray-500 text-xs">
-                      👍 {review.likes}
-                    </span>
-                    <span className="text-gray-500 text-xs">
-                      👎 {review.dislikes}
-                    </span>
+                    <span className="text-gray-500 text-xs">👍 {review.likes}</span>
+                    <span className="text-gray-500 text-xs">👎 {review.dislikes}</span>
                   </div>
                 </div>
 
@@ -347,7 +340,7 @@ export function ContentTab() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => setPage(p => Math.max(1, p - 1))}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
             className="border-white/20"
           >
@@ -359,7 +352,7 @@ export function ContentTab() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
             className="border-white/20"
           >

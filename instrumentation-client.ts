@@ -1,5 +1,8 @@
-// sentry.client.config.ts - Client-side Sentry initialization
+// instrumentation-client.ts - Client-side Sentry initialization
 import * as Sentry from "@sentry/nextjs";
+
+// Export router transition hook for navigation tracking
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN || "https://e2e5e2b86c43e243dc494c8b8c866aaa@o4510183717732352.ingest.de.sentry.io/4510183722123344",
@@ -7,17 +10,32 @@ Sentry.init({
   // Performance Monitoring
   tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
   
+  // Performance thresholds (in milliseconds)
+  // These prevent Sentry from flagging normal API responses as "poor performance"
+  _experiments: {
+    enableLogs: true,
+    // Only flag performance issues above these thresholds
+    performanceInstrumentationOptions: {
+      enableLongTask: true,
+      enableInteractions: true,
+      enableNavigationTiming: true,
+      enablePaintTiming: true,
+      enableResourceTiming: true,
+      enableWebVitalsAttribution: true,
+      // Set higher thresholds for development
+      ...(process.env.NODE_ENV === "development" && {
+        slowTransactionThreshold: 2000, // 2 seconds
+        idleTimeout: 3000, // 3 seconds
+      }),
+    },
+  },
+  
   // Session Replay
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
 
   // Environment
   environment: process.env.NODE_ENV || "development",
-  
-  // Enable logging
-  _experiments: {
-    enableLogs: true,
-  },
 
   // Integrations
   integrations: [
@@ -35,7 +53,16 @@ Sentry.init({
   beforeSend(event, hint) {
     // Don't send errors in development
     if (process.env.NODE_ENV === "development") {
-      console.error("Sentry Error (dev):", hint.originalException || hint.syntheticException);
+      // Suppress performance warnings in development
+      if (hint.originalException instanceof Error && 
+          hint.originalException.message.includes("Poor API_RESPONSE performance")) {
+        return null;
+      }
+      
+      // Only log actual errors, not performance warnings
+      if (event.exception && event.exception.values && event.exception.values.length > 0) {
+        console.error("Sentry Error (dev):", hint.originalException || hint.syntheticException);
+      }
       return null;
     }
 
@@ -54,7 +81,7 @@ Sentry.init({
   },
 
   // Don't send breadcrumbs in development
-  beforeBreadcrumb(breadcrumb, hint) {
+  beforeBreadcrumb(breadcrumb, _hint) {
     if (process.env.NODE_ENV === "development") {
       return null;
     }

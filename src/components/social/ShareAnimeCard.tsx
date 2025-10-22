@@ -6,10 +6,9 @@ import Image from 'next/image'
 import { Share2, Twitter, Download, X, Users, Send, Loader2 } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
-import { useToast } from '../../lib/toast-context'
+import { useToast } from '../ui/toast'
 import { useAuth } from '../../app/lib/auth-context'
 import { apiGetFriends, apiSendMessage } from '../../app/lib/api'
-import type { Anime } from '../../types/anime'
 
 interface ShareAnimeCardProps {
   anime: {
@@ -37,7 +36,7 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
   const [sendingTo, setSendingTo] = useState<string | null>(null)
 
   const animeUrl = `${window.location.origin}/anime/${anime.slug}`
-  
+
   // Generate share text based on user's interaction
   const getShareText = () => {
     if (userRating && userStatus === 'completed') {
@@ -76,7 +75,7 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
   const loadFriends = async () => {
     try {
       setLoadingFriends(true)
-      const data = await apiGetFriends() as any
+      const data = (await apiGetFriends()) as any
       setFriends(data?.friends || [])
     } catch (error) {
       console.error('Failed to load friends:', error)
@@ -90,10 +89,10 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
   const shareWithFriend = async (friendId: string, friendName: string) => {
     try {
       setSendingTo(friendId)
-      
+
       const message = getShareText() + `\n${animeUrl}`
       await apiSendMessage(friendId, message, anime.id)
-      
+
       toast.success(`Shared with ${friendName}!`, 'Success')
       setShowFriendSelector(false)
       setShowModal(false)
@@ -118,280 +117,277 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
       </Button>
 
       {/* Share Modal - Using Portal to render at document.body - Mobile Optimized */}
-      {showModal && createPortal(
-        <div 
-          className="fixed inset-0 flex items-center justify-center p-3 sm:p-4 lg:p-6 bg-black/80 backdrop-blur-sm"
-          style={{ 
-            zIndex: 999999,
-            position: 'fixed',
-            isolation: 'isolate'
-          }}
-        >
-          <div className="glass rounded-xl sm:rounded-2xl max-w-md w-full p-4 sm:p-6 relative border border-white/10 animate-in zoom-in-95 duration-200">
-            {/* Close Button - Touch-friendly */}
-            <button
-              onClick={() => setShowModal(false)}
-              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-white transition-colors w-8 h-8 sm:w-auto sm:h-auto flex items-center justify-center touch-manipulation"
-              aria-label="Close share modal"
-            >
-              <X className="h-5 w-5" />
-            </button>
+      {showModal &&
+        createPortal(
+          <div
+            className="fixed inset-0 flex items-center justify-center p-3 sm:p-4 lg:p-6 bg-black/80 backdrop-blur-sm"
+            style={{
+              zIndex: 999999,
+              position: 'fixed',
+              isolation: 'isolate',
+            }}
+          >
+            <div className="glass rounded-xl sm:rounded-2xl max-w-md w-full p-4 sm:p-6 relative border border-white/10 animate-in zoom-in-95 duration-200">
+              {/* Close Button - Touch-friendly */}
+              <button
+                onClick={() => setShowModal(false)}
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-white transition-colors w-8 h-8 sm:w-auto sm:h-auto flex items-center justify-center touch-manipulation"
+                aria-label="Close share modal"
+              >
+                <X className="h-5 w-5" />
+              </button>
 
-            {/* Header - Responsive */}
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2 pr-8">
-              <Share2 className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400" />
-              Share Anime
-            </h3>
+              {/* Header - Responsive */}
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2 pr-8">
+                <Share2 className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400" />
+                Share Anime
+              </h3>
 
-            {/* Anime Preview Card - Responsive */}
-            <div className="bg-white/5 rounded-lg sm:rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 border border-white/10">
-              <div className="flex gap-4">
-                {anime.coverImage && (
-                  <div className="relative w-20 h-28 rounded-lg overflow-hidden">
-                    <Image
-                      src={anime.coverImage}
-                      alt={anime.title}
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                    />
+              {/* Anime Preview Card - Responsive */}
+              <div className="bg-white/5 rounded-lg sm:rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 border border-white/10">
+                <div className="flex gap-4">
+                  {anime.coverImage && (
+                    <div className="relative w-20 h-28 rounded-lg overflow-hidden">
+                      <Image
+                        src={anime.coverImage}
+                        alt={anime.title}
+                        fill
+                        className="object-cover"
+                        sizes="80px"
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-white font-semibold mb-1 line-clamp-2">{anime.title}</h4>
+                    {anime.titleEnglish && anime.titleEnglish !== anime.title && (
+                      <p className="text-gray-400 text-sm mb-2 line-clamp-1">
+                        {anime.titleEnglish}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-2 items-center">
+                      {anime.year && <span className="text-xs text-gray-500">{anime.year}</span>}
+                      {anime.type && (
+                        <Badge className="bg-primary-500/20 text-primary-400 text-xs px-2 py-0">
+                          {anime.type.toUpperCase()}
+                        </Badge>
+                      )}
+                      {anime.averageRating && (
+                        <div className="flex items-center gap-1 text-xs text-yellow-400">
+                          ⭐ {anime.averageRating.toFixed(1)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* User's Interaction */}
+                {(userRating || userStatus) && (
+                  <div className="mt-3 pt-3 border-t border-white/10">
+                    <div className="flex items-center gap-2 text-sm">
+                      {userStatus && (
+                        <Badge className="bg-secondary-500/20 text-secondary-400 text-xs">
+                          {userStatus.replace('_', ' ').toUpperCase()}
+                        </Badge>
+                      )}
+                      {userRating && (
+                        <span className="text-primary-400 font-semibold">
+                          My Rating: {userRating}/10
+                        </span>
+                      )}
+                    </div>
                   </div>
                 )}
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-white font-semibold mb-1 line-clamp-2">
-                    {anime.title}
-                  </h4>
-                  {anime.titleEnglish && anime.titleEnglish !== anime.title && (
-                    <p className="text-gray-400 text-sm mb-2 line-clamp-1">
-                      {anime.titleEnglish}
-                    </p>
-                  )}
-                  <div className="flex flex-wrap gap-2 items-center">
-                    {anime.year && (
-                      <span className="text-xs text-gray-500">{anime.year}</span>
-                    )}
-                    {anime.type && (
-                      <Badge className="bg-primary-500/20 text-primary-400 text-xs px-2 py-0">
-                        {anime.type.toUpperCase()}
-                      </Badge>
-                    )}
-                    {anime.averageRating && (
-                      <div className="flex items-center gap-1 text-xs text-yellow-400">
-                        ⭐ {anime.averageRating.toFixed(1)}
-                      </div>
-                    )}
-                  </div>
-                </div>
               </div>
 
-              {/* User's Interaction */}
-              {(userRating || userStatus) && (
-                <div className="mt-3 pt-3 border-t border-white/10">
-                  <div className="flex items-center gap-2 text-sm">
-                    {userStatus && (
-                      <Badge className="bg-secondary-500/20 text-secondary-400 text-xs">
-                        {userStatus.replace('_', ' ').toUpperCase()}
-                      </Badge>
-                    )}
-                    {userRating && (
-                      <span className="text-primary-400 font-semibold">
-                        My Rating: {userRating}/10
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+              {/* Share Text Preview */}
+              <div className="bg-white/5 rounded-xl p-3 mb-4 border border-white/10">
+                <p className="text-sm text-gray-300 italic">"{getShareText()}"</p>
+              </div>
 
-            {/* Share Text Preview */}
-            <div className="bg-white/5 rounded-xl p-3 mb-4 border border-white/10">
-              <p className="text-sm text-gray-300 italic">"{getShareText()}"</p>
-            </div>
+              {/* Share Options */}
+              <div className="space-y-3">
+                {/* Share with Friend - NEW FEATURE */}
+                {user && (
+                  <button
+                    onClick={() => setShowFriendSelector(true)}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 sm:py-3 rounded-xl bg-primary-500/10 hover:bg-primary-500/20 active:bg-primary-500/30 border border-primary-500/20 transition-colors group touch-manipulation"
+                  >
+                    <div className="w-10 h-10 bg-primary-500/20 rounded-lg flex items-center justify-center group-hover:bg-primary-500/30 transition-colors">
+                      <Users className="h-5 w-5 text-primary-400" />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="text-white font-medium text-sm sm:text-base">
+                        Share with Friend
+                      </p>
+                      <p className="text-gray-400 text-xs">Send via direct message</p>
+                    </div>
+                    <Send className="h-4 w-4 text-primary-400" />
+                  </button>
+                )}
 
-            {/* Share Options */}
-            <div className="space-y-3">
-              {/* Share with Friend - NEW FEATURE */}
-              {user && (
+                {/* Twitter - Mobile Optimized */}
                 <button
-                  onClick={() => setShowFriendSelector(true)}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 sm:py-3 rounded-xl bg-primary-500/10 hover:bg-primary-500/20 active:bg-primary-500/30 border border-primary-500/20 transition-colors group touch-manipulation"
+                  onClick={shareToTwitter}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 sm:py-3 rounded-xl bg-[#1DA1F2]/10 hover:bg-[#1DA1F2]/20 active:bg-[#1DA1F2]/30 border border-[#1DA1F2]/20 transition-colors group touch-manipulation"
                 >
-                  <div className="w-10 h-10 bg-primary-500/20 rounded-lg flex items-center justify-center group-hover:bg-primary-500/30 transition-colors">
-                    <Users className="h-5 w-5 text-primary-400" />
+                  <div className="w-10 h-10 sm:w-10 sm:h-10 bg-[#1DA1F2]/20 rounded-lg flex items-center justify-center group-hover:bg-[#1DA1F2]/30 transition-colors">
+                    <Twitter className="h-5 w-5 text-[#1DA1F2]" />
                   </div>
                   <div className="flex-1 text-left">
-                    <p className="text-white font-medium text-sm sm:text-base">Share with Friend</p>
-                    <p className="text-gray-400 text-xs">Send via direct message</p>
+                    <p className="text-white font-medium text-sm sm:text-base">Share on Twitter</p>
+                    <p className="text-gray-400 text-xs">Post to your timeline</p>
                   </div>
-                  <Send className="h-4 w-4 text-primary-400" />
                 </button>
-              )}
 
-              {/* Twitter - Mobile Optimized */}
-              <button
-                onClick={shareToTwitter}
-                className="w-full flex items-center gap-3 px-4 py-3.5 sm:py-3 rounded-xl bg-[#1DA1F2]/10 hover:bg-[#1DA1F2]/20 active:bg-[#1DA1F2]/30 border border-[#1DA1F2]/20 transition-colors group touch-manipulation"
-              >
-                <div className="w-10 h-10 sm:w-10 sm:h-10 bg-[#1DA1F2]/20 rounded-lg flex items-center justify-center group-hover:bg-[#1DA1F2]/30 transition-colors">
-                  <Twitter className="h-5 w-5 text-[#1DA1F2]" />
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="text-white font-medium text-sm sm:text-base">Share on Twitter</p>
-                  <p className="text-gray-400 text-xs">Post to your timeline</p>
-                </div>
-              </button>
-
-              {/* Generate Share Image (Coming Soon) - Mobile Optimized */}
-              <button
-                onClick={generateShareImage}
-                className="w-full flex items-center gap-3 px-4 py-3.5 sm:py-3 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/10 transition-colors group touch-manipulation"
-              >
-                <div className="w-10 h-10 bg-primary-500/20 rounded-lg flex items-center justify-center group-hover:bg-primary-500/30 transition-colors">
-                  <Download className="h-5 w-5 text-primary-400" />
-                </div>
-                <div className="flex-1 text-left">
-                  <div className="flex items-center gap-2">
-                    <p className="text-white font-medium">Download Share Card</p>
-                    <Badge className="bg-warning-500/20 text-warning-400 text-xs px-2 py-0">
-                      Soon
-                    </Badge>
+                {/* Generate Share Image (Coming Soon) - Mobile Optimized */}
+                <button
+                  onClick={generateShareImage}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 sm:py-3 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/10 transition-colors group touch-manipulation"
+                >
+                  <div className="w-10 h-10 bg-primary-500/20 rounded-lg flex items-center justify-center group-hover:bg-primary-500/30 transition-colors">
+                    <Download className="h-5 w-5 text-primary-400" />
                   </div>
-                  <p className="text-gray-400 text-xs">Generate beautiful share image</p>
-                </div>
-              </button>
-
-              {/* Copy Link */}
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(animeUrl)
-                  toast.success('Link copied to clipboard!', 'Copied')
-                }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors group"
-              >
-                <div className="w-10 h-10 bg-secondary-500/20 rounded-lg flex items-center justify-center group-hover:bg-secondary-500/30 transition-colors">
-                  <Share2 className="h-5 w-5 text-secondary-400" />
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="text-white font-medium">Copy Link</p>
-                  <p className="text-gray-400 text-xs truncate">{animeUrl}</p>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* Friend Selector Modal */}
-      {showFriendSelector && createPortal(
-        <div 
-          className="fixed inset-0 flex items-center justify-center p-3 sm:p-4 lg:p-6 bg-black/80 backdrop-blur-sm"
-          style={{ 
-            zIndex: 1000000,
-            position: 'fixed',
-            isolation: 'isolate'
-          }}
-        >
-          <div className="glass rounded-xl sm:rounded-2xl max-w-md w-full p-4 sm:p-6 relative border border-white/10 animate-in zoom-in-95 duration-200 max-h-[80vh] flex flex-col">
-            {/* Close Button */}
-            <button
-              onClick={() => setShowFriendSelector(false)}
-              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-white transition-colors w-8 h-8 flex items-center justify-center"
-              aria-label="Close friend selector"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            {/* Header */}
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2 pr-8">
-              <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400" />
-              Share with Friend
-            </h3>
-
-            {/* Anime Preview - Compact */}
-            <div className="bg-white/5 rounded-lg p-3 mb-4 border border-white/10">
-              <div className="flex gap-3 items-center">
-                {anime.coverImage && (
-                  <div className="relative w-12 h-16 rounded overflow-hidden flex-shrink-0">
-                    <Image
-                      src={anime.coverImage}
-                      alt={anime.title}
-                      fill
-                      className="object-cover"
-                      sizes="48px"
-                    />
+                  <div className="flex-1 text-left">
+                    <div className="flex items-center gap-2">
+                      <p className="text-white font-medium">Download Share Card</p>
+                      <Badge className="bg-warning-500/20 text-warning-400 text-xs px-2 py-0">
+                        Soon
+                      </Badge>
+                    </div>
+                    <p className="text-gray-400 text-xs">Generate beautiful share image</p>
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-white font-semibold text-sm line-clamp-1">
-                    {anime.titleEnglish || anime.title}
-                  </h4>
-                  <p className="text-gray-400 text-xs line-clamp-1">
-                    {getShareText()}
-                  </p>
-                </div>
+                </button>
+
+                {/* Copy Link */}
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(animeUrl)
+                    toast.success('Link copied to clipboard!', 'Copied')
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors group"
+                >
+                  <div className="w-10 h-10 bg-secondary-500/20 rounded-lg flex items-center justify-center group-hover:bg-secondary-500/30 transition-colors">
+                    <Share2 className="h-5 w-5 text-secondary-400" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-white font-medium">Copy Link</p>
+                    <p className="text-gray-400 text-xs truncate">{animeUrl}</p>
+                  </div>
+                </button>
               </div>
             </div>
+          </div>,
+          document.body
+        )}
 
-            {/* Friends List */}
-            <div className="flex-1 overflow-y-auto -mx-4 px-4">
-              {loadingFriends ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary-400" />
+      {/* Friend Selector Modal */}
+      {showFriendSelector &&
+        createPortal(
+          <div
+            className="fixed inset-0 flex items-center justify-center p-3 sm:p-4 lg:p-6 bg-black/80 backdrop-blur-sm"
+            style={{
+              zIndex: 1000000,
+              position: 'fixed',
+              isolation: 'isolate',
+            }}
+          >
+            <div className="glass rounded-xl sm:rounded-2xl max-w-md w-full p-4 sm:p-6 relative border border-white/10 animate-in zoom-in-95 duration-200 max-h-[80vh] flex flex-col">
+              {/* Close Button */}
+              <button
+                onClick={() => setShowFriendSelector(false)}
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-white transition-colors w-8 h-8 flex items-center justify-center"
+                aria-label="Close friend selector"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              {/* Header */}
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2 pr-8">
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400" />
+                Share with Friend
+              </h3>
+
+              {/* Anime Preview - Compact */}
+              <div className="bg-white/5 rounded-lg p-3 mb-4 border border-white/10">
+                <div className="flex gap-3 items-center">
+                  {anime.coverImage && (
+                    <div className="relative w-12 h-16 rounded overflow-hidden flex-shrink-0">
+                      <Image
+                        src={anime.coverImage}
+                        alt={anime.title}
+                        fill
+                        className="object-cover"
+                        sizes="48px"
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-white font-semibold text-sm line-clamp-1">
+                      {anime.titleEnglish || anime.title}
+                    </h4>
+                    <p className="text-gray-400 text-xs line-clamp-1">{getShareText()}</p>
+                  </div>
                 </div>
-              ) : friends.length === 0 ? (
-                <div className="text-center py-8">
-                  <Users className="h-12 w-12 text-gray-500 mx-auto mb-3" />
-                  <p className="text-gray-400 text-sm">No friends yet</p>
-                  <p className="text-gray-500 text-xs mt-1">Add friends to share anime with them!</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {friends.map((friend: any) => (
-                    <button
-                      key={friend.id}
-                      onClick={() => shareWithFriend(friend.id, friend.username)}
-                      disabled={sendingTo === friend.id}
-                      className="w-full flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {friend.avatar ? (
-                        <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                          <Image
-                            src={friend.avatar}
-                            alt={friend.username}
-                            fill
-                            className="object-cover"
-                            sizes="40px"
-                          />
+              </div>
+
+              {/* Friends List */}
+              <div className="flex-1 overflow-y-auto -mx-4 px-4">
+                {loadingFriends ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary-400" />
+                  </div>
+                ) : friends.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Users className="h-12 w-12 text-gray-500 mx-auto mb-3" />
+                    <p className="text-gray-400 text-sm">No friends yet</p>
+                    <p className="text-gray-500 text-xs mt-1">
+                      Add friends to share anime with them!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {friends.map((friend: any) => (
+                      <button
+                        key={friend.id}
+                        onClick={() => shareWithFriend(friend.id, friend.username)}
+                        disabled={sendingTo === friend.id}
+                        className="w-full flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {friend.avatar ? (
+                          <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                            <Image
+                              src={friend.avatar}
+                              alt={friend.username}
+                              fill
+                              className="object-cover"
+                              sizes="40px"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 flex items-center justify-center flex-shrink-0">
+                            <Users className="h-5 w-5 text-primary-400" />
+                          </div>
+                        )}
+                        <div className="flex-1 text-left min-w-0">
+                          <p className="text-white font-medium text-sm truncate">
+                            {friend.name || friend.username}
+                          </p>
+                          <p className="text-gray-400 text-xs truncate">@{friend.username}</p>
                         </div>
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 flex items-center justify-center flex-shrink-0">
-                          <Users className="h-5 w-5 text-primary-400" />
-                        </div>
-                      )}
-                      <div className="flex-1 text-left min-w-0">
-                        <p className="text-white font-medium text-sm truncate">
-                          {friend.name || friend.username}
-                        </p>
-                        <p className="text-gray-400 text-xs truncate">
-                          @{friend.username}
-                        </p>
-                      </div>
-                      {sendingTo === friend.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin text-primary-400" />
-                      ) : (
-                        <Send className="h-4 w-4 text-gray-400 group-hover:text-primary-400 transition-colors" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
+                        {sendingTo === friend.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-primary-400" />
+                        ) : (
+                          <Send className="h-4 w-4 text-gray-400 group-hover:text-primary-400 transition-colors" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </div>,
+          document.body
+        )}
     </>
   )
 }
-

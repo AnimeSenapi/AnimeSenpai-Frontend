@@ -2,7 +2,7 @@
 
 import { useAuth } from '../app/lib/auth-context'
 import { EmailVerificationBanner } from '../components/EmailVerificationBanner'
-import { ShieldAlert, Mail } from 'lucide-react'
+import { ShieldAlert } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '../components/ui/button'
 
@@ -23,10 +23,10 @@ interface VerificationGuardProps {
  * Verification Guard Component
  * Protects features by checking if user has verified their email
  */
-export function VerificationGuard({ 
-  children, 
+export function VerificationGuard({
+  children,
   requireVerification = false,
-  message 
+  message,
 }: VerificationGuardProps) {
   const { user, isAuthenticated } = useAuth()
 
@@ -49,20 +49,22 @@ export function VerificationGuard({
             <div className="w-16 h-16 bg-warning-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <ShieldAlert className="h-8 w-8 text-warning-400" />
             </div>
-            
+
             <h2 className="text-2xl font-bold text-white mb-3">Email Verification Required</h2>
-            
+
             <p className="text-gray-400 mb-6">
-              {message || 'This feature requires email verification to prevent spam and ensure account security.'}
+              {message ||
+                'This feature requires email verification to prevent spam and ensure account security.'}
             </p>
 
-            <EmailVerificationBanner 
-              email={user.email} 
-            />
+            <EmailVerificationBanner email={user.email} />
 
             <div className="mt-6 pt-6 border-t border-white/10">
               <Link href="/dashboard">
-                <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white/10">
+                <Button
+                  variant="outline"
+                  className="w-full border-white/20 text-white hover:bg-white/10"
+                >
                   Return to Dashboard
                 </Button>
               </Link>
@@ -91,7 +93,7 @@ export function useEmailVerification() {
   return {
     isVerified: user?.emailVerified || false,
     needsVerification: isAuthenticated && !user?.emailVerified,
-    user
+    user,
   }
 }
 
@@ -107,8 +109,8 @@ export function withEmailVerification<P extends object>(
 ) {
   return function VerifiedComponent(props: P) {
     return (
-      <VerificationGuard 
-        requireVerification={options?.requireVerification} 
+      <VerificationGuard
+        requireVerification={options?.requireVerification}
         message={options?.message}
       >
         <Component {...props} />
@@ -116,4 +118,3 @@ export function withEmailVerification<P extends object>(
     )
   }
 }
-

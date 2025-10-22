@@ -1,26 +1,53 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { 
-  apiGetAllUsers, 
-  apiAdminSearchUsers, 
-  apiUpdateUserRole, 
-  apiDeleteUser, 
+import {
+  apiGetAllUsers,
+  apiAdminSearchUsers,
+  apiUpdateUserRole,
+  apiDeleteUser,
   apiGetUserDetails,
   apiSendPasswordResetEmail,
   apiToggleEmailVerification,
   apiUpdateUserDetails,
   apiGetUserActivity,
-  apiSendCustomEmail
+  apiSendCustomEmail,
 } from '../../lib/api'
-import { Search, ChevronLeft, ChevronRight, Shield, ShieldCheck, Crown, Trash2, Ban, Eye, X, RefreshCw, Mail, CheckCircle, AlertCircle, Download, ArrowUpDown, Check, Users, KeyRound, Edit, Send, Activity, MailOpen } from 'lucide-react'
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Shield,
+  ShieldCheck,
+  Crown,
+  Trash2,
+  Eye,
+  X,
+  RefreshCw,
+  CheckCircle,
+  AlertCircle,
+  Download,
+  ArrowUpDown,
+  Check,
+  Users,
+  KeyRound,
+  Edit,
+  Send,
+  Activity,
+  MailOpen,
+} from 'lucide-react'
 import { Button } from '../../../components/ui/button'
 import { LoadingState } from '../../../components/ui/loading-state'
 import { EmptyState } from '../../../components/ui/error-state'
 import { Badge } from '../../../components/ui/badge'
 import { Checkbox } from '../../../components/ui/checkbox'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../../components/ui/tooltip'
-import { useToast } from '../../../lib/toast-context'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../../../components/ui/tooltip'
+import { useToast } from '../../../components/ui/toast'
 
 interface User {
   id: string
@@ -79,7 +106,7 @@ export function UsersTab() {
   const [sortBy, setSortBy] = useState<'createdAt' | 'lastLoginAt' | 'email'>('createdAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [verifiedFilter, setVerifiedFilter] = useState<'all' | 'verified' | 'unverified'>('all')
-  
+
   // New modals
   const [showEditModal, setShowEditModal] = useState(false)
   const [userToEdit, setUserToEdit] = useState<User | null>(null)
@@ -98,11 +125,11 @@ export function UsersTab() {
   const loadUsers = async () => {
     try {
       setLoading(true)
-      const data = await apiGetAllUsers({ 
-        page, 
+      const data = (await apiGetAllUsers({
+        page,
         limit: 20,
-        role: roleFilter === 'all' ? undefined : roleFilter 
-      }) as any
+        role: roleFilter === 'all' ? undefined : roleFilter,
+      })) as any
       setUsers(data.users)
       setTotalPages(data.pagination.pages)
     } catch (error: any) {
@@ -126,7 +153,7 @@ export function UsersTab() {
 
     try {
       setLoading(true)
-      const results = await apiAdminSearchUsers(searchQuery, 20) as any
+      const results = (await apiAdminSearchUsers(searchQuery, 20)) as any
       setUsers(results)
     } catch (error) {
       console.error('Search failed:', error)
@@ -146,7 +173,7 @@ export function UsersTab() {
   }
 
   const handleDeleteUser = async (userId: string) => {
-    const user = users.find(u => u.id === userId)
+    const user = users.find((u) => u.id === userId)
     setUserToDelete(user || null)
     setShowDeleteConfirm(true)
   }
@@ -160,7 +187,10 @@ export function UsersTab() {
       setShowUserModal(false)
       setShowDeleteConfirm(false)
       setUserToDelete(null)
-      toast.success(`User ${userToDelete.name || userToDelete.email} deleted successfully`, 'Deleted')
+      toast.success(
+        `User ${userToDelete.name || userToDelete.email} deleted successfully`,
+        'Deleted'
+      )
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete user', 'Error')
     }
@@ -171,7 +201,7 @@ export function UsersTab() {
       setLoadingActivity(true)
       const [details, activity] = await Promise.all([
         apiGetUserDetails(user.id) as any,
-        apiGetUserActivity(user.id) as any
+        apiGetUserActivity(user.id) as any,
       ])
       setSelectedUser(details as UserDetails)
       setUserActivity(activity as UserActivity)
@@ -195,7 +225,7 @@ export function UsersTab() {
 
   const handleToggleEmailVerification = async (user: User) => {
     const action = user.emailVerified ? 'unverify' : 'verify'
-    
+
     try {
       await apiToggleEmailVerification(user.id, !user.emailVerified)
       loadUsers()
@@ -210,7 +240,7 @@ export function UsersTab() {
     setEditForm({
       name: user.name || '',
       username: user.username || '',
-      email: user.email
+      email: user.email,
     })
     setShowEditModal(true)
   }
@@ -230,9 +260,11 @@ export function UsersTab() {
     }
 
     // Check if anything changed
-    if (editForm.name === (userToEdit.name || '') && 
-        editForm.username === (userToEdit.username || '') && 
-        editForm.email === userToEdit.email) {
+    if (
+      editForm.name === (userToEdit.name || '') &&
+      editForm.username === (userToEdit.username || '') &&
+      editForm.email === userToEdit.email
+    ) {
       toast.error('No changes detected', 'No Changes')
       return
     }
@@ -240,7 +272,8 @@ export function UsersTab() {
     try {
       const updates: any = {}
       if (editForm.name !== (userToEdit.name || '')) updates.name = editForm.name || undefined
-      if (editForm.username !== (userToEdit.username || '')) updates.username = editForm.username || undefined
+      if (editForm.username !== (userToEdit.username || ''))
+        updates.username = editForm.username || undefined
       if (editForm.email !== userToEdit.email) updates.email = editForm.email
 
       await apiUpdateUserDetails(userToEdit.id, updates)
@@ -300,13 +333,13 @@ export function UsersTab() {
     if (selectedUsers.size === users.length) {
       setSelectedUsers(new Set())
     } else {
-      setSelectedUsers(new Set(users.map(u => u.id)))
+      setSelectedUsers(new Set(users.map((u) => u.id)))
     }
   }
 
   const handleBulkDelete = async () => {
     if (selectedUsers.size === 0) return
-    
+
     try {
       for (const userId of selectedUsers) {
         await apiDeleteUser(userId)
@@ -320,18 +353,26 @@ export function UsersTab() {
   }
 
   const exportToCSV = () => {
-    const headers = ['Email', 'Username', 'Name', 'Role', 'Email Verified', 'Created At', 'Last Login']
-    const rows = users.map(u => [
+    const headers = [
+      'Email',
+      'Username',
+      'Name',
+      'Role',
+      'Email Verified',
+      'Created At',
+      'Last Login',
+    ]
+    const rows = users.map((u) => [
       u.email,
       u.username || '',
       u.name || '',
       u.role,
       u.emailVerified ? 'Yes' : 'No',
       new Date(u.createdAt).toLocaleString(),
-      u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : 'Never'
+      u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : 'Never',
     ])
 
-    const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
+    const csv = [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -347,7 +388,7 @@ export function UsersTab() {
 
     // Filter by verification status
     if (verifiedFilter !== 'all') {
-      filtered = filtered.filter(u => 
+      filtered = filtered.filter((u) =>
         verifiedFilter === 'verified' ? u.emailVerified : !u.emailVerified
       )
     }
@@ -355,7 +396,7 @@ export function UsersTab() {
     // Sort users
     filtered.sort((a, b) => {
       let comparison = 0
-      
+
       if (sortBy === 'email') {
         comparison = a.email.localeCompare(b.email)
       } else if (sortBy === 'createdAt') {
@@ -479,10 +520,16 @@ export function UsersTab() {
             Total: <span className="text-white font-medium">{users.length}</span>
           </span>
           <span className="text-gray-400">
-            Verified: <span className="text-green-400 font-medium">{users.filter(u => u.emailVerified).length}</span>
+            Verified:{' '}
+            <span className="text-green-400 font-medium">
+              {users.filter((u) => u.emailVerified).length}
+            </span>
           </span>
           <span className="text-gray-400">
-            Admins: <span className="text-yellow-400 font-medium">{users.filter(u => u.role === 'admin').length}</span>
+            Admins:{' '}
+            <span className="text-yellow-400 font-medium">
+              {users.filter((u) => u.role === 'admin').length}
+            </span>
           </span>
         </div>
         <Button
@@ -507,8 +554,8 @@ export function UsersTab() {
             searchQuery
               ? `No users match "${searchQuery}". Try a different search term.`
               : roleFilter !== 'all'
-              ? `No users with role "${roleFilter}". Try changing the filter.`
-              : 'No users registered yet.'
+                ? `No users with role "${roleFilter}". Try changing the filter.`
+                : 'No users registered yet.'
           }
           actionLabel={searchQuery || roleFilter !== 'all' ? 'Clear Filters' : undefined}
           onAction={
@@ -535,44 +582,57 @@ export function UsersTab() {
                         onCheckedChange={toggleSelectAll}
                       />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white" onClick={() => {
-                      if (sortBy === 'email') {
-                        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
-                      } else {
-                        setSortBy('email')
-                      }
-                    }}>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
+                      onClick={() => {
+                        if (sortBy === 'email') {
+                          setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+                        } else {
+                          setSortBy('email')
+                        }
+                      }}
+                    >
                       <div className="flex items-center gap-1">
                         User
                         <ArrowUpDown className="h-3 w-3" />
                       </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Role</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white" onClick={() => {
-                      if (sortBy === 'createdAt') {
-                        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
-                      } else {
-                        setSortBy('createdAt')
-                      }
-                    }}>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      Role
+                    </th>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
+                      onClick={() => {
+                        if (sortBy === 'createdAt') {
+                          setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+                        } else {
+                          setSortBy('createdAt')
+                        }
+                      }}
+                    >
                       <div className="flex items-center gap-1">
                         Joined
                         <ArrowUpDown className="h-3 w-3" />
                       </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white" onClick={() => {
-                      if (sortBy === 'lastLoginAt') {
-                        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
-                      } else {
-                        setSortBy('lastLoginAt')
-                      }
-                    }}>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
+                      onClick={() => {
+                        if (sortBy === 'lastLoginAt') {
+                          setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+                        } else {
+                          setSortBy('lastLoginAt')
+                        }
+                      }}
+                    >
                       <div className="flex items-center gap-1">
                         Last Login
                         <ArrowUpDown className="h-3 w-3" />
                       </div>
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/10">
@@ -587,7 +647,9 @@ export function UsersTab() {
                       <td className="px-6 py-4">
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium text-white">{user.username || user.name || user.email}</p>
+                            <p className="text-sm font-medium text-white">
+                              {user.username || user.name || user.email}
+                            </p>
                             {user.emailVerified ? (
                               <CheckCircle className="h-3.5 w-3.5 text-green-400" />
                             ) : (
@@ -598,7 +660,9 @@ export function UsersTab() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium ${getRoleColor(user.role)}`}>
+                        <div
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium ${getRoleColor(user.role)}`}
+                        >
                           {getRoleIcon(user.role)}
                           <span className="capitalize">{user.role}</span>
                         </div>
@@ -607,7 +671,9 @@ export function UsersTab() {
                         {new Date(user.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-300">
-                        {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Never'}
+                        {user.lastLoginAt
+                          ? new Date(user.lastLoginAt).toLocaleDateString()
+                          : 'Never'}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <TooltipProvider>
@@ -654,10 +720,16 @@ export function UsersTab() {
                                   onClick={() => handleToggleEmailVerification(user)}
                                   className={`p-1.5 rounded transition-colors ${user.emailVerified ? 'hover:bg-warning-500/20 text-warning-400 hover:text-warning-300' : 'hover:bg-success-500/20 text-success-400 hover:text-success-300'}`}
                                 >
-                                  {user.emailVerified ? <AlertCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                                  {user.emailVerified ? (
+                                    <AlertCircle className="h-4 w-4" />
+                                  ) : (
+                                    <CheckCircle className="h-4 w-4" />
+                                  )}
                                 </button>
                               </TooltipTrigger>
-                              <TooltipContent>{user.emailVerified ? 'Unverify Email' : 'Verify Email'}</TooltipContent>
+                              <TooltipContent>
+                                {user.emailVerified ? 'Unverify Email' : 'Verify Email'}
+                              </TooltipContent>
                             </Tooltip>
 
                             <Tooltip>
@@ -674,7 +746,12 @@ export function UsersTab() {
 
                             <select
                               value={user.role}
-                              onChange={(e) => handleRoleChange(user.id, e.target.value as 'user' | 'moderator' | 'admin')}
+                              onChange={(e) =>
+                                handleRoleChange(
+                                  user.id,
+                                  e.target.value as 'user' | 'moderator' | 'admin'
+                                )
+                              }
                               className="px-2 py-1 text-xs bg-white/5 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500/50 transition-colors"
                               title="Change Role"
                             >
@@ -717,16 +794,22 @@ export function UsersTab() {
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-semibold text-white">{user.username || user.name || user.email}</p>
+                        <p className="text-sm font-semibold text-white">
+                          {user.username || user.name || user.email}
+                        </p>
                         {user.emailVerified ? (
                           <CheckCircle className="h-4 w-4 text-green-400 flex-shrink-0" />
                         ) : (
                           <AlertCircle className="h-4 w-4 text-warning-400 flex-shrink-0" />
                         )}
                       </div>
-                      {user.username && <p className="text-xs text-gray-400 break-all">{user.email}</p>}
+                      {user.username && (
+                        <p className="text-xs text-gray-400 break-all">{user.email}</p>
+                      )}
                       <div className="flex items-center gap-2 mt-2">
-                        <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-xs font-medium ${getRoleColor(user.role)}`}>
+                        <div
+                          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-xs font-medium ${getRoleColor(user.role)}`}
+                        >
                           {getRoleIcon(user.role)}
                           <span className="capitalize">{user.role}</span>
                         </div>
@@ -742,7 +825,9 @@ export function UsersTab() {
                   </div>
                   <div>
                     <p className="text-gray-400">Last Login</p>
-                    <p className="text-white">{user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Never'}</p>
+                    <p className="text-white">
+                      {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Never'}
+                    </p>
                   </div>
                 </div>
 
@@ -777,8 +862,14 @@ export function UsersTab() {
                     className={`flex flex-col items-center gap-1 p-2 rounded transition-colors ${user.emailVerified ? 'hover:bg-warning-500/20 text-warning-400 hover:text-warning-300' : 'hover:bg-success-500/20 text-success-400 hover:text-success-300'}`}
                     title={user.emailVerified ? 'Unverify' : 'Verify'}
                   >
-                    {user.emailVerified ? <AlertCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
-                    <span className="text-[10px]">{user.emailVerified ? 'Unverify' : 'Verify'}</span>
+                    {user.emailVerified ? (
+                      <AlertCircle className="h-4 w-4" />
+                    ) : (
+                      <CheckCircle className="h-4 w-4" />
+                    )}
+                    <span className="text-[10px]">
+                      {user.emailVerified ? 'Unverify' : 'Verify'}
+                    </span>
                   </button>
                 </div>
 
@@ -793,7 +884,9 @@ export function UsersTab() {
                   </button>
                   <select
                     value={user.role}
-                    onChange={(e) => handleRoleChange(user.id, e.target.value as 'user' | 'moderator' | 'admin')}
+                    onChange={(e) =>
+                      handleRoleChange(user.id, e.target.value as 'user' | 'moderator' | 'admin')
+                    }
                     className="px-2 py-1.5 text-xs bg-white/5 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500/50 transition-colors"
                   >
                     <option value="user">User</option>
@@ -820,14 +913,14 @@ export function UsersTab() {
             </p>
             <div className="flex gap-2">
               <Button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
                 className="px-3 py-1.5 bg-white/5 border border-white/10 text-white hover:bg-white/10 rounded disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <Button
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 className="px-3 py-1.5 bg-white/5 border border-white/10 text-white hover:bg-white/10 rounded disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -840,8 +933,14 @@ export function UsersTab() {
 
       {/* User Details Modal */}
       {showUserModal && selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowUserModal(false)}>
-          <div className="glass rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-white/10" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          onClick={() => setShowUserModal(false)}
+        >
+          <div
+            className="glass rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-white/10"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-white">User Details & Activity</h3>
               <button
@@ -860,7 +959,9 @@ export function UsersTab() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-400 mb-1">Name</p>
-                    <p className="text-white">{selectedUser.name || selectedUser.username || selectedUser.email}</p>
+                    <p className="text-white">
+                      {selectedUser.name || selectedUser.username || selectedUser.email}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-400 mb-1">Username</p>
@@ -885,19 +986,25 @@ export function UsersTab() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-400 mb-1">Role</p>
-                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium ${getRoleColor(selectedUser.role)}`}>
+                    <div
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium ${getRoleColor(selectedUser.role)}`}
+                    >
                       {getRoleIcon(selectedUser.role)}
                       <span className="capitalize">{selectedUser.role}</span>
                     </div>
                   </div>
                   <div>
                     <p className="text-sm text-gray-400 mb-1">Joined</p>
-                    <p className="text-white">{new Date(selectedUser.createdAt).toLocaleString()}</p>
+                    <p className="text-white">
+                      {new Date(selectedUser.createdAt).toLocaleString()}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-400 mb-1">Last Login</p>
                     <p className="text-white">
-                      {selectedUser.lastLoginAt ? new Date(selectedUser.lastLoginAt).toLocaleString() : 'Never'}
+                      {selectedUser.lastLoginAt
+                        ? new Date(selectedUser.lastLoginAt).toLocaleString()
+                        : 'Never'}
                     </p>
                   </div>
                 </div>
@@ -913,19 +1020,27 @@ export function UsersTab() {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <div className="bg-white/5 rounded-lg p-3 border border-white/10">
                           <p className="text-xs text-gray-400 mb-1">Anime List</p>
-                          <p className="text-xl font-bold text-white">{userActivity.stats.animeList}</p>
+                          <p className="text-xl font-bold text-white">
+                            {userActivity.stats.animeList}
+                          </p>
                         </div>
                         <div className="bg-white/5 rounded-lg p-3 border border-white/10">
                           <p className="text-xs text-gray-400 mb-1">Reviews</p>
-                          <p className="text-xl font-bold text-white">{userActivity.stats.reviews}</p>
+                          <p className="text-xl font-bold text-white">
+                            {userActivity.stats.reviews}
+                          </p>
                         </div>
                         <div className="bg-white/5 rounded-lg p-3 border border-white/10">
                           <p className="text-xs text-gray-400 mb-1">Friends</p>
-                          <p className="text-xl font-bold text-white">{userActivity.stats.friends}</p>
+                          <p className="text-xl font-bold text-white">
+                            {userActivity.stats.friends}
+                          </p>
                         </div>
                         <div className="bg-white/5 rounded-lg p-3 border border-white/10">
                           <p className="text-xs text-gray-400 mb-1">Followers</p>
-                          <p className="text-xl font-bold text-white">{userActivity.stats.followers}</p>
+                          <p className="text-xl font-bold text-white">
+                            {userActivity.stats.followers}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -933,12 +1048,19 @@ export function UsersTab() {
                     {/* Recent Activity */}
                     {userActivity.recentActivity.length > 0 && (
                       <div className="border-t border-white/10 pt-4">
-                        <h4 className="text-sm font-semibold text-white mb-3">Recent Security Events</h4>
+                        <h4 className="text-sm font-semibold text-white mb-3">
+                          Recent Security Events
+                        </h4>
                         <div className="space-y-2 max-h-60 overflow-y-auto">
                           {userActivity.recentActivity.map((event) => (
-                            <div key={event.id} className="bg-white/5 rounded-lg p-3 border border-white/10 text-sm">
+                            <div
+                              key={event.id}
+                              className="bg-white/5 rounded-lg p-3 border border-white/10 text-sm"
+                            >
                               <div className="flex items-center justify-between mb-1">
-                                <span className="text-white font-medium">{event.eventType.replace(/_/g, ' ').toUpperCase()}</span>
+                                <span className="text-white font-medium">
+                                  {event.eventType.replace(/_/g, ' ').toUpperCase()}
+                                </span>
                                 <span className="text-xs text-gray-400">
                                   {new Date(event.createdAt).toLocaleString()}
                                 </span>
@@ -961,8 +1083,14 @@ export function UsersTab() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && userToDelete && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowDeleteConfirm(false)}>
-          <div className="glass rounded-2xl p-6 max-w-md w-full border border-error-500/30" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          onClick={() => setShowDeleteConfirm(false)}
+        >
+          <div
+            className="glass rounded-2xl p-6 max-w-md w-full border border-error-500/30"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-start gap-4 mb-6">
               <div className="w-12 h-12 bg-error-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
                 <AlertCircle className="h-6 w-6 text-error-400" />
@@ -970,17 +1098,22 @@ export function UsersTab() {
               <div className="flex-1">
                 <h3 className="text-xl font-bold text-white mb-2">Delete User?</h3>
                 <p className="text-gray-300 text-sm mb-3">
-                  Are you sure you want to delete <strong>{userToDelete.name || userToDelete.username || userToDelete.email}</strong>?
+                  Are you sure you want to delete{' '}
+                  <strong>
+                    {userToDelete.name || userToDelete.username || userToDelete.email}
+                  </strong>
+                  ?
                 </p>
                 <div className="bg-error-500/10 border border-error-500/20 rounded-lg p-3 mb-4">
                   <p className="text-error-300 text-xs font-semibold mb-1">⚠️ Warning</p>
                   <p className="text-error-300/80 text-xs">
-                    This action cannot be undone. All user data, including their anime list, ratings, and activity, will be permanently deleted.
+                    This action cannot be undone. All user data, including their anime list,
+                    ratings, and activity, will be permanently deleted.
                   </p>
                 </div>
               </div>
             </div>
-            
+
             <div className="flex gap-3">
               <Button
                 onClick={() => setShowDeleteConfirm(false)}
@@ -1003,8 +1136,14 @@ export function UsersTab() {
 
       {/* Edit User Modal */}
       {showEditModal && userToEdit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowEditModal(false)}>
-          <div className="glass rounded-2xl p-6 max-w-md w-full border border-white/10" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          onClick={() => setShowEditModal(false)}
+        >
+          <div
+            className="glass rounded-2xl p-6 max-w-md w-full border border-white/10"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <Edit className="h-5 w-5 text-blue-400" />
@@ -1017,7 +1156,7 @@ export function UsersTab() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-gray-400 mb-2">Name</label>
@@ -1029,7 +1168,7 @@ export function UsersTab() {
                   placeholder="User's display name"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm text-gray-400 mb-2">Username</label>
                 <input
@@ -1040,7 +1179,7 @@ export function UsersTab() {
                   placeholder="Unique username"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm text-gray-400 mb-2">Email</label>
                 <input
@@ -1078,8 +1217,14 @@ export function UsersTab() {
 
       {/* Custom Email Modal */}
       {showEmailModal && userToEmail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowEmailModal(false)}>
-          <div className="glass rounded-2xl p-6 max-w-lg w-full border border-white/10" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          onClick={() => setShowEmailModal(false)}
+        >
+          <div
+            className="glass rounded-2xl p-6 max-w-lg w-full border border-white/10"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <MailOpen className="h-5 w-5 text-purple-400" />
@@ -1092,10 +1237,12 @@ export function UsersTab() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            
+
             <div className="mb-4 bg-white/5 rounded-lg p-3 border border-white/10">
               <p className="text-sm text-gray-400">Sending to:</p>
-              <p className="text-white font-medium">{userToEmail.name || userToEmail.username || 'Unknown'}</p>
+              <p className="text-white font-medium">
+                {userToEmail.name || userToEmail.username || 'Unknown'}
+              </p>
               <p className="text-sm text-gray-400">{userToEmail.email}</p>
             </div>
 
@@ -1111,7 +1258,7 @@ export function UsersTab() {
                   maxLength={200}
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm text-gray-400 mb-2">Message *</label>
                 <textarea
@@ -1150,4 +1297,3 @@ export function UsersTab() {
     </div>
   )
 }
-

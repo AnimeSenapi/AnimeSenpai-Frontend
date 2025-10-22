@@ -14,13 +14,13 @@ interface UseCachedDataOptions<T> {
 
 /**
  * Hook for fetching and caching data
- * 
+ *
  * Features:
  * - Automatic caching in memory and localStorage
  * - Deduplication (prevents duplicate requests)
  * - Stale-while-revalidate pattern
  * - Automatic cache invalidation
- * 
+ *
  * @example
  * ```tsx
  * const { data, loading, error, refetch } = useCachedData({
@@ -43,39 +43,42 @@ export function useCachedData<T>({
   const [error, setError] = useState<unknown>(null)
   const fetchingRef = useRef(false)
 
-  const fetchData = useCallback(async (forceRefresh = false) => {
-    if (fetchingRef.current) return // Prevent duplicate requests
-    
-    try {
-      // If we have cached data and not forcing refresh, use it
-      if (!forceRefresh) {
-        const cached = clientCache.get<T>(cacheKey)
-        if (cached !== null) {
-          setData(cached)
-          setLoading(false)
-          return
+  const fetchData = useCallback(
+    async (forceRefresh = false) => {
+      if (fetchingRef.current) return // Prevent duplicate requests
+
+      try {
+        // If we have cached data and not forcing refresh, use it
+        if (!forceRefresh) {
+          const cached = clientCache.get<T>(cacheKey)
+          if (cached !== null) {
+            setData(cached)
+            setLoading(false)
+            return
+          }
         }
+
+        fetchingRef.current = true
+        setLoading(true)
+        setError(null)
+
+        const result = await fetcher()
+
+        // Cache the result
+        clientCache.set(cacheKey, result, ttl)
+
+        setData(result)
+        onSuccess?.(result)
+      } catch (err) {
+        setError(err)
+        onError?.(err)
+      } finally {
+        setLoading(false)
+        fetchingRef.current = false
       }
-
-      fetchingRef.current = true
-      setLoading(true)
-      setError(null)
-
-      const result = await fetcher()
-      
-      // Cache the result
-      clientCache.set(cacheKey, result, ttl)
-      
-      setData(result)
-      onSuccess?.(result)
-    } catch (err) {
-      setError(err)
-      onError?.(err)
-    } finally {
-      setLoading(false)
-      fetchingRef.current = false
-    }
-  }, [cacheKey, fetcher, ttl, onSuccess, onError])
+    },
+    [cacheKey, fetcher, ttl, onSuccess, onError]
+  )
 
   // Fetch on mount or when enabled changes
   useEffect(() => {
@@ -109,7 +112,7 @@ export function useCachedData<T>({
  */
 export function usePrefetch() {
   const prefetch = useCallback(
-    async <T,>(cacheKey: string, fetcher: () => Promise<T>, ttl?: number) => {
+    async <T>(cacheKey: string, fetcher: () => Promise<T>, ttl?: number) => {
       // Check if already cached
       if (clientCache.get(cacheKey) !== null) {
         return
@@ -147,36 +150,42 @@ export function usePaginatedCache<T>({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<unknown>(null)
 
-  const fetchPage = useCallback(async (page: number) => {
-    const cacheKey = `${cacheKeyPrefix}:page:${page}`
-    
-    // Check cache first
-    const cached = clientCache.get<T[]>(cacheKey)
-    if (cached !== null) {
-      setPages(prev => new Map(prev).set(page, cached))
-      return cached
-    }
+  const fetchPage = useCallback(
+    async (page: number) => {
+      const cacheKey = `${cacheKeyPrefix}:page:${page}`
 
-    try {
-      setLoading(true)
-      const data = await fetcher(page)
-      
-      // Cache the page
-      clientCache.set(cacheKey, data, ttl)
-      
-      setPages(prev => new Map(prev).set(page, data))
-      return data
-    } catch (err) {
-      setError(err)
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }, [cacheKeyPrefix, fetcher, ttl])
+      // Check cache first
+      const cached = clientCache.get<T[]>(cacheKey)
+      if (cached !== null) {
+        setPages((prev) => new Map(prev).set(page, cached))
+        return cached
+      }
 
-  const getPage = useCallback((page: number) => {
-    return pages.get(page) || null
-  }, [pages])
+      try {
+        setLoading(true)
+        const data = await fetcher(page)
+
+        // Cache the page
+        clientCache.set(cacheKey, data, ttl)
+
+        setPages((prev) => new Map(prev).set(page, data))
+        return data
+      } catch (err) {
+        setError(err)
+        throw err
+      } finally {
+        setLoading(false)
+      }
+    },
+    [cacheKeyPrefix, fetcher, ttl]
+  )
+
+  const getPage = useCallback(
+    (page: number) => {
+      return pages.get(page) || null
+    },
+    [pages]
+  )
 
   const getAllData = useCallback(() => {
     return Array.from(pages.values()).flat()
@@ -200,4 +209,3 @@ export function usePaginatedCache<T>({
     error,
   }
 }
-

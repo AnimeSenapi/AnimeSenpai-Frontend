@@ -5,12 +5,11 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { cn } from '../../app/lib/utils'
 import { Anime } from '../../types/anime'
-import { getTagById } from '../../types/tags'
 import { Star, Play, Calendar } from 'lucide-react'
 import { Button } from '../ui/button'
 
 interface SearchAnimeCardProps {
-  anime: Anime & { 
+  anime: Anime & {
     listStatus?: 'favorite' | 'watching' | 'completed' | 'plan-to-watch'
   }
   variant?: 'grid' | 'list' | 'compact'
@@ -19,32 +18,28 @@ interface SearchAnimeCardProps {
   isFavorited?: boolean
 }
 
-export function SearchAnimeCard({ 
-  anime, 
-  variant = 'grid', 
+export function SearchAnimeCard({
+  anime,
+  variant = 'grid',
   className,
   onFavorite,
-  isFavorited = false
+  isFavorited = false,
 }: SearchAnimeCardProps) {
   const router = useRouter()
-  
+
   // Prefer English title over romanized Japanese
   const displayTitle = anime.titleEnglish || anime.title
-  
-  // Handle both old format (tags array) and new format (genres array)
-  const firstTag = anime.genres?.[0] || anime.tags?.[0]
-  const tag = typeof firstTag === 'string' ? getTagById(firstTag) : firstTag || { name: 'Anime', color: 'bg-gray-500/20 text-gray-400' }
-  
+
   if (variant === 'compact') {
     return (
-      <Link href={`/anime/${anime.slug}`} className={cn("block group", className)}>
+      <Link href={`/anime/${anime.slug}`} className={cn('block group', className)}>
         <div className="flex items-center gap-3 px-2 py-2 hover:bg-white/5 rounded-lg transition-all duration-200">
           {/* Image - Clean without rating badge */}
           <div className="relative flex-shrink-0">
             <div className="w-14 h-20 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border border-white/10 group-hover:border-primary-500/40 transition-colors relative">
-              {(anime.coverImage || anime.imageUrl) ? (
-                <Image 
-                  src={(anime.coverImage || anime.imageUrl) as string} 
+              {anime.coverImage || anime.imageUrl ? (
+                <Image
+                  src={(anime.coverImage || anime.imageUrl) as string}
                   alt={displayTitle}
                   fill
                   className="object-cover"
@@ -98,15 +93,15 @@ export function SearchAnimeCard({
 
   if (variant === 'list') {
     return (
-      <Link href={`/anime/${anime.slug}`} className={cn("block group", className)}>
+      <Link href={`/anime/${anime.slug}`} className={cn('block group', className)}>
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-5 hover:bg-white/10 hover:border-primary-500/50 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-primary-500/10">
           <div className="flex items-start gap-5">
             {/* Image */}
             <div className="relative flex-shrink-0">
               <div className="w-24 h-36 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden border border-white/10 relative">
-                {(anime.coverImage || anime.imageUrl) ? (
-                  <Image 
-                    src={(anime.coverImage || anime.imageUrl) as string} 
+                {anime.coverImage || anime.imageUrl ? (
+                  <Image
+                    src={(anime.coverImage || anime.imageUrl) as string}
                     alt={displayTitle}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -117,7 +112,7 @@ export function SearchAnimeCard({
                     <span className="text-gray-500 text-xs font-medium">No Image</span>
                   </div>
                 )}
-                
+
                 {/* Rating Badge - Shows on Hover */}
                 <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <div className="bg-black/70 backdrop-blur-md border border-white/20 text-white text-xs px-2 py-1 rounded-lg flex items-center gap-1 shadow-lg">
@@ -153,12 +148,12 @@ export function SearchAnimeCard({
                       </>
                     )}
                   </div>
-                  
+
                   {/* Genres */}
                   {anime.genres && anime.genres.length > 0 && (
                     <div className="flex items-center gap-2 flex-wrap mb-3">
                       {anime.genres.slice(0, 4).map((genre, index) => (
-                        <span 
+                        <span
                           key={index}
                           className="text-xs px-2.5 py-1 bg-white/10 text-gray-300 rounded-md border border-white/20"
                         >
@@ -191,13 +186,13 @@ export function SearchAnimeCard({
 
   // Grid variant
   return (
-    <Link href={`/anime/${anime.slug}`} className={cn("block group", className)}>
+    <Link href={`/anime/${anime.slug}`} className={cn('block group', className)}>
       <div className="relative transform hover:scale-[1.03] transition-all duration-300 cursor-pointer">
         {/* Image Container */}
         <div className="relative aspect-[2/3] bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl overflow-hidden border border-white/10 group-hover:border-primary-500/50 transition-all duration-300">
-          {(anime.coverImage || anime.imageUrl) ? (
-            <Image 
-              src={(anime.coverImage || anime.imageUrl) as string} 
+          {anime.coverImage || anime.imageUrl ? (
+            <Image
+              src={(anime.coverImage || anime.imageUrl) as string}
               alt={displayTitle}
               fill
               className="object-cover transition-all duration-300 group-hover:blur-sm"
@@ -208,7 +203,7 @@ export function SearchAnimeCard({
               <span className="text-gray-500 text-sm font-medium">No Image</span>
             </div>
           )}
-          
+
           {/* Season Count Badge - Top Left */}
           {anime.seasonCount && anime.seasonCount > 1 && (
             <div className="absolute top-2 left-2 z-10">
@@ -217,15 +212,15 @@ export function SearchAnimeCard({
               </div>
             </div>
           )}
-          
+
           {/* Gradient Overlay - Always visible */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-          
+
           {/* Favorite Button - Always visible */}
           {onFavorite && (
             <div className="absolute top-2 right-2 z-10">
-              <Button 
-                size="sm" 
+              <Button
+                size="sm"
                 className="border-0 h-8 w-8 p-0 transition-all bg-black/50 hover:bg-black/70"
                 onClick={(e) => {
                   e.preventDefault()
@@ -233,21 +228,25 @@ export function SearchAnimeCard({
                   onFavorite()
                 }}
               >
-                <Star className={cn(
-                  "h-3.5 w-3.5 transition-all",
-                  isFavorited 
-                    ? "fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" 
-                    : "text-white"
-                )} />
+                <Star
+                  className={cn(
+                    'h-3.5 w-3.5 transition-all',
+                    isFavorited
+                      ? 'fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]'
+                      : 'text-white'
+                  )}
+                />
               </Button>
             </div>
           )}
-          
+
           {/* Rating Badge - Shows on Hover */}
-          <div className={cn(
-            "absolute top-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
-            onFavorite ? "right-12" : "right-2"
-          )}>
+          <div
+            className={cn(
+              'absolute top-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300',
+              onFavorite ? 'right-12' : 'right-2'
+            )}
+          >
             <div className="bg-black/70 backdrop-blur-md border border-white/20 text-white text-xs px-2 py-1 rounded-lg flex items-center gap-1 shadow-lg">
               <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
               <span className="font-bold">{anime.rating || 'N/A'}</span>
@@ -276,7 +275,7 @@ export function SearchAnimeCard({
                 </>
               )}
             </div>
-            
+
             {/* Genres - Clickable */}
             {anime.genres && anime.genres.length > 0 && (
               <div className="flex items-center gap-1 flex-wrap">

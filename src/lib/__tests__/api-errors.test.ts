@@ -12,8 +12,8 @@ describe('API Error Handling', () => {
       const error = {
         error: {
           data: { code: 'UNAUTHORIZED' },
-          message: 'Unauthorized'
-        }
+          message: 'Unauthorized',
+        },
       }
       const result = handleApiError(error)
       expect(result).toBe('Please sign in to continue')
@@ -23,8 +23,8 @@ describe('API Error Handling', () => {
       const error = {
         error: {
           data: { code: 'NOT_FOUND' },
-          message: 'Not found'
-        }
+          message: 'Not found',
+        },
       }
       const result = handleApiError(error)
       expect(result).toBe('The requested item could not be found')
@@ -34,8 +34,8 @@ describe('API Error Handling', () => {
       const error = {
         error: {
           data: { code: 'NETWORK_ERROR' },
-          message: 'Network error'
-        }
+          message: 'Network error',
+        },
       }
       const result = handleApiError(error)
       expect(result).toBe('Network error. Please check your internet connection and try again.')
@@ -45,8 +45,8 @@ describe('API Error Handling', () => {
       const error = {
         error: {
           data: { code: 'TOO_MANY_REQUESTS' },
-          message: 'Too many requests'
-        }
+          message: 'Too many requests',
+        },
       }
       const result = handleApiError(error)
       expect(result).toBe('Too many requests. Please slow down and try again in a moment.')
@@ -56,8 +56,8 @@ describe('API Error Handling', () => {
       const error = {
         error: {
           data: { code: 'EMAIL_ALREADY_EXISTS' },
-          message: 'Email already exists'
-        }
+          message: 'Email already exists',
+        },
       }
       const result = handleApiError(error)
       expect(result).toBe('An account with this email already exists. Try signing in instead.')
@@ -67,8 +67,8 @@ describe('API Error Handling', () => {
       const error = {
         error: {
           data: { code: 'UNKNOWN_ERROR' },
-          message: 'Unknown error'
-        }
+          message: 'Unknown error',
+        },
       }
       const result = handleApiError(error)
       expect(result).toBe('An unexpected error occurred. Please try again.')
@@ -102,8 +102,8 @@ describe('API Error Handling', () => {
       const error = {
         error: {
           data: { code: 'UNAUTHORIZED' },
-          message: 'Unauthorized'
-        }
+          message: 'Unauthorized',
+        },
       }
       expect(isAuthError(error)).toBe(true)
     })
@@ -112,8 +112,8 @@ describe('API Error Handling', () => {
       const error = {
         error: {
           data: { code: 'FORBIDDEN' },
-          message: 'Forbidden'
-        }
+          message: 'Forbidden',
+        },
       }
       expect(isAuthError(error)).toBe(true)
     })
@@ -122,8 +122,8 @@ describe('API Error Handling', () => {
       const error = {
         error: {
           data: { code: 'INVALID_TOKEN' },
-          message: 'Invalid token'
-        }
+          message: 'Invalid token',
+        },
       }
       expect(isAuthError(error)).toBe(true)
     })
@@ -132,8 +132,8 @@ describe('API Error Handling', () => {
       const error = {
         error: {
           data: { code: 'TOKEN_EXPIRED' },
-          message: 'Token expired'
-        }
+          message: 'Token expired',
+        },
       }
       expect(isAuthError(error)).toBe(true)
     })
@@ -142,8 +142,8 @@ describe('API Error Handling', () => {
       const error = {
         error: {
           data: { code: 'NOT_FOUND' },
-          message: 'Not found'
-        }
+          message: 'Not found',
+        },
       }
       expect(isAuthError(error)).toBe(false)
     })
@@ -159,8 +159,8 @@ describe('API Error Handling', () => {
       const error = {
         error: {
           data: { code: 'INTERNAL_SERVER_ERROR', httpStatus: 500 },
-          message: 'Internal server error'
-        }
+          message: 'Internal server error',
+        },
       }
       expect(shouldRetry(error)).toBe(true)
     })
@@ -169,8 +169,8 @@ describe('API Error Handling', () => {
       const error = {
         error: {
           data: { code: 'BAD_REQUEST', httpStatus: 400 },
-          message: 'Bad request'
-        }
+          message: 'Bad request',
+        },
       }
       expect(shouldRetry(error)).toBe(false)
     })
@@ -179,11 +179,10 @@ describe('API Error Handling', () => {
       const error = {
         error: {
           data: { code: 'UNAUTHORIZED', httpStatus: 401 },
-          message: 'Unauthorized'
-        }
+          message: 'Unauthorized',
+        },
       }
       expect(shouldRetry(error)).toBe(false)
     })
   })
 })
-

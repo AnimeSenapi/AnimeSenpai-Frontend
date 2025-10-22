@@ -6,11 +6,11 @@ import { useRouter } from 'next/navigation'
 import { cn } from '../../app/lib/utils'
 import { Anime } from '../../types/anime'
 import { getTagById } from '../../types/tags'
-import { Heart, Play, CheckCircle, Star, MoreVertical, Bookmark } from 'lucide-react'
+import { Heart, Play, CheckCircle, Star, MoreVertical } from 'lucide-react'
 import { Button } from '../ui/button'
 
 interface MyListAnimeCardProps {
-  anime: Anime & { 
+  anime: Anime & {
     listStatus: 'favorite' | 'watching' | 'completed' | 'plan-to-watch'
     progress?: number
   }
@@ -21,22 +21,21 @@ interface MyListAnimeCardProps {
   onProgressUpdate?: (animeId: string, progress: number) => void
 }
 
-export function MyListAnimeCard({ 
-  anime, 
-  variant = 'grid', 
+export function MyListAnimeCard({
+  anime,
+  variant = 'grid',
   className,
   onFavorite,
   isFavorited = false,
-  onProgressUpdate
+  onProgressUpdate: _onProgressUpdate,
 }: MyListAnimeCardProps) {
   const router = useRouter()
   // Prefer English title over romanized Japanese
   const displayTitle = anime.titleEnglish || anime.title
-  const tag = anime.tags && anime.tags.length > 0 ? getTagById(anime.tags[0]) : null
   const progress = anime.progress || 0
   const totalEpisodes = anime.totalEpisodes || anime.episodes || 0
   const progressPercent = totalEpisodes > 0 ? (progress / totalEpisodes) * 100 : 0
-  
+
   const getStatusConfig = () => {
     switch (anime.listStatus) {
       case 'favorite':
@@ -47,7 +46,7 @@ export function MyListAnimeCard({
           bgColor: 'bg-gray-800/90',
           borderColor: 'border-secondary-500/30',
           textColor: 'text-secondary-400',
-          iconColor: 'text-secondary-500'
+          iconColor: 'text-secondary-500',
         }
       case 'watching':
         return {
@@ -57,7 +56,7 @@ export function MyListAnimeCard({
           bgColor: 'bg-gray-800/90',
           borderColor: 'border-primary-500/30',
           textColor: 'text-primary-400',
-          iconColor: 'text-primary-500'
+          iconColor: 'text-primary-500',
         }
       case 'completed':
         return {
@@ -67,7 +66,7 @@ export function MyListAnimeCard({
           bgColor: 'bg-gray-800/90',
           borderColor: 'border-success-500/30',
           textColor: 'text-success-400',
-          iconColor: 'text-success-500'
+          iconColor: 'text-success-500',
         }
       case 'plan-to-watch':
         return {
@@ -77,7 +76,7 @@ export function MyListAnimeCard({
           bgColor: 'bg-gray-800/90',
           borderColor: 'border-planning-500/30',
           textColor: 'text-planning-400',
-          iconColor: 'text-planning-500'
+          iconColor: 'text-planning-500',
         }
     }
   }
@@ -87,15 +86,15 @@ export function MyListAnimeCard({
 
   if (variant === 'list') {
     return (
-      <Link href={`/anime/${anime.slug}`} className={cn("block group", className)}>
+      <Link href={`/anime/${anime.slug}`} className={cn('block group', className)}>
         <div className="glass rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 transform hover:scale-[1.02]">
           <div className="flex items-center gap-6">
             {/* Image */}
             <div className="relative flex-shrink-0">
               <div className="w-24 h-32 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl overflow-hidden relative">
-                {(anime.coverImage || anime.imageUrl) ? (
-                  <Image 
-                    src={(anime.coverImage || anime.imageUrl) as string} 
+                {anime.coverImage || anime.imageUrl ? (
+                  <Image
+                    src={(anime.coverImage || anime.imageUrl) as string}
                     alt={displayTitle}
                     fill
                     className="object-cover"
@@ -109,13 +108,15 @@ export function MyListAnimeCard({
               </div>
               {/* Status Badge - Subtle Dark Style */}
               <div className="absolute -top-2 -right-2">
-                <div className={cn(
-                  "backdrop-blur-md text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5 border",
-                  statusConfig.bgColor,
-                  statusConfig.borderColor,
-                  statusConfig.textColor
-                )}>
-                  <StatusIcon className={cn("h-3 w-3", statusConfig.iconColor)} />
+                <div
+                  className={cn(
+                    'backdrop-blur-md text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5 border',
+                    statusConfig.bgColor,
+                    statusConfig.borderColor,
+                    statusConfig.textColor
+                  )}
+                >
+                  <StatusIcon className={cn('h-3 w-3', statusConfig.iconColor)} />
                   <span className="font-medium">{statusConfig.label}</span>
                 </div>
               </div>
@@ -135,16 +136,18 @@ export function MyListAnimeCard({
                     <span>•</span>
                     <span>{anime.studio}</span>
                   </div>
-                  
+
                   {/* Episode Progress */}
                   {totalEpisodes > 0 && (
                     <div className="mt-3">
                       <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
                         <span>Progress</span>
-                        <span>{progress} / {totalEpisodes} episodes</span>
+                        <span>
+                          {progress} / {totalEpisodes} episodes
+                        </span>
                       </div>
                       <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
-                        <div 
+                        <div
                           className="bg-gradient-to-r from-primary-500 to-primary-400 h-full transition-all duration-300"
                           style={{ width: `${Math.min(100, progressPercent)}%` }}
                         />
@@ -156,11 +159,11 @@ export function MyListAnimeCard({
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 text-warning-400 fill-warning-400" />
                     <span className="text-white font-semibold">
-                      {anime.rating && !isNaN(Number(anime.rating)) 
-                        ? Number(anime.rating).toFixed(1) 
+                      {anime.rating && !isNaN(Number(anime.rating))
+                        ? Number(anime.rating).toFixed(1)
                         : anime.averageRating && !isNaN(Number(anime.averageRating))
-                        ? Number(anime.averageRating).toFixed(1)
-                        : 'N/A'}
+                          ? Number(anime.averageRating).toFixed(1)
+                          : 'N/A'}
                     </span>
                   </div>
                   {onFavorite && (
@@ -173,17 +176,21 @@ export function MyListAnimeCard({
                       className="p-2 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-sm transition-all"
                       aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
                     >
-                      <Star 
+                      <Star
                         className={cn(
-                          "h-4 w-4 transition-all",
-                          isFavorited 
-                            ? "fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" 
-                            : "text-white hover:text-yellow-400"
+                          'h-4 w-4 transition-all',
+                          isFavorited
+                            ? 'fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]'
+                            : 'text-white hover:text-yellow-400'
                         )}
                       />
                     </button>
                   )}
-                  <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white hover:bg-white/10">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-400 hover:text-white hover:bg-white/10"
+                  >
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </div>
@@ -195,12 +202,9 @@ export function MyListAnimeCard({
                   anime.tags.slice(0, 3).map((tagId) => {
                     const tag = getTagById(tagId)
                     return tag ? (
-                      <span 
+                      <span
                         key={tagId}
-                        className={cn(
-                          "text-xs px-2 py-1 rounded-full font-medium",
-                          tag.color
-                        )}
+                        className={cn('text-xs px-2 py-1 rounded-full font-medium', tag.color)}
                       >
                         {tag.name}
                       </span>
@@ -216,10 +220,12 @@ export function MyListAnimeCard({
                 <div className="w-full">
                   <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
                     <span>Progress</span>
-                    <span>{progress} / {totalEpisodes} eps</span>
+                    <span>
+                      {progress} / {totalEpisodes} eps
+                    </span>
                   </div>
                   <div className="w-full bg-gray-700/50 rounded-full h-1.5 overflow-hidden">
-                    <div 
+                    <div
                       className="bg-gradient-to-r from-primary-500 to-secondary-500 h-1.5 rounded-full transition-all duration-300"
                       style={{ width: `${Math.min(100, progressPercent)}%` }}
                     />
@@ -235,13 +241,13 @@ export function MyListAnimeCard({
 
   // Grid variant
   return (
-    <Link href={`/anime/${anime.slug}`} className={cn("block group", className)}>
+    <Link href={`/anime/${anime.slug}`} className={cn('block group', className)}>
       <div className="relative transform hover:scale-105 transition-all duration-300">
         {/* Image Container */}
         <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl overflow-hidden">
-          {(anime.coverImage || anime.imageUrl) ? (
-            <Image 
-              src={(anime.coverImage || anime.imageUrl) as string} 
+          {anime.coverImage || anime.imageUrl ? (
+            <Image
+              src={(anime.coverImage || anime.imageUrl) as string}
               alt={displayTitle}
               fill
               className="object-cover group-hover:scale-110 transition-transform duration-500"
@@ -252,19 +258,21 @@ export function MyListAnimeCard({
               <span className="text-gray-500 text-sm font-medium">No Image</span>
             </div>
           )}
-          
+
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          
+
           {/* Status Badge - Subtle Dark Style */}
           <div className="absolute top-3 right-3 z-10">
-            <div className={cn(
-              "backdrop-blur-md text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border shadow-sm",
-              statusConfig.bgColor,
-              statusConfig.borderColor,
-              statusConfig.textColor
-            )}>
-              <StatusIcon className={cn("h-3.5 w-3.5", statusConfig.iconColor)} />
+            <div
+              className={cn(
+                'backdrop-blur-md text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border shadow-sm',
+                statusConfig.bgColor,
+                statusConfig.borderColor,
+                statusConfig.textColor
+              )}
+            >
+              <StatusIcon className={cn('h-3.5 w-3.5', statusConfig.iconColor)} />
               <span className="font-medium">{statusConfig.label}</span>
             </div>
           </div>
@@ -274,11 +282,11 @@ export function MyListAnimeCard({
             <div className="bg-black/50 backdrop-blur-sm text-white text-sm px-2 py-1 rounded-lg flex items-center gap-1">
               <Star className="h-3 w-3 text-warning-400 fill-warning-400" />
               <span className="font-semibold">
-                {anime.rating && !isNaN(Number(anime.rating)) 
-                  ? Number(anime.rating).toFixed(1) 
+                {anime.rating && !isNaN(Number(anime.rating))
+                  ? Number(anime.rating).toFixed(1)
                   : anime.averageRating && !isNaN(Number(anime.averageRating))
-                  ? Number(anime.averageRating).toFixed(1)
-                  : 'N/A'}
+                    ? Number(anime.averageRating).toFixed(1)
+                    : 'N/A'}
               </span>
             </div>
           </div>
@@ -294,12 +302,12 @@ export function MyListAnimeCard({
               className="absolute top-3 right-3 z-10 p-2 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-sm transition-all touch-manipulation active:bg-black/80"
               aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
             >
-              <Star 
+              <Star
                 className={cn(
-                  "h-5 w-5 transition-all",
-                  isFavorited 
-                    ? "fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" 
-                    : "text-white hover:text-yellow-400"
+                  'h-5 w-5 transition-all',
+                  isFavorited
+                    ? 'fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]'
+                    : 'text-white hover:text-yellow-400'
                 )}
               />
             </button>
@@ -308,8 +316,8 @@ export function MyListAnimeCard({
           {/* Action Buttons */}
           <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <div className="flex items-center gap-2">
-              <Button 
-                size="sm" 
+              <Button
+                size="sm"
                 className="flex-1 bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 border border-white/20"
               >
                 <Play className="h-4 w-4 mr-1" />
@@ -335,23 +343,25 @@ export function MyListAnimeCard({
               <span>{anime.totalEpisodes || anime.episodes} eps</span>
             </div>
           </div>
-          
+
           {/* Episode Progress Bar */}
           {totalEpisodes > 0 && (
             <div className="mb-2">
               <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
                 <span>Progress</span>
-                <span className="font-medium">{progress}/{totalEpisodes}</span>
+                <span className="font-medium">
+                  {progress}/{totalEpisodes}
+                </span>
               </div>
               <div className="w-full bg-gray-700/50 rounded-full h-1.5 overflow-hidden">
-                <div 
+                <div
                   className="bg-gradient-to-r from-primary-500 to-secondary-500 h-1.5 rounded-full transition-all duration-300"
                   style={{ width: `${Math.min(100, progressPercent)}%` }}
                 />
               </div>
             </div>
           )}
-          
+
           {/* Tags - Clickable */}
           <div className="flex items-center gap-1">
             {anime.tags && anime.tags.length > 0 ? (
@@ -361,7 +371,7 @@ export function MyListAnimeCard({
                   <span
                     key={tagId}
                     className={cn(
-                      "text-xs px-2 py-0.5 rounded-full font-medium hover:opacity-80 transition-opacity cursor-pointer",
+                      'text-xs px-2 py-0.5 rounded-full font-medium hover:opacity-80 transition-opacity cursor-pointer',
                       tag.color
                     )}
                     onClick={(e) => {

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '../ui/button'
 import { UserPlus, UserMinus, Loader2 } from 'lucide-react'
 import { useAuth } from '../../app/lib/auth-context'
-import { useToast } from '../../lib/toast-context'
+import { useToast } from '../ui/toast'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -17,13 +17,13 @@ interface FollowButtonProps {
   variant?: 'default' | 'outline'
 }
 
-export function FollowButton({ 
-  userId, 
+export function FollowButton({
+  userId,
   username,
   initialFollowing = false,
   onFollowChange,
   size = 'default',
-  variant = 'default'
+  variant = 'default',
 }: FollowButtonProps) {
   const { user, getAuthHeaders } = useAuth()
   const toast = useToast()
@@ -46,10 +46,13 @@ export function FollowButton({
     if (!user) return
 
     try {
-      const response = await fetch(`${API_URL}/social.checkFollowing?input=${encodeURIComponent(JSON.stringify({ followerId: user.id, followingId: userId }))}`, {
-        method: 'GET',
-        headers: getAuthHeaders()
-      })
+      const response = await fetch(
+        `${API_URL}/social.checkFollowing?input=${encodeURIComponent(JSON.stringify({ followerId: user.id, followingId: userId }))}`,
+        {
+          method: 'GET',
+          headers: getAuthHeaders(),
+        }
+      )
 
       const data = await response.json()
       if (data.result?.data) {
@@ -77,11 +80,11 @@ export function FollowButton({
 
     try {
       const endpoint = isFollowing ? 'social.unfollow' : 'social.follow'
-      
+
       const response = await fetch(`${API_URL}/${endpoint}`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ userId })
+        body: JSON.stringify({ userId }),
       })
 
       const data = await response.json()
@@ -151,8 +154,8 @@ export function FollowButton({
         isFollowing
           ? 'border-white/20 text-white hover:bg-error-500/20 hover:border-error-500 hover:text-error-400 group'
           : variant === 'default'
-          ? 'bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white'
-          : 'border-white/20 text-white hover:bg-white/10'
+            ? 'bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white'
+            : 'border-white/20 text-white hover:bg-white/10'
       }
     >
       {isLoading ? (

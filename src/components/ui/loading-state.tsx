@@ -49,9 +49,18 @@ export function LoadingState({
   if (variant === 'dots') {
     return (
       <div className={`flex items-center justify-center gap-2 ${className}`}>
-        <div className="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-        <div className="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-        <div className="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+        <div
+          className="w-2 h-2 bg-primary-400 rounded-full animate-bounce"
+          style={{ animationDelay: '0ms' }}
+        ></div>
+        <div
+          className="w-2 h-2 bg-primary-400 rounded-full animate-bounce"
+          style={{ animationDelay: '150ms' }}
+        ></div>
+        <div
+          className="w-2 h-2 bg-primary-400 rounded-full animate-bounce"
+          style={{ animationDelay: '300ms' }}
+        ></div>
         {text && <span className={`ml-2 text-gray-400 ${textSizeClasses[size]}`}>{text}</span>}
       </div>
     )
@@ -63,8 +72,13 @@ export function LoadingState({
       <div className={`flex flex-col items-center justify-center ${className}`}>
         <div className="relative">
           <div className={`${sizeClasses[size]} bg-primary-400/20 rounded-full animate-ping`}></div>
-          <div className={`${sizeClasses[size]} bg-primary-400/40 rounded-full animate-ping absolute inset-0`} style={{ animationDelay: '300ms' }}></div>
-          <div className={`${sizeClasses[size]} bg-primary-400 rounded-full absolute inset-0 flex items-center justify-center`}>
+          <div
+            className={`${sizeClasses[size]} bg-primary-400/40 rounded-full animate-ping absolute inset-0`}
+            style={{ animationDelay: '300ms' }}
+          ></div>
+          <div
+            className={`${sizeClasses[size]} bg-primary-400 rounded-full absolute inset-0 flex items-center justify-center`}
+          >
             <Sparkles className="h-1/2 w-1/2 text-white" />
           </div>
         </div>
@@ -76,16 +90,20 @@ export function LoadingState({
   // Full page loading
   if (variant === 'full') {
     return (
-      <div className={`min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 flex items-center justify-center p-4 ${className}`}>
+      <div
+        className={`min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 flex items-center justify-center p-4 ${className}`}
+      >
         <div className="text-center">
           <div className="relative inline-block">
-            <Loader2 className={`${sizeClasses[size]} text-primary-400 animate-spin mx-auto mb-4`} />
+            <Loader2
+              className={`${sizeClasses[size]} text-primary-400 animate-spin mx-auto mb-4`}
+            />
             <div className="absolute inset-0 bg-primary-400/20 rounded-full blur-xl"></div>
           </div>
           <p className={`text-gray-400 ${textSizeClasses[size]} mb-2`}>{text}</p>
           {showProgress && (
             <div className="w-48 h-1 bg-gray-800 rounded-full overflow-hidden mx-auto">
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-primary-500 to-secondary-500 transition-all duration-300"
                 style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
               ></div>
@@ -99,16 +117,20 @@ export function LoadingState({
   // Overlay loading (over existing content)
   if (variant === 'overlay') {
     return (
-      <div className={`absolute inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-50 ${className}`}>
+      <div
+        className={`absolute inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-50 ${className}`}
+      >
         <div className="text-center">
           <div className="relative inline-block">
-            <Loader2 className={`${sizeClasses[size]} text-primary-400 animate-spin mx-auto mb-4`} />
+            <Loader2
+              className={`${sizeClasses[size]} text-primary-400 animate-spin mx-auto mb-4`}
+            />
             <div className="absolute inset-0 bg-primary-400/20 rounded-full blur-xl"></div>
           </div>
           <p className={`text-gray-300 ${textSizeClasses[size]} mb-2`}>{text}</p>
           {showProgress && (
             <div className="w-48 h-1 bg-gray-800 rounded-full overflow-hidden mx-auto">
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-primary-500 to-secondary-500 transition-all duration-300"
                 style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
               ></div>
@@ -129,7 +151,7 @@ export function LoadingState({
       <p className={`text-gray-400 ${textSizeClasses[size]} mb-2`}>{text}</p>
       {showProgress && (
         <div className="w-48 h-1 bg-gray-800 rounded-full overflow-hidden">
-          <div 
+          <div
             className="h-full bg-gradient-to-r from-primary-500 to-secondary-500 transition-all duration-300"
             style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
           ></div>
@@ -170,7 +192,8 @@ export function LoadingButton({
   variant = 'primary',
 }: LoadingButtonProps) {
   const variantClasses = {
-    primary: 'bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white',
+    primary:
+      'bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white',
     secondary: 'bg-gray-700 hover:bg-gray-600 text-white',
     outline: 'border border-white/20 hover:bg-white/10 text-white',
   }
@@ -210,7 +233,13 @@ export function CardSkeleton({ className = '' }: { className?: string }) {
 /**
  * Loading Skeleton for Lists
  */
-export function ListSkeleton({ count = 3, className = '' }: { count?: number; className?: string }) {
+export function ListSkeleton({
+  count = 3,
+  className = '',
+}: {
+  count?: number
+  className?: string
+}) {
   return (
     <div className={`space-y-3 ${className}`}>
       {Array.from({ length: count }).map((_, i) => (
@@ -227,4 +256,3 @@ export function ListSkeleton({ count = 3, className = '' }: { count?: number; cl
     </div>
   )
 }
-

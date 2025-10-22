@@ -2,13 +2,7 @@
 
 import { useEffect } from 'react'
 import { Button } from '../components/ui/button'
-import { 
-  Home, 
-  RefreshCw, 
-  AlertTriangle,
-  Bug,
-  ArrowLeft
-} from 'lucide-react'
+import { Home, RefreshCw, AlertTriangle, Bug, ArrowLeft } from 'lucide-react'
 
 interface ErrorProps {
   error: Error & { digest?: string }
@@ -55,11 +49,9 @@ export default function Error({ error, reset }: ErrorProps) {
               Oops!
             </span>
           </h1>
-          
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-            Something went wrong
-          </h2>
-          
+
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">Something went wrong</h2>
+
           <p className="text-gray-400 text-lg mb-8 max-w-md mx-auto">
             We encountered an unexpected error. Don't worry, our team has been notified.
           </p>
@@ -69,17 +61,11 @@ export default function Error({ error, reset }: ErrorProps) {
             <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-8 text-left">
               <div className="flex items-center gap-2 mb-2">
                 <Bug className="h-4 w-4 text-red-400" />
-                <h3 className="text-red-400 font-semibold text-sm">
-                  Debug Info (Development)
-                </h3>
+                <h3 className="text-red-400 font-semibold text-sm">Debug Info (Development)</h3>
               </div>
-              <p className="text-red-300 text-xs font-mono break-all">
-                {error.message}
-              </p>
+              <p className="text-red-300 text-xs font-mono break-all">{error.message}</p>
               {error.digest && (
-                <p className="text-red-400 text-xs mt-2">
-                  Error ID: {error.digest}
-                </p>
+                <p className="text-red-400 text-xs mt-2">Error ID: {error.digest}</p>
               )}
             </div>
           )}
@@ -94,7 +80,7 @@ export default function Error({ error, reset }: ErrorProps) {
               Try Again
             </Button>
             <Button
-              onClick={() => window.location.href = '/dashboard'}
+              onClick={() => (window.location.href = '/dashboard')}
               variant="outline"
               className="border-white/20 text-white hover:bg-white/10 px-8 py-3.5 rounded-xl"
             >
@@ -107,8 +93,8 @@ export default function Error({ error, reset }: ErrorProps) {
           <div className="pt-6 border-t border-white/10">
             <p className="text-gray-500 text-sm">
               If this keeps happening,{' '}
-              <a 
-                href="mailto:support@animesenpai.app" 
+              <a
+                href="mailto:support@animesenpai.app"
                 className="text-primary-400 hover:text-primary-300 transition-colors"
               >
                 contact support

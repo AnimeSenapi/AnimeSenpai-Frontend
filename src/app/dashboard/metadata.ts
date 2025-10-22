@@ -2,11 +2,12 @@ import { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Dashboard - Your Anime Journey',
-  description: 'View your personalized anime dashboard with recommendations, trending shows, and your watch progress. Discover what to watch next based on your taste.',
+  description:
+    'View your personalized anime dashboard with recommendations, trending shows, and your watch progress. Discover what to watch next based on your taste.',
   openGraph: {
     title: 'My Anime Dashboard - AnimeSenpai',
-    description: 'Track your anime journey, get personalized recommendations, and discover new shows.',
+    description:
+      'Track your anime journey, get personalized recommendations, and discover new shows.',
     images: ['/og-dashboard.png'],
   },
 }
-

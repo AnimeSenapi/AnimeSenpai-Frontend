@@ -9,26 +9,26 @@ export enum ErrorType {
   // Network errors
   NETWORK_ERROR = 'NETWORK_ERROR',
   TIMEOUT_ERROR = 'TIMEOUT_ERROR',
-  
+
   // Auth errors
   AUTH_ERROR = 'AUTH_ERROR',
   TOKEN_EXPIRED = 'TOKEN_EXPIRED',
   UNAUTHORIZED = 'UNAUTHORIZED',
-  
+
   // API errors
   API_ERROR = 'API_ERROR',
   NOT_FOUND = 'NOT_FOUND',
   VALIDATION_ERROR = 'VALIDATION_ERROR',
   SERVER_ERROR = 'SERVER_ERROR',
-  
+
   // Client errors
   RENDER_ERROR = 'RENDER_ERROR',
   STATE_ERROR = 'STATE_ERROR',
-  
+
   // Data errors
   DATA_ERROR = 'DATA_ERROR',
   PARSE_ERROR = 'PARSE_ERROR',
-  
+
   // Generic
   UNKNOWN_ERROR = 'UNKNOWN_ERROR',
 }
@@ -109,7 +109,11 @@ class ErrorHandler {
     // Standard Error objects
     if (error instanceof Error) {
       // Auth errors
-      if (error.message.includes('auth') || error.message.includes('token') || error.message.includes('unauthorized')) {
+      if (
+        error.message.includes('auth') ||
+        error.message.includes('token') ||
+        error.message.includes('unauthorized')
+      ) {
         return this.createError(ErrorType.AUTH_ERROR, error.message, error, context)
       }
 
@@ -128,12 +132,7 @@ class ErrorHandler {
     }
 
     // Unknown error type
-    return this.createError(
-      ErrorType.UNKNOWN_ERROR,
-      'An unexpected error occurred',
-      error,
-      context
-    )
+    return this.createError(ErrorType.UNKNOWN_ERROR, 'An unexpected error occurred', error, context)
   }
 
   /**
@@ -145,8 +144,8 @@ class ErrorHandler {
       [ErrorType.TIMEOUT_ERROR]: 'Request timed out. Please try again.',
       [ErrorType.AUTH_ERROR]: 'Authentication failed. Please sign in again.',
       [ErrorType.TOKEN_EXPIRED]: 'Your session has expired. Please sign in again.',
-      [ErrorType.UNAUTHORIZED]: 'You don\'t have permission to do that.',
-      [ErrorType.API_ERROR]: 'We couldn\'t complete your request. Please try again.',
+      [ErrorType.UNAUTHORIZED]: "You don't have permission to do that.",
+      [ErrorType.API_ERROR]: "We couldn't complete your request. Please try again.",
       [ErrorType.NOT_FOUND]: 'The requested resource was not found.',
       [ErrorType.VALIDATION_ERROR]: 'Please check your input and try again.',
       [ErrorType.SERVER_ERROR]: 'Our servers are having issues. Please try again later.',
@@ -167,7 +166,7 @@ class ErrorHandler {
   private logError(error: AppError) {
     // Add to in-memory log
     this.errorLog.push(error)
-    
+
     // Keep log size manageable
     if (this.errorLog.length > this.maxLogSize) {
       this.errorLog.shift()
@@ -263,11 +262,7 @@ class ErrorHandler {
    * Check if error requires authentication
    */
   requiresAuth(error: AppError): boolean {
-    const authErrors = [
-      ErrorType.AUTH_ERROR,
-      ErrorType.TOKEN_EXPIRED,
-      ErrorType.UNAUTHORIZED,
-    ]
+    const authErrors = [ErrorType.AUTH_ERROR, ErrorType.TOKEN_EXPIRED, ErrorType.UNAUTHORIZED]
     return authErrors.includes(error.type)
   }
 }
@@ -285,4 +280,3 @@ export const createError = (
   originalError?: Error | unknown,
   context?: Record<string, any>
 ) => errorHandler.createError(type, message, originalError, context)
-

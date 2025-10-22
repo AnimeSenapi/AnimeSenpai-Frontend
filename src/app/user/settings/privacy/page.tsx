@@ -2,26 +2,23 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { 
-  Shield, 
-  Eye, 
-  EyeOff, 
-  Users, 
-  MessageCircle, 
+import {
+  Shield,
+  Users,
+  MessageCircle,
   UserPlus,
   Activity as ActivityIcon,
   List,
   MessageSquare,
-  Check,
   Loader2,
   Lock,
   Globe,
-  Info
+  Info,
 } from 'lucide-react'
 import { Button } from '../../../../components/ui/button'
 import { LoadingState } from '../../../../components/ui/loading-state'
 import { useAuth } from '../../../lib/auth-context'
-import { useToast } from '../../../../lib/toast-context'
+import { useToast } from '../../../../components/ui/toast'
 import { cn } from '../../../lib/utils'
 
 interface PrivacySettings {
@@ -40,9 +37,9 @@ interface PrivacySettings {
 
 export default function PrivacySettingsPage() {
   const router = useRouter()
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated } = useAuth()
   const toast = useToast()
-  
+
   const [settings, setSettings] = useState<PrivacySettings | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -52,7 +49,7 @@ export default function PrivacySettingsPage() {
       router.push('/auth/signin')
       return
     }
-    
+
     loadSettings()
   }, [isAuthenticated])
 
@@ -60,29 +57,30 @@ export default function PrivacySettingsPage() {
     const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
     return {
       'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
+      ...(token && { Authorization: `Bearer ${token}` }),
     }
   }
 
   const loadSettings = async () => {
     try {
       setLoading(true)
-      
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
       const url = `${API_URL}/privacy.getSettings`
-      
+
       const response = await fetch(url, {
         method: 'GET',
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       })
-      
+
       if (!response.ok) {
         throw new Error('Failed to load privacy settings')
       }
-      
+
       const json = await response.json()
       const data = json.result?.data
-      
+
       if (data?.settings) {
         setSettings(data.settings)
       }
@@ -96,28 +94,29 @@ export default function PrivacySettingsPage() {
 
   const updateSetting = async (key: keyof PrivacySettings, value: any) => {
     if (!settings) return
-    
+
     try {
       setSaving(true)
-      
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
       const url = `${API_URL}/privacy.updateSettings`
-      
+
       const response = await fetch(url, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
-          [key]: value
-        })
+          [key]: value,
+        }),
       })
-      
+
       if (!response.ok) {
         throw new Error('Failed to update privacy settings')
       }
-      
+
       const json = await response.json()
       const data = json.result?.data
-      
+
       if (data?.settings) {
         setSettings(data.settings)
         toast.success('Privacy settings updated', 'Success')
@@ -133,25 +132,26 @@ export default function PrivacySettingsPage() {
   const applyPreset = async (preset: 'public' | 'friends_only' | 'private') => {
     try {
       setSaving(true)
-      
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
       const url = `${API_URL}/privacy.applyPreset`
-      
+
       const response = await fetch(url, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
-          preset
-        })
+          preset,
+        }),
       })
-      
+
       if (!response.ok) {
         throw new Error('Failed to apply preset')
       }
-      
+
       const json = await response.json()
       const data = json.result?.data
-      
+
       if (data?.settings) {
         setSettings(data.settings)
         toast.success(`Applied "${preset.replace('_', ' ')}" preset`, 'Success')
@@ -238,58 +238,64 @@ export default function PrivacySettingsPage() {
         <div className="glass rounded-xl p-6 border border-white/10 mb-6">
           <h3 className="text-lg font-semibold text-white mb-4">Profile Visibility</h3>
           <p className="text-sm text-gray-400 mb-4">Who can see your profile</p>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <button
               onClick={() => updateSetting('profileVisibility', 'public')}
               disabled={saving}
               className={cn(
-                "p-4 rounded-lg border-2 transition-all text-left",
+                'p-4 rounded-lg border-2 transition-all text-left',
                 settings.profileVisibility === 'public'
                   ? 'bg-primary-500/20 border-primary-500/50'
                   : 'bg-white/5 border-white/10 hover:border-white/20'
               )}
             >
-              <Globe className={cn(
-                "h-5 w-5 mb-2",
-                settings.profileVisibility === 'public' ? 'text-primary-400' : 'text-gray-400'
-              )} />
+              <Globe
+                className={cn(
+                  'h-5 w-5 mb-2',
+                  settings.profileVisibility === 'public' ? 'text-primary-400' : 'text-gray-400'
+                )}
+              />
               <div className="font-semibold text-white">Public</div>
               <div className="text-xs text-gray-400">Everyone</div>
             </button>
-            
+
             <button
               onClick={() => updateSetting('profileVisibility', 'friends')}
               disabled={saving}
               className={cn(
-                "p-4 rounded-lg border-2 transition-all text-left",
+                'p-4 rounded-lg border-2 transition-all text-left',
                 settings.profileVisibility === 'friends'
                   ? 'bg-primary-500/20 border-primary-500/50'
                   : 'bg-white/5 border-white/10 hover:border-white/20'
               )}
             >
-              <Users className={cn(
-                "h-5 w-5 mb-2",
-                settings.profileVisibility === 'friends' ? 'text-primary-400' : 'text-gray-400'
-              )} />
+              <Users
+                className={cn(
+                  'h-5 w-5 mb-2',
+                  settings.profileVisibility === 'friends' ? 'text-primary-400' : 'text-gray-400'
+                )}
+              />
               <div className="font-semibold text-white">Friends Only</div>
               <div className="text-xs text-gray-400">Only friends</div>
             </button>
-            
+
             <button
               onClick={() => updateSetting('profileVisibility', 'private')}
               disabled={saving}
               className={cn(
-                "p-4 rounded-lg border-2 transition-all text-left",
+                'p-4 rounded-lg border-2 transition-all text-left',
                 settings.profileVisibility === 'private'
                   ? 'bg-primary-500/20 border-primary-500/50'
                   : 'bg-white/5 border-white/10 hover:border-white/20'
               )}
             >
-              <Lock className={cn(
-                "h-5 w-5 mb-2",
-                settings.profileVisibility === 'private' ? 'text-primary-400' : 'text-gray-400'
-              )} />
+              <Lock
+                className={cn(
+                  'h-5 w-5 mb-2',
+                  settings.profileVisibility === 'private' ? 'text-primary-400' : 'text-gray-400'
+                )}
+              />
               <div className="font-semibold text-white">Private</div>
               <div className="text-xs text-gray-400">Only you</div>
             </button>
@@ -300,7 +306,7 @@ export default function PrivacySettingsPage() {
         <div className="glass rounded-xl p-6 border border-white/10 mb-6">
           <h3 className="text-lg font-semibold text-white mb-4">Content Visibility</h3>
           <p className="text-sm text-gray-400 mb-6">Control what others can see</p>
-          
+
           <div className="space-y-4">
             {/* Anime List */}
             <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
@@ -315,14 +321,16 @@ export default function PrivacySettingsPage() {
                 onClick={() => updateSetting('showAnimeList', !settings.showAnimeList)}
                 disabled={saving}
                 className={cn(
-                  "w-12 h-6 rounded-full transition-all relative",
+                  'w-12 h-6 rounded-full transition-all relative',
                   settings.showAnimeList ? 'bg-success-500' : 'bg-gray-600'
                 )}
               >
-                <div className={cn(
-                  "w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform",
-                  settings.showAnimeList ? 'right-0.5' : 'left-0.5'
-                )} />
+                <div
+                  className={cn(
+                    'w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform',
+                    settings.showAnimeList ? 'right-0.5' : 'left-0.5'
+                  )}
+                />
               </button>
             </div>
 
@@ -339,14 +347,16 @@ export default function PrivacySettingsPage() {
                 onClick={() => updateSetting('showReviews', !settings.showReviews)}
                 disabled={saving}
                 className={cn(
-                  "w-12 h-6 rounded-full transition-all relative",
+                  'w-12 h-6 rounded-full transition-all relative',
                   settings.showReviews ? 'bg-success-500' : 'bg-gray-600'
                 )}
               >
-                <div className={cn(
-                  "w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform",
-                  settings.showReviews ? 'right-0.5' : 'left-0.5'
-                )} />
+                <div
+                  className={cn(
+                    'w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform',
+                    settings.showReviews ? 'right-0.5' : 'left-0.5'
+                  )}
+                />
               </button>
             </div>
 
@@ -363,14 +373,16 @@ export default function PrivacySettingsPage() {
                 onClick={() => updateSetting('showActivity', !settings.showActivity)}
                 disabled={saving}
                 className={cn(
-                  "w-12 h-6 rounded-full transition-all relative",
+                  'w-12 h-6 rounded-full transition-all relative',
                   settings.showActivity ? 'bg-success-500' : 'bg-gray-600'
                 )}
               >
-                <div className={cn(
-                  "w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform",
-                  settings.showActivity ? 'right-0.5' : 'left-0.5'
-                )} />
+                <div
+                  className={cn(
+                    'w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform',
+                    settings.showActivity ? 'right-0.5' : 'left-0.5'
+                  )}
+                />
               </button>
             </div>
 
@@ -387,14 +399,16 @@ export default function PrivacySettingsPage() {
                 onClick={() => updateSetting('showFriends', !settings.showFriends)}
                 disabled={saving}
                 className={cn(
-                  "w-12 h-6 rounded-full transition-all relative",
+                  'w-12 h-6 rounded-full transition-all relative',
                   settings.showFriends ? 'bg-success-500' : 'bg-gray-600'
                 )}
               >
-                <div className={cn(
-                  "w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform",
-                  settings.showFriends ? 'right-0.5' : 'left-0.5'
-                )} />
+                <div
+                  className={cn(
+                    'w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform',
+                    settings.showFriends ? 'right-0.5' : 'left-0.5'
+                  )}
+                />
               </button>
             </div>
           </div>
@@ -404,7 +418,7 @@ export default function PrivacySettingsPage() {
         <div className="glass rounded-xl p-6 border border-white/10">
           <h3 className="text-lg font-semibold text-white mb-4">Interaction Settings</h3>
           <p className="text-sm text-gray-400 mb-6">Control how others can interact with you</p>
-          
+
           <div className="space-y-4">
             {/* Allow Messages */}
             <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
@@ -419,14 +433,16 @@ export default function PrivacySettingsPage() {
                 onClick={() => updateSetting('allowMessages', !settings.allowMessages)}
                 disabled={saving}
                 className={cn(
-                  "w-12 h-6 rounded-full transition-all relative",
+                  'w-12 h-6 rounded-full transition-all relative',
                   settings.allowMessages ? 'bg-success-500' : 'bg-gray-600'
                 )}
               >
-                <div className={cn(
-                  "w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform",
-                  settings.allowMessages ? 'right-0.5' : 'left-0.5'
-                )} />
+                <div
+                  className={cn(
+                    'w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform',
+                    settings.allowMessages ? 'right-0.5' : 'left-0.5'
+                  )}
+                />
               </button>
             </div>
 
@@ -443,14 +459,16 @@ export default function PrivacySettingsPage() {
                 onClick={() => updateSetting('allowFriendRequests', !settings.allowFriendRequests)}
                 disabled={saving}
                 className={cn(
-                  "w-12 h-6 rounded-full transition-all relative",
+                  'w-12 h-6 rounded-full transition-all relative',
                   settings.allowFriendRequests ? 'bg-success-500' : 'bg-gray-600'
                 )}
               >
-                <div className={cn(
-                  "w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform",
-                  settings.allowFriendRequests ? 'right-0.5' : 'left-0.5'
-                )} />
+                <div
+                  className={cn(
+                    'w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform',
+                    settings.allowFriendRequests ? 'right-0.5' : 'left-0.5'
+                  )}
+                />
               </button>
             </div>
           </div>
@@ -463,9 +481,15 @@ export default function PrivacySettingsPage() {
             <div className="text-sm text-gray-300">
               <p className="font-semibold text-white mb-2">About Privacy Settings</p>
               <ul className="space-y-1 text-gray-400">
-                <li>• <strong>Public:</strong> Everyone can see this content</li>
-                <li>• <strong>Friends Only:</strong> Only your friends can see this content</li>
-                <li>• <strong>Private:</strong> Only you can see this content</li>
+                <li>
+                  • <strong>Public:</strong> Everyone can see this content
+                </li>
+                <li>
+                  • <strong>Friends Only:</strong> Only your friends can see this content
+                </li>
+                <li>
+                  • <strong>Private:</strong> Only you can see this content
+                </li>
               </ul>
             </div>
           </div>
@@ -482,4 +506,3 @@ export default function PrivacySettingsPage() {
     </div>
   )
 }
-

@@ -1,18 +1,26 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
 import { Navbar } from '../components/navbar/navbar'
 import { Providers } from './providers'
 import { CookieConsent } from '../components/CookieConsent'
 import { SkipNav } from '../components/SkipNav'
-import { Analytics } from "@vercel/analytics/next"
-import { SpeedInsights } from "@vercel/speed-insights/next"
+import { LayoutErrorBoundary } from '../components/LayoutErrorBoundary'
+import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
+import { InstallPrompt, IOSInstallInstructions } from '../components/pwa/InstallPrompt'
+import { WebVitalsProvider } from '../components/WebVitalsProvider'
+import { AnalyticsProvider } from '../components/AnalyticsProvider'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+// Use system fonts for faster builds and better compatibility
+const fontFamily = {
+  fontFamily:
+    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+}
 
 const siteUrl = 'https://animesenpai.app'
 const siteName = 'AnimeSenpai'
-const siteDescription = 'Discover, track, and explore your favorite anime. Get personalized recommendations, connect with fellow fans, and build your ultimate anime collection.'
+const siteDescription =
+  'Discover, track, and explore your favorite anime. Get personalized recommendations, connect with fellow fans, and build your ultimate anime collection.'
 
 // Viewport configuration (Next.js 15+)
 export const viewport: Viewport = {
@@ -21,9 +29,10 @@ export const viewport: Viewport = {
   maximumScale: 5,
   userScalable: true,
   viewportFit: 'cover', // Enable safe area for iPhone notch/dynamic island
+  interactiveWidget: 'resizes-content', // iOS 15+ keyboard behavior
   themeColor: [
     { media: '(prefers-color-scheme: dark)', color: '#0a0a0f' },
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' }
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
   ],
 }
 
@@ -31,7 +40,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
     default: 'AnimeSenpai - Track, Discover & Watch Anime | Free Anime Tracker',
-    template: '%s | AnimeSenpai'
+    template: '%s | AnimeSenpai',
   },
   description: siteDescription,
   keywords: [
@@ -60,7 +69,7 @@ export const metadata: Metadata = {
     'new anime',
     'popular anime',
     'AnimeSenpai',
-    'anime senpai'
+    'anime senpai',
   ],
   authors: [{ name: 'AnimeSenpai Team' }],
   creator: 'AnimeSenpai',
@@ -83,7 +92,7 @@ export const metadata: Metadata = {
         width: 1200,
         height: 630,
         alt: 'AnimeSenpai - Your Ultimate Anime Tracking & Discovery Platform',
-      }
+      },
     ],
   },
   twitter: {
@@ -124,11 +133,7 @@ export const metadata: Metadata = {
   category: 'entertainment',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   // Structured data for organization
   const organizationData = {
     '@context': 'https://schema.org',
@@ -137,9 +142,7 @@ export default function RootLayout({
     url: siteUrl,
     logo: `${siteUrl}/assets/logo/AnimeSenpai_Inline.svg`,
     description: siteDescription,
-    sameAs: [
-      'https://www.tiktok.com/@animesenpai.app',
-    ],
+    sameAs: ['https://www.tiktok.com/@animesenpai.app'],
     contactPoint: {
       '@type': 'ContactPoint',
       email: 'contact@animesenpai.app',
@@ -166,6 +169,26 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
+        {/* PWA Meta Tags */}
+        <meta name="application-name" content="AnimeSenpai" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="AnimeSenpai" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
+        <meta name="msapplication-TileColor" content="#6366f1" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <meta name="theme-color" content="#6366f1" />
+        
+        {/* iOS Splash Screens */}
+        <link rel="apple-touch-startup-image" href="/splash/iphone-se.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
+        <link rel="apple-touch-startup-image" href="/splash/iphone-plus.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)" />
+        <link rel="apple-touch-startup-image" href="/splash/iphone-x.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" />
+        <link rel="apple-touch-startup-image" href="/splash/iphone-xr.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" />
+        <link rel="apple-touch-startup-image" href="/splash/iphone-12.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />
+        <link rel="apple-touch-startup-image" href="/splash/ipad.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)" />
+        
         {/* Structured Data - Organization */}
         <script
           type="application/ld+json"
@@ -177,41 +200,54 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(searchData) }}
         />
       </head>
-      <body className={inter.className}>
-        <Providers>
-          {/* Skip Navigation Links for Screen Readers */}
-          <SkipNav />
-          
-          {/* Alpha Badge - Simple & Clean */}
-          <div className="fixed top-3 left-3 sm:top-4 sm:left-4 z-[999] pointer-events-none animate-in fade-in duration-700" aria-hidden="true">
-            <div className="relative">
-              {/* Subtle glow */}
-              <div className="absolute -inset-0.5 bg-violet-500/20 rounded-lg blur-sm"></div>
-              
-              {/* Badge container */}
-              <div className="relative flex items-center gap-2 bg-black/50 backdrop-blur-sm border border-white/10 rounded-lg px-3 py-1.5 shadow-lg">
-                {/* Pulse dot */}
-                <div className="relative flex items-center justify-center">
-                  <span className="animate-ping absolute h-2 w-2 rounded-full bg-violet-400 opacity-75"></span>
-                  <span className="relative block h-1.5 w-1.5 rounded-full bg-violet-400"></span>
+      <body style={fontFamily}>
+        <LayoutErrorBoundary>
+          <Providers>
+            <WebVitalsProvider>
+              <AnalyticsProvider>
+                {/* Skip Navigation Links for Screen Readers */}
+                <SkipNav />
+
+            {/* Alpha Badge - Simple & Clean */}
+            <div
+              className="fixed top-3 left-3 sm:top-4 sm:left-4 z-[999] pointer-events-none animate-in fade-in duration-700"
+              aria-hidden="true"
+            >
+              <div className="relative">
+                {/* Subtle glow */}
+                <div className="absolute -inset-0.5 bg-violet-500/20 rounded-lg blur-sm"></div>
+
+                {/* Badge container */}
+                <div className="relative flex items-center gap-2 bg-black/50 backdrop-blur-sm border border-white/10 rounded-lg px-3 py-1.5 shadow-lg">
+                  {/* Pulse dot */}
+                  <div className="relative flex items-center justify-center">
+                    <span className="animate-ping absolute h-2 w-2 rounded-full bg-violet-400 opacity-75"></span>
+                    <span className="relative block h-1.5 w-1.5 rounded-full bg-violet-400"></span>
+                  </div>
+
+                  {/* Text */}
+                  <span className="text-[11px] sm:text-xs font-bold text-violet-300 uppercase tracking-wide">
+                    Alpha
+                  </span>
                 </div>
-                
-                {/* Text */}
-                <span className="text-[11px] sm:text-xs font-bold text-violet-300 uppercase tracking-wide">
-                  Alpha
-                </span>
               </div>
             </div>
-          </div>
-          
-          <Navbar />
-          <main id="main-content" role="main">
-            {children}
-          </main>
-          <CookieConsent />
-        </Providers>
-        <Analytics />
-        <SpeedInsights />
+
+            <Navbar />
+            <main id="main-content" role="main">
+              {children}
+            </main>
+            <CookieConsent />
+            
+            {/* PWA Install Prompts */}
+            <InstallPrompt />
+            <IOSInstallInstructions />
+          </AnalyticsProvider>
+        </WebVitalsProvider>
+      </Providers>
+      <Analytics />
+      <SpeedInsights />
+        </LayoutErrorBoundary>
       </body>
     </html>
   )

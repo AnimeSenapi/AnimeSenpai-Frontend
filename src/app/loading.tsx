@@ -14,20 +14,22 @@ export default function Loading() {
           <div className="glass rounded-2xl p-12">
             {/* Spinner */}
             <div className="w-16 h-16 border-4 border-brand-primary-400/20 border-t-brand-primary-400 rounded-full animate-spin mx-auto mb-8"></div>
-            
+
             {/* Loading Text */}
-            <h2 className="text-2xl font-bold text-white mb-4">
-              Loading...
-            </h2>
-            <p className="text-gray-300 mb-8">
-              Please wait while we load your content
-            </p>
+            <h2 className="text-2xl font-bold text-white mb-4">Loading...</h2>
+            <p className="text-gray-300 mb-8">Please wait while we load your content</p>
 
             {/* Loading Dots Animation */}
             <div className="flex justify-center space-x-2">
               <div className="w-2 h-2 bg-primary-400 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <div
+                className="w-2 h-2 bg-primary-400 rounded-full animate-bounce"
+                style={{ animationDelay: '0.1s' }}
+              ></div>
+              <div
+                className="w-2 h-2 bg-primary-400 rounded-full animate-bounce"
+                style={{ animationDelay: '0.2s' }}
+              ></div>
             </div>
           </div>
         </div>

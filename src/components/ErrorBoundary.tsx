@@ -1,188 +1,295 @@
+/**
+ * Error Boundary Component
+ *
+ * Catches JavaScript errors anywhere in the component tree,
+ * logs those errors, and displays a fallback UI.
+ *
+ * Based on React Error Boundary pattern
+ */
+
 'use client'
 
-import React, { Component, ReactNode } from 'react'
+import React, { Component, ReactNode, ErrorInfo } from 'react'
+import { AlertTriangle, RefreshCw, Home, ChevronDown } from 'lucide-react'
 import { Button } from './ui/button'
-import { RefreshCw, Home, AlertTriangle } from 'lucide-react'
+import { cn } from '../app/lib/utils'
 import * as Sentry from '@sentry/nextjs'
 
-interface Props {
+interface ErrorBoundaryProps {
   children: ReactNode
   fallback?: ReactNode
+  onError?: (error: Error, errorInfo: ErrorInfo) => void
+  resetOnPropsChange?: boolean
+  resetKeys?: Array<string | number>
+  level?: 'page' | 'section' | 'component'
+  className?: string
 }
 
-interface State {
+interface ErrorBoundaryState {
   hasError: boolean
   error: Error | null
-  errorInfo: React.ErrorInfo | null
+  errorInfo: ErrorInfo | null
+  errorId: string | null
 }
 
-export class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  private resetTimeoutId: number | null = null
+
+  constructor(props: ErrorBoundaryProps) {
     super(props)
     this.state = {
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
+      errorId: null,
     }
   }
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+    // Generate unique error ID for tracking
+    const errorId = `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
     return {
       hasError: true,
       error,
-      errorInfo: null
+      errorId,
     }
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo)
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Log error to console in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error Boundary caught an error:', error, errorInfo)
+    }
+
+    // Update state with error info
     this.setState({
-      error,
-      errorInfo
+      errorInfo,
     })
 
-    // Log to centralized error handler
-    if (typeof window !== 'undefined') {
-      const { errorHandler, ErrorType } = require('../lib/error-handler')
-      errorHandler.createError(
-        ErrorType.RENDER_ERROR,
-        error.message,
-        error,
-        {
+    // Report to Sentry
+    Sentry.captureException(error, {
+      tags: {
+        errorBoundary: true,
+        level: this.props.level || 'component',
+      },
+      contexts: {
+        react: {
           componentStack: errorInfo.componentStack,
-          errorBoundary: true,
-        }
-      )
-    }
-
-    // Send to Sentry for error tracking
-    Sentry.captureException(error, { 
-      contexts: { 
-        react: { 
-          componentStack: errorInfo.componentStack 
-        } 
-      } 
+        },
+      },
+      extra: {
+        errorId: this.state.errorId,
+        props: this.props.resetKeys,
+      },
     })
+
+    // Call custom error handler if provided
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo)
+    }
   }
 
-  handleReset = () => {
+  componentDidUpdate(prevProps: ErrorBoundaryProps) {
+    const { resetKeys, resetOnPropsChange } = this.props
+    const { hasError } = this.state
+
+    // Reset error boundary when resetKeys change
+    if (hasError && resetKeys && prevProps.resetKeys) {
+      const hasResetKeyChanged = resetKeys.some(
+        (key, index) => key !== prevProps.resetKeys?.[index]
+      )
+
+      if (hasResetKeyChanged) {
+        this.resetErrorBoundary()
+      }
+    }
+
+    // Reset error boundary on any prop change if enabled
+    if (hasError && resetOnPropsChange) {
+      this.resetErrorBoundary()
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.resetTimeoutId) {
+      clearTimeout(this.resetTimeoutId)
+    }
+  }
+
+  resetErrorBoundary = () => {
+    if (this.resetTimeoutId) {
+      clearTimeout(this.resetTimeoutId)
+    }
+
     this.setState({
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
+      errorId: null,
     })
+  }
+
+  handleRetry = () => {
+    this.resetErrorBoundary()
   }
 
   handleReload = () => {
     window.location.reload()
   }
 
+  handleGoHome = () => {
+    window.location.href = '/'
+  }
+
   render() {
     if (this.state.hasError) {
-      // Custom fallback UI
+      // Use custom fallback if provided
       if (this.props.fallback) {
         return this.props.fallback
       }
 
-      // Default error UI
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
-          {/* Animated Background Elements */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute -top-40 -right-40 w-80 h-80 bg-error-500/10 rounded-full blur-3xl animate-pulse"></div>
-            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-error-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          </div>
-
-          <main className="container relative z-10 flex items-center justify-center min-h-screen py-20">
-            <div className="text-center max-w-2xl px-4">
-              <div className="glass rounded-2xl p-8 md:p-12">
-                {/* Error Icon */}
-                <div className="mb-6">
-                  <div className="w-20 h-20 bg-error-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <AlertTriangle className="h-10 w-10 text-error-400" />
-                  </div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                    Oops! Something went wrong
-                  </h1>
-                  <p className="text-xl text-gray-300 mb-2">
-                    We encountered an unexpected error
-                  </p>
-                  <p className="text-gray-400 mb-6">
-                    Don't worry, our team has been notified and we're working on fixing it.
-                  </p>
-                </div>
-
-                {/* Error Details (only in development) */}
-                {process.env.NODE_ENV === 'development' && this.state.error && (
-                  <div className="mb-6 p-4 bg-error-500/10 border border-error-500/20 rounded-xl text-left">
-                    <h3 className="text-sm font-semibold text-error-400 mb-2">Error Details (Dev Only):</h3>
-                    <pre className="text-xs text-gray-300 overflow-x-auto whitespace-pre-wrap break-words">
-                      {this.state.error.toString()}
-                    </pre>
-                    {this.state.errorInfo && (
-                      <details className="mt-2">
-                        <summary className="text-xs text-gray-400 cursor-pointer hover:text-white">
-                          Component Stack
-                        </summary>
-                        <pre className="text-xs text-gray-400 mt-2 overflow-x-auto whitespace-pre-wrap">
-                          {this.state.errorInfo.componentStack}
-                        </pre>
-                      </details>
-                    )}
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button
-                    onClick={this.handleReload}
-                    className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white"
-                  >
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Reload Page
-                  </Button>
-                  <Button
-                    onClick={() => window.location.href = '/'}
-                    variant="outline"
-                    className="border-white/20 text-white hover:bg-white/10"
-                  >
-                    <Home className="h-4 w-4 mr-2" />
-                    Go Home
-                  </Button>
-                </div>
-
-                {/* Additional Help */}
-                <div className="mt-8 pt-6 border-t border-white/10">
-                  <p className="text-sm text-gray-400">
-                    If this problem persists, please{' '}
-                    <a
-                      href="mailto:support@animesenpai.com"
-                      className="text-primary-400 hover:text-primary-300 underline"
-                    >
-                      contact support
-                    </a>
-                  </p>
-                </div>
-              </div>
-            </div>
-          </main>
-        </div>
-      )
+      // Render default error UI based on level
+      return this.renderDefaultError()
     }
 
     return this.props.children
   }
+
+  private renderDefaultError() {
+    const { level = 'component', className } = this.props
+    const { error, errorInfo, errorId } = this.state
+
+    const isPageLevel = level === 'page'
+    const isSectionLevel = level === 'section'
+
+    return (
+      <div
+        className={cn(
+          'flex flex-col items-center justify-center',
+          isPageLevel && 'min-h-screen p-4 sm:p-6 lg:p-8',
+          isSectionLevel && 'min-h-[400px] p-8',
+          !isPageLevel && !isSectionLevel && 'min-h-[200px] p-4',
+          className
+        )}
+      >
+        <div
+          className={cn(
+            'glass rounded-xl p-6 sm:p-8 max-w-2xl w-full',
+            'flex flex-col items-center text-center space-y-6'
+          )}
+        >
+          {/* Error Icon */}
+          <div className="relative">
+            <div className="absolute inset-0 bg-red-500/20 rounded-full blur-xl" />
+            <div className="relative bg-red-500/10 rounded-full p-4">
+              <AlertTriangle className="h-12 w-12 sm:h-16 sm:w-16 text-red-400" />
+            </div>
+          </div>
+
+          {/* Error Message */}
+          <div className="space-y-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-white">
+              {isPageLevel
+                ? 'Oops! Something went wrong'
+                : isSectionLevel
+                  ? 'Unable to load this section'
+                  : 'Component Error'}
+            </h2>
+            <p className="text-gray-400 text-sm sm:text-base">
+              {isPageLevel
+                ? 'We encountered an unexpected error. Please try again or return home.'
+                : isSectionLevel
+                  ? 'This section encountered an error. You can try refreshing or continue using other parts of the app.'
+                  : 'This component encountered an error. The rest of the page should still work.'}
+            </p>
+          </div>
+
+          {/* Error Details (Development Only) */}
+          {process.env.NODE_ENV === 'development' && error && (
+            <details className="w-full text-left">
+              <summary className="cursor-pointer text-sm text-gray-400 hover:text-white flex items-center gap-2">
+                <ChevronDown className="h-4 w-4" />
+                Error Details (Development Only)
+              </summary>
+              <div className="mt-4 p-4 bg-red-500/10 rounded-lg border border-red-500/20">
+                <p className="text-sm text-red-400 font-mono break-all">{error.toString()}</p>
+                {errorInfo && (
+                  <pre className="mt-4 text-xs text-gray-400 overflow-auto max-h-60">
+                    {errorInfo.componentStack}
+                  </pre>
+                )}
+                {errorId && <p className="mt-2 text-xs text-gray-500">Error ID: {errorId}</p>}
+              </div>
+            </details>
+          )}
+
+          {/* Error ID (Production) */}
+          {process.env.NODE_ENV === 'production' && errorId && (
+            <p className="text-xs text-gray-500">Error ID: {errorId}</p>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-3 justify-center">
+            <Button onClick={this.handleRetry} variant="default" size="lg" className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Try Again
+            </Button>
+
+            {isPageLevel && (
+              <>
+                <Button onClick={this.handleReload} variant="outline" size="lg" className="gap-2">
+                  <RefreshCw className="h-4 w-4" />
+                  Reload Page
+                </Button>
+                <Button onClick={this.handleGoHome} variant="ghost" size="lg" className="gap-2">
+                  <Home className="h-4 w-4" />
+                  Go Home
+                </Button>
+              </>
+            )}
+
+            {isSectionLevel && (
+              <Button onClick={this.handleGoHome} variant="ghost" size="lg" className="gap-2">
+                <Home className="h-4 w-4" />
+                Go Home
+              </Button>
+            )}
+          </div>
+
+          {/* Help Text */}
+          <p className="text-xs text-gray-500 max-w-md">
+            If this problem persists, please contact support with the error ID above.
+          </p>
+        </div>
+      </div>
+    )
+  }
 }
 
-// Hook-based error boundary for functional components
+/**
+ * Hook to trigger error boundary from functional components
+ */
 export function useErrorHandler() {
-  const [error, setError] = React.useState<Error | null>(null)
+  return (error: Error) => {
+    throw error
+  }
+}
 
-  React.useEffect(() => {
-    if (error) {
-      throw error
-    }
-  }, [error])
+/**
+ * HOC to wrap components with error boundary
+ */
+export function withErrorBoundary<P extends object>(
+  Component: React.ComponentType<P>,
+  errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>
+) {
+  const WrappedComponent = (props: P) => (
+    <ErrorBoundary {...errorBoundaryProps}>
+      <Component {...props} />
+    </ErrorBoundary>
+  )
 
-  return setError
+  WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`
+
+  return WrappedComponent
 }

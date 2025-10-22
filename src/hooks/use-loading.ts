@@ -28,20 +28,20 @@ export function useLoading(initialMessage: string = 'Loading...'): UseLoadingRet
     setIsLoading(false)
   }, [])
 
-  const withLoading = useCallback(async <T,>(
-    asyncFn: () => Promise<T>,
-    message?: string
-  ): Promise<T> => {
-    try {
-      setIsLoading(true)
-      if (message) {
-        setLoadingMessage(message)
+  const withLoading = useCallback(
+    async <T>(asyncFn: () => Promise<T>, message?: string): Promise<T> => {
+      try {
+        setIsLoading(true)
+        if (message) {
+          setLoadingMessage(message)
+        }
+        return await asyncFn()
+      } finally {
+        setIsLoading(false)
       }
-      return await asyncFn()
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+    },
+    []
+  )
 
   return {
     isLoading,
@@ -142,10 +142,7 @@ export function useDebounce<T>(value: T, delay: number = 500): T {
  * useThrottle Hook
  * Throttles function calls
  */
-export function useThrottle<T extends (...args: any[]) => any>(
-  func: T,
-  delay: number = 500
-): T {
+export function useThrottle<T extends (...args: any[]) => any>(func: T, delay: number = 500): T {
   const [lastRun, setLastRun] = useState(Date.now())
 
   return ((...args: any[]) => {
@@ -156,4 +153,3 @@ export function useThrottle<T extends (...args: any[]) => any>(
     }
   }) as T
 }
-

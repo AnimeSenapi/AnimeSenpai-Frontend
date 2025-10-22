@@ -2,15 +2,15 @@
 
 import { ReactNode } from 'react'
 import { Button } from './button'
-import { 
-  AlertTriangle, 
-  RefreshCw, 
-  Home, 
-  WifiOff, 
-  ServerCrash, 
+import {
+  AlertTriangle,
+  RefreshCw,
+  Home,
+  WifiOff,
+  ServerCrash,
   Lock,
   Search,
-  FileQuestion
+  FileQuestion,
 } from 'lucide-react'
 import { ErrorType, AppError } from '../../lib/error-handler'
 
@@ -61,12 +61,12 @@ function getErrorIcon(error?: AppError | Error | string | null): ReactNode {
  */
 function getErrorMessage(error?: AppError | Error | string | null): string {
   if (!error) return 'Something went wrong'
-  
+
   if (typeof error === 'string') return error
-  
+
   if ('userMessage' in error && error.userMessage) return error.userMessage
   if ('message' in error) return error.message
-  
+
   return 'Something went wrong'
 }
 
@@ -75,62 +75,79 @@ function getErrorMessage(error?: AppError | Error | string | null): string {
  */
 function getErrorSuggestions(error?: AppError | Error | string | null): string[] {
   if (!error) return []
-  
-  const errorMessage = typeof error === 'string' ? error : 
-                      ('userMessage' in error ? error.userMessage : 
-                       ('message' in error ? error.message : ''))
-  
+
+  const errorMessage =
+    typeof error === 'string'
+      ? error
+      : 'userMessage' in error
+        ? error.userMessage
+        : 'message' in error
+          ? error.message
+          : ''
+
   const suggestions: string[] = []
-  
+
   // Network errors
-  if (errorMessage.includes('network') || errorMessage.includes('connection') || errorMessage.includes('offline')) {
+  if (
+    errorMessage?.includes('network') ||
+    errorMessage?.includes('connection') ||
+    errorMessage?.includes('offline')
+  ) {
     suggestions.push('Check your internet connection')
     suggestions.push('Try refreshing the page')
     suggestions.push('Check if other websites are working')
   }
-  
+
   // Authentication errors
-  if (errorMessage.includes('sign in') || errorMessage.includes('session') || errorMessage.includes('expired')) {
+  if (
+    errorMessage?.includes('sign in') ||
+    errorMessage?.includes('session') ||
+    errorMessage?.includes('expired')
+  ) {
     suggestions.push('Try signing in again')
     suggestions.push('Clear your browser cache')
     suggestions.push('Check if cookies are enabled')
   }
-  
+
   // Not found errors
-  if (errorMessage.includes('not found')) {
+  if (errorMessage?.includes('not found')) {
     suggestions.push('Check if the URL is correct')
     suggestions.push('The item may have been deleted')
     suggestions.push('Try searching for it instead')
   }
-  
+
   // Permission errors
-  if (errorMessage.includes('permission') || errorMessage.includes('forbidden') || errorMessage.includes('blocked')) {
+  if (
+    errorMessage?.includes('permission') ||
+    errorMessage?.includes('forbidden') ||
+    errorMessage?.includes('blocked')
+  ) {
     suggestions.push('You may not have permission to perform this action')
     suggestions.push('Try signing in with a different account')
     suggestions.push('Contact support if you believe this is an error')
   }
-  
+
   // Server errors
-  if (errorMessage.includes('server') || errorMessage.includes('temporarily unavailable')) {
+  if (errorMessage?.includes('server') || errorMessage?.includes('temporarily unavailable')) {
     suggestions.push('Our servers may be experiencing issues')
     suggestions.push('Please try again in a few minutes')
     suggestions.push('Check our status page for updates')
   }
-  
+
   // Validation errors
-  if (errorMessage.includes('invalid') || errorMessage.includes('check your input')) {
+  if (errorMessage?.includes('invalid') || errorMessage?.includes('check your input')) {
     suggestions.push('Double-check your input')
     suggestions.push('Make sure all required fields are filled')
     suggestions.push('Check for any formatting errors')
   }
-  
+
   // Rate limiting
-  if (errorMessage.includes('too many requests')) {
+  if (errorMessage?.includes('too many requests')) {
     suggestions.push('Please wait a moment before trying again')
-    suggestions.push('You\'re making requests too quickly')
+    suggestions.push("You're making requests too quickly")
     suggestions.push('Slow down and try again in a minute')
   }
-  
+
   return suggestions
 }
 
@@ -158,7 +175,9 @@ export function ErrorState({
   // Full page error
   if (variant === 'full') {
     return (
-      <div className={`min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden flex items-center justify-center p-4 ${className}`}>
+      <div
+        className={`min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden flex items-center justify-center p-4 ${className}`}
+      >
         {/* Background Effects */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-error-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -204,7 +223,7 @@ export function ErrorState({
               )}
               {showHome && (
                 <Button
-                  onClick={onHome || (() => window.location.href = '/dashboard')}
+                  onClick={onHome || (() => (window.location.href = '/dashboard'))}
                   variant="outline"
                   className="border-white/20 text-white hover:bg-white/10"
                 >
@@ -222,7 +241,9 @@ export function ErrorState({
   // Compact error (for small spaces)
   if (variant === 'compact') {
     return (
-      <div className={`flex items-center gap-3 p-4 bg-error-500/10 border border-error-500/20 rounded-lg ${className}`}>
+      <div
+        className={`flex items-center gap-3 p-4 bg-error-500/10 border border-error-500/20 rounded-lg ${className}`}
+      >
         <AlertTriangle className="h-5 w-5 text-error-400 flex-shrink-0" />
         <p className="text-error-300 text-sm flex-1">{errorMessage}</p>
         {showRetry && onRetry && (
@@ -280,7 +301,7 @@ export function ErrorState({
           )}
           {showHome && (
             <Button
-              onClick={onHome || (() => window.location.href = '/dashboard')}
+              onClick={onHome || (() => (window.location.href = '/dashboard'))}
               variant="outline"
               className="border-white/20 text-white hover:bg-white/10"
             >
@@ -356,7 +377,7 @@ export function EmptyState({
         </div>
         <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
         <p className="text-gray-400 mb-6">{message}</p>
-        
+
         {/* Helpful Suggestions */}
         {suggestions && suggestions.length > 0 && (
           <div className="mb-6 text-left bg-white/5 rounded-lg p-4 border border-white/10">
@@ -396,4 +417,3 @@ export function EmptyState({
     </div>
   )
 }
-

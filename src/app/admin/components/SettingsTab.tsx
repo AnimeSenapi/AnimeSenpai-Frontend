@@ -1,19 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { 
-  Settings, 
-  Bell, 
-  Lock, 
-  Globe, 
+import {
+  Settings,
+  Bell,
+  Lock,
+  Globe,
   Eye,
   EyeOff,
   Save,
   RotateCcw,
   Shield,
-  Mail,
   BarChart,
-  AlertTriangle
+  AlertTriangle,
 } from 'lucide-react'
 import { Button } from '../../../components/ui/button'
 
@@ -89,12 +88,14 @@ export function SettingsTab() {
       enableAnalytics: false,
       googleAnalyticsId: '',
       enableErrorTracking: false,
-    }
+    },
   })
-  
-  const [loading, setLoading] = useState(false)
+
+  const [_loading, setLoading] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
-  const [activeSection, setActiveSection] = useState<'general' | 'features' | 'security' | 'notifications' | 'analytics'>('general')
+  const [activeSection, setActiveSection] = useState<
+    'general' | 'features' | 'security' | 'notifications' | 'analytics'
+  >('general')
   const [showPassword, setShowPassword] = useState(false)
 
   // Load settings from backend
@@ -103,7 +104,7 @@ export function SettingsTab() {
       try {
         setLoading(true)
         const { apiGetSettings } = await import('../../lib/api')
-        const loadedSettings = await apiGetSettings() as any
+        const loadedSettings = (await apiGetSettings()) as any
         setSettings(loadedSettings)
       } catch (error: any) {
         console.error('Failed to load settings:', error)
@@ -112,20 +113,20 @@ export function SettingsTab() {
         setLoading(false)
       }
     }
-    
+
     loadSettings()
   }, [])
 
   const handleSave = async () => {
     try {
       setSaveStatus('saving')
-      
+
       const { apiSaveSettings } = await import('../../lib/api')
       await apiSaveSettings(settings as any)
-      
+
       setSaveStatus('saved')
       setTimeout(() => setSaveStatus('idle'), 2000)
-      
+
       alert('Settings saved successfully!')
     } catch (error: any) {
       setSaveStatus('error')
@@ -137,7 +138,7 @@ export function SettingsTab() {
     if (!confirm('Are you sure you want to reset all settings to defaults?')) {
       return
     }
-    
+
     // Reset to defaults
     setSettings({
       general: {
@@ -170,17 +171,17 @@ export function SettingsTab() {
         enableAnalytics: false,
         googleAnalyticsId: '',
         enableErrorTracking: false,
-      }
+      },
     })
   }
 
   const updateSetting = (section: keyof SiteSettings, key: string, value: any) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       [section]: {
         ...prev[section],
-        [key]: value
-      }
+        [key]: value,
+      },
     }))
   }
 
@@ -214,7 +215,11 @@ export function SettingsTab() {
             className="px-4 py-2 bg-primary-500/20 border border-primary-500/30 text-primary-300 hover:bg-primary-500/30 rounded-lg flex items-center gap-2"
           >
             <Save className="h-4 w-4" />
-            {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved!' : 'Save Changes'}
+            {saveStatus === 'saving'
+              ? 'Saving...'
+              : saveStatus === 'saved'
+                ? 'Saved!'
+                : 'Save Changes'}
           </Button>
         </div>
       </div>
@@ -267,7 +272,9 @@ export function SettingsTab() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Site Description</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Site Description
+                  </label>
                   <textarea
                     value={settings.general.siteDescription}
                     onChange={(e) => updateSetting('general', 'siteDescription', e.target.value)}
@@ -285,7 +292,9 @@ export function SettingsTab() {
                     <input
                       type="checkbox"
                       checked={settings.general.maintenanceMode}
-                      onChange={(e) => updateSetting('general', 'maintenanceMode', e.target.checked)}
+                      onChange={(e) =>
+                        updateSetting('general', 'maintenanceMode', e.target.checked)
+                      }
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
@@ -301,7 +310,9 @@ export function SettingsTab() {
                     <input
                       type="checkbox"
                       checked={settings.general.allowRegistration}
-                      onChange={(e) => updateSetting('general', 'allowRegistration', e.target.checked)}
+                      onChange={(e) =>
+                        updateSetting('general', 'allowRegistration', e.target.checked)
+                      }
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-success-500"></div>
@@ -335,13 +346,17 @@ export function SettingsTab() {
                   <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
                     <div>
                       <p className="font-medium text-white">Social Features</p>
-                      <p className="text-sm text-gray-400">Following, feeds, and social interactions</p>
+                      <p className="text-sm text-gray-400">
+                        Following, feeds, and social interactions
+                      </p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
                         checked={settings.features.enableSocialFeatures}
-                        onChange={(e) => updateSetting('features', 'enableSocialFeatures', e.target.checked)}
+                        onChange={(e) =>
+                          updateSetting('features', 'enableSocialFeatures', e.target.checked)
+                        }
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
@@ -357,7 +372,9 @@ export function SettingsTab() {
                       <input
                         type="checkbox"
                         checked={settings.features.enableRecommendations}
-                        onChange={(e) => updateSetting('features', 'enableRecommendations', e.target.checked)}
+                        onChange={(e) =>
+                          updateSetting('features', 'enableRecommendations', e.target.checked)
+                        }
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
@@ -373,7 +390,9 @@ export function SettingsTab() {
                       <input
                         type="checkbox"
                         checked={settings.features.enableComments}
-                        onChange={(e) => updateSetting('features', 'enableComments', e.target.checked)}
+                        onChange={(e) =>
+                          updateSetting('features', 'enableComments', e.target.checked)
+                        }
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
@@ -389,7 +408,9 @@ export function SettingsTab() {
                       <input
                         type="checkbox"
                         checked={settings.features.enableReviews}
-                        onChange={(e) => updateSetting('features', 'enableReviews', e.target.checked)}
+                        onChange={(e) =>
+                          updateSetting('features', 'enableReviews', e.target.checked)
+                        }
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
@@ -407,19 +428,25 @@ export function SettingsTab() {
                     <Lock className="h-5 w-5 text-primary-400" />
                     Security Settings
                   </h3>
-                  <p className="text-sm text-gray-400">Manage authentication and security policies</p>
+                  <p className="text-sm text-gray-400">
+                    Manage authentication and security policies
+                  </p>
                 </div>
 
                 <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
                   <div>
                     <p className="font-medium text-white">Email Verification</p>
-                    <p className="text-sm text-gray-400">Require email verification for new accounts</p>
+                    <p className="text-sm text-gray-400">
+                      Require email verification for new accounts
+                    </p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
                       checked={settings.general.requireEmailVerification}
-                      onChange={(e) => updateSetting('general', 'requireEmailVerification', e.target.checked)}
+                      onChange={(e) =>
+                        updateSetting('general', 'requireEmailVerification', e.target.checked)
+                      }
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
@@ -435,7 +462,9 @@ export function SettingsTab() {
                     <input
                       type="checkbox"
                       checked={settings.security.enableTwoFactor}
-                      onChange={(e) => updateSetting('security', 'enableTwoFactor', e.target.checked)}
+                      onChange={(e) =>
+                        updateSetting('security', 'enableTwoFactor', e.target.checked)
+                      }
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
@@ -443,29 +472,41 @@ export function SettingsTab() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Session Timeout (days)</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Session Timeout (days)
+                  </label>
                   <input
                     type="number"
                     value={settings.security.sessionTimeout}
-                    onChange={(e) => updateSetting('security', 'sessionTimeout', parseInt(e.target.value))}
+                    onChange={(e) =>
+                      updateSetting('security', 'sessionTimeout', parseInt(e.target.value))
+                    }
                     min={1}
                     max={365}
                     className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Users will be logged out after this many days</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Users will be logged out after this many days
+                  </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Max Login Attempts</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Max Login Attempts
+                  </label>
                   <input
                     type="number"
                     value={settings.security.maxLoginAttempts}
-                    onChange={(e) => updateSetting('security', 'maxLoginAttempts', parseInt(e.target.value))}
+                    onChange={(e) =>
+                      updateSetting('security', 'maxLoginAttempts', parseInt(e.target.value))
+                    }
                     min={3}
                     max={10}
                     className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Account will be locked after this many failed attempts</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Account will be locked after this many failed attempts
+                  </p>
                 </div>
               </div>
             )}
@@ -490,7 +531,9 @@ export function SettingsTab() {
                     <input
                       type="checkbox"
                       checked={settings.notifications.enableEmailNotifications}
-                      onChange={(e) => updateSetting('notifications', 'enableEmailNotifications', e.target.checked)}
+                      onChange={(e) =>
+                        updateSetting('notifications', 'enableEmailNotifications', e.target.checked)
+                      }
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
@@ -500,7 +543,9 @@ export function SettingsTab() {
                 {settings.notifications.enableEmailNotifications && (
                   <div className="space-y-4 p-4 bg-white/5 rounded-lg border border-white/10">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">SMTP Host</label>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        SMTP Host
+                      </label>
                       <input
                         type="text"
                         value={settings.notifications.smtpHost}
@@ -512,20 +557,28 @@ export function SettingsTab() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">SMTP Port</label>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          SMTP Port
+                        </label>
                         <input
                           type="number"
                           value={settings.notifications.smtpPort}
-                          onChange={(e) => updateSetting('notifications', 'smtpPort', parseInt(e.target.value))}
+                          onChange={(e) =>
+                            updateSetting('notifications', 'smtpPort', parseInt(e.target.value))
+                          }
                           placeholder="587"
                           className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Email Provider</label>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Email Provider
+                        </label>
                         <select
                           value={settings.notifications.emailProvider}
-                          onChange={(e) => updateSetting('notifications', 'emailProvider', e.target.value)}
+                          onChange={(e) =>
+                            updateSetting('notifications', 'emailProvider', e.target.value)
+                          }
                           className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
                         >
                           <option value="smtp">SMTP</option>
@@ -537,7 +590,9 @@ export function SettingsTab() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">SMTP Username</label>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        SMTP Username
+                      </label>
                       <input
                         type="text"
                         value={settings.notifications.smtpUser}
@@ -548,12 +603,16 @@ export function SettingsTab() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">SMTP Password</label>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        SMTP Password
+                      </label>
                       <div className="relative">
                         <input
                           type={showPassword ? 'text' : 'password'}
                           value={settings.notifications.smtpPassword}
-                          onChange={(e) => updateSetting('notifications', 'smtpPassword', e.target.value)}
+                          onChange={(e) =>
+                            updateSetting('notifications', 'smtpPassword', e.target.value)
+                          }
                           placeholder="••••••••"
                           className="w-full px-4 py-2 pr-10 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
                         />
@@ -562,7 +621,11 @@ export function SettingsTab() {
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
                         >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
                         </button>
                       </div>
                     </div>
@@ -595,21 +658,29 @@ export function SettingsTab() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 bg-white/5 rounded-lg">
                     <p className="text-sm text-gray-400 mb-1">Session Timeout</p>
-                    <p className="text-2xl font-bold text-white">{settings.security.sessionTimeout} days</p>
+                    <p className="text-2xl font-bold text-white">
+                      {settings.security.sessionTimeout} days
+                    </p>
                   </div>
                   <div className="p-4 bg-white/5 rounded-lg">
                     <p className="text-sm text-gray-400 mb-1">Max Login Attempts</p>
-                    <p className="text-2xl font-bold text-white">{settings.security.maxLoginAttempts}</p>
+                    <p className="text-2xl font-bold text-white">
+                      {settings.security.maxLoginAttempts}
+                    </p>
                   </div>
                   <div className="p-4 bg-white/5 rounded-lg">
                     <p className="text-sm text-gray-400 mb-1">Email Verification</p>
-                    <p className={`text-sm font-bold ${settings.general.requireEmailVerification ? 'text-success-400' : 'text-error-400'}`}>
+                    <p
+                      className={`text-sm font-bold ${settings.general.requireEmailVerification ? 'text-success-400' : 'text-error-400'}`}
+                    >
                       {settings.general.requireEmailVerification ? 'Enabled' : 'Disabled'}
                     </p>
                   </div>
                   <div className="p-4 bg-white/5 rounded-lg">
                     <p className="text-sm text-gray-400 mb-1">Two-Factor Auth</p>
-                    <p className={`text-sm font-bold ${settings.security.enableTwoFactor ? 'text-success-400' : 'text-error-400'}`}>
+                    <p
+                      className={`text-sm font-bold ${settings.security.enableTwoFactor ? 'text-success-400' : 'text-error-400'}`}
+                    >
                       {settings.security.enableTwoFactor ? 'Enabled' : 'Disabled'}
                     </p>
                   </div>
@@ -637,7 +708,9 @@ export function SettingsTab() {
                     <input
                       type="checkbox"
                       checked={settings.analytics.enableAnalytics}
-                      onChange={(e) => updateSetting('analytics', 'enableAnalytics', e.target.checked)}
+                      onChange={(e) =>
+                        updateSetting('analytics', 'enableAnalytics', e.target.checked)
+                      }
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
@@ -646,15 +719,21 @@ export function SettingsTab() {
 
                 {settings.analytics.enableAnalytics && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Google Analytics ID</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Google Analytics ID
+                    </label>
                     <input
                       type="text"
                       value={settings.analytics.googleAnalyticsId}
-                      onChange={(e) => updateSetting('analytics', 'googleAnalyticsId', e.target.value)}
+                      onChange={(e) =>
+                        updateSetting('analytics', 'googleAnalyticsId', e.target.value)
+                      }
                       placeholder="G-XXXXXXXXXX"
                       className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Your Google Analytics measurement ID</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Your Google Analytics measurement ID
+                    </p>
                   </div>
                 )}
 
@@ -667,7 +746,9 @@ export function SettingsTab() {
                     <input
                       type="checkbox"
                       checked={settings.analytics.enableErrorTracking}
-                      onChange={(e) => updateSetting('analytics', 'enableErrorTracking', e.target.checked)}
+                      onChange={(e) =>
+                        updateSetting('analytics', 'enableErrorTracking', e.target.checked)
+                      }
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
@@ -681,20 +762,24 @@ export function SettingsTab() {
 
       {/* Save Status Footer */}
       {saveStatus !== 'idle' && (
-        <div className={`p-4 rounded-lg border ${
-          saveStatus === 'saved' 
-            ? 'bg-success-500/10 border-success-500/30' 
-            : saveStatus === 'error'
-            ? 'bg-error-500/10 border-error-500/30'
-            : 'bg-primary-500/10 border-primary-500/30'
-        }`}>
-          <p className={`text-sm font-medium ${
-            saveStatus === 'saved' 
-              ? 'text-success-300' 
+        <div
+          className={`p-4 rounded-lg border ${
+            saveStatus === 'saved'
+              ? 'bg-success-500/10 border-success-500/30'
               : saveStatus === 'error'
-              ? 'text-error-300'
-              : 'text-primary-300'
-          }`}>
+                ? 'bg-error-500/10 border-error-500/30'
+                : 'bg-primary-500/10 border-primary-500/30'
+          }`}
+        >
+          <p
+            className={`text-sm font-medium ${
+              saveStatus === 'saved'
+                ? 'text-success-300'
+                : saveStatus === 'error'
+                  ? 'text-error-300'
+                  : 'text-primary-300'
+            }`}
+          >
             {saveStatus === 'saved' && '✓ Settings saved successfully!'}
             {saveStatus === 'error' && '✗ Failed to save settings'}
             {saveStatus === 'saving' && '⏳ Saving settings...'}

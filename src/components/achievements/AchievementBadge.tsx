@@ -17,7 +17,7 @@ export function AchievementBadge({
   unlocked,
   progress = 0,
   size = 'md',
-  showProgress = false
+  showProgress = false,
 }: AchievementBadgeProps) {
   const Icon = achievement.icon
   const tierInfo = TIER_INFO[achievement.tier]
@@ -26,18 +26,18 @@ export function AchievementBadge({
     sm: {
       container: 'w-16 h-16',
       icon: 'h-6 w-6',
-      badge: 'text-[10px] px-1.5 py-0.5'
+      badge: 'text-[10px] px-1.5 py-0.5',
     },
     md: {
       container: 'w-20 h-20',
       icon: 'h-8 w-8',
-      badge: 'text-xs px-2 py-0.5'
+      badge: 'text-xs px-2 py-0.5',
     },
     lg: {
       container: 'w-24 h-24',
       icon: 'h-10 w-10',
-      badge: 'text-sm px-2 py-1'
-    }
+      badge: 'text-sm px-2 py-1',
+    },
   }
 
   const sizeConfig = sizes[size]
@@ -62,10 +62,7 @@ export function AchievementBadge({
 
         {/* Progress Ring (for locked achievements) */}
         {!unlocked && showProgress && progress > 0 && (
-          <svg
-            className="absolute inset-0 w-full h-full -rotate-90"
-            viewBox="0 0 100 100"
-          >
+          <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
             <circle
               cx="50"
               cy="50"
@@ -109,7 +106,7 @@ export function AchievementBadge({
             {achievement.name}
           </h4>
           <p className="text-xs text-gray-400 mb-2">{achievement.description}</p>
-          
+
           {!unlocked && showProgress && (
             <div className="mt-2">
               <div className="flex justify-between text-xs mb-1">
@@ -135,4 +132,3 @@ export function AchievementBadge({
     </div>
   )
 }
-

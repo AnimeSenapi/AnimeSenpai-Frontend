@@ -4,11 +4,11 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '../../components/ui/button'
 import { Badge } from '../../components/ui/badge'
-import { 
-  ChevronDown, 
-  Search, 
-  HelpCircle, 
-  Mail, 
+import {
+  ChevronDown,
+  Search,
+  HelpCircle,
+  Mail,
   BookOpen,
   User,
   Star,
@@ -16,8 +16,7 @@ import {
   Shield,
   Settings,
   Zap,
-  Heart,
-  MessageCircle
+  MessageCircle,
 } from 'lucide-react'
 
 interface FAQItem {
@@ -31,143 +30,176 @@ const faqs: FAQItem[] = [
   {
     category: 'Getting Started',
     question: 'What is AnimeSenpai?',
-    answer: 'AnimeSenpai is your ultimate anime companion! Track what you watch, discover new favorites based on your tastes, rate and review anime, and connect with other anime fans. We use advanced ML recommendations to help you find your next favorite show.'
+    answer:
+      'AnimeSenpai is your ultimate anime companion! Track what you watch, discover new favorites based on your tastes, rate and review anime, and connect with other anime fans. We use advanced ML recommendations to help you find your next favorite show.',
   },
   {
     category: 'Getting Started',
     question: 'How do I create an account?',
-    answer: 'Click "Sign Up" in the top right corner, enter your email, create a username and password, and verify your email. After that, you\'ll go through a quick onboarding to help us understand your anime preferences!'
+    answer:
+      'Click "Sign Up" in the top right corner, enter your email, create a username and password, and verify your email. After that, you\'ll go through a quick onboarding to help us understand your anime preferences!',
   },
   {
     category: 'Getting Started',
     question: 'Is AnimeSenpai free?',
-    answer: 'Yes! AnimeSenpai is completely free to use. All features including recommendations, list management, and social features are available at no cost.'
+    answer:
+      'Yes! AnimeSenpai is completely free to use. All features including recommendations, list management, and social features are available at no cost.',
   },
-  
+
   // Account & Profile
   {
     category: 'Account & Profile',
     question: 'How do I change my username?',
-    answer: 'Go to Settings → Profile tab and update your username. Make sure it\'s unique and at least 2 characters long.'
+    answer:
+      "Go to Settings → Profile tab and update your username. Make sure it's unique and at least 2 characters long.",
   },
   {
     category: 'Account & Profile',
     question: 'How do I upload an avatar?',
-    answer: 'Go to your Profile page (click your avatar in the navbar → "Profile"), hover over your avatar, and click the camera icon. Choose an image file (max 2MB) and it will upload automatically!'
+    answer:
+      'Go to your Profile page (click your avatar in the navbar → "Profile"), hover over your avatar, and click the camera icon. Choose an image file (max 2MB) and it will upload automatically!',
   },
   {
     category: 'Account & Profile',
     question: 'Can I reset my password?',
-    answer: 'Yes! On the sign-in page, click "Forgot password?" and enter your email. We\'ll send you a reset link that\'s valid for 1 hour.'
+    answer:
+      'Yes! On the sign-in page, click "Forgot password?" and enter your email. We\'ll send you a reset link that\'s valid for 1 hour.',
   },
   {
     category: 'Account & Profile',
     question: 'How do I make my profile private?',
-    answer: 'Go to Settings → Privacy tab and adjust what information is visible on your public profile (watch history, favorites, ratings, etc.).'
+    answer:
+      'Go to Settings → Privacy tab and adjust what information is visible on your public profile (watch history, favorites, ratings, etc.).',
   },
-  
+
   // Anime Lists
   {
     category: 'Anime Lists',
     question: 'How do I add anime to my list?',
-    answer: 'Click on any anime card to view its details, then click "Add to List". Choose a status (Watching, Completed, Plan to Watch, or Favorite) and it will be added to your collection!'
+    answer:
+      'Click on any anime card to view its details, then click "Add to List". Choose a status (Watching, Completed, Plan to Watch, or Favorite) and it will be added to your collection!',
   },
   {
     category: 'Anime Lists',
-    question: 'What\'s the difference between Favorite and other statuses?',
-    answer: 'Favorite is for anime you absolutely love! It\'s separate from your watch status. You can mark an anime as both "Completed" and "Favorite".'
+    question: "What's the difference between Favorite and other statuses?",
+    answer:
+      'Favorite is for anime you absolutely love! It\'s separate from your watch status. You can mark an anime as both "Completed" and "Favorite".',
   },
   {
     category: 'Anime Lists',
     question: 'How do I rate anime?',
-    answer: 'Add the anime to your list first, then click "Rate Anime" on the detail page. You can rate from 1-10 stars and optionally write a review!'
+    answer:
+      'Add the anime to your list first, then click "Rate Anime" on the detail page. You can rate from 1-10 stars and optionally write a review!',
   },
   {
     category: 'Anime Lists',
     question: 'Can I search my own list?',
-    answer: 'Yes! Go to "My List" and use the search bar to find anime by title or studio. You can also filter by category and sort by different criteria.'
+    answer:
+      'Yes! Go to "My List" and use the search bar to find anime by title or studio. You can also filter by category and sort by different criteria.',
   },
-  
+
   // Recommendations
   {
     category: 'Recommendations',
     question: 'How do recommendations work?',
-    answer: 'We use a triple-hybrid system: content-based filtering (genre/tags), collaborative filtering (similar users), and ML embeddings (semantic similarity). The more anime you add and rate, the better your recommendations become!'
+    answer:
+      'We use a triple-hybrid system: content-based filtering (genre/tags), collaborative filtering (similar users), and ML embeddings (semantic similarity). The more anime you add and rate, the better your recommendations become!',
   },
   {
     category: 'Recommendations',
     question: 'Why am I seeing the same recommendations?',
-    answer: 'Try rating more anime! Our algorithm improves as you interact with the platform. Also complete the onboarding if you haven\'t already - it helps us understand your preferences.'
+    answer:
+      "Try rating more anime! Our algorithm improves as you interact with the platform. Also complete the onboarding if you haven't already - it helps us understand your preferences.",
   },
   {
     category: 'Recommendations',
     question: 'Can I see what my friends are watching?',
-    answer: 'Yes! Follow other users and you\'ll see "Your Friends Are Watching" on your dashboard. This shows popular anime among people you follow.'
+    answer:
+      'Yes! Follow other users and you\'ll see "Your Friends Are Watching" on your dashboard. This shows popular anime among people you follow.',
   },
-  
+
   // Features
   {
     category: 'Features',
     question: 'Where can I watch the anime?',
-    answer: 'On each anime detail page, we show "Where to Watch" with links to streaming platforms like Crunchyroll, Funimation, Netflix, and Hulu (when available).'
+    answer:
+      'On each anime detail page, we show "Where to Watch" with links to streaming platforms like Crunchyroll, Funimation, Netflix, and Hulu (when available).',
   },
   {
     category: 'Features',
     question: 'Can I see anime trailers?',
-    answer: 'Yes! Many anime have trailers on their detail pages. Just click play on the trailer preview at the top of the page.'
+    answer:
+      'Yes! Many anime have trailers on their detail pages. Just click play on the trailer preview at the top of the page.',
   },
   {
     category: 'Features',
     question: 'How do I find related seasons?',
-    answer: 'When viewing an anime, scroll down to the "More from this Series" section to see other seasons and related content from the same franchise.'
+    answer:
+      'When viewing an anime, scroll down to the "More from this Series" section to see other seasons and related content from the same franchise.',
   },
   {
     category: 'Features',
-    question: 'Can I see other users\' profiles?',
-    answer: 'Yes! Click on any username to view their public profile. You can see their stats, favorites, and recent activity (depending on their privacy settings).'
+    question: "Can I see other users' profiles?",
+    answer:
+      'Yes! Click on any username to view their public profile. You can see their stats, favorites, and recent activity (depending on their privacy settings).',
   },
-  
+
   // Technical
   {
     category: 'Troubleshooting',
-    question: 'Why can\'t I sign in?',
-    answer: 'Make sure you\'ve verified your email address. Check your spam folder for the verification email. If you forgot your password, use the "Forgot password?" link on the sign-in page.'
+    question: "Why can't I sign in?",
+    answer:
+      'Make sure you\'ve verified your email address. Check your spam folder for the verification email. If you forgot your password, use the "Forgot password?" link on the sign-in page.',
   },
   {
     category: 'Troubleshooting',
-    question: 'Images aren\'t loading. What should I do?',
-    answer: 'Try refreshing the page. If the problem persists, it might be a temporary connection issue with our image server. Images should load within a few seconds.'
+    question: "Images aren't loading. What should I do?",
+    answer:
+      'Try refreshing the page. If the problem persists, it might be a temporary connection issue with our image server. Images should load within a few seconds.',
   },
   {
     category: 'Troubleshooting',
     question: 'The site is running slow. How can I fix it?',
-    answer: 'Try clearing your browser cache and cookies. Also ensure you have a stable internet connection. If problems persist, try a different browser.'
+    answer:
+      'Try clearing your browser cache and cookies. Also ensure you have a stable internet connection. If problems persist, try a different browser.',
   },
   {
     category: 'Troubleshooting',
     question: 'I found a bug. How do I report it?',
-    answer: 'We appreciate your feedback! Please email us with details about the bug, what you were doing when it occurred, and your browser/device information.'
+    answer:
+      'We appreciate your feedback! Please email us with details about the bug, what you were doing when it occurred, and your browser/device information.',
   },
-  
+
   // Privacy & Security
   {
     category: 'Privacy & Security',
     question: 'Is my data safe?',
-    answer: 'Yes! We use industry-standard encryption for passwords, secure authentication tokens, and follow GDPR guidelines. We never sell your data or share it with third parties.'
+    answer:
+      'Yes! We use industry-standard encryption for passwords, secure authentication tokens, and follow GDPR guidelines. We never sell your data or share it with third parties.',
   },
   {
     category: 'Privacy & Security',
     question: 'Can I delete my account?',
-    answer: 'Yes. Go to Settings → Security tab and you\'ll find the option to delete your account. This action is permanent and cannot be undone.'
+    answer:
+      "Yes. Go to Settings → Security tab and you'll find the option to delete your account. This action is permanent and cannot be undone.",
   },
   {
     category: 'Privacy & Security',
     question: 'Do you use cookies?',
-    answer: 'Yes, we use essential cookies for authentication and user preferences. We also use analytics cookies (with your consent) to improve the platform. You can manage cookie preferences in the banner at the bottom of the page.'
-  }
+    answer:
+      'Yes, we use essential cookies for authentication and user preferences. We also use analytics cookies (with your consent) to improve the platform. You can manage cookie preferences in the banner at the bottom of the page.',
+  },
 ]
 
-const categories = ['Getting Started', 'Account & Profile', 'Anime Lists', 'Recommendations', 'Features', 'Troubleshooting', 'Privacy & Security']
+const categories = [
+  'Getting Started',
+  'Account & Profile',
+  'Anime Lists',
+  'Recommendations',
+  'Features',
+  'Troubleshooting',
+  'Privacy & Security',
+]
 
 export default function HelpPage() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -185,11 +217,12 @@ export default function HelpPage() {
   }
 
   // Filter FAQs by search and category
-  const filteredFAQs = faqs.filter(faq => {
-    const matchesSearch = !searchQuery || 
+  const filteredFAQs = faqs.filter((faq) => {
+    const matchesSearch =
+      !searchQuery ||
       faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
       faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
-    
+
     const matchesCategory = !selectedCategory || faq.category === selectedCategory
 
     return matchesSearch && matchesCategory
@@ -199,10 +232,10 @@ export default function HelpPage() {
     'Getting Started': BookOpen,
     'Account & Profile': User,
     'Anime Lists': Bookmark,
-    'Recommendations': Star,
-    'Features': Zap,
-    'Troubleshooting': HelpCircle,
-    'Privacy & Security': Shield
+    Recommendations: Star,
+    Features: Zap,
+    Troubleshooting: HelpCircle,
+    'Privacy & Security': Shield,
   }
 
   return (
@@ -355,16 +388,14 @@ export default function HelpPage() {
                               {faq.question}
                             </h3>
                           </div>
-                          <ChevronDown 
+                          <ChevronDown
                             className={`h-5 w-5 text-gray-400 flex-shrink-0 transition-transform ${
                               isOpen ? 'transform rotate-180' : ''
                             }`}
                           />
                         </div>
                         {isOpen && (
-                          <p className="text-gray-300 mt-3 leading-relaxed">
-                            {faq.answer}
-                          </p>
+                          <p className="text-gray-300 mt-3 leading-relaxed">{faq.answer}</p>
                         )}
                       </div>
                     </button>
@@ -430,5 +461,3 @@ export default function HelpPage() {
     </div>
   )
 }
-
-

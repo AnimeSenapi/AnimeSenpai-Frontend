@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button } from './ui/button'
 import { Mail, X, Send, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
-import { useToast } from '../lib/toast-context'
+import { useToast } from './ui/toast'
 
 interface EmailVerificationBannerProps {
   email: string
@@ -23,10 +23,10 @@ export function EmailVerificationBanner({ email, onDismiss }: EmailVerificationB
   const handleResend = async () => {
     try {
       setIsResending(true)
-      
+
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003/api/trpc'
       const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
-      
+
       const response = await fetch(`${API_URL}/auth.resendVerification`, {
         method: 'POST',
         headers: {
@@ -59,9 +59,9 @@ export function EmailVerificationBanner({ email, onDismiss }: EmailVerificationB
   const handleDismiss = () => {
     setIsDismissed(true)
     onDismiss?.()
-    
+
     // Store dismissed state in localStorage (don't show again for 24 hours)
-    const dismissedUntil = Date.now() + (24 * 60 * 60 * 1000)
+    const dismissedUntil = Date.now() + 24 * 60 * 60 * 1000
     localStorage.setItem('emailVerificationBannerDismissed', dismissedUntil.toString())
   }
 
@@ -84,7 +84,8 @@ export function EmailVerificationBanner({ email, onDismiss }: EmailVerificationB
           <div className="flex-1">
             <h3 className="text-green-400 font-semibold mb-1">Email Sent!</h3>
             <p className="text-gray-300 text-sm">
-              We've sent a verification link to <strong>{email}</strong>. Check your inbox and spam folder.
+              We've sent a verification link to <strong>{email}</strong>. Check your inbox and spam
+              folder.
             </p>
           </div>
           <button
@@ -106,7 +107,8 @@ export function EmailVerificationBanner({ email, onDismiss }: EmailVerificationB
         <div className="flex-1">
           <h3 className="text-warning-400 font-semibold mb-1">Verify Your Email</h3>
           <p className="text-gray-300 text-sm mb-3">
-            Please verify your email address (<strong>{email}</strong>) to unlock all features and ensure account security.
+            Please verify your email address (<strong>{email}</strong>) to unlock all features and
+            ensure account security.
           </p>
           <div className="flex flex-col sm:flex-row gap-2">
             <Button
@@ -161,10 +163,10 @@ export function EmailVerificationPrompt({ email }: { email: string }) {
   const handleResend = async () => {
     try {
       setIsResending(true)
-      
+
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003/api/trpc'
       const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
-      
+
       const response = await fetch(`${API_URL}/auth.resendVerification`, {
         method: 'POST',
         headers: {
@@ -208,9 +210,7 @@ export function EmailVerificationPrompt({ email }: { email: string }) {
         <Mail className="h-5 w-5 text-warning-400 flex-shrink-0 mt-0.5" />
         <div className="flex-1">
           <h4 className="text-warning-400 font-semibold mb-1 text-sm">Email Not Verified</h4>
-          <p className="text-gray-400 text-xs mb-3">
-            Verify your email to unlock all features
-          </p>
+          <p className="text-gray-400 text-xs mb-3">Verify your email to unlock all features</p>
           <Button
             onClick={handleResend}
             disabled={isResending}
@@ -234,4 +234,3 @@ export function EmailVerificationPrompt({ email }: { email: string }) {
     </div>
   )
 }
-

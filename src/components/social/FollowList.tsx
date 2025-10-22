@@ -61,7 +61,7 @@ export function FollowList({ userId, type, limit = 20 }: FollowListProps) {
         `${API_URL}/${endpoint}?input=${encodeURIComponent(JSON.stringify(params))}`,
         {
           method: 'GET',
-          headers: getAuthHeaders()
+          headers: getAuthHeaders(),
         }
       )
 
@@ -91,11 +91,7 @@ export function FollowList({ userId, type, limit = 20 }: FollowListProps) {
 
   const handleFollowChange = (userId: string, isFollowing: boolean) => {
     // Update local state
-    setUsers(prevUsers =>
-      prevUsers.map(u =>
-        u.id === userId ? { ...u, isFollowing } : u
-      )
-    )
+    setUsers((prevUsers) => prevUsers.map((u) => (u.id === userId ? { ...u, isFollowing } : u)))
   }
 
   if (isLoading) {
@@ -164,16 +160,10 @@ export function FollowList({ userId, type, limit = 20 }: FollowListProps) {
                 @{user.username}
               </h3>
             </Link>
-            {user.name && (
-              <p className="text-gray-400 text-sm truncate">{user.name}</p>
-            )}
-            {user.bio && (
-              <p className="text-gray-500 text-sm mt-1 line-clamp-2">{user.bio}</p>
-            )}
+            {user.name && <p className="text-gray-400 text-sm truncate">{user.name}</p>}
+            {user.bio && <p className="text-gray-500 text-sm mt-1 line-clamp-2">{user.bio}</p>}
             {user.animeCount !== undefined && (
-              <p className="text-gray-500 text-xs mt-1">
-                {user.animeCount} anime in list
-              </p>
+              <p className="text-gray-500 text-xs mt-1">{user.animeCount} anime in list</p>
             )}
             {user.isMutual && (
               <span className="inline-flex items-center gap-1 text-xs text-primary-400 mt-1">

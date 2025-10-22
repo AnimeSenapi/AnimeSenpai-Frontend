@@ -32,17 +32,21 @@ export function SEOHead({
     }
 
     // Create or update meta tags
-    const updateMetaTag = (name: string, content: string, attribute: 'name' | 'property' = 'name') => {
+    const updateMetaTag = (
+      name: string,
+      content: string,
+      attribute: 'name' | 'property' = 'name'
+    ) => {
       if (!content) return
-      
+
       let meta = document.querySelector(`meta[${attribute}="${name}"]`) as HTMLMetaElement
-      
+
       if (!meta) {
         meta = document.createElement('meta')
         meta.setAttribute(attribute, name)
         document.head.appendChild(meta)
       }
-      
+
       meta.content = content
     }
 
@@ -76,13 +80,13 @@ export function SEOHead({
     // Update canonical
     if (canonical) {
       let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement
-      
+
       if (!link) {
         link = document.createElement('link')
         link.rel = 'canonical'
         document.head.appendChild(link)
       }
-      
+
       link.href = canonical
     }
 
@@ -116,4 +120,3 @@ export function SEOHead({
 
   return null
 }
-

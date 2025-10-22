@@ -3,14 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '../../../components/ui/button'
-import { 
-  Mail, 
-  ArrowLeft,
-  CheckCircle,
-  Send,
-  Clock,
-  Loader2
-} from 'lucide-react'
+import { Mail, ArrowLeft, Send, Clock, Loader2 } from 'lucide-react'
 import { useAuth } from '../../lib/auth-context'
 import { RequireGuest } from '../../lib/protected-route'
 
@@ -23,7 +16,7 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     clearError()
-    
+
     try {
       await forgotPassword(email)
       setIsSubmitted(true)
@@ -74,7 +67,7 @@ export default function ForgotPasswordPage() {
 
           <div className="relative z-10 w-full max-w-md">
             {/* Back Link */}
-            <Link 
+            <Link
               href="/auth/signin"
               className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
             >
@@ -87,19 +80,13 @@ export default function ForgotPasswordPage() {
               <div className="w-16 h-16 bg-green-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Send className="h-8 w-8 text-green-400" />
               </div>
-              
-              <h1 className="text-3xl font-bold text-white mb-3">
-                Check Your Inbox
-              </h1>
-              
-              <p className="text-gray-300 mb-2">
-                We've sent a password reset link to:
-              </p>
-              
-              <p className="text-primary-400 font-semibold mb-6">
-                {email}
-              </p>
-              
+
+              <h1 className="text-3xl font-bold text-white mb-3">Check Your Inbox</h1>
+
+              <p className="text-gray-300 mb-2">We've sent a password reset link to:</p>
+
+              <p className="text-primary-400 font-semibold mb-6">{email}</p>
+
               <div className="bg-primary-500/10 border border-primary-500/20 rounded-xl p-4 mb-6 text-left">
                 <p className="text-sm text-gray-300 mb-2">
                   <strong className="text-white">What to do next:</strong>
@@ -113,25 +100,23 @@ export default function ForgotPasswordPage() {
 
               <div className="space-y-3">
                 <Button
-                  onClick={() => window.location.href = 'mailto:'}
+                  onClick={() => (window.location.href = 'mailto:')}
                   variant="outline"
                   className="w-full border-white/20 text-white hover:bg-white/10"
                 >
                   <Mail className="h-4 w-4 mr-2" />
                   Open Email App
                 </Button>
-                
+
                 <div className="pt-3 border-t border-white/10">
-                  <p className="text-gray-400 text-sm mb-3">
-                    Didn't receive the email?
-                  </p>
+                  <p className="text-gray-400 text-sm mb-3">Didn't receive the email?</p>
                   {countdown > 0 ? (
                     <div className="flex items-center justify-center gap-2 text-gray-500">
                       <Clock className="h-4 w-4" />
                       <span className="text-sm">Resend in {countdown}s</span>
                     </div>
                   ) : (
-                    <button 
+                    <button
                       onClick={handleResend}
                       disabled={isLoading}
                       className="text-primary-400 hover:text-primary-300 transition-colors font-medium text-sm"
@@ -159,7 +144,7 @@ export default function ForgotPasswordPage() {
 
         <div className="relative z-10 w-full max-w-md">
           {/* Back Link */}
-          <Link 
+          <Link
             href="/auth/signin"
             className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
           >
@@ -173,12 +158,8 @@ export default function ForgotPasswordPage() {
               <div className="w-16 h-16 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Mail className="h-8 w-8 text-primary-400" />
               </div>
-              <h1 className="text-3xl font-bold text-white mb-2">
-                Forgot Password?
-              </h1>
-              <p className="text-gray-400">
-                No worries, we'll email you a reset link
-              </p>
+              <h1 className="text-3xl font-bold text-white mb-2">Forgot Password?</h1>
+              <p className="text-gray-400">No worries, we'll email you a reset link</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -187,7 +168,7 @@ export default function ForgotPasswordPage() {
                   <p className="text-red-400 text-sm">{error}</p>
                 </div>
               )}
-              
+
               {/* Email Input */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
@@ -205,9 +186,7 @@ export default function ForgotPasswordPage() {
                     required
                   />
                 </div>
-                <p className="mt-2 text-xs text-gray-500">
-                  Enter the email you used to sign up
-                </p>
+                <p className="mt-2 text-xs text-gray-500">Enter the email you used to sign up</p>
               </div>
 
               {/* Submit Button */}
@@ -233,7 +212,7 @@ export default function ForgotPasswordPage() {
               <div className="text-center pt-4 border-t border-white/10">
                 <p className="text-gray-400 text-sm">
                   Remember your password?{' '}
-                  <Link 
+                  <Link
                     href="/auth/signin"
                     className="text-primary-400 hover:text-primary-300 transition-colors font-medium"
                   >

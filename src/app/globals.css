@@ -2,11 +2,395 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Mobile Touch Optimization */
-@import '../styles/mobile-touch.css';
+/* Import iOS-specific fixes */
+@import '../styles/ios-fixes.css';
 
-/* Accessibility Enhancements */
-@import '../styles/accessibility.css';
+/* ========================================
+   Mobile Touch Optimization 
+   ======================================== */
+
+/**
+ * Mobile Touch Optimization Styles
+ * Ensures all interactive elements meet WCAG 2.1 AAA touch target requirements (44x44px minimum)
+ */
+
+/* Touch-friendly button sizing for mobile */
+@media (max-width: 768px) {
+  /* Ensure all buttons meet 44px minimum height on mobile */
+  button[data-slot="button"],
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Icon-only buttons need padding to reach 44px */
+  button[data-slot="button"][class*="size-"] {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 10px;
+  }
+
+  /* Small buttons on mobile should be at least 44px */
+  button[data-slot="button"][class*="h-8"],
+  button[data-slot="button"][class*="h-9"] {
+    min-height: 44px;
+  }
+}
+
+/* Touch manipulation for better mobile interaction */
+.touch-manipulation {
+  touch-action: manipulation; /* Prevents 300ms tap delay */
+  -webkit-tap-highlight-color: transparent; /* Removes blue highlight on tap */
+}
+
+/* Active state feedback for touch */
+@media (max-width: 768px) {
+  button:active,
+  a:active,
+  [role="button"]:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease-out;
+  }
+}
+
+/* Ensure links in mobile menu are touch-friendly */
+@media (max-width: 768px) {
+  nav a,
+  .mobile-menu a {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* Safe area support for iPhone X+ (notch, dynamic island, bottom bar) */
+:root {
+  /* Define safe area insets (iOS will override with actual values) */
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+}
+
+/* Apply safe area padding to fixed headers */
+.safe-area-top {
+  padding-top: max(1rem, var(--safe-area-inset-top));
+}
+
+/* Apply safe area padding to fixed footers/bottom elements */
+.safe-area-bottom {
+  padding-bottom: max(1rem, var(--safe-area-inset-bottom));
+}
+
+/* Apply safe area padding to left side (landscape) */
+.safe-area-left {
+  padding-left: max(1rem, var(--safe-area-inset-left));
+}
+
+/* Apply safe area padding to right side (landscape) */
+.safe-area-right {
+  padding-right: max(1rem, var(--safe-area-inset-right));
+}
+
+/* Full safe area padding (all sides) */
+.safe-area-all {
+  padding-top: max(1rem, var(--safe-area-inset-top));
+  padding-right: max(1rem, var(--safe-area-inset-right));
+  padding-bottom: max(1rem, var(--safe-area-inset-bottom));
+  padding-left: max(1rem, var(--safe-area-inset-left));
+}
+
+/* Fixed navbar with safe area */
+.navbar-safe {
+  padding-top: var(--safe-area-inset-top);
+  top: var(--safe-area-inset-top);
+}
+
+/* Bottom navigation with safe area */
+.bottom-nav-safe {
+  padding-bottom: var(--safe-area-inset-bottom);
+}
+
+/* Scroll padding for elements that might be hidden by notch */
+html {
+  scroll-padding-top: calc(64px + var(--safe-area-inset-top));
+}
+
+/* Touch target spacing (minimum 8px between touch targets) */
+@media (max-width: 768px) {
+  .touch-target-group > * + * {
+    margin-left: 8px;
+  }
+}
+
+/* Prevent double-tap zoom on touch targets */
+button,
+a[role="button"],
+[onclick] {
+  touch-action: manipulation;
+}
+
+/* ========================================
+   Accessibility Enhancements
+   WCAG 2.1 AA/AAA Compliance
+   ======================================== */
+
+/* Skip Navigation Links */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.focus-within\:not-sr-only:focus-within {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* Keyboard Focus Styles (WCAG 2.1 AA) */
+*:focus-visible {
+  outline: 2px solid var(--color-primary-400, #22d3ee);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Remove default browser outline */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Enhanced focus for interactive elements */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--color-primary-400, #22d3ee);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.2);
+}
+
+/* Focus for card/link components */
+[class*="group"]:focus-visible {
+  outline: 2px solid var(--color-primary-400, #22d3ee);
+  outline-offset: 4px;
+}
+
+/* High contrast focus for dark backgrounds */
+.glass:focus-within,
+.dark *:focus-visible {
+  outline-color: var(--color-primary-400, #22d3ee);
+  box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.3);
+}
+
+/* Skip links visible on focus */
+a[href^="#"]:focus {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 9999;
+  padding: 0.75rem 1.5rem;
+  background: white;
+  color: #1a1a1a;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+/* Keyboard Navigation Visual Feedback */
+button:focus-visible::before,
+a:focus-visible::before,
+[role="button"]:focus-visible::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border: 2px solid var(--color-primary-400, #22d3ee);
+  border-radius: inherit;
+  pointer-events: none;
+  animation: focusPulse 2s ease-in-out infinite;
+}
+
+@keyframes focusPulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Tab Order Optimization */
+[tabindex="-1"] {
+  outline: none;
+}
+
+/* Ensure proper tab order for main navigation */
+nav a {
+  position: relative;
+}
+
+/* Color Contrast Enhancements for WCAG AA/AAA */
+
+/* Ensure text on backgrounds meets 4.5:1 ratio (AA) or 7:1 (AAA) */
+.text-gray-400 {
+  /* Original: #9ca3af - 3.8:1 on dark bg */
+  /* Enhanced: Lighter for better contrast - meets WCAG AA for large text */
+  color: #cbd5e1 !important; /* 4.5:1 on #111827 (gray-900) */
+}
+
+.text-gray-500 {
+  /* Original: #6b7280 - 2.9:1 on dark bg */
+  /* Enhanced: Significantly lighter - meets WCAG AA */
+  color: #b4bac4 !important; /* 4.6:1 on #111827 (gray-900) */
+}
+
+.text-gray-600 {
+  /* Enhanced for better contrast */
+  color: #d1d5db !important; /* 5.2:1 on #111827 (gray-900) */
+}
+
+/* Ensure primary colors meet contrast requirements */
+.text-primary-400 {
+  color: #22d3ee !important; /* 4.5:1 on #111827 */
+}
+
+.text-primary-500 {
+  color: #06b6d4 !important; /* 4.3:1 on #111827 */
+}
+
+/* Ensure secondary colors meet contrast requirements */
+.text-secondary-400 {
+  color: #f472b6 !important; /* 4.8:1 on #111827 */
+}
+
+.text-secondary-500 {
+  color: #ec4899 !important; /* 4.6:1 on #111827 */
+}
+
+/* Links must have 3:1 contrast with surrounding text */
+a.text-primary-400 {
+  text-decoration-skip-ink: auto;
+}
+
+a.text-primary-400:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+/* Buttons with clear visual states */
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.5;
+  filter: grayscale(0.3);
+}
+
+/* Loading states should announce to screen readers */
+[aria-busy="true"] {
+  cursor: wait;
+}
+
+/* Form Accessibility */
+input[aria-invalid="true"],
+textarea[aria-invalid="true"],
+select[aria-invalid="true"] {
+  border-color: var(--color-error-500, #ef4444);
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+input:focus[aria-invalid="true"],
+textarea:focus[aria-invalid="true"] {
+  outline-color: var(--color-error-500, #ef4444);
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+}
+
+/* Ensure interactive elements have visible hover states */
+button:hover:not(:disabled),
+a:hover,
+[role="button"]:hover {
+  transition: all 0.2s ease-out;
+}
+
+/* Screen Reader Only Text */
+.sr-only-focusable:not(:focus):not(:focus-within) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  * {
+    border-color: currentColor;
+  }
+  
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    border-width: 2px;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  /* Keep only essential animations */
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+}
+
+/* Focus Trap for Modals */
+.modal-open {
+  overflow: hidden;
+}
+
+[role="dialog"] {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+
+/* Ensure modals are accessible */
+[role="dialog"]:focus {
+  outline: none;
+}
+
+[role="dialog"] > *:first-child:focus-visible {
+  outline: 2px solid var(--color-primary-400);
+}
 
 @layer base {
   :root {

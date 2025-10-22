@@ -74,16 +74,17 @@ export class PushNotificationService {
 
       // Check existing subscription
       let subscription = await this.registration.pushManager.getSubscription()
-      
+
       if (!subscription) {
         // Create new subscription
         // In production, you'd use your own VAPID public key
-        const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 
+        const vapidPublicKey =
+          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
           'BEl62iUYgUivxIkv69yViEuiBIa-Ib37J8YbpglUZdQZ-3WGPD3-JCr3d0h8lCJPdDKnVJB7UrIkHO6Tq3mUXmw'
-        
+
         subscription = await this.registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey) as BufferSource
+          applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
         })
       }
 
@@ -107,10 +108,10 @@ export class PushNotificationService {
 
     try {
       const subscription = await this.registration.pushManager.getSubscription()
-      
+
       if (subscription) {
         await subscription.unsubscribe()
-        
+
         // Remove from backend
         await this.removeSubscriptionFromBackend(subscription)
       }
@@ -130,22 +131,23 @@ export class PushNotificationService {
     if (!token) return
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
-      
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+
       const response = await fetch(`${API_URL}/notifications.subscribeToPush`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           endpoint: subscription.endpoint,
           keys: {
             p256dh: this.arrayBufferToBase64(subscription.getKey('p256dh') as ArrayBuffer),
-            auth: this.arrayBufferToBase64(subscription.getKey('auth') as ArrayBuffer)
+            auth: this.arrayBufferToBase64(subscription.getKey('auth') as ArrayBuffer),
           },
-          userAgent: navigator.userAgent
-        })
+          userAgent: navigator.userAgent,
+        }),
       })
 
       if (!response.ok) {
@@ -164,17 +166,18 @@ export class PushNotificationService {
     if (!token) return
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
-      
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+
       await fetch(`${API_URL}/notifications.unsubscribeFromPush`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          endpoint: subscription.endpoint
-        })
+          endpoint: subscription.endpoint,
+        }),
       })
     } catch (error) {
       console.error('Failed to remove subscription from backend:', error)
@@ -204,7 +207,7 @@ export class PushNotificationService {
     const bytes = new Uint8Array(buffer as ArrayBuffer)
     let binary = ''
     for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i])
+      binary += String.fromCharCode(bytes[i] ?? 0)
     }
     return window.btoa(binary)
   }
@@ -222,7 +225,7 @@ export class PushNotificationService {
         await this.registration.showNotification(title, {
           icon: '/favicon.ico',
           badge: '/favicon.ico',
-          ...options
+          ...options,
         })
       }
     } catch (error) {
@@ -235,18 +238,12 @@ export class PushNotificationService {
 export const pushNotificationService = PushNotificationService.getInstance()
 
 // Export helper functions
-export const requestNotificationPermission = () => 
-  pushNotificationService.requestPermission()
+export const requestNotificationPermission = () => pushNotificationService.requestPermission()
 
-export const subscribeToPushNotifications = () => 
-  pushNotificationService.subscribe()
+export const subscribeToPushNotifications = () => pushNotificationService.subscribe()
 
-export const unsubscribeFromPushNotifications = () => 
-  pushNotificationService.unsubscribe()
+export const unsubscribeFromPushNotifications = () => pushNotificationService.unsubscribe()
 
-export const isPushNotificationSupported = () => 
-  pushNotificationService.isSupported()
+export const isPushNotificationSupported = () => pushNotificationService.isSupported()
 
-export const getNotificationPermissionStatus = () => 
-  pushNotificationService.getPermissionStatus()
-
+export const getNotificationPermissionStatus = () => pushNotificationService.getPermissionStatus()

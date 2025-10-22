@@ -1,6 +1,6 @@
 /**
  * Skip Navigation Component
- * 
+ *
  * Provides skip links for screen reader users to bypass repetitive navigation
  * WCAG 2.1 Level A requirement
  */
@@ -25,4 +25,3 @@ export function SkipNav() {
     </div>
   )
 }
-

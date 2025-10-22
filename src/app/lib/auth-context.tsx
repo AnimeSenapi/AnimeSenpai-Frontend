@@ -1,7 +1,15 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { apiMe, clearSession, apiSignin, apiSignup, apiForgotPassword, apiResetPassword, apiVerifyEmail } from './api'
+import {
+  apiMe,
+  clearSession,
+  apiSignin,
+  apiSignup,
+  apiForgotPassword,
+  apiResetPassword,
+  apiVerifyEmail,
+} from './api'
 import { logger, captureException } from '../../lib/logger'
 
 export interface User {
@@ -68,76 +76,83 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const isAuthenticated = !!user
 
-    // Initialize auth context on mount
-    useEffect(() => {
-      const initAuth = async () => {
-        // Check both localStorage and sessionStorage for tokens
-        const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
-        
-        if (accessToken) {
-          try {
-            setIsLoading(true)
-            const userData = await apiMe() as any
-            setUser(userData)
-          } catch (err: unknown) {
-            // Only clear tokens if it's a token-related error, not a network error
-            const errorMessage = err instanceof Error ? err.message : ''
-            if (errorMessage.includes('TOKEN_INVALID') || errorMessage.includes('UNAUTHORIZED') || errorMessage.includes('expired')) {
-              clearSession()
-            }
-          } finally {
-            setIsLoading(false)
+  // Initialize auth context on mount
+  useEffect(() => {
+    const initAuth = async () => {
+      // Check both localStorage and sessionStorage for tokens
+      const accessToken =
+        localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
+
+      if (accessToken) {
+        try {
+          setIsLoading(true)
+          const userData = (await apiMe()) as any
+          setUser(userData)
+        } catch (err: unknown) {
+          // Only clear tokens if it's a token-related error, not a network error
+          const errorMessage = err instanceof Error ? err.message : ''
+          if (
+            errorMessage.includes('TOKEN_INVALID') ||
+            errorMessage.includes('UNAUTHORIZED') ||
+            errorMessage.includes('expired')
+          ) {
+            clearSession()
           }
-        } else {
-          // No token found, set loading to false immediately
+        } finally {
           setIsLoading(false)
         }
+      } else {
+        // No token found, set loading to false immediately
+        setIsLoading(false)
       }
-      
-      initAuth()
-    }, [])
-    
-    // Proactive token refresh - refresh token every 45 minutes to prevent expiration
-    useEffect(() => {
-      if (!isAuthenticated) return
-      
-      const refreshInterval = 45 * 60 * 1000 // 45 minutes (tokens expire in 1 hour)
-      
-      const intervalId = setInterval(async () => {
-        const refreshToken = localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken')
-        if (refreshToken) {
-          try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
-            const response = await fetch(apiUrl + '/auth.refreshToken', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ refreshToken }),
-              credentials: 'include',
-            })
-            
-            if (response.ok) {
-              const json = await response.json()
-              if ('result' in json && json.result?.data) {
-                const data = json.result.data
-                const storage = localStorage.getItem('refreshToken') ? localStorage : sessionStorage
-                storage.setItem('accessToken', data.accessToken)
-                storage.setItem('refreshToken', data.refreshToken)
-              }
-            } else if (response.status === 401) {
-              // Refresh token is invalid or expired - sign out user
-              clearInterval(intervalId)
-              signout()
+    }
+
+    initAuth()
+  }, [])
+
+  // Proactive token refresh - refresh token every 45 minutes to prevent expiration
+  useEffect(() => {
+    if (!isAuthenticated) return
+
+    const refreshInterval = 45 * 60 * 1000 // 45 minutes (tokens expire in 1 hour)
+
+    const intervalId = setInterval(async () => {
+      const refreshToken =
+        localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken')
+      if (refreshToken) {
+        try {
+          const apiUrl =
+            process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+          const response = await fetch(apiUrl + '/auth.refreshToken', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ refreshToken }),
+            credentials: 'include',
+          })
+
+          if (response.ok) {
+            const json = await response.json()
+            if ('result' in json && json.result?.data) {
+              const data = json.result.data
+              const storage = localStorage.getItem('refreshToken') ? localStorage : sessionStorage
+              storage.setItem('accessToken', data.accessToken)
+              storage.setItem('refreshToken', data.refreshToken)
             }
-          } catch (error) {
-            // Network error - will retry at next interval
+          } else if (response.status === 401) {
+            // Refresh token is invalid or expired - sign out user
+            clearInterval(intervalId)
+            signout()
           }
+        } catch (error) {
+          // Network error - will retry at next interval
         }
-      }, refreshInterval)
-      
-      return () => clearInterval(intervalId)
-    }, [isAuthenticated])
+      }
+    }, refreshInterval)
+
+    return () => clearInterval(intervalId)
+  }, [isAuthenticated])
 
   // Removed unused checkAuth function
 
@@ -145,21 +160,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       // Wait for initialization to complete
       if (!isInitialized) {
-        await new Promise(resolve => setTimeout(resolve, 200))
+        await new Promise((resolve) => setTimeout(resolve, 200))
       }
-      
-      const data = await apiSignin({ email, password, rememberMe }) as any
+
+      const data = (await apiSignin({ email, password, rememberMe })) as any
       setUser(data.user)
-      
+
       // Store tokens based on "Remember Me" preference
       const storage = rememberMe ? localStorage : sessionStorage
-      
+
       storage.setItem('accessToken', data.accessToken)
       storage.setItem('refreshToken', data.refreshToken)
-      
+
       // If using sessionStorage, clear localStorage tokens
       if (!rememberMe) {
         localStorage.removeItem('accessToken')
@@ -192,15 +207,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       // Wait for initialization to complete
       if (!isInitialized) {
-        await new Promise(resolve => setTimeout(resolve, 200))
+        await new Promise((resolve) => setTimeout(resolve, 200))
       }
-      
-      const result = await apiSignup(data) as any
+
+      const result = (await apiSignup(data)) as any
       setUser(result.user)
-      
+
       // Store tokens
       localStorage.setItem('accessToken', result.accessToken)
       localStorage.setItem('refreshToken', result.refreshToken)
@@ -218,7 +233,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser(null)
     setError(null)
     setIsLoading(false)
-    
+
     // Direct redirect to signin page
     if (typeof window !== 'undefined') {
       window.location.href = '/auth/signin'
@@ -229,7 +244,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       await apiForgotPassword({ email })
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to send reset email'
@@ -244,7 +259,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       await apiResetPassword({ token, newPassword, confirmNewPassword })
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to reset password'
@@ -259,7 +274,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       await apiVerifyEmail({ token })
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to verify email'
@@ -276,11 +291,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const refreshUser = async () => {
     try {
-      const userData = await apiMe() as any
+      const userData = (await apiMe()) as any
       setUser(userData)
     } catch (err: unknown) {
-      logger.error('Failed to refresh user data', { 
-        error: err instanceof Error ? err.message : String(err)
+      logger.error('Failed to refresh user data', {
+        error: err instanceof Error ? err.message : String(err),
       })
       captureException(err, { context: { operation: 'refresh_user' } })
       signout()
@@ -290,7 +305,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const getAuthHeaders = (): Record<string, string> => {
     const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     }
     if (token) {
       headers['Authorization'] = 'Bearer ' + token
@@ -314,10 +329,5 @@ export function AuthProvider({ children }: AuthProviderProps) {
     getAuthHeaders,
   }
 
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

@@ -1,7 +1,7 @@
 /**
  * useLoading Hook Tests
  * Tests for loading state management hooks
- * 
+ *
  * Note: These are manual tests since React Testing Library is not available
  * In a real project, you would use @testing-library/react
  */
@@ -34,4 +34,3 @@ describe('useLoading Hook', () => {
     expect(typeof module.useThrottle).toBe('function')
   })
 })
-

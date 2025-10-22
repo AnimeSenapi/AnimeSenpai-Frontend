@@ -8,7 +8,7 @@ export async function register() {
     await import("./sentry.edge.config");
   }
 
-  // Client-side initialization happens in sentry.client.config.ts
-  // which is auto-loaded by Next.js
+  // Client-side initialization is loaded from instrumentation-client.ts
+  // This is automatically loaded by Next.js for client-side code
 }
 

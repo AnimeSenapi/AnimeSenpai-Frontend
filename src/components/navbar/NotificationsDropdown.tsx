@@ -3,9 +3,17 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { 
-  Bell, Check, X, User, UserPlus, Heart, 
-  MessageCircle, Share2, CheckCheck, Loader2
+import {
+  Bell,
+  Check,
+  X,
+  User,
+  UserPlus,
+  Heart,
+  MessageCircle,
+  Share2,
+  CheckCheck,
+  Loader2,
 } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
 import { useAuth } from '@/app/lib/auth-context'
@@ -16,7 +24,7 @@ import {
   apiMarkAllNotificationsAsRead,
   apiGetPendingFriendRequests,
   apiAcceptFriendRequest,
-  apiDeclineFriendRequest
+  apiDeclineFriendRequest,
 } from '@/app/lib/api'
 import { formatDistanceToNow } from 'date-fns'
 import {
@@ -32,7 +40,6 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 
 interface Notification {
   id: string
@@ -74,10 +81,10 @@ export function NotificationsDropdown() {
     }
 
     loadUnreadCount()
-    
+
     // Poll for new notifications every 30 seconds
     const interval = setInterval(loadUnreadCount, 30000)
-    
+
     return () => clearInterval(interval)
   }, [isAuthenticated])
 
@@ -89,43 +96,60 @@ export function NotificationsDropdown() {
   }, [dropdownOpen, drawerOpen, isAuthenticated])
 
   const loadUnreadCount = async () => {
-    if (!isAuthenticated) return
+    if (!isAuthenticated) {
+      setUnreadCount(0)
+      return
+    }
 
     try {
-      const data = await apiGetUnreadNotificationCount() as any
+      const data = (await apiGetUnreadNotificationCount()) as any
       setUnreadCount(data.count || 0)
     } catch (error) {
+      // Silently fail - user might not be authenticated yet
       setUnreadCount(0)
     }
   }
 
   const loadNotifications = async () => {
+    if (!isAuthenticated) {
+      setNotifications([])
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
-      const data = await apiGetNotifications({ limit: 20, unreadOnly: false }) as any
+      const data = (await apiGetNotifications({ limit: 20, unreadOnly: false })) as any
       setNotifications(data.notifications || [])
     } catch (error) {
-      console.error('Failed to load notifications:', error)
+      // Silently fail - user might not be authenticated yet
+      setNotifications([])
     } finally {
       setLoading(false)
     }
   }
 
   const loadFriendRequests = async () => {
+    if (!isAuthenticated) {
+      setFriendRequests([])
+      return
+    }
+
     try {
-      const data = await apiGetPendingFriendRequests() as any
+      const data = (await apiGetPendingFriendRequests()) as any
       setFriendRequests(data.requests || [])
     } catch (error) {
-      console.error('Failed to load friend requests:', error)
+      // Silently fail - user might not be authenticated yet
+      setFriendRequests([])
     }
   }
 
   const handleMarkRead = async (notificationId: string) => {
     try {
       await apiMarkNotificationAsRead(notificationId)
-      setNotifications(notifications.map(n => 
-        n.id === notificationId ? { ...n, isRead: true } : n
-      ))
+      setNotifications(
+        notifications.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n))
+      )
       setUnreadCount(Math.max(0, unreadCount - 1))
     } catch (error) {
       console.error('Failed to mark as read:', error)
@@ -135,7 +159,7 @@ export function NotificationsDropdown() {
   const handleMarkAllRead = async () => {
     try {
       await apiMarkAllNotificationsAsRead()
-      setNotifications(notifications.map(n => ({ ...n, isRead: true })))
+      setNotifications(notifications.map((n) => ({ ...n, isRead: true })))
       setUnreadCount(0)
     } catch (error) {
       console.error('Failed to mark all as read:', error)
@@ -145,7 +169,7 @@ export function NotificationsDropdown() {
   const handleAcceptFriendRequest = async (requestId: string) => {
     try {
       await apiAcceptFriendRequest(requestId)
-      setFriendRequests(friendRequests.filter(r => r.id !== requestId))
+      setFriendRequests(friendRequests.filter((r) => r.id !== requestId))
       await loadNotifications()
     } catch (error) {
       console.error('Failed to accept friend request:', error)
@@ -155,7 +179,7 @@ export function NotificationsDropdown() {
   const handleDeclineFriendRequest = async (requestId: string) => {
     try {
       await apiDeclineFriendRequest(requestId)
-      setFriendRequests(friendRequests.filter(r => r.id !== requestId))
+      setFriendRequests(friendRequests.filter((r) => r.id !== requestId))
     } catch (error) {
       console.error('Failed to decline friend request:', error)
     }
@@ -298,7 +322,7 @@ export function NotificationsDropdown() {
                   <div
                     key={notification.id}
                     className={cn(
-                      "rounded-lg p-3 cursor-pointer transition-all group",
+                      'rounded-lg p-3 cursor-pointer transition-all group',
                       notification.isRead
                         ? 'hover:bg-white/5'
                         : 'bg-primary-500/10 hover:bg-primary-500/15'
@@ -317,14 +341,18 @@ export function NotificationsDropdown() {
                         {getNotificationIcon(notification.type)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={cn(
-                          "text-sm leading-relaxed",
-                          notification.isRead ? 'text-gray-400' : 'text-white font-medium'
-                        )}>
+                        <p
+                          className={cn(
+                            'text-sm leading-relaxed',
+                            notification.isRead ? 'text-gray-400' : 'text-white font-medium'
+                          )}
+                        >
                           {notification.message}
                         </p>
                         <p className="text-xs text-gray-500 mt-1.5">
-                          {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                          {formatDistanceToNow(new Date(notification.createdAt), {
+                            addSuffix: true,
+                          })}
                         </p>
                       </div>
                       {!notification.isRead && (
@@ -365,16 +393,13 @@ export function NotificationsDropdown() {
           <DropdownMenuTrigger asChild>
             <button
               className={cn(
-                "relative flex items-center justify-center w-10 h-10 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200",
-                unreadCount > 0 && "text-primary-400"
+                'relative flex items-center justify-center w-10 h-10 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200',
+                unreadCount > 0 && 'text-primary-400'
               )}
               aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
             >
-              <Bell className={cn(
-                "h-5 w-5",
-                unreadCount > 0 && "animate-pulse"
-              )} />
-              
+              <Bell className={cn('h-5 w-5', unreadCount > 0 && 'animate-pulse')} />
+
               {unreadCount > 0 && (
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-error-500 to-error-600 rounded-full flex items-center justify-center border-2 border-gray-900 shadow-lg">
                   <span className="text-xs font-bold text-white">
@@ -396,16 +421,13 @@ export function NotificationsDropdown() {
           <DrawerTrigger asChild>
             <button
               className={cn(
-                "relative flex items-center justify-center w-10 h-10 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200",
-                unreadCount > 0 && "text-primary-400"
+                'relative flex items-center justify-center w-10 h-10 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200',
+                unreadCount > 0 && 'text-primary-400'
               )}
               aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
             >
-              <Bell className={cn(
-                "h-5 w-5",
-                unreadCount > 0 && "animate-pulse"
-              )} />
-              
+              <Bell className={cn('h-5 w-5', unreadCount > 0 && 'animate-pulse')} />
+
               {unreadCount > 0 && (
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-error-500 to-error-600 rounded-full flex items-center justify-center border-2 border-gray-900 shadow-lg">
                   <span className="text-xs font-bold text-white">
@@ -426,4 +448,3 @@ export function NotificationsDropdown() {
     </>
   )
 }
-

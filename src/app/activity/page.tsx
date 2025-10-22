@@ -5,18 +5,17 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { formatDistanceToNow } from 'date-fns'
-import { 
-  Activity as ActivityIcon, 
-  Heart, 
-  Star, 
-  Play, 
-  Check, 
+import {
+  Activity as ActivityIcon,
+  Heart,
+  Star,
+  Play,
+  Check,
   UserPlus,
   MessageCircle,
-  Loader2
+  Loader2,
 } from 'lucide-react'
 import { Button } from '../../components/ui/button'
-import { Badge } from '../../components/ui/badge'
 import { LoadingState } from '../../components/ui/loading-state'
 import { EmptyState } from '../../components/ui/error-state'
 import { useAuth } from '../lib/auth-context'
@@ -53,8 +52,8 @@ interface Activity {
 
 export default function ActivityFeedPage() {
   const router = useRouter()
-  const { isAuthenticated, user } = useAuth()
-  
+  const { isAuthenticated } = useAuth()
+
   const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -67,7 +66,7 @@ export default function ActivityFeedPage() {
       router.push('/auth/signin')
       return
     }
-    
+
     loadActivities()
   }, [isAuthenticated])
 
@@ -78,16 +77,16 @@ export default function ActivityFeedPage() {
       } else {
         setLoading(true)
       }
-      
+
       const { apiGetFriendActivities } = await import('../lib/api')
-      const data = await apiGetFriendActivities({
+      const data = (await apiGetFriendActivities({
         limit: 20,
-        cursor: loadMore ? cursor || undefined : undefined
-      }) as any
-      
+        cursor: loadMore ? cursor || undefined : undefined,
+      })) as any
+
       if (data) {
         if (loadMore) {
-          setActivities(prev => [...prev, ...(data.activities || [])])
+          setActivities((prev) => [...prev, ...(data.activities || [])])
         } else {
           setActivities(data.activities || [])
         }
@@ -126,14 +125,17 @@ export default function ActivityFeedPage() {
     const username = activity.user.name || activity.user.username
     const animeTitle = activity.anime?.titleEnglish || activity.anime?.title
     const targetUsername = activity.targetUser?.name || activity.targetUser?.username
-    
+
     switch (activity.activityType) {
       case 'rated_anime':
         const rating = activity.metadata?.score || activity.metadata?.rating
         return (
           <>
             <span className="font-semibold text-white">{username}</span> rated{' '}
-            <Link href={`/anime/${activity.anime?.slug}`} className="font-semibold text-primary-400 hover:text-primary-300">
+            <Link
+              href={`/anime/${activity.anime?.slug}`}
+              className="font-semibold text-primary-400 hover:text-primary-300"
+            >
               {animeTitle}
             </Link>
             {rating && (
@@ -144,67 +146,81 @@ export default function ActivityFeedPage() {
             )}
           </>
         )
-      
+
       case 'completed_anime':
         return (
           <>
             <span className="font-semibold text-white">{username}</span> completed{' '}
-            <Link href={`/anime/${activity.anime?.slug}`} className="font-semibold text-success-400 hover:text-success-300">
+            <Link
+              href={`/anime/${activity.anime?.slug}`}
+              className="font-semibold text-success-400 hover:text-success-300"
+            >
               {animeTitle}
             </Link>
           </>
         )
-      
+
       case 'started_watching':
         return (
           <>
             <span className="font-semibold text-white">{username}</span> started watching{' '}
-            <Link href={`/anime/${activity.anime?.slug}`} className="font-semibold text-primary-400 hover:text-primary-300">
+            <Link
+              href={`/anime/${activity.anime?.slug}`}
+              className="font-semibold text-primary-400 hover:text-primary-300"
+            >
               {animeTitle}
             </Link>
           </>
         )
-      
+
       case 'added_to_list':
         const status = activity.metadata?.status
         return (
           <>
             <span className="font-semibold text-white">{username}</span> added{' '}
-            <Link href={`/anime/${activity.anime?.slug}`} className="font-semibold text-primary-400 hover:text-primary-300">
+            <Link
+              href={`/anime/${activity.anime?.slug}`}
+              className="font-semibold text-primary-400 hover:text-primary-300"
+            >
               {animeTitle}
             </Link>
             {status && <span className="text-gray-400"> to {status.replace('-', ' ')}</span>}
           </>
         )
-      
+
       case 'followed_user':
         return (
           <>
             <span className="font-semibold text-white">{username}</span> started following{' '}
-            <Link href={`/user/${activity.targetUser?.username}`} className="font-semibold text-secondary-400 hover:text-secondary-300">
+            <Link
+              href={`/user/${activity.targetUser?.username}`}
+              className="font-semibold text-secondary-400 hover:text-secondary-300"
+            >
               {targetUsername}
             </Link>
           </>
         )
-      
+
       case 'reviewed_anime':
         return (
           <>
             <span className="font-semibold text-white">{username}</span> reviewed{' '}
-            <Link href={`/anime/${activity.anime?.slug}`} className="font-semibold text-primary-400 hover:text-primary-300">
+            <Link
+              href={`/anime/${activity.anime?.slug}`}
+              className="font-semibold text-primary-400 hover:text-primary-300"
+            >
               {animeTitle}
             </Link>
           </>
         )
-      
+
       default:
         return <span className="text-gray-400">Unknown activity</span>
     }
   }
 
-  const filteredActivities = filterType === 'all' 
-    ? activities 
-    : activities.filter(a => a.activityType === filterType)
+  const filteredActivities =
+    filterType === 'all' ? activities : activities.filter((a) => a.activityType === filterType)
 
   if (loading) {
     return <LoadingState variant="full" text="Loading activity feed..." size="lg" />
@@ -306,7 +322,7 @@ export default function ActivityFeedPage() {
         ) : (
           <div className="space-y-4">
             {filteredActivities.map((activity) => (
-              <div 
+              <div
                 key={activity.id}
                 className="glass rounded-xl p-4 border border-white/10 hover:border-white/20 transition-all"
               >
@@ -315,8 +331,8 @@ export default function ActivityFeedPage() {
                   <Link href={`/user/${activity.user.username}`}>
                     <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 overflow-hidden border border-white/10">
                       {activity.user.avatar ? (
-                        <Image 
-                          src={activity.user.avatar} 
+                        <Image
+                          src={activity.user.avatar}
                           alt={activity.user.username}
                           width={40}
                           height={40}
@@ -324,7 +340,7 @@ export default function ActivityFeedPage() {
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-sm font-bold text-primary-400">
-                          {activity.user.username[0].toUpperCase()}
+                          {activity.user?.username?.[0]?.toUpperCase() || 'U'}
                         </div>
                       )}
                     </div>
@@ -334,12 +350,8 @@ export default function ActivityFeedPage() {
                   <div className="flex-1 min-w-0">
                     {/* Activity Text */}
                     <div className="flex items-start gap-2 mb-2">
-                      <div className="mt-0.5">
-                        {getActivityIcon(activity.activityType)}
-                      </div>
-                      <p className="text-sm text-gray-300 flex-1">
-                        {getActivityText(activity)}
-                      </p>
+                      <div className="mt-0.5">{getActivityIcon(activity.activityType)}</div>
+                      <p className="text-sm text-gray-300 flex-1">{getActivityText(activity)}</p>
                     </div>
 
                     {/* Anime Cover (if applicable) */}
@@ -348,8 +360,8 @@ export default function ActivityFeedPage() {
                         <div className="inline-block mt-2">
                           <div className="w-16 h-24 rounded-lg overflow-hidden border border-white/10 hover:border-primary-500/50 transition-all relative">
                             {activity.anime.coverImage ? (
-                              <Image 
-                                src={activity.anime.coverImage} 
+                              <Image
+                                src={activity.anime.coverImage}
                                 alt={activity.anime.title}
                                 fill
                                 className="object-cover"
@@ -366,13 +378,14 @@ export default function ActivityFeedPage() {
                     )}
 
                     {/* Review Preview (if reviewed) */}
-                    {activity.activityType === 'reviewed_anime' && activity.metadata?.reviewPreview && (
-                      <div className="mt-2 p-3 bg-white/5 rounded-lg border border-white/10">
-                        <p className="text-sm text-gray-300 line-clamp-2 italic">
-                          "{activity.metadata.reviewPreview}"
-                        </p>
-                      </div>
-                    )}
+                    {activity.activityType === 'reviewed_anime' &&
+                      activity.metadata?.reviewPreview && (
+                        <div className="mt-2 p-3 bg-white/5 rounded-lg border border-white/10">
+                          <p className="text-sm text-gray-300 line-clamp-2 italic">
+                            "{activity.metadata.reviewPreview}"
+                          </p>
+                        </div>
+                      )}
 
                     {/* Timestamp */}
                     <p className="text-xs text-gray-500 mt-2">
@@ -409,4 +422,3 @@ export default function ActivityFeedPage() {
     </div>
   )
 }
-

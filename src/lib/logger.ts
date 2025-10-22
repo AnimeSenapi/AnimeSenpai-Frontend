@@ -1,13 +1,13 @@
 /**
  * Sentry Logger Utility
- * 
+ *
  * This file provides a convenient wrapper around Sentry's logging functionality.
  * Use these functions throughout the app for structured logging that will be sent to Sentry.
- * 
+ *
  * @example
  * ```typescript
  * import { logger } from '@/lib/logger'
- * 
+ *
  * // Log different severity levels
  * logger.trace('Starting database connection', { database: 'users' })
  * logger.debug(logger.fmt`Cache miss for user: ${userId}`)
@@ -80,11 +80,14 @@ export const logger = {
  *   captureException(error, { context: { userId, operation: 'update_profile' } })
  * }
  */
-export function captureException(error: Error | unknown, options?: {
-  context?: Record<string, any>
-  tags?: Record<string, string>
-  level?: 'fatal' | 'error' | 'warning' | 'log' | 'info' | 'debug'
-}) {
+export function captureException(
+  error: Error | unknown,
+  options?: {
+    context?: Record<string, any>
+    tags?: Record<string, string>
+    level?: 'fatal' | 'error' | 'warning' | 'log' | 'info' | 'debug'
+  }
+) {
   Sentry.captureException(error, {
     level: options?.level || 'error',
     tags: options?.tags,
@@ -95,17 +98,20 @@ export function captureException(error: Error | unknown, options?: {
 /**
  * Helper function to capture custom messages
  * @example
- * captureMessage('User completed onboarding', { 
+ * captureMessage('User completed onboarding', {
  *   level: 'info',
  *   tags: { flow: 'onboarding' },
  *   context: { userId: user.id }
  * })
  */
-export function captureMessage(message: string, options?: {
-  context?: Record<string, any>
-  tags?: Record<string, string>
-  level?: 'fatal' | 'error' | 'warning' | 'log' | 'info' | 'debug'
-}) {
+export function captureMessage(
+  message: string,
+  options?: {
+    context?: Record<string, any>
+    tags?: Record<string, string>
+    level?: 'fatal' | 'error' | 'warning' | 'log' | 'info' | 'debug'
+  }
+) {
   Sentry.captureMessage(message, {
     level: options?.level || 'info',
     tags: options?.tags,
@@ -134,4 +140,3 @@ export async function withSpan<T>(
 
 // Re-export commonly used Sentry functions
 export { Sentry }
-

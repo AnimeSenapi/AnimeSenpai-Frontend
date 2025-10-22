@@ -6,20 +6,13 @@ import { MetadataRoute } from 'next'
  */
 export default function robots(): MetadataRoute.Robots {
   const baseUrl = 'https://animesenpai.app'
-  
+
   return {
     rules: [
       {
         userAgent: '*',
         allow: '/',
-        disallow: [
-          '/api/',
-          '/admin/',
-          '/user/settings',
-          '/auth/*',
-          '/_next/',
-          '/private/',
-        ],
+        disallow: ['/api/', '/admin/', '/user/settings', '/auth/*', '/_next/', '/private/'],
       },
       // Specific rules for major search engines
       {

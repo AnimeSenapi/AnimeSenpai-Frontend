@@ -27,7 +27,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const ids = await apiGetFavoritedAnimeIds() as any
+      const ids = (await apiGetFavoritedAnimeIds()) as any
       setFavoritedAnimeIds(ids)
     } catch (error) {
       console.error('Failed to load favorites:', error)
@@ -53,10 +53,8 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     }
 
     // Optimistic update
-    setFavoritedAnimeIds(prev => 
-      prev.includes(animeId) 
-        ? prev.filter(id => id !== animeId)
-        : [...prev, animeId]
+    setFavoritedAnimeIds((prev) =>
+      prev.includes(animeId) ? prev.filter((id) => id !== animeId) : [...prev, animeId]
     )
 
     try {
@@ -64,10 +62,8 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to toggle favorite:', error)
       // Revert on error
-      setFavoritedAnimeIds(prev => 
-        prev.includes(animeId) 
-          ? prev.filter(id => id !== animeId)
-          : [...prev, animeId]
+      setFavoritedAnimeIds((prev) =>
+        prev.includes(animeId) ? prev.filter((id) => id !== animeId) : [...prev, animeId]
       )
     }
   }
@@ -77,13 +73,15 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <FavoritesContext.Provider value={{
-      favoritedAnimeIds,
-      isFavorited,
-      toggleFavorite,
-      isLoading,
-      refreshFavorites
-    }}>
+    <FavoritesContext.Provider
+      value={{
+        favoritedAnimeIds,
+        isFavorited,
+        toggleFavorite,
+        isLoading,
+        refreshFavorites,
+      }}
+    >
       {children}
     </FavoritesContext.Provider>
   )
@@ -96,4 +94,3 @@ export function useFavorites() {
   }
   return context
 }
-

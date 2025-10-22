@@ -2,19 +2,19 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { 
-  Film, 
-  Search, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  ChevronLeft, 
-  ChevronRight, 
+import {
+  Film,
+  Search,
+  Edit,
+  Trash2,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
   RefreshCw,
   X,
   Star,
   Calendar,
-  Play
+  Play,
 } from 'lucide-react'
 import { Button } from '../../../components/ui/button'
 import Link from 'next/link'
@@ -60,14 +60,17 @@ export function AnimeTab() {
   const loadAnime = async () => {
     try {
       setLoading(true)
-      const TRPC_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
-      const url = `${TRPC_URL}/anime.getAll?input=${encodeURIComponent(JSON.stringify({ 
-        page, 
-        limit,
-        sortBy: 'createdAt',
-        sortOrder: 'desc'
-      }))}`
-      
+      const TRPC_URL =
+        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+      const url = `${TRPC_URL}/anime.getAll?input=${encodeURIComponent(
+        JSON.stringify({
+          page,
+          limit,
+          sortBy: 'createdAt',
+          sortOrder: 'desc',
+        })
+      )}`
+
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -82,7 +85,7 @@ export function AnimeTab() {
 
       const json = await response.json()
       const data = json.result?.data
-      
+
       if (data) {
         setAnime(data.anime || [])
         setTotalPages(data.pagination?.pages || 1)
@@ -105,11 +108,14 @@ export function AnimeTab() {
 
     try {
       setLoading(true)
-      const TRPC_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
-      const url = `${TRPC_URL}/anime.search?input=${encodeURIComponent(JSON.stringify({ 
-        query: searchQuery 
-      }))}`
-      
+      const TRPC_URL =
+        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+      const url = `${TRPC_URL}/anime.search?input=${encodeURIComponent(
+        JSON.stringify({
+          query: searchQuery,
+        })
+      )}`
+
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -159,20 +165,23 @@ export function AnimeTab() {
     setIsSaving(true)
     try {
       const { apiUpdateAnime } = await import('../../lib/api')
-      
+
       // Prepare update data (only send changed fields)
       const updateData: any = {}
       if (editFormData.title !== selectedAnime.title) updateData.title = editFormData.title
-      if (editFormData.titleEnglish !== selectedAnime.titleEnglish) updateData.titleEnglish = editFormData.titleEnglish
-      if (editFormData.titleJapanese !== selectedAnime.titleJapanese) updateData.titleJapanese = editFormData.titleJapanese
+      if (editFormData.titleEnglish !== selectedAnime.titleEnglish)
+        updateData.titleEnglish = editFormData.titleEnglish
+      if (editFormData.titleJapanese !== selectedAnime.titleJapanese)
+        updateData.titleJapanese = editFormData.titleJapanese
       if (editFormData.year !== selectedAnime.year) updateData.year = parseInt(editFormData.year)
-      if (editFormData.episodes !== selectedAnime.episodes) updateData.episodes = parseInt(editFormData.episodes)
+      if (editFormData.episodes !== selectedAnime.episodes)
+        updateData.episodes = parseInt(editFormData.episodes)
       if (editFormData.status !== selectedAnime.status) updateData.status = editFormData.status
       if (editFormData.type !== selectedAnime.type) updateData.type = editFormData.type
       if (editFormData.rating !== selectedAnime.rating) updateData.rating = editFormData.rating
 
       await apiUpdateAnime(selectedAnime.id, updateData)
-      
+
       setShowEditModal(false)
       loadAnime()
     } catch (error: any) {
@@ -190,7 +199,6 @@ export function AnimeTab() {
 
     try {
       const { apiDeleteAnime } = await import('../../lib/api')
-      const { useToast } = await import('../../../lib/toast-context')
       await apiDeleteAnime(animeId)
       loadAnime()
       // Toast notification would go here if we had access to toast context
@@ -211,8 +219,8 @@ export function AnimeTab() {
           <button
             onClick={() => setViewMode('list')}
             className={`px-3 py-2 rounded-lg ${
-              viewMode === 'list' 
-                ? 'bg-primary-500/20 text-primary-300 border border-primary-500/30' 
+              viewMode === 'list'
+                ? 'bg-primary-500/20 text-primary-300 border border-primary-500/30'
                 : 'bg-white/5 text-gray-400 hover:text-white'
             }`}
           >
@@ -221,8 +229,8 @@ export function AnimeTab() {
           <button
             onClick={() => setViewMode('grid')}
             className={`px-3 py-2 rounded-lg ${
-              viewMode === 'grid' 
-                ? 'bg-primary-500/20 text-primary-300 border border-primary-500/30' 
+              viewMode === 'grid'
+                ? 'bg-primary-500/20 text-primary-300 border border-primary-500/30'
                 : 'bg-white/5 text-gray-400 hover:text-white'
             }`}
           >
@@ -310,12 +318,24 @@ export function AnimeTab() {
               <table className="w-full">
                 <thead className="bg-white/5">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Anime</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Type</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Year</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Episodes</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Rating</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      Anime
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      Type
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      Year
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      Episodes
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      Rating
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/10">
@@ -325,8 +345,8 @@ export function AnimeTab() {
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-16 bg-gray-800 rounded overflow-hidden flex-shrink-0 relative">
                             {item.coverImage ? (
-                              <Image 
-                                src={item.coverImage} 
+                              <Image
+                                src={item.coverImage}
                                 alt={item.title}
                                 fill
                                 className="object-cover"
@@ -345,7 +365,10 @@ export function AnimeTab() {
                             )}
                             <div className="flex gap-1 mt-1">
                               {item.genres?.slice(0, 2).map((genre, i) => (
-                                <span key={i} className="text-[10px] px-1.5 py-0.5 bg-primary-500/10 text-primary-300 rounded">
+                                <span
+                                  key={i}
+                                  className="text-[10px] px-1.5 py-0.5 bg-primary-500/10 text-primary-300 rounded"
+                                >
                                   {genre.name}
                                 </span>
                               ))}
@@ -356,9 +379,7 @@ export function AnimeTab() {
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-300">{item.type || 'TV'}</span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-300">
-                        {item.year}
-                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-300">{item.year}</td>
                       <td className="px-6 py-4 text-sm text-gray-300">
                         {item.episodes || 'Unknown'}
                       </td>
@@ -419,7 +440,7 @@ export function AnimeTab() {
             </p>
             <div className="flex gap-2">
               <Button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
                 className="px-3 py-1.5 bg-white/5 border border-white/10 text-white hover:bg-white/10 rounded disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -429,7 +450,7 @@ export function AnimeTab() {
                 {page}
               </span>
               <Button
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 className="px-3 py-1.5 bg-white/5 border border-white/10 text-white hover:bg-white/10 rounded disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -450,8 +471,8 @@ export function AnimeTab() {
               >
                 <div className="aspect-[2/3] bg-gray-800 relative">
                   {item.coverImage ? (
-                    <Image 
-                      src={item.coverImage} 
+                    <Image
+                      src={item.coverImage}
                       alt={item.title}
                       fill
                       className="object-cover"
@@ -465,7 +486,9 @@ export function AnimeTab() {
                   {item.rating && (
                     <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-sm px-2 py-1 rounded flex items-center gap-1">
                       <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                      <span className="text-xs font-bold text-white">{Number(item.rating).toFixed(1)}</span>
+                      <span className="text-xs font-bold text-white">
+                        {Number(item.rating).toFixed(1)}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -488,7 +511,7 @@ export function AnimeTab() {
             </p>
             <div className="flex gap-2">
               <Button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
                 className="px-3 py-1.5 bg-white/5 border border-white/10 text-white hover:bg-white/10 rounded disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -498,7 +521,7 @@ export function AnimeTab() {
                 {page}
               </span>
               <Button
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 className="px-3 py-1.5 bg-white/5 border border-white/10 text-white hover:bg-white/10 rounded disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -511,8 +534,14 @@ export function AnimeTab() {
 
       {/* Anime Details Modal */}
       {showDetailsModal && selectedAnime && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowDetailsModal(false)}>
-          <div className="glass rounded-2xl p-6 max-w-2xl w-full mx-4 border border-white/10 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          onClick={() => setShowDetailsModal(false)}
+        >
+          <div
+            className="glass rounded-2xl p-6 max-w-2xl w-full mx-4 border border-white/10 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-bold text-white">Anime Details</h3>
               <button
@@ -522,13 +551,13 @@ export function AnimeTab() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            
+
             <div className="space-y-6">
               {/* Cover Image */}
               {selectedAnime.coverImage && (
                 <div className="w-full max-w-xs mx-auto relative aspect-[2/3]">
-                  <Image 
-                    src={selectedAnime.coverImage} 
+                  <Image
+                    src={selectedAnime.coverImage}
                     alt={selectedAnime.title}
                     fill
                     className="object-cover rounded-xl"
@@ -571,7 +600,9 @@ export function AnimeTab() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-400 mb-1">Status</p>
-                  <p className="text-white capitalize">{selectedAnime.status?.replace(/-/g, ' ')}</p>
+                  <p className="text-white capitalize">
+                    {selectedAnime.status?.replace(/-/g, ' ')}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-400 mb-1">Rating</p>
@@ -596,7 +627,7 @@ export function AnimeTab() {
                   <p className="text-sm text-gray-400 mb-2">Genres</p>
                   <div className="flex flex-wrap gap-2">
                     {selectedAnime.genres.map((genre, i) => (
-                      <span 
+                      <span
                         key={i}
                         className="px-3 py-1 bg-primary-500/10 text-primary-300 rounded-lg border border-primary-500/20 text-sm"
                       >
@@ -611,11 +642,15 @@ export function AnimeTab() {
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
                 <div>
                   <p className="text-sm text-gray-400 mb-1">Created At</p>
-                  <p className="text-white text-sm">{new Date(selectedAnime.createdAt).toLocaleString()}</p>
+                  <p className="text-white text-sm">
+                    {new Date(selectedAnime.createdAt).toLocaleString()}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-400 mb-1">Updated At</p>
-                  <p className="text-white text-sm">{new Date(selectedAnime.updatedAt).toLocaleString()}</p>
+                  <p className="text-white text-sm">
+                    {new Date(selectedAnime.updatedAt).toLocaleString()}
+                  </p>
                 </div>
               </div>
 
@@ -657,8 +692,14 @@ export function AnimeTab() {
 
       {/* Edit Anime Modal */}
       {showEditModal && selectedAnime && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowEditModal(false)}>
-          <div className="glass rounded-2xl p-6 max-w-2xl w-full mx-4 border border-white/10 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setShowEditModal(false)}
+        >
+          <div
+            className="glass rounded-2xl p-6 max-w-2xl w-full mx-4 border border-white/10 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-bold text-white flex items-center gap-3">
                 <Edit className="h-6 w-6 text-primary-400" />
@@ -675,33 +716,43 @@ export function AnimeTab() {
             <div className="space-y-4">
               {/* Title (Romanized) */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Title (Romanized)</label>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Title (Romanized)
+                </label>
                 <input
                   type="text"
                   value={editFormData.title || ''}
-                  onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
+                  onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
                   className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
                 />
               </div>
 
               {/* Title (English) */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Title (English)</label>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Title (English)
+                </label>
                 <input
                   type="text"
                   value={editFormData.titleEnglish || ''}
-                  onChange={(e) => setEditFormData({...editFormData, titleEnglish: e.target.value})}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, titleEnglish: e.target.value })
+                  }
                   className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
                 />
               </div>
 
               {/* Title (Japanese) */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Title (Japanese)</label>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Title (Japanese)
+                </label>
                 <input
                   type="text"
                   value={editFormData.titleJapanese || ''}
-                  onChange={(e) => setEditFormData({...editFormData, titleJapanese: e.target.value})}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, titleJapanese: e.target.value })
+                  }
                   className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
                 />
               </div>
@@ -713,7 +764,7 @@ export function AnimeTab() {
                   <input
                     type="number"
                     value={editFormData.year || ''}
-                    onChange={(e) => setEditFormData({...editFormData, year: e.target.value})}
+                    onChange={(e) => setEditFormData({ ...editFormData, year: e.target.value })}
                     className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
                   />
                 </div>
@@ -722,7 +773,7 @@ export function AnimeTab() {
                   <input
                     type="number"
                     value={editFormData.episodes || ''}
-                    onChange={(e) => setEditFormData({...editFormData, episodes: e.target.value})}
+                    onChange={(e) => setEditFormData({ ...editFormData, episodes: e.target.value })}
                     className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
                   />
                 </div>
@@ -734,7 +785,7 @@ export function AnimeTab() {
                   <label className="block text-sm font-medium text-gray-400 mb-2">Status</label>
                   <select
                     value={editFormData.status || ''}
-                    onChange={(e) => setEditFormData({...editFormData, status: e.target.value})}
+                    onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
                     className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
                   >
                     <option value="Finished Airing">Finished Airing</option>
@@ -746,7 +797,7 @@ export function AnimeTab() {
                   <label className="block text-sm font-medium text-gray-400 mb-2">Type</label>
                   <select
                     value={editFormData.type || ''}
-                    onChange={(e) => setEditFormData({...editFormData, type: e.target.value})}
+                    onChange={(e) => setEditFormData({ ...editFormData, type: e.target.value })}
                     className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
                   >
                     <option value="TV">TV</option>
@@ -764,7 +815,7 @@ export function AnimeTab() {
                 <label className="block text-sm font-medium text-gray-400 mb-2">Rating</label>
                 <select
                   value={editFormData.rating || ''}
-                  onChange={(e) => setEditFormData({...editFormData, rating: e.target.value})}
+                  onChange={(e) => setEditFormData({ ...editFormData, rating: e.target.value })}
                   className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
                 >
                   <option value="">Select Rating</option>

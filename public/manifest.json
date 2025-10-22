@@ -1,74 +1,87 @@
 {
-  "name": "AnimeSenpai - Track & Discover Anime",
+  "name": "AnimeSenpai",
   "short_name": "AnimeSenpai",
-  "description": "Discover, track, and explore your favorite anime. Get personalized recommendations and build your ultimate anime collection.",
-  "start_url": "/dashboard",
+  "description": "Track, discover, and share your favorite anime with friends",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0f",
-  "theme_color": "#06b6d4",
+  "background_color": "#0f0f23",
+  "theme_color": "#6366f1",
   "orientation": "portrait-primary",
-  "categories": ["entertainment", "lifestyle"],
-  "lang": "en-US",
-  "dir": "ltr",
   "scope": "/",
+  "lang": "en",
+  "categories": ["entertainment", "lifestyle", "social"],
   "icons": [
     {
-      "src": "/icon-192x192.png",
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "maskable any"
     },
     {
-      "src": "/icon-192x192.png",
-      "sizes": "192x192",
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "maskable any"
     },
     {
-      "src": "/icon-512x512.png",
+      "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/apple-touch-icon.png",
-      "sizes": "180x180",
-      "type": "image/png",
-      "purpose": "apple-touch-icon"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshot-mobile.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "AnimeSenpai on Mobile"
-    },
-    {
-      "src": "/screenshot-desktop.png",
-      "sizes": "1920x1080",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "AnimeSenpai on Desktop"
+      "purpose": "maskable any"
     }
   ],
   "shortcuts": [
     {
       "name": "My List",
-      "short_name": "List",
+      "short_name": "My List",
       "description": "View your anime list",
       "url": "/mylist",
       "icons": [
         {
-          "src": "/icon-192x192.png",
-          "sizes": "192x192"
+          "src": "/icons/shortcut-mylist.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Discover",
+      "short_name": "Discover",
+      "description": "Discover new anime",
+      "url": "/discover",
+      "icons": [
+        {
+          "src": "/icons/shortcut-discover.png",
+          "sizes": "96x96"
         }
       ]
     },
@@ -79,26 +92,24 @@
       "url": "/search",
       "icons": [
         {
-          "src": "/icon-192x192.png",
-          "sizes": "192x192"
+          "src": "/icons/shortcut-search.png",
+          "sizes": "96x96"
         }
       ]
     },
     {
-      "name": "Dashboard",
-      "short_name": "Home",
-      "description": "Go to dashboard",
-      "url": "/dashboard",
+      "name": "Stats",
+      "short_name": "Stats",
+      "description": "View your anime statistics",
+      "url": "/stats",
       "icons": [
         {
-          "src": "/icon-192x192.png",
-          "sizes": "192x192"
+          "src": "/icons/shortcut-stats.png",
+          "sizes": "96x96"
         }
       ]
     }
   ],
-  "related_applications": [],
-  "prefer_related_applications": false,
   "share_target": {
     "action": "/share",
     "method": "POST",
@@ -108,6 +119,36 @@
       "text": "text",
       "url": "url"
     }
+  },
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop-home.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "AnimeSenpai Home Dashboard"
+    },
+    {
+      "src": "/screenshots/mobile-list.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "My Anime List"
+    },
+    {
+      "src": "/screenshots/mobile-discover.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Discover New Anime"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
   }
 }
-

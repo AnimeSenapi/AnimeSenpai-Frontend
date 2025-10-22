@@ -11,7 +11,7 @@ interface AdminRouteProps {
 
 /**
  * Protected route wrapper for admin-only pages
- * 
+ *
  * Features:
  * - Checks user authentication
  * - Verifies admin role
@@ -70,7 +70,8 @@ export function AdminRoute({ children }: AdminRouteProps) {
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Access Denied</h1>
           <p className="text-gray-400 mb-6">
-            You don't have permission to access the admin panel. This page is restricted to administrators only.
+            You don't have permission to access the admin panel. This page is restricted to
+            administrators only.
           </p>
           <button
             onClick={() => router.push('/dashboard')}
@@ -86,4 +87,3 @@ export function AdminRoute({ children }: AdminRouteProps) {
   // Render admin content
   return <>{children}</>
 }
-

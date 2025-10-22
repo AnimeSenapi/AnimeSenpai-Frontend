@@ -1,5 +1,3 @@
-import { Activity } from 'lucide-react'
-
 export default function ActivityLoading() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 text-white">
@@ -13,10 +11,10 @@ export default function ActivityLoading() {
               <div className="h-4 w-64 bg-white/5 rounded animate-pulse" />
             </div>
           </div>
-          
+
           {/* Filter Skeleton */}
           <div className="flex gap-2">
-            {[1, 2, 3, 4, 5].map(i => (
+            {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="h-8 w-24 bg-white/5 rounded-lg animate-pulse" />
             ))}
           </div>
@@ -24,7 +22,7 @@ export default function ActivityLoading() {
 
         {/* Activity Items Skeleton */}
         <div className="space-y-4">
-          {[1, 2, 3, 4, 5].map(i => (
+          {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="glass rounded-xl p-4 border border-white/10">
               <div className="flex gap-4">
                 <div className="w-10 h-10 bg-white/5 rounded-full animate-pulse" />
@@ -41,4 +39,3 @@ export default function ActivityLoading() {
     </div>
   )
 }
-

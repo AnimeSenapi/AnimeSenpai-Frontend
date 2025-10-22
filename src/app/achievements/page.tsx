@@ -2,16 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { 
-  Trophy, 
-  Star, 
-  Users, 
-  Film, 
-  MessageSquare,
-  Lock,
-  Check,
-  Loader2
-} from 'lucide-react'
+import { Trophy, Lock, Check } from 'lucide-react'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
 import { LoadingState } from '../../components/ui/loading-state'
@@ -37,13 +28,13 @@ interface Achievement {
 export default function AchievementsPage() {
   const router = useRouter()
   const { isAuthenticated } = useAuth()
-  
+
   const [achievements, setAchievements] = useState<Achievement[]>([])
   const [byCategory, setByCategory] = useState<Record<string, Achievement[]>>({})
   const [stats, setStats] = useState({
     unlockedCount: 0,
     totalCount: 0,
-    totalPoints: 0
+    totalPoints: 0,
   })
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -53,24 +44,24 @@ export default function AchievementsPage() {
       router.push('/auth/signin')
       return
     }
-    
+
     loadAchievements()
   }, [isAuthenticated])
 
   const loadAchievements = async () => {
     try {
       setLoading(true)
-      
+
       const { apiGetMyAchievements } = await import('../lib/api')
-      const data = await apiGetMyAchievements() as any
-      
+      const data = (await apiGetMyAchievements()) as any
+
       if (data) {
         setAchievements(data.achievements || [])
         setByCategory(data.byCategory || {})
         setStats({
           unlockedCount: data.unlockedCount || 0,
           totalCount: data.totalCount || 0,
-          totalPoints: data.totalPoints || 0
+          totalPoints: data.totalPoints || 0,
         })
       }
     } catch (error) {
@@ -78,21 +69,6 @@ export default function AchievementsPage() {
       setAchievements([])
     } finally {
       setLoading(false)
-    }
-  }
-
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'watching':
-        return <Film className="h-5 w-5" />
-      case 'rating':
-        return <Star className="h-5 w-5" />
-      case 'social':
-        return <Users className="h-5 w-5" />
-      case 'discovery':
-        return <Trophy className="h-5 w-5" />
-      default:
-        return <Trophy className="h-5 w-5" />
     }
   }
 
@@ -111,9 +87,10 @@ export default function AchievementsPage() {
     }
   }
 
-  const filteredAchievements = selectedCategory === 'all'
-    ? achievements
-    : achievements.filter(a => a.category === selectedCategory)
+  const filteredAchievements =
+    selectedCategory === 'all'
+      ? achievements
+      : achievements.filter((a) => a.category === selectedCategory)
 
   if (loading) {
     return <LoadingState variant="full" text="Loading achievements..." size="lg" />
@@ -139,7 +116,9 @@ export default function AchievementsPage() {
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="glass rounded-xl p-4 border border-white/10">
-              <div className="text-2xl font-bold text-white mb-1">{stats.unlockedCount}/{stats.totalCount}</div>
+              <div className="text-2xl font-bold text-white mb-1">
+                {stats.unlockedCount}/{stats.totalCount}
+              </div>
               <div className="text-sm text-gray-400">Achievements Unlocked</div>
             </div>
             <div className="glass rounded-xl p-4 border border-white/10">
@@ -170,7 +149,7 @@ export default function AchievementsPage() {
             >
               All
             </Button>
-            {categories.map(cat => (
+            {categories.map((cat) => (
               <Button
                 key={cat}
                 variant={selectedCategory === cat ? 'default' : 'outline'}
@@ -190,31 +169,35 @@ export default function AchievementsPage() {
 
         {/* Achievements Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredAchievements.map(achievement => (
+          {filteredAchievements.map((achievement) => (
             <div
               key={achievement.id}
               className={cn(
-                "glass rounded-xl p-6 border transition-all",
+                'glass rounded-xl p-6 border transition-all',
                 achievement.unlocked
-                  ? "border-primary-500/50 bg-white/5"
-                  : "border-white/10 opacity-75"
+                  ? 'border-primary-500/50 bg-white/5'
+                  : 'border-white/10 opacity-75'
               )}
             >
               <div className="flex items-start gap-4 mb-4">
-                <div className={cn(
-                  "w-16 h-16 rounded-xl flex items-center justify-center text-3xl bg-gradient-to-br",
-                  achievement.unlocked 
-                    ? getTierColor(achievement.tier)
-                    : "from-gray-700 to-gray-800"
-                )}>
-                  {achievement.unlocked ? achievement.icon : <Lock className="h-8 w-8 text-gray-600" />}
+                <div
+                  className={cn(
+                    'w-16 h-16 rounded-xl flex items-center justify-center text-3xl bg-gradient-to-br',
+                    achievement.unlocked
+                      ? getTierColor(achievement.tier)
+                      : 'from-gray-700 to-gray-800'
+                  )}
+                >
+                  {achievement.unlocked ? (
+                    achievement.icon
+                  ) : (
+                    <Lock className="h-8 w-8 text-gray-600" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-bold text-white">{achievement.name}</h3>
-                    {achievement.unlocked && (
-                      <Check className="h-4 w-4 text-success-400" />
-                    )}
+                    {achievement.unlocked && <Check className="h-4 w-4 text-success-400" />}
                   </div>
                   <p className="text-xs text-gray-400">{achievement.description}</p>
                 </div>
@@ -225,10 +208,12 @@ export default function AchievementsPage() {
                 <div className="mb-3">
                   <div className="flex justify-between text-xs text-gray-400 mb-1">
                     <span>Progress</span>
-                    <span>{achievement.progress}/{achievement.requirement}</span>
+                    <span>
+                      {achievement.progress}/{achievement.requirement}
+                    </span>
                   </div>
                   <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className="h-full bg-gradient-to-r from-primary-500 to-secondary-500 transition-all"
                       style={{ width: `${achievement.percentage}%` }}
                     />
@@ -238,13 +223,19 @@ export default function AchievementsPage() {
 
               {/* Footer */}
               <div className="flex items-center justify-between text-xs">
-                <Badge className={cn(
-                  "text-[10px] px-2 py-0.5",
-                  achievement.tier === 'platinum' && "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
-                  achievement.tier === 'gold' && "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-                  achievement.tier === 'silver' && "bg-gray-400/20 text-gray-300 border-gray-400/30",
-                  achievement.tier === 'bronze' && "bg-amber-700/20 text-amber-400 border-amber-700/30"
-                )}>
+                <Badge
+                  className={cn(
+                    'text-[10px] px-2 py-0.5',
+                    achievement.tier === 'platinum' &&
+                      'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+                    achievement.tier === 'gold' &&
+                      'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+                    achievement.tier === 'silver' &&
+                      'bg-gray-400/20 text-gray-300 border-gray-400/30',
+                    achievement.tier === 'bronze' &&
+                      'bg-amber-700/20 text-amber-400 border-amber-700/30'
+                  )}
+                >
                   {achievement.tier}
                 </Badge>
                 <span className="text-gray-500">{achievement.points} points</span>

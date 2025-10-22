@@ -3,8 +3,7 @@
 import { useState } from 'react'
 import { AlertTriangle, Ban, Flag, X, Loader2 } from 'lucide-react'
 import { Button } from '../ui/button'
-import { Badge } from '../ui/badge'
-import { useToast } from '../../lib/toast-context'
+import { useToast } from '../ui/toast'
 import { cn } from '../../app/lib/utils'
 
 interface BlockReportModalProps {
@@ -15,17 +14,19 @@ interface BlockReportModalProps {
   onReport?: () => void
 }
 
-export function BlockReportModal({ 
-  userId, 
-  username, 
+export function BlockReportModal({
+  userId,
+  username,
   onClose,
   onBlock,
-  onReport
+  onReport,
 }: BlockReportModalProps) {
   const toast = useToast()
-  
+
   const [mode, setMode] = useState<'menu' | 'block' | 'report'>('menu')
-  const [reportReason, setReportReason] = useState<'spam' | 'harassment' | 'inappropriate_content' | 'fake_account' | 'other'>('spam')
+  const [reportReason, setReportReason] = useState<
+    'spam' | 'harassment' | 'inappropriate_content' | 'fake_account' | 'other'
+  >('spam')
   const [reportDescription, setReportDescription] = useState('')
   const [blockReason, setBlockReason] = useState('')
   const [loading, setLoading] = useState(false)
@@ -34,29 +35,30 @@ export function BlockReportModal({
     const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
     return {
       'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
+      ...(token && { Authorization: `Bearer ${token}` }),
     }
   }
 
   const handleBlock = async () => {
     try {
       setLoading(true)
-      
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
-      
+
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+
       const response = await fetch(`${API_URL}/safety.blockUser`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
           userId,
-          reason: blockReason
-        })
+          reason: blockReason,
+        }),
       })
-      
+
       if (!response.ok) {
         throw new Error('Failed to block user')
       }
-      
+
       toast.success(`Blocked @${username}`, 'User Blocked')
       if (onBlock) onBlock()
       onClose()
@@ -76,23 +78,24 @@ export function BlockReportModal({
 
     try {
       setLoading(true)
-      
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
-      
+
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+
       const response = await fetch(`${API_URL}/safety.reportUser`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
           userId,
           reason: reportReason,
-          description: reportDescription
-        })
+          description: reportDescription,
+        }),
       })
-      
+
       if (!response.ok) {
         throw new Error('Failed to report user')
       }
-      
+
       toast.success('Report submitted. Our team will review it.', 'Report Submitted')
       if (onReport) onReport()
       onClose()
@@ -105,8 +108,14 @@ export function BlockReportModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
-      <div className="glass rounded-2xl p-6 max-w-md w-full mx-4 border border-white/10" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="glass rounded-2xl p-6 max-w-md w-full mx-4 border border-white/10"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Menu */}
         {mode === 'menu' && (
           <>
@@ -123,9 +132,7 @@ export function BlockReportModal({
               </button>
             </div>
 
-            <p className="text-gray-400 text-sm mb-6">
-              Choose an action for @{username}
-            </p>
+            <p className="text-gray-400 text-sm mb-6">Choose an action for @{username}</p>
 
             <div className="space-y-3">
               <button
@@ -257,16 +264,16 @@ export function BlockReportModal({
                   { value: 'harassment', label: 'Harassment or Bullying' },
                   { value: 'inappropriate_content', label: 'Inappropriate Content' },
                   { value: 'fake_account', label: 'Fake Account' },
-                  { value: 'other', label: 'Other' }
-                ].map(option => (
+                  { value: 'other', label: 'Other' },
+                ].map((option) => (
                   <button
                     key={option.value}
                     onClick={() => setReportReason(option.value as any)}
                     className={cn(
-                      "w-full p-3 rounded-lg border transition-all text-left",
+                      'w-full p-3 rounded-lg border transition-all text-left',
                       reportReason === option.value
-                        ? "bg-warning-500/20 border-warning-500/50 text-white"
-                        : "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10"
+                        ? 'bg-warning-500/20 border-warning-500/50 text-white'
+                        : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'
                     )}
                   >
                     {option.label}
@@ -311,4 +318,3 @@ export function BlockReportModal({
     </div>
   )
 }
-

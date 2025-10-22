@@ -1,0 +1,418 @@
+/**
+ * iOS-Specific Bug Fixes
+ * Addresses Safari and iOS-specific rendering and interaction issues
+ */
+
+/* ========================================
+   iOS INPUT FIXES
+   ======================================== */
+
+/* Fix iOS input zoom on focus (prevents auto-zoom on inputs < 16px) */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+input[type="number"],
+textarea,
+select {
+  font-size: 16px !important; /* iOS won't zoom if font-size >= 16px */
+}
+
+/* Prevent iOS from styling inputs with shadows/gradients */
+input,
+textarea,
+select,
+button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Fix iOS rendering glitches with transforms */
+.ios-transform-fix {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  perspective: 1000;
+}
+
+/* ========================================
+   iOS SCROLLING FIXES
+   ======================================== */
+
+/* Enable smooth momentum scrolling on iOS */
+.ios-scroll,
+.overflow-scroll,
+.overflow-y-scroll,
+.overflow-x-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+}
+
+/* Fix iOS scroll bounce */
+body {
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent rubber-band scrolling */
+html,
+body {
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Fix position: fixed elements on iOS when keyboard opens */
+.ios-fixed-bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  /* Add safe area for iOS home indicator */
+  padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
+}
+
+/* ========================================
+   iOS TAP/CLICK FIXES
+   ======================================== */
+
+/* Remove iOS tap highlight */
+* {
+  -webkit-tap-highlight-color: transparent;
+  tap-highlight-color: transparent;
+}
+
+/* Fix iOS double-tap zoom */
+button,
+a,
+input[type="button"],
+input[type="submit"],
+[role="button"],
+[onclick] {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Allow text selection in specific elements */
+p,
+span,
+div[contenteditable],
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* ========================================
+   iOS FONT RENDERING FIXES
+   ======================================== */
+
+/* Fix iOS font rendering (anti-aliasing) */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Fix iOS text size adjust */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* ========================================
+   iOS VIDEO/MEDIA FIXES
+   ======================================== */
+
+/* Prevent iOS from fullscreening videos */
+video {
+  -webkit-playsinline: true;
+  playsinline: true;
+  object-fit: cover;
+}
+
+/* Fix iOS video poster image */
+video::-webkit-media-controls-start-playback-button {
+  display: none;
+}
+
+/* ========================================
+   iOS MODAL/OVERLAY FIXES
+   ======================================== */
+
+/* Fix iOS modal scroll lock */
+.modal-open {
+  position: fixed;
+  width: 100%;
+  overflow: hidden;
+  -webkit-overflow-scrolling: auto;
+}
+
+/* Prevent background scroll when modal is open */
+body.modal-open {
+  position: fixed;
+  overflow: hidden;
+  width: 100%;
+  height: 100vh;
+}
+
+/* ========================================
+   iOS POSITION STICKY FIXES
+   ======================================== */
+
+/* Fix sticky positioning on iOS Safari */
+.sticky,
+.sticky-top,
+[class*="sticky"] {
+  position: -webkit-sticky;
+  position: sticky;
+}
+
+/* ========================================
+   iOS FLEX/GRID FIXES
+   ======================================== */
+
+/* Fix iOS flex bugs */
+.flex,
+.flex-col,
+.flex-row {
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+}
+
+/* Fix iOS gap support (older iOS versions) */
+@supports not (gap: 1rem) {
+  .gap-1 > * + * { margin-left: 0.25rem; }
+  .gap-2 > * + * { margin-left: 0.5rem; }
+  .gap-3 > * + * { margin-left: 0.75rem; }
+  .gap-4 > * + * { margin-left: 1rem; }
+  .gap-6 > * + * { margin-left: 1.5rem; }
+  .gap-8 > * + * { margin-left: 2rem; }
+  
+  .gap-y-1 > * + * { margin-top: 0.25rem; }
+  .gap-y-2 > * + * { margin-top: 0.5rem; }
+  .gap-y-3 > * + * { margin-top: 0.75rem; }
+  .gap-y-4 > * + * { margin-top: 1rem; }
+  .gap-y-6 > * + * { margin-top: 1.5rem; }
+  .gap-y-8 > * + * { margin-top: 2rem; }
+}
+
+/* ========================================
+   iOS ANIMATION FIXES
+   ======================================== */
+
+/* Enable hardware acceleration for smoother animations */
+.animated,
+.transition,
+[class*="transition"],
+[class*="animate"] {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Reduce motion for iOS users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ========================================
+   iOS SAFE AREA FIXES
+   ======================================== */
+
+/* Ensure viewport meta tag values are respected */
+@supports (padding: max(0px)) {
+  /* Override safe area when needed */
+  .ignore-safe-area {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  
+  /* Respect only bottom safe area (for forms above keyboard) */
+  .safe-bottom-only {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}
+
+/* ========================================
+   iOS KEYBOARD FIXES
+   ======================================== */
+
+/* Fix iOS keyboard pushing up fixed elements */
+.ios-keyboard-safe {
+  position: fixed;
+  bottom: 0;
+  /* Use visualViewport height if available */
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height (iOS 15.4+) */
+}
+
+/* Prevent layout shift when iOS keyboard opens */
+.prevent-keyboard-shift {
+  position: relative;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+/* ========================================
+   iOS SPECIFIC UTILITY CLASSES
+   ======================================== */
+
+/* iOS-only styles */
+@supports (-webkit-touch-callout: none) {
+  .ios\:hidden {
+    display: none !important;
+  }
+  
+  .ios\:block {
+    display: block !important;
+  }
+  
+  .ios\:flex {
+    display: flex !important;
+  }
+  
+  /* Fix iOS safari 100vh issue */
+  .ios\:h-screen {
+    height: 100vh;
+    height: -webkit-fill-available;
+  }
+  
+  .ios\:min-h-screen {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* ========================================
+   iOS DATE PICKER FIXES
+   ======================================== */
+
+/* Style iOS date/time pickers */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 44px; /* Touch target size */
+}
+
+/* Fix iOS date picker display */
+input[type="date"]::-webkit-datetime-edit,
+input[type="time"]::-webkit-datetime-edit,
+input[type="datetime-local"]::-webkit-datetime-edit {
+  padding: 0.5rem;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+  filter: invert(1);
+}
+
+/* ========================================
+   iOS SELECT/DROPDOWN FIXES
+   ======================================== */
+
+/* Fix iOS select dropdown */
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1.5rem;
+  padding-right: 2.5rem;
+}
+
+/* ========================================
+   iOS CHECKBOX/RADIO FIXES
+   ======================================== */
+
+/* Custom iOS-style checkboxes and radios */
+input[type="checkbox"],
+input[type="radio"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 20px;
+  min-height: 20px;
+  cursor: pointer;
+}
+
+/* ========================================
+   iOS PERFORMANCE FIXES
+   ======================================== */
+
+/* Enable GPU acceleration for better performance */
+.gpu-accelerated {
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
+}
+
+/* Optimize iOS rendering for large lists */
+.ios-optimized-list {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: scroll-position;
+  contain: layout style paint;
+}
+
+/* ========================================
+   iOS PWA FIXES
+   ======================================== */
+
+/* Fix iOS PWA status bar overlap */
+@media (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  /* Fix iOS PWA bounce scroll */
+  html {
+    overflow: hidden;
+    height: 100%;
+  }
+  
+  body {
+    overflow: auto;
+    height: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ========================================
+   iOS LANDSCAPE ORIENTATION FIXES
+   ======================================== */
+
+/* Fix iOS landscape keyboard overlap */
+@media (max-height: 400px) and (orientation: landscape) {
+  .hide-on-landscape {
+    display: none !important;
+  }
+  
+  /* Reduce padding in landscape to save space */
+  .responsive-padding {
+    padding: 0.5rem !important;
+  }
+}
+

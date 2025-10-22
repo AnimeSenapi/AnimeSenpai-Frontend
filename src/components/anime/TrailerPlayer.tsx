@@ -22,7 +22,7 @@ export function TrailerPlayer({ trailerUrl, title, className = '' }: TrailerPlay
       const patterns = [
         /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
         /youtube\.com\/embed\/([^&\n?#]+)/,
-        /youtube\.com\/v\/([^&\n?#]+)/
+        /youtube\.com\/v\/([^&\n?#]+)/,
       ]
 
       for (const pattern of patterns) {
@@ -64,10 +64,10 @@ export function TrailerPlayer({ trailerUrl, title, className = '' }: TrailerPlay
             className="object-cover transition-transform duration-300 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 60vw"
           />
-          
+
           {/* Dark Overlay */}
           <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors"></div>
-          
+
           {/* Play Button - Touch-friendly */}
           <button
             onClick={() => setIsPlaying(true)}
@@ -104,7 +104,7 @@ export function TrailerPlayer({ trailerUrl, title, className = '' }: TrailerPlay
             allowFullScreen
             className="w-full h-full"
           />
-          
+
           {/* Close Button - Mobile Optimized */}
           <button
             onClick={() => setIsPlaying(false)}
@@ -133,7 +133,7 @@ export function TrailerButton({ trailerUrl, title }: TrailerButtonProps) {
       const patterns = [
         /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
         /youtube\.com\/embed\/([^&\n?#]+)/,
-        /youtube\.com\/v\/([^&\n?#]+)/
+        /youtube\.com\/v\/([^&\n?#]+)/,
       ]
 
       for (const pattern of patterns) {
@@ -169,45 +169,45 @@ export function TrailerButton({ trailerUrl, title }: TrailerButtonProps) {
         Watch Trailer
       </Button>
 
-      {showModal && typeof document !== 'undefined' && createPortal(
-        <div 
-          className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 lg:p-8"
-          style={{ 
-            zIndex: 999999,
-            position: 'fixed',
-            isolation: 'isolate'
-          }}
-          onClick={() => setShowModal(false)}
-        >
-          <div 
-            className="w-full max-w-4xl relative"
-            style={{ zIndex: 1000000 }}
-            onClick={(e) => e.stopPropagation()}
+      {showModal &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 lg:p-8"
+            style={{
+              zIndex: 999999,
+              position: 'fixed',
+              isolation: 'isolate',
+            }}
+            onClick={() => setShowModal(false)}
           >
-            <div className="relative aspect-video rounded-lg sm:rounded-xl lg:rounded-2xl overflow-hidden bg-black shadow-2xl border border-white/10">
-              <iframe
-                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
-                title={`${title} Trailer`}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-full"
-              />
-              
-              {/* Close Button - Touch-friendly */}
-              <button
-                onClick={() => setShowModal(false)}
-                className="absolute -top-10 sm:-top-12 right-0 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors backdrop-blur-sm border border-white/20 touch-manipulation"
-                aria-label="Close trailer"
-              >
-                <X className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-              </button>
+            <div
+              className="w-full max-w-4xl relative"
+              style={{ zIndex: 1000000 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="relative aspect-video rounded-lg sm:rounded-xl lg:rounded-2xl overflow-hidden bg-black shadow-2xl border border-white/10">
+                <iframe
+                  src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
+                  title={`${title} Trailer`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full"
+                />
+
+                {/* Close Button - Touch-friendly */}
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="absolute -top-10 sm:-top-12 right-0 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors backdrop-blur-sm border border-white/20 touch-manipulation"
+                  aria-label="Close trailer"
+                >
+                  <X className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                </button>
+              </div>
             </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </div>,
+          document.body
+        )}
     </>
   )
 }
-
-

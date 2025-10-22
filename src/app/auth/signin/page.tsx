@@ -7,7 +7,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import { Button } from '../../../components/ui/button'
 import { Checkbox } from '../../../components/ui/checkbox'
 import { useAuth } from '../../lib/auth-context'
-import { useToast } from '../../../lib/toast-context'
+import { useToast } from '../../../components/ui/toast'
 import { RequireGuest } from '../../lib/protected-route'
 
 export default function SignInPage() {
@@ -22,19 +22,19 @@ export default function SignInPage() {
 
   const validateForm = () => {
     const errors: { email?: string; password?: string } = {}
-    
+
     if (!email) {
       errors.email = 'Email is required'
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       errors.email = 'Please enter a valid email address'
     }
-    
+
     if (!password) {
       errors.password = 'Password is required'
     } else if (password.length < 8) {
       errors.password = 'Password must be at least 8 characters'
     }
-    
+
     setFormErrors(errors)
     return Object.keys(errors).length === 0
   }
@@ -43,16 +43,16 @@ export default function SignInPage() {
     e.preventDefault()
     clearError()
     setFormErrors({})
-    
+
     if (!validateForm()) {
       return
     }
-    
+
     try {
       await signin(email, password, rememberMe)
-      
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
+
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
       toast.success('Welcome back!', 'Signed In')
       router.push('/dashboard')
     } catch (err) {
@@ -73,7 +73,7 @@ export default function SignInPage() {
 
         <div className="relative z-10 w-full max-w-md">
           {/* Back Link */}
-          <Link 
+          <Link
             href="/dashboard"
             className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
           >
@@ -88,12 +88,8 @@ export default function SignInPage() {
               <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary-500/20">
                 <span className="text-white font-bold text-2xl">AS</span>
               </div>
-              <h1 className="text-3xl font-bold text-white mb-2">
-                Welcome Back
-              </h1>
-              <p className="text-gray-400">
-                Sign in to continue your anime journey
-              </p>
+              <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
+              <p className="text-gray-400">Sign in to continue your anime journey</p>
             </div>
 
             {/* Error Message */}
@@ -122,9 +118,7 @@ export default function SignInPage() {
                       }
                     }}
                     className={`w-full pl-12 pr-4 py-3.5 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all ${
-                      formErrors.email 
-                        ? 'border-red-500/50' 
-                        : 'border-white/10'
+                      formErrors.email ? 'border-red-500/50' : 'border-white/10'
                     }`}
                     placeholder="you@example.com"
                     suppressHydrationWarning
@@ -153,9 +147,7 @@ export default function SignInPage() {
                       }
                     }}
                     className={`w-full pl-12 pr-12 py-3.5 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all ${
-                      formErrors.password 
-                        ? 'border-red-500/50' 
-                        : 'border-white/10'
+                      formErrors.password ? 'border-red-500/50' : 'border-white/10'
                     }`}
                     placeholder="••••••••"
                     suppressHydrationWarning
@@ -188,7 +180,7 @@ export default function SignInPage() {
                     Remember me
                   </label>
                 </div>
-                <Link 
+                <Link
                   href="/auth/forgot-password"
                   className="text-sm text-primary-400 hover:text-primary-300 transition-colors"
                 >
@@ -216,7 +208,7 @@ export default function SignInPage() {
               <div className="text-center pt-4">
                 <p className="text-gray-400 text-sm">
                   Don't have an account?{' '}
-                  <Link 
+                  <Link
                     href="/auth/signup"
                     className="text-primary-400 hover:text-primary-300 transition-colors font-medium"
                   >

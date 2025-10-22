@@ -16,12 +16,7 @@ export function GuestAuth() {
         <Link href="/auth/signin">Sign In</Link>
       </Button>
       <Separator orientation="vertical" className="h-6 bg-white/20" />
-      <Button
-        variant="outline"
-        size="sm"
-        className="btn-dark h-9 px-4"
-        asChild
-      >
+      <Button variant="outline" size="sm" className="btn-dark h-9 px-4" asChild>
         <Link href="/auth/signup">Sign Up</Link>
       </Button>
     </div>

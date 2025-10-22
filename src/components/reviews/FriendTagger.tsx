@@ -2,11 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
-import { AtSign, X, Search, Check } from 'lucide-react'
-import { Button } from '../ui/button'
+import { AtSign, X } from 'lucide-react'
 import { Badge } from '../ui/badge'
 import { useAuth } from '../../app/lib/auth-context'
-import { cn } from '../../app/lib/utils'
 
 interface Friend {
   id: string
@@ -20,25 +18,25 @@ interface FriendTaggerProps {
   initialTags?: string[]
 }
 
-export function FriendTagger({ onTagsChange, initialTags = [] }: FriendTaggerProps) {
-  const { user } = useAuth()
+export function FriendTagger({ onTagsChange, initialTags: _initialTags = [] }: FriendTaggerProps) {
+  const { user: _user } = useAuth()
   const [friends, setFriends] = useState<Friend[]>([])
   const [taggedFriends, setTaggedFriends] = useState<Friend[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [showDropdown, setShowDropdown] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [_loading, setLoading] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     loadFriends()
-    
+
     // Close dropdown when clicking outside
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowDropdown(false)
       }
     }
-    
+
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
@@ -47,29 +45,30 @@ export function FriendTagger({ onTagsChange, initialTags = [] }: FriendTaggerPro
     const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
     return {
       'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
+      ...(token && { Authorization: `Bearer ${token}` }),
     }
   }
 
   const loadFriends = async () => {
     try {
       setLoading(true)
-      
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
       const url = `${API_URL}/social.getFriends`
-      
+
       const response = await fetch(url, {
         method: 'GET',
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       })
-      
+
       if (!response.ok) {
         throw new Error('Failed to load friends')
       }
-      
+
       const json = await response.json()
       const data = json.result?.data
-      
+
       if (data?.friends) {
         setFriends(data.friends)
       }
@@ -81,30 +80,31 @@ export function FriendTagger({ onTagsChange, initialTags = [] }: FriendTaggerPro
   }
 
   const toggleFriend = (friend: Friend) => {
-    const isTagged = taggedFriends.some(f => f.id === friend.id)
-    
+    const isTagged = taggedFriends.some((f) => f.id === friend.id)
+
     let newTagged: Friend[]
     if (isTagged) {
-      newTagged = taggedFriends.filter(f => f.id !== friend.id)
+      newTagged = taggedFriends.filter((f) => f.id !== friend.id)
     } else {
       newTagged = [...taggedFriends, friend]
     }
-    
+
     setTaggedFriends(newTagged)
-    onTagsChange(newTagged.map(f => f.id))
+    onTagsChange(newTagged.map((f) => f.id))
     setSearchQuery('')
   }
 
   const removeFriend = (friendId: string) => {
-    const newTagged = taggedFriends.filter(f => f.id !== friendId)
+    const newTagged = taggedFriends.filter((f) => f.id !== friendId)
     setTaggedFriends(newTagged)
-    onTagsChange(newTagged.map(f => f.id))
+    onTagsChange(newTagged.map((f) => f.id))
   }
 
-  const filteredFriends = friends.filter(friend => 
-    !taggedFriends.some(f => f.id === friend.id) &&
-    (friend.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     friend.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredFriends = friends.filter(
+    (friend) =>
+      !taggedFriends.some((f) => f.id === friend.id) &&
+      (friend.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        friend.name?.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
   return (
@@ -112,8 +112,8 @@ export function FriendTagger({ onTagsChange, initialTags = [] }: FriendTaggerPro
       {/* Tagged Friends */}
       {taggedFriends.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {taggedFriends.map(friend => (
-            <Badge 
+          {taggedFriends.map((friend) => (
+            <Badge
               key={friend.id}
               className="bg-primary-500/20 text-primary-300 border-primary-500/30 pl-2 pr-1 py-1 flex items-center gap-1"
             >
@@ -161,7 +161,7 @@ export function FriendTagger({ onTagsChange, initialTags = [] }: FriendTaggerPro
         {/* Dropdown */}
         {showDropdown && filteredFriends.length > 0 && (
           <div className="absolute z-10 w-full mt-2 glass rounded-lg border border-white/10 overflow-hidden max-h-64 overflow-y-auto">
-            {filteredFriends.slice(0, 10).map(friend => (
+            {filteredFriends.slice(0, 10).map((friend) => (
               <button
                 key={friend.id}
                 onClick={() => toggleFriend(friend)}
@@ -169,8 +169,8 @@ export function FriendTagger({ onTagsChange, initialTags = [] }: FriendTaggerPro
               >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 overflow-hidden border border-white/10">
                   {friend.avatar ? (
-                    <Image 
-                      src={friend.avatar} 
+                    <Image
+                      src={friend.avatar}
                       alt={friend.username}
                       width={32}
                       height={32}
@@ -178,7 +178,7 @@ export function FriendTagger({ onTagsChange, initialTags = [] }: FriendTaggerPro
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-xs font-bold text-primary-400">
-                      {friend.username[0].toUpperCase()}
+                      {friend.username?.[0]?.toUpperCase() || 'U'}
                     </div>
                   )}
                 </div>
@@ -186,9 +186,7 @@ export function FriendTagger({ onTagsChange, initialTags = [] }: FriendTaggerPro
                   <div className="font-medium text-white truncate">
                     {friend.name || friend.username}
                   </div>
-                  <div className="text-xs text-gray-400 truncate">
-                    @{friend.username}
-                  </div>
+                  <div className="text-xs text-gray-400 truncate">@{friend.username}</div>
                 </div>
               </button>
             ))}
@@ -204,10 +202,7 @@ export function FriendTagger({ onTagsChange, initialTags = [] }: FriendTaggerPro
       </div>
 
       {/* Info Text */}
-      <p className="text-xs text-gray-500">
-        Tag friends to recommend this anime to them
-      </p>
+      <p className="text-xs text-gray-500">Tag friends to recommend this anime to them</p>
     </div>
   )
 }
-

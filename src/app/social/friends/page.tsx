@@ -50,7 +50,7 @@ export default function FriendsPage() {
   const tabs: Array<{ id: TabType; label: string; icon: any }> = [
     { id: 'friends', label: 'Friends', icon: Users },
     { id: 'followers', label: 'Followers', icon: UserCheck },
-    { id: 'following', label: 'Following', icon: UserPlus }
+    { id: 'following', label: 'Following', icon: UserPlus },
   ]
 
   return (
@@ -72,7 +72,7 @@ export default function FriendsPage() {
             >
               ← Back to Dashboard
             </Link>
-            
+
             <div className="flex items-center gap-4 mb-2">
               <div className="w-14 h-14 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-2xl flex items-center justify-center">
                 <Users className="h-7 w-7 text-primary-400" />
@@ -97,9 +97,10 @@ export default function FriendsPage() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`
                       flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium transition-all
-                      ${activeTab === tab.id
-                        ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      ${
+                        activeTab === tab.id
+                          ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg'
+                          : 'text-gray-400 hover:text-white hover:bg-white/5'
                       }
                     `}
                   >
@@ -117,7 +118,9 @@ export default function FriendsPage() {
               <div>
                 <div className="mb-6">
                   <h2 className="text-xl font-bold text-white mb-2">Mutual Follows</h2>
-                  <p className="text-gray-400 text-sm">People you follow who also follow you back</p>
+                  <p className="text-gray-400 text-sm">
+                    People you follow who also follow you back
+                  </p>
                 </div>
                 <FollowList userId={user.id} type="friends" limit={50} />
               </div>
@@ -168,4 +171,3 @@ export default function FriendsPage() {
     </div>
   )
 }
-

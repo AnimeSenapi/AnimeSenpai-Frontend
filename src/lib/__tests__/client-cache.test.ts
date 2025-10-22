@@ -43,18 +43,18 @@ describe('ClientCache', () => {
     it('should expire values after TTL', async () => {
       clientCache.set('expire-test', 'value', 100) // 100ms TTL
       expect(clientCache.get('expire-test')).toBe('value')
-      
-      await new Promise(resolve => setTimeout(resolve, 150))
-      
+
+      await new Promise((resolve) => setTimeout(resolve, 150))
+
       expect(clientCache.get('expire-test')).toBeNull()
     })
 
     it('should not expire values before TTL', async () => {
       clientCache.set('no-expire-test', 'value', 1000) // 1 second TTL
       expect(clientCache.get('no-expire-test')).toBe('value')
-      
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
+
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
       expect(clientCache.get('no-expire-test')).toBe('value')
     })
   })
@@ -65,7 +65,7 @@ describe('ClientCache', () => {
       clientCache.get('stats-test')
       clientCache.get('stats-test')
       clientCache.get('non-existent')
-      
+
       const stats = clientCache.stats()
       expect(stats.size).toBe(1)
       expect(stats.totalHits).toBeGreaterThan(0)
@@ -76,11 +76,11 @@ describe('ClientCache', () => {
     it('should track top keys', () => {
       clientCache.set('key1', 'value1', CacheTTL.short)
       clientCache.set('key2', 'value2', CacheTTL.short)
-      
+
       clientCache.get('key1')
       clientCache.get('key1')
       clientCache.get('key2')
-      
+
       const stats = clientCache.stats()
       expect(stats.topKeys).toBeDefined()
       expect(stats.topKeys.length).toBeGreaterThan(0)
@@ -117,4 +117,3 @@ describe('ClientCache', () => {
     })
   })
 })
-

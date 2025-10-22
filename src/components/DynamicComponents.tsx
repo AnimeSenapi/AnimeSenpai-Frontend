@@ -16,22 +16,23 @@ const OverlayFallback = () => <LoadingState variant="overlay" text="Loading..." 
  * Admin Components - Heavy, only load for admins
  */
 export const DynamicAnimeTab = dynamic(
-  () => import('../app/admin/components/AnimeTab').then(mod => ({ default: mod.AnimeTab })),
+  () => import('../app/admin/components/AnimeTab').then((mod) => ({ default: mod.AnimeTab })),
   { loading: LoadingFallback, ssr: false }
 )
 
 export const DynamicUsersTab = dynamic(
-  () => import('../app/admin/components/UsersTab').then(mod => ({ default: mod.UsersTab })),
+  () => import('../app/admin/components/UsersTab').then((mod) => ({ default: mod.UsersTab })),
   { loading: LoadingFallback, ssr: false }
 )
 
 export const DynamicSettingsTab = dynamic(
-  () => import('../app/admin/components/SettingsTab').then(mod => ({ default: mod.SettingsTab })),
+  () => import('../app/admin/components/SettingsTab').then((mod) => ({ default: mod.SettingsTab })),
   { loading: LoadingFallback, ssr: false }
 )
 
 export const DynamicDashboardTab = dynamic(
-  () => import('../app/admin/components/DashboardTab').then(mod => ({ default: mod.DashboardTab })),
+  () =>
+    import('../app/admin/components/DashboardTab').then((mod) => ({ default: mod.DashboardTab })),
   { loading: LoadingFallback, ssr: false }
 )
 
@@ -39,17 +40,17 @@ export const DynamicDashboardTab = dynamic(
  * Social Components - Load when user interacts
  */
 export const DynamicShareAnimeCard = dynamic(
-  () => import('./social/ShareAnimeCard').then(mod => ({ default: mod.ShareAnimeCard })),
+  () => import('./social/ShareAnimeCard').then((mod) => ({ default: mod.ShareAnimeCard })),
   { loading: SpinnerFallback, ssr: false }
 )
 
 export const DynamicFollowButton = dynamic(
-  () => import('./social/FollowButton').then(mod => ({ default: mod.FollowButton })),
+  () => import('./social/FollowButton').then((mod) => ({ default: mod.FollowButton })),
   { loading: SpinnerFallback, ssr: false }
 )
 
 export const DynamicFriendsWatching = dynamic(
-  () => import('./social/FriendsWatching').then(mod => ({ default: mod.FriendsWatching })),
+  () => import('./social/FriendsWatching').then((mod) => ({ default: mod.FriendsWatching })),
   { loading: LoadingFallback, ssr: false }
 )
 
@@ -57,7 +58,7 @@ export const DynamicFriendsWatching = dynamic(
  * Media Components - Heavy, load on demand
  */
 export const DynamicTrailerPlayer = dynamic(
-  () => import('./anime/TrailerPlayer').then(mod => ({ default: mod.TrailerPlayer })),
+  () => import('./anime/TrailerPlayer').then((mod) => ({ default: mod.TrailerPlayer })),
   { loading: OverlayFallback, ssr: false }
 )
 
@@ -65,7 +66,8 @@ export const DynamicTrailerPlayer = dynamic(
  * Chart Components - Heavy libraries, load on demand
  */
 export const DynamicCharts = dynamic(
-  () => import('../app/admin/components/DashboardTab').then(mod => ({ default: mod.DashboardTab })),
+  () =>
+    import('../app/admin/components/DashboardTab').then((mod) => ({ default: mod.DashboardTab })),
   { loading: LoadingFallback, ssr: false }
 )
 
@@ -73,7 +75,10 @@ export const DynamicCharts = dynamic(
  * Recommendation Carousel - Can be lazy loaded
  */
 export const DynamicRecommendationCarousel = dynamic(
-  () => import('./recommendations/RecommendationCarousel').then(mod => ({ default: mod.RecommendationCarousel })),
+  () =>
+    import('./recommendations/RecommendationCarousel').then((mod) => ({
+      default: mod.RecommendationCarousel,
+    })),
   { loading: LoadingFallback }
 )
 
@@ -81,7 +86,7 @@ export const DynamicRecommendationCarousel = dynamic(
  * Cookie Consent - Not critical for initial render
  */
 export const DynamicCookieConsent = dynamic(
-  () => import('./CookieConsent').then(mod => ({ default: mod.CookieConsent })),
+  () => import('./CookieConsent').then((mod) => ({ default: mod.CookieConsent })),
   { ssr: false }
 )
 
@@ -100,4 +105,3 @@ export function createLazyComponent<T extends React.ComponentType<any>>(
     ssr: options?.ssr ?? true,
   })
 }
-

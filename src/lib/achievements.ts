@@ -1,16 +1,16 @@
 /**
  * 🏆 Achievement System
- * 
+ *
  * Gamification features to increase user engagement
  */
 
-import { 
-  Trophy, 
-  Star, 
-  Heart, 
-  Flame, 
-  Target, 
-  Award, 
+import {
+  Trophy,
+  Star,
+  Heart,
+  Flame,
+  Target,
+  Award,
   Zap,
   Crown,
   Gem,
@@ -24,7 +24,7 @@ import {
   Film,
   BookOpen,
   Compass,
-  type LucideIcon
+  type LucideIcon,
 } from 'lucide-react'
 
 export type AchievementCategory = 'watching' | 'rating' | 'social' | 'exploration' | 'special'
@@ -50,7 +50,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Film,
     category: 'watching',
     tier: 'bronze',
-    requirement: 1
+    requirement: 1,
   },
   {
     id: 'anime_10',
@@ -59,7 +59,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: BookOpen,
     category: 'watching',
     tier: 'bronze',
-    requirement: 10
+    requirement: 10,
   },
   {
     id: 'anime_25',
@@ -68,7 +68,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Eye,
     category: 'watching',
     tier: 'silver',
-    requirement: 25
+    requirement: 25,
   },
   {
     id: 'anime_50',
@@ -77,7 +77,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Star,
     category: 'watching',
     tier: 'silver',
-    requirement: 50
+    requirement: 50,
   },
   {
     id: 'anime_100',
@@ -86,7 +86,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Trophy,
     category: 'watching',
     tier: 'gold',
-    requirement: 100
+    requirement: 100,
   },
   {
     id: 'anime_250',
@@ -95,7 +95,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Award,
     category: 'watching',
     tier: 'gold',
-    requirement: 250
+    requirement: 250,
   },
   {
     id: 'anime_500',
@@ -104,7 +104,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Crown,
     category: 'watching',
     tier: 'platinum',
-    requirement: 500
+    requirement: 500,
   },
   {
     id: 'anime_1000',
@@ -113,7 +113,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Gem,
     category: 'watching',
     tier: 'diamond',
-    requirement: 1000
+    requirement: 1000,
   },
 
   // Completion Achievements
@@ -124,7 +124,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Target,
     category: 'watching',
     tier: 'bronze',
-    requirement: 10
+    requirement: 10,
   },
   {
     id: 'completed_50',
@@ -133,7 +133,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Trophy,
     category: 'watching',
     tier: 'silver',
-    requirement: 50
+    requirement: 50,
   },
   {
     id: 'completed_100',
@@ -142,7 +142,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Crown,
     category: 'watching',
     tier: 'gold',
-    requirement: 100
+    requirement: 100,
   },
 
   // Rating Achievements
@@ -153,7 +153,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Star,
     category: 'rating',
     tier: 'bronze',
-    requirement: 1
+    requirement: 1,
   },
   {
     id: 'ratings_10',
@@ -162,7 +162,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: MessageSquare,
     category: 'rating',
     tier: 'bronze',
-    requirement: 10
+    requirement: 10,
   },
   {
     id: 'ratings_50',
@@ -171,7 +171,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Award,
     category: 'rating',
     tier: 'silver',
-    requirement: 50
+    requirement: 50,
   },
   {
     id: 'ratings_100',
@@ -180,7 +180,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Crown,
     category: 'rating',
     tier: 'gold',
-    requirement: 100
+    requirement: 100,
   },
 
   // Social Achievements
@@ -191,7 +191,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Users,
     category: 'social',
     tier: 'bronze',
-    requirement: 1
+    requirement: 1,
   },
   {
     id: 'followers_10',
@@ -200,7 +200,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Users,
     category: 'social',
     tier: 'silver',
-    requirement: 10
+    requirement: 10,
   },
   {
     id: 'followers_50',
@@ -209,7 +209,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: TrendingUp,
     category: 'social',
     tier: 'gold',
-    requirement: 50
+    requirement: 50,
   },
   {
     id: 'followers_100',
@@ -218,7 +218,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Crown,
     category: 'social',
     tier: 'platinum',
-    requirement: 100
+    requirement: 100,
   },
   {
     id: 'following_10',
@@ -227,7 +227,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Heart,
     category: 'social',
     tier: 'bronze',
-    requirement: 10
+    requirement: 10,
   },
   {
     id: 'friends_5',
@@ -236,7 +236,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Users,
     category: 'social',
     tier: 'silver',
-    requirement: 5
+    requirement: 5,
   },
 
   // Exploration Achievements
@@ -247,7 +247,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Compass,
     category: 'exploration',
     tier: 'bronze',
-    requirement: 5
+    requirement: 5,
   },
   {
     id: 'genres_10',
@@ -256,7 +256,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Sparkles,
     category: 'exploration',
     tier: 'silver',
-    requirement: 10
+    requirement: 10,
   },
   {
     id: 'genres_15',
@@ -265,7 +265,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Gem,
     category: 'exploration',
     tier: 'gold',
-    requirement: 15
+    requirement: 15,
   },
 
   // Special Achievements
@@ -276,7 +276,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Zap,
     category: 'special',
     tier: 'gold',
-    requirement: 1
+    requirement: 1,
   },
   {
     id: 'profile_complete',
@@ -285,7 +285,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Shield,
     category: 'special',
     tier: 'bronze',
-    requirement: 1
+    requirement: 1,
   },
   {
     id: 'streak_7',
@@ -294,7 +294,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Flame,
     category: 'special',
     tier: 'silver',
-    requirement: 7
+    requirement: 7,
   },
   {
     id: 'streak_30',
@@ -303,7 +303,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Calendar,
     category: 'special',
     tier: 'gold',
-    requirement: 30
+    requirement: 30,
   },
   {
     id: 'perfectionist',
@@ -312,8 +312,8 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: Star,
     category: 'rating',
     tier: 'silver',
-    requirement: 10
-  }
+    requirement: 10,
+  },
 ]
 
 // Tier colors and display info
@@ -323,36 +323,36 @@ export const TIER_INFO = {
     bgColor: 'bg-orange-500/10',
     borderColor: 'border-orange-500/30',
     textColor: 'text-orange-400',
-    glow: 'shadow-orange-500/20'
+    glow: 'shadow-orange-500/20',
   },
   silver: {
     color: 'from-gray-400 to-gray-200',
     bgColor: 'bg-gray-400/10',
     borderColor: 'border-gray-400/30',
     textColor: 'text-gray-300',
-    glow: 'shadow-gray-400/20'
+    glow: 'shadow-gray-400/20',
   },
   gold: {
     color: 'from-yellow-600 to-yellow-400',
     bgColor: 'bg-yellow-500/10',
     borderColor: 'border-yellow-500/30',
     textColor: 'text-yellow-400',
-    glow: 'shadow-yellow-500/20'
+    glow: 'shadow-yellow-500/20',
   },
   platinum: {
     color: 'from-cyan-400 to-blue-400',
     bgColor: 'bg-cyan-400/10',
     borderColor: 'border-cyan-400/30',
     textColor: 'text-cyan-400',
-    glow: 'shadow-cyan-400/20'
+    glow: 'shadow-cyan-400/20',
   },
   diamond: {
     color: 'from-purple-400 to-pink-400',
     bgColor: 'bg-purple-400/10',
     borderColor: 'border-purple-400/30',
     textColor: 'text-purple-400',
-    glow: 'shadow-purple-400/20'
-  }
+    glow: 'shadow-purple-400/20',
+  },
 }
 
 /**
@@ -464,10 +464,7 @@ export function calculateAchievements(stats: {
 /**
  * Get achievement progress (0-1)
  */
-export function getAchievementProgress(
-  achievement: Achievement,
-  currentValue: number
-): number {
+export function getAchievementProgress(achievement: Achievement, currentValue: number): number {
   return Math.min(currentValue / achievement.requirement, 1)
 }
 
@@ -478,9 +475,8 @@ export function getNextAchievement(
   category: AchievementCategory,
   unlockedIds: string[]
 ): Achievement | null {
-  const categoryAchievements = ACHIEVEMENTS
-    .filter(a => a.category === category)
-    .filter(a => !unlockedIds.includes(a.id))
+  const categoryAchievements = ACHIEVEMENTS.filter((a) => a.category === category)
+    .filter((a) => !unlockedIds.includes(a.id))
     .sort((a, b) => a.requirement - b.requirement)
 
   return categoryAchievements[0] || null
@@ -497,7 +493,7 @@ export function groupAchievementsByCategory(
     rating: [],
     social: [],
     exploration: [],
-    special: []
+    special: [],
   }
 
   for (const achievement of achievements) {
@@ -506,4 +502,3 @@ export function groupAchievementsByCategory(
 
   return grouped
 }
-

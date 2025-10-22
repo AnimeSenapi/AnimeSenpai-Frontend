@@ -11,11 +11,11 @@ interface ProtectedRouteProps {
   requireGuest?: boolean
 }
 
-export function ProtectedRoute({ 
-  children, 
-  redirectTo = '/auth/signin', 
+export function ProtectedRoute({
+  children,
+  redirectTo = '/auth/signin',
   requireAuth = true,
-  requireGuest = false 
+  requireGuest = false,
 }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
@@ -62,7 +62,13 @@ export function ProtectedRoute({
 }
 
 // Convenience components
-export function RequireAuth({ children, redirectTo }: { children: React.ReactNode; redirectTo?: string }) {
+export function RequireAuth({
+  children,
+  redirectTo,
+}: {
+  children: React.ReactNode
+  redirectTo?: string
+}) {
   return (
     <ProtectedRoute requireAuth={true} redirectTo={redirectTo}>
       {children}

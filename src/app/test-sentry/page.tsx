@@ -2,7 +2,6 @@
 
 import { Button } from '@/components/ui/button'
 import { captureException, captureMessage, logger } from '@/lib/logger'
-import * as Sentry from '@sentry/nextjs'
 import Link from 'next/link'
 
 /**
@@ -16,22 +15,22 @@ export default function TestSentryPage() {
       throw new Error('Test error from Sentry test page')
     } catch (error) {
       captureException(error, {
-        context: { 
+        context: {
           page: 'test-sentry',
-          testType: 'manual'
+          testType: 'manual',
         },
         tags: {
-          test: 'true'
-        }
+          test: 'true',
+        },
       })
       alert('Error sent to Sentry! Check your Sentry dashboard.')
     }
   }
 
   const testLog = () => {
-    logger.info('Test log from Sentry test page', { 
+    logger.info('Test log from Sentry test page', {
       timestamp: Date.now(),
-      test: true 
+      test: true,
     })
     alert('Log sent to Sentry! Check your Sentry dashboard.')
   }
@@ -40,7 +39,7 @@ export default function TestSentryPage() {
     captureMessage('Test message from Sentry test page', {
       level: 'warning',
       context: { test: true },
-      tags: { feature: 'sentry-test' }
+      tags: { feature: 'sentry-test' },
     })
     alert('Message sent to Sentry! Check your Sentry dashboard.')
   }
@@ -59,20 +58,18 @@ export default function TestSentryPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 pt-32 pb-20">
       <div className="container mx-auto px-4 max-w-2xl">
         <div className="glass rounded-2xl p-8">
-          <h1 className="text-3xl font-bold text-white mb-2">
-            🧪 Sentry Test Page
-          </h1>
+          <h1 className="text-3xl font-bold text-white mb-2">🧪 Sentry Test Page</h1>
           <p className="text-gray-400 mb-8">
             Test Sentry error tracking and logging. Check your{' '}
-            <a 
-              href="https://sentry.io" 
-              target="_blank" 
+            <a
+              href="https://sentry.io"
+              target="_blank"
               rel="noopener noreferrer"
               className="text-primary-400 hover:underline"
             >
               Sentry dashboard
-            </a>
-            {' '}after clicking these buttons.
+            </a>{' '}
+            after clicking these buttons.
           </p>
 
           <div className="space-y-4">
@@ -88,9 +85,7 @@ export default function TestSentryPage() {
 
             <div className="bg-white/5 rounded-xl p-4">
               <h2 className="text-white font-semibold mb-2">2. Test Structured Log</h2>
-              <p className="text-gray-400 text-sm mb-3">
-                Sends a structured log entry to Sentry
-              </p>
+              <p className="text-gray-400 text-sm mb-3">Sends a structured log entry to Sentry</p>
               <Button onClick={testLog} className="w-full">
                 Test Logger
               </Button>
@@ -98,9 +93,7 @@ export default function TestSentryPage() {
 
             <div className="bg-white/5 rounded-xl p-4">
               <h2 className="text-white font-semibold mb-2">3. Test Message</h2>
-              <p className="text-gray-400 text-sm mb-3">
-                Sends a custom message to Sentry
-              </p>
+              <p className="text-gray-400 text-sm mb-3">Sends a custom message to Sentry</p>
               <Button onClick={testMessage} className="w-full">
                 Test Message Capture
               </Button>
@@ -121,8 +114,8 @@ export default function TestSentryPage() {
               <p className="text-gray-400 text-sm mb-3">
                 ⚠️ Throws an uncaught error (will crash the component)
               </p>
-              <Button 
-                onClick={testThrowError} 
+              <Button
+                onClick={testThrowError}
                 variant="outline"
                 className="w-full border-error-500/50 text-error-400 hover:bg-error-500/10"
               >
@@ -134,16 +127,21 @@ export default function TestSentryPage() {
           <div className="mt-8 p-4 bg-primary-500/10 border border-primary-500/20 rounded-xl">
             <h3 className="text-primary-400 font-semibold mb-2">Environment Info</h3>
             <div className="text-sm text-gray-300 space-y-1">
-              <p>Node ENV: <code className="text-primary-300">{process.env.NODE_ENV || 'development'}</code></p>
-              <p>Sentry DSN: <code className="text-primary-300">{process.env.NEXT_PUBLIC_SENTRY_DSN ? 'Set' : 'Using fallback'}</code></p>
+              <p>
+                Node ENV:{' '}
+                <code className="text-primary-300">{process.env.NODE_ENV || 'development'}</code>
+              </p>
+              <p>
+                Sentry DSN:{' '}
+                <code className="text-primary-300">
+                  {process.env.NEXT_PUBLIC_SENTRY_DSN ? 'Set' : 'Using fallback'}
+                </code>
+              </p>
             </div>
           </div>
 
           <div className="mt-6 text-center">
-            <Link 
-              href="/"
-              className="text-gray-400 hover:text-white transition-colors"
-            >
+            <Link href="/" className="text-gray-400 hover:text-white transition-colors">
               ← Back to Home
             </Link>
           </div>
@@ -152,4 +150,3 @@ export default function TestSentryPage() {
     </div>
   )
 }
-

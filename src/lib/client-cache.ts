@@ -1,6 +1,6 @@
 /**
  * 🚀 Client-Side Cache Manager
- * 
+ *
  * Reduces redundant API calls by caching data in browser memory
  * Automatically expires stale data
  * Uses localStorage for persistent caching across sessions
@@ -14,11 +14,11 @@ interface CacheEntry<T> {
 }
 
 export const CacheTTL = {
-  short: 1 * 60 * 1000,      // 1 minute
-  medium: 5 * 60 * 1000,     // 5 minutes
-  long: 15 * 60 * 1000,      // 15 minutes
-  veryLong: 60 * 60 * 1000,  // 1 hour
-  day: 24 * 60 * 60 * 1000,  // 24 hours
+  short: 1 * 60 * 1000, // 1 minute
+  medium: 5 * 60 * 1000, // 5 minutes
+  long: 15 * 60 * 1000, // 15 minutes
+  veryLong: 60 * 60 * 1000, // 1 hour
+  day: 24 * 60 * 60 * 1000, // 24 hours
   week: 7 * 24 * 60 * 60 * 1000, // 1 week
 }
 
@@ -37,11 +37,11 @@ class ClientCache {
 
   constructor() {
     this.cache = new Map()
-    
+
     // Cleanup expired entries every minute
     if (typeof window !== 'undefined') {
       setInterval(() => this.cleanup(), 60000)
-      
+
       // Load from localStorage on init
       if (CACHE_CONFIG.persistToLocalStorage) {
         this.loadFromLocalStorage()
@@ -52,51 +52,51 @@ class ClientCache {
   get<T>(key: string): T | null {
     // Check memory cache first
     let entry = this.cache.get(key)
-    
+
     // If not in memory, check localStorage
     if (!entry && CACHE_CONFIG.persistToLocalStorage) {
-      entry = this.getFromLocalStorage(key)
+      entry = this.getFromLocalStorage(key) ?? undefined
       if (entry) {
         this.cache.set(key, entry)
       }
     }
-    
+
     if (!entry) {
       this.totalMisses++
       return null
     }
-    
+
     if (Date.now() > entry.expires) {
       this.delete(key)
       this.totalMisses++
       return null
     }
-    
+
     // Update hit count
     entry.hits++
     this.totalHits++
-    
+
     return entry.data as T
   }
 
   set<T>(key: string, data: T, ttl: number): void {
     const now = Date.now()
     const expires = now + ttl
-    
+
     // Check if we need to evict old entries
     if (this.cache.size >= CACHE_CONFIG.maxMemorySize) {
       this.evictOldest()
     }
-    
+
     const entry: CacheEntry<T> = {
       data,
       expires,
       timestamp: now,
-      hits: 0
+      hits: 0,
     }
-    
+
     this.cache.set(key, entry)
-    
+
     // Persist to localStorage if enabled
     if (CACHE_CONFIG.persistToLocalStorage) {
       this.saveToLocalStorage(key, entry)
@@ -105,7 +105,7 @@ class ClientCache {
 
   delete(key: string): void {
     this.cache.delete(key)
-    
+
     if (CACHE_CONFIG.persistToLocalStorage) {
       this.deleteFromLocalStorage(key)
     }
@@ -115,7 +115,7 @@ class ClientCache {
     this.cache.clear()
     this.totalHits = 0
     this.totalMisses = 0
-    
+
     if (CACHE_CONFIG.persistToLocalStorage) {
       this.clearLocalStorage()
     }
@@ -124,27 +124,27 @@ class ClientCache {
   private cleanup(): void {
     const now = Date.now()
     const keysToDelete: string[] = []
-    
+
     for (const [key, entry] of this.cache.entries()) {
       if (now > entry.expires) {
         keysToDelete.push(key)
       }
     }
-    
-    keysToDelete.forEach(key => this.delete(key))
+
+    keysToDelete.forEach((key) => this.delete(key))
   }
 
   private evictOldest(): void {
     let oldestKey: string | null = null
     let oldestTimestamp = Infinity
-    
+
     for (const [key, entry] of this.cache.entries()) {
       if (entry.timestamp < oldestTimestamp) {
         oldestTimestamp = entry.timestamp
         oldestKey = key
       }
     }
-    
+
     if (oldestKey) {
       this.delete(oldestKey)
     }
@@ -185,7 +185,7 @@ class ClientCache {
   private clearLocalStorage(): void {
     try {
       const keys = Object.keys(localStorage)
-      keys.forEach(key => {
+      keys.forEach((key) => {
         if (key.startsWith(CACHE_CONFIG.localStoragePrefix)) {
           localStorage.removeItem(key)
         }
@@ -198,7 +198,7 @@ class ClientCache {
   private loadFromLocalStorage(): void {
     try {
       const keys = Object.keys(localStorage)
-      keys.forEach(key => {
+      keys.forEach((key) => {
         if (key.startsWith(CACHE_CONFIG.localStoragePrefix)) {
           const cacheKey = key.replace(CACHE_CONFIG.localStoragePrefix, '')
           const item = localStorage.getItem(key)
@@ -221,24 +221,24 @@ class ClientCache {
   stats() {
     const totalRequests = this.totalHits + this.totalMisses
     const hitRate = totalRequests > 0 ? (this.totalHits / totalRequests) * 100 : 0
-    
+
     let totalHits = 0
     const topKeys: Array<{ key: string; hits: number }> = []
-    
+
     for (const [key, entry] of this.cache.entries()) {
       totalHits += entry.hits
       topKeys.push({ key, hits: entry.hits })
     }
-    
+
     topKeys.sort((a, b) => b.hits - a.hits)
-    
+
     return {
       size: this.cache.size,
       keys: Array.from(this.cache.keys()),
       hitRate: hitRate.toFixed(2) + '%',
       totalHits: this.totalHits,
       totalMisses: this.totalMisses,
-      topKeys: topKeys.slice(0, 10)
+      topKeys: topKeys.slice(0, 10),
     }
   }
 }

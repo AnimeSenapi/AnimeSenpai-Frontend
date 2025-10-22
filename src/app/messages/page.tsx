@@ -6,23 +6,21 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createPortal } from 'react-dom'
 import { formatDistanceToNow } from 'date-fns'
-import { 
-  MessageCircle, 
-  Send, 
+import {
+  MessageCircle,
+  Send,
   Loader2,
   ArrowLeft,
   Search,
   Film,
   UserPlus,
   X,
-  Users
+  Users,
 } from 'lucide-react'
 import { Button } from '../../components/ui/button'
-import { Badge } from '../../components/ui/badge'
 import { LoadingState } from '../../components/ui/loading-state'
-import { EmptyState } from '../../components/ui/error-state'
 import { useAuth } from '../lib/auth-context'
-import { useToast } from '../../lib/toast-context'
+import { useToast } from '../../components/ui/toast'
 import { cn } from '../lib/utils'
 
 interface Conversation {
@@ -73,7 +71,7 @@ export default function MessagesPage() {
   const router = useRouter()
   const { isAuthenticated, user, isLoading: authLoading } = useAuth()
   const toast = useToast()
-  
+
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
@@ -91,14 +89,14 @@ export default function MessagesPage() {
     if (authLoading) {
       return
     }
-    
+
     // Check if user is authenticated
     if (!isAuthenticated || !user) {
       console.log('❌ Not authenticated, redirecting to sign in')
       router.push('/auth/signin')
       return
     }
-    
+
     console.log('✅ User authenticated:', user.username)
     loadConversations()
   }, [isAuthenticated, authLoading, user])
@@ -106,14 +104,14 @@ export default function MessagesPage() {
   const loadConversations = async () => {
     try {
       setLoading(true)
-      
+
       // Check for auth token
       const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
       console.log('🔑 Auth token exists:', !!token)
-      
+
       const { apiGetConversations } = await import('../lib/api')
-      const data = await apiGetConversations() as any
-      
+      const data = (await apiGetConversations()) as any
+
       if (data?.conversations) {
         setConversations(data.conversations)
         console.log('✅ Loaded conversations:', data.conversations.length)
@@ -124,7 +122,7 @@ export default function MessagesPage() {
       console.error('❌ Failed to load conversations:', error)
       console.error('Error message:', error.message)
       console.error('Error stack:', error.stack)
-      
+
       // Check if it's an auth error
       if (error.message?.includes('No authentication') || error.message?.includes('UNAUTHORIZED')) {
         toast.error('Please sign in to view messages', 'Authentication Required')
@@ -142,20 +140,16 @@ export default function MessagesPage() {
     try {
       setLoadingMessages(true)
       setSelectedConversation(userId)
-      
+
       const { apiGetMessages } = await import('../lib/api')
-      const data = await apiGetMessages(userId, { limit: 50 }) as any
-      
+      const data = (await apiGetMessages(userId, { limit: 50 })) as any
+
       if (data?.messages) {
         setMessages(data.messages)
-        
+
         // Mark conversation as read
-        setConversations(prev => 
-          prev.map(conv => 
-            conv.user.id === userId 
-              ? { ...conv, unreadCount: 0 }
-              : conv
-          )
+        setConversations((prev) =>
+          prev.map((conv) => (conv.user.id === userId ? { ...conv, unreadCount: 0 } : conv))
         )
       }
     } catch (error) {
@@ -172,20 +166,18 @@ export default function MessagesPage() {
 
     try {
       setSending(true)
-      
+
       const { apiSendMessage } = await import('../lib/api')
-      const data = await apiSendMessage(selectedConversation, newMessage) as any
-      
+      const data = (await apiSendMessage(selectedConversation, newMessage)) as any
+
       if (data?.message) {
-        setMessages(prev => [...prev, data.message])
+        setMessages((prev) => [...prev, data.message])
         setNewMessage('')
-        
+
         // Update conversation last message
-        setConversations(prev =>
-          prev.map(conv =>
-            conv.user.id === selectedConversation
-              ? { ...conv, lastMessage: data.message }
-              : conv
+        setConversations((prev) =>
+          prev.map((conv) =>
+            conv.user.id === selectedConversation ? { ...conv, lastMessage: data.message } : conv
           )
         )
         toast.success('Message sent!', 'Success')
@@ -202,7 +194,7 @@ export default function MessagesPage() {
     try {
       setLoadingFriends(true)
       const { apiGetFriends } = await import('../lib/api')
-      const data = await apiGetFriends() as any
+      const data = (await apiGetFriends()) as any
       setFriends(data?.friends || [])
     } catch (error) {
       console.error('Failed to load friends:', error)
@@ -224,12 +216,13 @@ export default function MessagesPage() {
     }
   }, [showNewMessageModal])
 
-  const filteredConversations = conversations.filter(conv =>
-    conv.user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    conv.user.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredConversations = conversations.filter(
+    (conv) =>
+      conv.user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      conv.user.name?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const selectedUser = conversations.find(c => c.user.id === selectedConversation)?.user
+  const selectedUser = conversations.find((c) => c.user.id === selectedConversation)?.user
 
   if (loading) {
     return <LoadingState variant="full" text="Loading messages..." size="lg" />
@@ -249,7 +242,7 @@ export default function MessagesPage() {
               <p className="text-gray-400">Chat with friends and share recommendations</p>
             </div>
           </div>
-          
+
           {/* New Message Button */}
           <Button
             onClick={() => setShowNewMessageModal(true)}
@@ -287,21 +280,21 @@ export default function MessagesPage() {
                   <p className="text-gray-500 text-xs mt-2">Start chatting with your friends!</p>
                 </div>
               ) : (
-                filteredConversations.map(conv => (
+                filteredConversations.map((conv) => (
                   <button
                     key={conv.user.id}
                     onClick={() => loadMessages(conv.user.id)}
                     className={cn(
-                      "w-full p-4 border-b border-white/5 hover:bg-white/5 transition-all text-left",
-                      selectedConversation === conv.user.id && "bg-white/10"
+                      'w-full p-4 border-b border-white/5 hover:bg-white/5 transition-all text-left',
+                      selectedConversation === conv.user.id && 'bg-white/10'
                     )}
                   >
                     <div className="flex gap-3">
                       <div className="relative flex-shrink-0">
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 overflow-hidden border border-white/10">
                           {conv.user.avatar ? (
-                            <Image 
-                              src={conv.user.avatar} 
+                            <Image
+                              src={conv.user.avatar}
                               alt={conv.user.username}
                               width={48}
                               height={48}
@@ -309,7 +302,7 @@ export default function MessagesPage() {
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-lg font-bold text-primary-400">
-                              {conv.user.username[0].toUpperCase()}
+                              {conv.user.username?.[0]?.toUpperCase() || 'U'}
                             </div>
                           )}
                         </div>
@@ -319,7 +312,7 @@ export default function MessagesPage() {
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-semibold text-white truncate">
@@ -327,18 +320,21 @@ export default function MessagesPage() {
                           </span>
                           {conv.lastMessage && (
                             <span className="text-xs text-gray-500">
-                              {formatDistanceToNow(new Date(conv.lastMessage.createdAt), { addSuffix: true })}
+                              {formatDistanceToNow(new Date(conv.lastMessage.createdAt), {
+                                addSuffix: true,
+                              })}
                             </span>
                           )}
                         </div>
-                        <p className={cn(
-                          "text-sm truncate",
-                          conv.unreadCount > 0 ? "text-white font-medium" : "text-gray-400"
-                        )}>
+                        <p
+                          className={cn(
+                            'text-sm truncate',
+                            conv.unreadCount > 0 ? 'text-white font-medium' : 'text-gray-400'
+                          )}
+                        >
                           {conv.lastMessage?.anime
                             ? `📺 Recommended: ${conv.lastMessage.anime.titleEnglish || conv.lastMessage.anime.title}`
-                            : conv.lastMessage?.content || 'No messages yet'
-                          }
+                            : conv.lastMessage?.content || 'No messages yet'}
                         </p>
                       </div>
                     </div>
@@ -359,11 +355,14 @@ export default function MessagesPage() {
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
-                <Link href={`/user/${selectedUser.username}`} className="flex items-center gap-3 flex-1">
+                <Link
+                  href={`/user/${selectedUser.username}`}
+                  className="flex items-center gap-3 flex-1"
+                >
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 overflow-hidden border border-white/10">
                     {selectedUser.avatar ? (
-                      <Image 
-                        src={selectedUser.avatar} 
+                      <Image
+                        src={selectedUser.avatar}
                         alt={selectedUser.username}
                         width={40}
                         height={40}
@@ -371,12 +370,14 @@ export default function MessagesPage() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-sm font-bold text-primary-400">
-                        {selectedUser.username[0].toUpperCase()}
+                        {selectedUser.username?.[0]?.toUpperCase() || 'U'}
                       </div>
                     )}
                   </div>
                   <div>
-                    <div className="font-semibold text-white">{selectedUser.name || selectedUser.username}</div>
+                    <div className="font-semibold text-white">
+                      {selectedUser.name || selectedUser.username}
+                    </div>
                     <div className="text-xs text-gray-400">@{selectedUser.username}</div>
                   </div>
                 </Link>
@@ -399,20 +400,17 @@ export default function MessagesPage() {
                 ) : (
                   messages.map((message) => {
                     const isOwn = message.senderId === user?.id
-                    
+
                     return (
                       <div
                         key={message.id}
-                        className={cn(
-                          "flex gap-3",
-                          isOwn ? "flex-row-reverse" : "flex-row"
-                        )}
+                        className={cn('flex gap-3', isOwn ? 'flex-row-reverse' : 'flex-row')}
                       >
                         {!isOwn && (
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 overflow-hidden border border-white/10 flex-shrink-0">
                             {message.sender.avatar ? (
-                              <Image 
-                                src={message.sender.avatar} 
+                              <Image
+                                src={message.sender.avatar}
                                 alt={message.sender.username}
                                 width={32}
                                 height={32}
@@ -420,29 +418,28 @@ export default function MessagesPage() {
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-xs font-bold text-primary-400">
-                                {message.sender.username[0].toUpperCase()}
+                                {message.sender.username?.[0]?.toUpperCase() || 'U'}
                               </div>
                             )}
                           </div>
                         )}
-                        
-                        <div className={cn(
-                          "max-w-[70%]",
-                          isOwn ? "items-end" : "items-start"
-                        )}>
-                          <div className={cn(
-                            "rounded-2xl px-4 py-2",
-                            isOwn 
-                              ? "bg-gradient-to-r from-primary-500 to-secondary-500 text-white" 
-                              : "bg-white/10 text-white"
-                          )}>
+
+                        <div className={cn('max-w-[70%]', isOwn ? 'items-end' : 'items-start')}>
+                          <div
+                            className={cn(
+                              'rounded-2xl px-4 py-2',
+                              isOwn
+                                ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white'
+                                : 'bg-white/10 text-white'
+                            )}
+                          >
                             {message.anime && (
                               <Link href={`/anime/${message.anime.slug}`}>
                                 <div className="flex items-center gap-2 p-2 bg-black/20 rounded-lg mb-2 hover:bg-black/30 transition-all">
                                   {message.anime.coverImage && (
                                     <div className="w-10 h-14 rounded overflow-hidden flex-shrink-0 relative">
-                                      <Image 
-                                        src={message.anime.coverImage} 
+                                      <Image
+                                        src={message.anime.coverImage}
                                         alt={message.anime.title}
                                         fill
                                         className="object-cover"
@@ -514,85 +511,83 @@ export default function MessagesPage() {
       </main>
 
       {/* New Message Modal */}
-      {showNewMessageModal && createPortal(
-        <div 
-          className="fixed inset-0 flex items-center justify-center p-3 sm:p-4 lg:p-6 bg-black/80 backdrop-blur-sm"
-          style={{ 
-            zIndex: 1000000,
-            position: 'fixed',
-            isolation: 'isolate'
-          }}
-        >
-          <div className="glass rounded-xl sm:rounded-2xl max-w-md w-full p-4 sm:p-6 relative border border-white/10 animate-in zoom-in-95 duration-200 max-h-[80vh] flex flex-col">
-            {/* Close Button */}
-            <button
-              onClick={() => setShowNewMessageModal(false)}
-              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-white transition-colors w-8 h-8 flex items-center justify-center"
-              aria-label="Close new message modal"
-            >
-              <X className="h-5 w-5" />
-            </button>
+      {showNewMessageModal &&
+        createPortal(
+          <div
+            className="fixed inset-0 flex items-center justify-center p-3 sm:p-4 lg:p-6 bg-black/80 backdrop-blur-sm"
+            style={{
+              zIndex: 1000000,
+              position: 'fixed',
+              isolation: 'isolate',
+            }}
+          >
+            <div className="glass rounded-xl sm:rounded-2xl max-w-md w-full p-4 sm:p-6 relative border border-white/10 animate-in zoom-in-95 duration-200 max-h-[80vh] flex flex-col">
+              {/* Close Button */}
+              <button
+                onClick={() => setShowNewMessageModal(false)}
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-white transition-colors w-8 h-8 flex items-center justify-center"
+                aria-label="Close new message modal"
+              >
+                <X className="h-5 w-5" />
+              </button>
 
-            {/* Header */}
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2 pr-8">
-              <UserPlus className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400" />
-              New Message
-            </h3>
+              {/* Header */}
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2 pr-8">
+                <UserPlus className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400" />
+                New Message
+              </h3>
 
-            {/* Friends List */}
-            <div className="flex-1 overflow-y-auto -mx-4 px-4">
-              {loadingFriends ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary-400" />
-                </div>
-              ) : friends.length === 0 ? (
-                <div className="text-center py-8">
-                  <Users className="h-12 w-12 text-gray-500 mx-auto mb-3" />
-                  <p className="text-gray-400 text-sm">No friends yet</p>
-                  <p className="text-gray-500 text-xs mt-1">Add friends to start chatting!</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {friends.map((friend: any) => (
-                    <button
-                      key={friend.id}
-                      onClick={() => startNewConversation(friend.id)}
-                      className="w-full flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors group"
-                    >
-                      {friend.avatar ? (
-                        <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                          <Image
-                            src={friend.avatar}
-                            alt={friend.username}
-                            width={40}
-                            height={40}
-                            className="object-cover"
-                          />
+              {/* Friends List */}
+              <div className="flex-1 overflow-y-auto -mx-4 px-4">
+                {loadingFriends ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary-400" />
+                  </div>
+                ) : friends.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Users className="h-12 w-12 text-gray-500 mx-auto mb-3" />
+                    <p className="text-gray-400 text-sm">No friends yet</p>
+                    <p className="text-gray-500 text-xs mt-1">Add friends to start chatting!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {friends.map((friend: any) => (
+                      <button
+                        key={friend.id}
+                        onClick={() => startNewConversation(friend.id)}
+                        className="w-full flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors group"
+                      >
+                        {friend.avatar ? (
+                          <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                            <Image
+                              src={friend.avatar}
+                              alt={friend.username}
+                              width={40}
+                              height={40}
+                              className="object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 flex items-center justify-center flex-shrink-0">
+                            <Users className="h-5 w-5 text-primary-400" />
+                          </div>
+                        )}
+                        <div className="flex-1 text-left min-w-0">
+                          <p className="text-white font-medium text-sm truncate">
+                            {friend.name || friend.username}
+                          </p>
+                          <p className="text-gray-400 text-xs truncate">@{friend.username}</p>
                         </div>
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 flex items-center justify-center flex-shrink-0">
-                          <Users className="h-5 w-5 text-primary-400" />
-                        </div>
-                      )}
-                      <div className="flex-1 text-left min-w-0">
-                        <p className="text-white font-medium text-sm truncate">
-                          {friend.name || friend.username}
-                        </p>
-                        <p className="text-gray-400 text-xs truncate">
-                          @{friend.username}
-                        </p>
-                      </div>
-                      <MessageCircle className="h-4 w-4 text-gray-400 group-hover:text-primary-400 transition-colors" />
-                    </button>
-                  ))}
-                </div>
-              )}
+                        <MessageCircle className="h-4 w-4 text-gray-400 group-hover:text-primary-400 transition-colors" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   )
 }
-

@@ -5,17 +5,17 @@ import Link from 'next/link'
 import { Button } from '../../../../components/ui/button'
 import { RequireGuest } from '../../../lib/protected-route'
 import { useAuth } from '../../../lib/auth-context'
-import { 
-  Lock, 
-  Eye, 
-  EyeOff, 
+import {
+  Lock,
+  Eye,
+  EyeOff,
   ArrowLeft,
   CheckCircle,
   AlertCircle,
   Loader2,
   Shield,
   Check,
-  X
+  X,
 } from 'lucide-react'
 
 interface ResetPasswordPageProps {
@@ -31,7 +31,7 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
   useEffect(() => {
     params.then(({ token }) => setToken(token))
   }, [params])
-  
+
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -48,28 +48,28 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
 
     const validateToken = async () => {
       setIsValidating(true)
-      await new Promise(resolve => setTimeout(resolve, 500))
+      await new Promise((resolve) => setTimeout(resolve, 500))
       setIsValidToken(token.length > 10)
       setIsValidating(false)
     }
-    
+
     validateToken()
   }, [token])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    
+
     if (!isPasswordValid) {
       setError('Password must be at least 8 characters')
       return
     }
-    
+
     if (!isPasswordMatch) {
       setError('Passwords do not match')
       return
     }
-    
+
     try {
       setIsLoading(true)
       await resetPassword(token, password, confirmPassword)
@@ -84,7 +84,6 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
   const isPasswordValid = password.length >= 8
   const isPasswordMatch = password === confirmPassword && confirmPassword.length > 0
   const hasUppercase = /[A-Z]/.test(password)
-  const hasLowercase = /[a-z]/.test(password)
   const hasNumber = /[0-9]/.test(password)
 
   if (isValidating) {
@@ -114,7 +113,7 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
         </div>
 
         <div className="relative z-10 w-full max-w-md">
-          <Link 
+          <Link
             href="/auth/signin"
             className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
           >
@@ -126,29 +125,25 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
             <div className="w-16 h-16 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <AlertCircle className="h-8 w-8 text-red-400" />
             </div>
-            
-            <h1 className="text-3xl font-bold text-white mb-3">
-              Invalid Reset Link
-            </h1>
-            
-            <p className="text-gray-300 mb-2">
-              This password reset link is invalid or has expired
-            </p>
-            
+
+            <h1 className="text-3xl font-bold text-white mb-3">Invalid Reset Link</h1>
+
+            <p className="text-gray-300 mb-2">This password reset link is invalid or has expired</p>
+
             <p className="text-gray-500 text-sm mb-8">
               Reset links expire after 1 hour for security
             </p>
 
             <div className="space-y-3">
               <Button
-                onClick={() => window.location.href = '/auth/forgot-password'}
+                onClick={() => (window.location.href = '/auth/forgot-password')}
                 className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold py-3.5 shadow-lg shadow-primary-500/25"
               >
                 Request New Reset Link
               </Button>
               <Button
                 variant="outline"
-                onClick={() => window.location.href = '/auth/signin'}
+                onClick={() => (window.location.href = '/auth/signin')}
                 className="w-full border-white/20 text-white hover:bg-white/10 py-3.5"
               >
                 Back to Sign In
@@ -169,7 +164,7 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
         </div>
 
         <div className="relative z-10 w-full max-w-md">
-          <Link 
+          <Link
             href="/auth/signin"
             className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
           >
@@ -181,21 +176,15 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
             <div className="w-16 h-16 bg-green-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="h-10 w-10 text-green-400" />
             </div>
-            
-            <h1 className="text-3xl font-bold text-white mb-3">
-              Password Reset! 🎉
-            </h1>
-            
-            <p className="text-gray-300 mb-2">
-              Your password has been successfully updated
-            </p>
-            
-            <p className="text-gray-500 text-sm mb-8">
-              You can now sign in with your new password
-            </p>
+
+            <h1 className="text-3xl font-bold text-white mb-3">Password Reset! 🎉</h1>
+
+            <p className="text-gray-300 mb-2">Your password has been successfully updated</p>
+
+            <p className="text-gray-500 text-sm mb-8">You can now sign in with your new password</p>
 
             <Button
-              onClick={() => window.location.href = '/auth/signin'}
+              onClick={() => (window.location.href = '/auth/signin')}
               className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3.5 shadow-lg shadow-green-500/25"
             >
               Sign In Now
@@ -215,7 +204,7 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
         </div>
 
         <div className="relative z-10 w-full max-w-md">
-          <Link 
+          <Link
             href="/auth/signin"
             className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
           >
@@ -229,12 +218,8 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
               <div className="w-16 h-16 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Lock className="h-8 w-8 text-primary-400" />
               </div>
-              <h1 className="text-3xl font-bold text-white mb-2">
-                Reset Password
-              </h1>
-              <p className="text-gray-400">
-                Choose a strong new password
-              </p>
+              <h1 className="text-3xl font-bold text-white mb-2">Reset Password</h1>
+              <p className="text-gray-400">Choose a strong new password</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -257,8 +242,8 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className={`w-full pl-12 pr-12 py-3.5 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${
-                      password && !isPasswordValid 
-                        ? 'border-red-500/50 focus:ring-red-400/50' 
+                      password && !isPasswordValid
+                        ? 'border-red-500/50 focus:ring-red-400/50'
                         : 'border-white/10 focus:ring-primary-500/50'
                     }`}
                     placeholder="Enter new password"
@@ -272,19 +257,25 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
-                
+
                 {/* Password Requirements */}
                 {password && (
                   <div className="mt-3 space-y-1.5">
-                    <div className={`flex items-center gap-2 text-xs ${isPasswordValid ? 'text-green-400' : 'text-gray-400'}`}>
+                    <div
+                      className={`flex items-center gap-2 text-xs ${isPasswordValid ? 'text-green-400' : 'text-gray-400'}`}
+                    >
                       {isPasswordValid ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
                       <span>At least 8 characters</span>
                     </div>
-                    <div className={`flex items-center gap-2 text-xs ${hasUppercase ? 'text-green-400' : 'text-gray-400'}`}>
+                    <div
+                      className={`flex items-center gap-2 text-xs ${hasUppercase ? 'text-green-400' : 'text-gray-400'}`}
+                    >
                       {hasUppercase ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
                       <span>Contains uppercase letter</span>
                     </div>
-                    <div className={`flex items-center gap-2 text-xs ${hasNumber ? 'text-green-400' : 'text-gray-400'}`}>
+                    <div
+                      className={`flex items-center gap-2 text-xs ${hasNumber ? 'text-green-400' : 'text-gray-400'}`}
+                    >
                       {hasNumber ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
                       <span>Contains number</span>
                     </div>
@@ -294,7 +285,10 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
 
               {/* Confirm Password Input */}
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-gray-300 mb-2"
+                >
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -305,11 +299,11 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className={`w-full pl-12 pr-12 py-3.5 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${
-                      confirmPassword && !isPasswordMatch 
-                        ? 'border-red-500/50 focus:ring-red-400/50' 
+                      confirmPassword && !isPasswordMatch
+                        ? 'border-red-500/50 focus:ring-red-400/50'
                         : confirmPassword && isPasswordMatch
-                        ? 'border-green-500/50 focus:ring-green-400/50'
-                        : 'border-white/10 focus:ring-primary-500/50'
+                          ? 'border-green-500/50 focus:ring-green-400/50'
+                          : 'border-white/10 focus:ring-primary-500/50'
                     }`}
                     placeholder="Confirm new password"
                     required
@@ -319,7 +313,11 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                   >
-                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
                   </button>
                 </div>
                 {confirmPassword && !isPasswordMatch && (
@@ -359,7 +357,7 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
               <div className="text-center pt-4 border-t border-white/10">
                 <p className="text-gray-400 text-sm">
                   Remember your password?{' '}
-                  <Link 
+                  <Link
                     href="/auth/signin"
                     className="text-primary-400 hover:text-primary-300 transition-colors font-medium"
                   >

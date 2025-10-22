@@ -64,14 +64,16 @@ export function CookieConsent() {
       timestamp: new Date().toISOString(),
       version: '1.0', // For future consent updates
     }
-    
+
     localStorage.setItem('cookie-consent', JSON.stringify(consentData))
-    
+
     // Dispatch event for analytics/tracking initialization
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('cookie-consent-updated', { 
-        detail: prefs 
-      }))
+      window.dispatchEvent(
+        new CustomEvent('cookie-consent-updated', {
+          detail: prefs,
+        })
+      )
     }
   }
 
@@ -92,20 +94,22 @@ export function CookieConsent() {
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-bold text-white mb-2">
-                    🍪 We value your privacy
-                  </h3>
+                  <h3 className="text-lg font-bold text-white mb-2">🍪 We value your privacy</h3>
                   <p className="text-sm text-gray-300 leading-relaxed mb-4">
-                    We use cookies to enhance your experience, analyze site traffic, and provide personalized content. 
-                    By clicking "Accept All", you consent to our use of cookies.{' '}
+                    We use cookies to enhance your experience, analyze site traffic, and provide
+                    personalized content. By clicking "Accept All", you consent to our use of
+                    cookies.{' '}
                     <button
                       onClick={() => setShowDetails(true)}
                       className="text-primary-400 hover:text-primary-400 underline"
                     >
                       Customize
-                    </button>
-                    {' '}or read our{' '}
-                    <Link href="/privacy" className="text-primary-400 hover:text-primary-400 underline">
+                    </button>{' '}
+                    or read our{' '}
+                    <Link
+                      href="/privacy"
+                      className="text-primary-400 hover:text-primary-400 underline"
+                    >
                       Privacy Policy
                     </Link>
                     .
@@ -177,7 +181,9 @@ export function CookieConsent() {
                       <div className="flex-1">
                         <h4 className="font-semibold text-white mb-1">Necessary Cookies</h4>
                         <p className="text-sm text-gray-400 mb-2">
-                          Essential for the website to function properly. These cannot be disabled as they are required for authentication, security, and basic functionality.
+                          Essential for the website to function properly. These cannot be disabled
+                          as they are required for authentication, security, and basic
+                          functionality.
                         </p>
                         <p className="text-xs text-gray-500">
                           Examples: Session tokens, authentication, security preferences
@@ -200,7 +206,8 @@ export function CookieConsent() {
                       <div className="flex-1">
                         <h4 className="font-semibold text-white mb-1">Analytics Cookies</h4>
                         <p className="text-sm text-gray-400 mb-2">
-                          Help us understand how you use our site so we can improve your experience. We use these to track page views, session duration, and feature usage.
+                          Help us understand how you use our site so we can improve your experience.
+                          We use these to track page views, session duration, and feature usage.
                         </p>
                         <p className="text-xs text-gray-500">
                           Examples: Google Analytics, Vercel Analytics, performance monitoring
@@ -212,7 +219,9 @@ export function CookieConsent() {
                         <input
                           type="checkbox"
                           checked={preferences.analytics}
-                          onChange={(e) => setPreferences({ ...preferences, analytics: e.target.checked })}
+                          onChange={(e) =>
+                            setPreferences({ ...preferences, analytics: e.target.checked })
+                          }
                           className="sr-only peer"
                         />
                         <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-primary-400/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-primary-500 peer-checked:to-secondary-500"></div>
@@ -229,7 +238,8 @@ export function CookieConsent() {
                       <div className="flex-1">
                         <h4 className="font-semibold text-white mb-1">Preference Cookies</h4>
                         <p className="text-sm text-gray-400 mb-2">
-                          Remember your settings and preferences like theme, language, and display options for a personalized experience.
+                          Remember your settings and preferences like theme, language, and display
+                          options for a personalized experience.
                         </p>
                         <p className="text-xs text-gray-500">
                           Examples: Theme preference, language selection, layout settings
@@ -241,7 +251,9 @@ export function CookieConsent() {
                         <input
                           type="checkbox"
                           checked={preferences.preferences}
-                          onChange={(e) => setPreferences({ ...preferences, preferences: e.target.checked })}
+                          onChange={(e) =>
+                            setPreferences({ ...preferences, preferences: e.target.checked })
+                          }
                           className="sr-only peer"
                         />
                         <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-primary-400/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-primary-500 peer-checked:to-secondary-500"></div>
@@ -258,7 +270,8 @@ export function CookieConsent() {
                       <div className="flex-1">
                         <h4 className="font-semibold text-white mb-1">Marketing Cookies</h4>
                         <p className="text-sm text-gray-400 mb-2">
-                          Used to deliver relevant advertisements and track campaign effectiveness. We may share this data with advertising partners.
+                          Used to deliver relevant advertisements and track campaign effectiveness.
+                          We may share this data with advertising partners.
                         </p>
                         <p className="text-xs text-gray-500">
                           Examples: Ad targeting, conversion tracking, social media integration
@@ -270,7 +283,9 @@ export function CookieConsent() {
                         <input
                           type="checkbox"
                           checked={preferences.marketing}
-                          onChange={(e) => setPreferences({ ...preferences, marketing: e.target.checked })}
+                          onChange={(e) =>
+                            setPreferences({ ...preferences, marketing: e.target.checked })
+                          }
                           className="sr-only peer"
                         />
                         <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-primary-400/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-primary-500 peer-checked:to-secondary-500"></div>
@@ -354,7 +369,7 @@ export function useCookieConsent() {
     }
 
     window.addEventListener('cookie-consent-updated', handleConsentUpdate as EventListener)
-    
+
     return () => {
       window.removeEventListener('cookie-consent-updated', handleConsentUpdate as EventListener)
     }
@@ -366,11 +381,11 @@ export function useCookieConsent() {
 // Helper function to check if analytics is allowed (for GA, etc.)
 export function canUseAnalytics(): boolean {
   if (typeof window === 'undefined') return false
-  
+
   try {
     const stored = localStorage.getItem('cookie-consent')
     if (!stored) return false
-    
+
     const data = JSON.parse(stored)
     return data.preferences?.analytics === true
   } catch {
@@ -381,15 +396,14 @@ export function canUseAnalytics(): boolean {
 // Helper function to check if marketing is allowed
 export function canUseMarketing(): boolean {
   if (typeof window === 'undefined') return false
-  
+
   try {
     const stored = localStorage.getItem('cookie-consent')
     if (!stored) return false
-    
+
     const data = JSON.parse(stored)
     return data.preferences?.marketing === true
   } catch {
     return false
   }
 }
-

@@ -4,20 +4,19 @@ import { useState, useEffect } from 'react'
 import { Bell, BellOff, Check, X, Loader2 } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
-import { useToast } from '../../lib/toast-context'
-import { 
+import { useToast } from '../ui/toast'
+import {
   pushNotificationService,
   isPushNotificationSupported,
   getNotificationPermissionStatus,
   requestNotificationPermission,
   subscribeToPushNotifications,
-  unsubscribeFromPushNotifications
+  unsubscribeFromPushNotifications,
 } from '../../lib/push-notifications'
-import { cn } from '../../app/lib/utils'
 
 export function NotificationSettings() {
   const toast = useToast()
-  
+
   const [isSupported, setIsSupported] = useState(false)
   const [permission, setPermission] = useState<NotificationPermission>('default')
   const [isSubscribed, setIsSubscribed] = useState(false)
@@ -30,11 +29,11 @@ export function NotificationSettings() {
   const checkNotificationStatus = async () => {
     const supported = isPushNotificationSupported()
     setIsSupported(supported)
-    
+
     if (supported) {
       const currentPermission = getNotificationPermissionStatus()
       setPermission(currentPermission)
-      
+
       // Check if already subscribed
       if (currentPermission === 'granted' && 'serviceWorker' in navigator) {
         const registration = await navigator.serviceWorker.ready
@@ -46,31 +45,31 @@ export function NotificationSettings() {
 
   const handleEnableNotifications = async () => {
     setLoading(true)
-    
+
     try {
       // Request permission
       const granted = await requestNotificationPermission()
-      
+
       if (!granted) {
         toast.error('Notification permission denied', 'Error')
         setPermission('denied')
         setLoading(false)
         return
       }
-      
+
       setPermission('granted')
-      
+
       // Subscribe to push
       const subscription = await subscribeToPushNotifications()
-      
+
       if (subscription) {
         setIsSubscribed(true)
         toast.success('Push notifications enabled!', 'Success')
-        
+
         // Show a test notification
         await pushNotificationService.showLocalNotification('Notifications Enabled! 🎉', {
-          body: 'You\'ll now receive updates about friend activities, new followers, and more!',
-          icon: '/favicon.ico'
+          body: "You'll now receive updates about friend activities, new followers, and more!",
+          icon: '/favicon.ico',
         })
       } else {
         toast.error('Failed to enable notifications', 'Error')
@@ -85,10 +84,10 @@ export function NotificationSettings() {
 
   const handleDisableNotifications = async () => {
     setLoading(true)
-    
+
     try {
       const success = await unsubscribeFromPushNotifications()
-      
+
       if (success) {
         setIsSubscribed(false)
         toast.success('Push notifications disabled', 'Success')
@@ -109,12 +108,11 @@ export function NotificationSettings() {
         <div className="flex items-center gap-3 mb-3">
           <BellOff className="h-5 w-5 text-gray-500" />
           <h3 className="text-lg font-semibold text-white">Push Notifications</h3>
-          <Badge className="bg-gray-500/20 text-gray-400 border-gray-500/30">
-            Not Supported
-          </Badge>
+          <Badge className="bg-gray-500/20 text-gray-400 border-gray-500/30">Not Supported</Badge>
         </div>
         <p className="text-sm text-gray-400">
-          Push notifications are not supported in your browser. Please use a modern browser like Chrome, Firefox, or Edge.
+          Push notifications are not supported in your browser. Please use a modern browser like
+          Chrome, Firefox, or Edge.
         </p>
       </div>
     )
@@ -169,7 +167,9 @@ export function NotificationSettings() {
 
       {/* Notification Types */}
       <div className="space-y-3 mb-6">
-        <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide">You'll be notified about:</p>
+        <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide">
+          You'll be notified about:
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
           <div className="flex items-center gap-2 text-gray-300">
             <Check className="h-4 w-4 text-success-400" />
@@ -232,4 +232,3 @@ export function NotificationSettings() {
     </div>
   )
 }
-

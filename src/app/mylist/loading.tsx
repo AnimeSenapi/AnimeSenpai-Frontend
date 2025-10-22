@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function MyListLoading() {
   return (
@@ -56,4 +56,3 @@ export default function MyListLoading() {
     </div>
   )
 }
-

@@ -13,28 +13,34 @@ export function generateAnimeStructuredData(anime: Anime) {
     '@context': 'https://schema.org',
     '@type': 'TVSeries',
     name: anime.titleEnglish || anime.title,
-    alternateName: [
-      anime.title,
-      anime.titleJapanese,
-      ...(anime.titleSynonyms || [])
-    ].filter(Boolean),
-    description: anime.description || anime.synopsis || `Watch ${anime.titleEnglish || anime.title} on AnimeSenpai`,
+    alternateName: [anime.title, anime.titleJapanese, ...(anime.titleSynonyms || [])].filter(
+      Boolean
+    ),
+    description:
+      anime.description ||
+      anime.synopsis ||
+      `Watch ${anime.titleEnglish || anime.title} on AnimeSenpai`,
     image: anime.coverImage || anime.bannerImage,
     genre: anime.genres?.map((g: any) => g.name || g) || [],
     datePublished: (anime as any).aired || (anime.year ? `${anime.year}-01-01` : undefined),
-    aggregateRating: anime.averageRating || anime.rating ? {
-      '@type': 'AggregateRating',
-      ratingValue: anime.averageRating || anime.rating,
-      bestRating: 10,
-      worstRating: 0,
-      ratingCount: (anime as any).ratingCount || 1,
-    } : undefined,
+    aggregateRating:
+      anime.averageRating || anime.rating
+        ? {
+            '@type': 'AggregateRating',
+            ratingValue: anime.averageRating || anime.rating,
+            bestRating: 10,
+            worstRating: 0,
+            ratingCount: (anime as any).ratingCount || 1,
+          }
+        : undefined,
     numberOfEpisodes: anime.episodes,
     numberOfSeasons: anime.seasonCount || 1,
-    productionCompany: anime.studio ? {
-      '@type': 'Organization',
-      name: anime.studio,
-    } : undefined,
+    productionCompany: anime.studio
+      ? {
+          '@type': 'Organization',
+          name: anime.studio,
+        }
+      : undefined,
     url: `https://animesenpai.app/anime/${anime.slug}`,
   }
 }
@@ -44,8 +50,11 @@ export function generateAnimeStructuredData(anime: Anime) {
  */
 export function generateAnimeOGData(anime: Anime) {
   const title = anime.titleEnglish || anime.title
-  const description = anime.description || anime.synopsis || `Watch ${title} and discover your next favorite anime on AnimeSenpai`
-  
+  const description =
+    anime.description ||
+    anime.synopsis ||
+    `Watch ${title} and discover your next favorite anime on AnimeSenpai`
+
   return {
     title: `${title} | AnimeSenpai`,
     description: description.slice(0, 200),
@@ -58,7 +67,7 @@ export function generateAnimeOGData(anime: Anime) {
         width: 1200,
         height: 630,
         alt: title,
-      }
+      },
     ],
   }
 }
@@ -69,7 +78,7 @@ export function generateAnimeOGData(anime: Anime) {
 export function generateAnimeTwitterData(anime: Anime) {
   const title = anime.titleEnglish || anime.title
   const description = anime.description || anime.synopsis || `Watch ${title} on AnimeSenpai`
-  
+
   return {
     card: 'summary_large_image' as const,
     title: `${title} | AnimeSenpai`,
@@ -89,16 +98,21 @@ export function generateAnimeMetaDescription(anime: Anime): string {
   const ratingValue = anime.averageRating || anime.rating
   const rating = ratingValue ? ` Rated ${Number(ratingValue).toFixed(1)}/10.` : ''
   const episodes = anime.episodes ? ` ${anime.episodes} episodes.` : ''
-  const genres = anime.genres && anime.genres.length > 0 
-    ? ` Genres: ${anime.genres.slice(0, 3).map((g: any) => g.name || g).join(', ')}.`
-    : ''
-  
+  const genres =
+    anime.genres && anime.genres.length > 0
+      ? ` Genres: ${anime.genres
+          .slice(0, 3)
+          .map((g: any) => g.name || g)
+          .join(', ')}.`
+      : ''
+
   const baseDescription = `Watch ${title}${year} on AnimeSenpai.${rating}${episodes}${genres}`
-  
-  const fullDescription = anime.description || anime.synopsis 
-    ? `${baseDescription} ${anime.description || anime.synopsis}`
-    : baseDescription
-  
+
+  const fullDescription =
+    anime.description || anime.synopsis
+      ? `${baseDescription} ${anime.description || anime.synopsis}`
+      : baseDescription
+
   // Limit to 160 characters for optimal SEO
   return fullDescription.slice(0, 160).trim()
 }
@@ -124,7 +138,7 @@ export function generateAnimeKeywords(anime: Anime): string[] {
     'myanimelist',
     'anilist',
   ].filter(Boolean) as string[]
-  
+
   return keywords
 }
 
@@ -174,7 +188,8 @@ export function generateOrganizationData() {
     name: 'AnimeSenpai',
     url: 'https://animesenpai.app',
     logo: 'https://animesenpai.app/assets/logo/AnimeSenpai_Inline.svg',
-    description: 'Track, discover, and explore your favorite anime. Get personalized recommendations and build your ultimate anime collection.',
+    description:
+      'Track, discover, and explore your favorite anime. Get personalized recommendations and build your ultimate anime collection.',
     sameAs: [
       'https://www.tiktok.com/@animesenpai.app',
       // Add more social links as they become available
@@ -206,4 +221,3 @@ export function generateCanonicalURL(path: string): string {
   const cleanPath = path.startsWith('/') ? path : `/${path}`
   return `${baseUrl}${cleanPath}`
 }
-

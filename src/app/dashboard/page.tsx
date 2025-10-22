@@ -3,56 +3,64 @@
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
-import { AnimeCard } from '../../components/anime/AnimeCard'
+import Link from 'next/link'
 import { EmailVerificationBanner } from '../../components/EmailVerificationBanner'
 import { Button } from '../../components/ui/button'
-import { Badge } from '../../components/ui/badge'
 import { LoadingState } from '../../components/ui/loading-state'
 import { EmptyState, ErrorState } from '../../components/ui/error-state'
-import { 
-  Sparkles, 
-  TrendingUp, 
-  Heart, 
-  Compass, 
-  Gem, 
+import {
+  Sparkles,
+  TrendingUp,
+  Heart,
+  Compass,
+  Gem,
   Target,
   Clock,
   Calendar,
-  Users,
-  Star
+  Star,
+  Filter,
+  Tag,
+  Crown,
 } from 'lucide-react'
 import { apiGetAllAnime, apiGetAllSeries, apiGetTrending } from '../lib/api'
 import { useAuth } from '../lib/auth-context'
 import { groupAnimeIntoSeries } from '../../lib/series-grouping'
 import type { Anime } from '../../types/anime'
 import { logger, captureException } from '../../lib/logger'
+import { SEOMetadata } from '../../components/SEOMetadata'
 
 // Lazy load heavy components
 const RecommendationCarousel = dynamic(
-  () => import('../../components/recommendations/RecommendationCarousel').then(mod => ({ default: mod.RecommendationCarousel })),
+  () =>
+    import('../../components/recommendations/RecommendationCarousel').then((mod) => ({
+      default: mod.RecommendationCarousel,
+    })),
   { loading: () => <div className="h-64 animate-pulse bg-white/5 rounded-xl" /> }
 )
 
 const FriendsWatching = dynamic(
-  () => import('../../components/social/FriendsWatching').then(mod => ({ default: mod.FriendsWatching })),
+  () =>
+    import('../../components/social/FriendsWatching').then((mod) => ({
+      default: mod.FriendsWatching,
+    })),
   { loading: () => <div className="h-48 animate-pulse bg-white/5 rounded-xl" /> }
 )
 
 const CarouselSkeleton = dynamic(
-  () => import('../../components/ui/skeleton').then(mod => ({ default: mod.CarouselSkeleton })),
+  () => import('../../components/ui/skeleton').then((mod) => ({ default: mod.CarouselSkeleton })),
   { ssr: false }
 )
 
 export default function DashboardPage() {
   const router = useRouter()
   const { user, isAuthenticated } = useAuth()
-  
+
   const [trendingAnime, setTrendingAnime] = useState<Anime[]>([])
   const [allAnime, setAllAnime] = useState<Anime[]>([])
   const [allSeries, setAllSeries] = useState<any[]>([]) // Grouped series
   const [forYouRecs, setForYouRecs] = useState<any[]>([])
   const [fansLikeYouRecs, setFansLikeYouRecs] = useState<any[]>([])
-  const [friendRecs, setFriendRecs] = useState<any[]>([])
+  const [_friendRecs, setFriendRecs] = useState<any[]>([])
   const [hiddenGemsRecs, setHiddenGemsRecs] = useState<any[]>([])
   const [discoveryRecs, setDiscoveryRecs] = useState<any[]>([])
   const [continueWatching, setContinueWatching] = useState<any[]>([])
@@ -68,7 +76,7 @@ export default function DashboardPage() {
     // Check both localStorage (Remember Me) and sessionStorage (current session)
     const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     }
     if (token) {
       headers['Authorization'] = 'Bearer ' + token
@@ -80,13 +88,13 @@ export default function DashboardPage() {
   useEffect(() => {
     async function checkOnboarding() {
       if (!isAuthenticated) return
-      
+
       try {
         const response = await fetch(`${API_URL}/onboarding.getStatus`, {
           method: 'GET',
-          headers: getAuthHeaders()
+          headers: getAuthHeaders(),
         })
-        
+
         const data = await response.json()
         if (data.result?.data && !data.result.data.completed) {
           // Redirect to onboarding if not completed
@@ -100,7 +108,7 @@ export default function DashboardPage() {
     }
 
     checkOnboarding()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated])
 
   useEffect(() => {
@@ -110,20 +118,20 @@ export default function DashboardPage() {
       try {
         // Load ONLY essential data first for fast initial render
         // Other sections load lazily as user scrolls
-        const trending = await apiGetTrending() as any
-        
+        const trending = (await apiGetTrending()) as any
+
         // Group trending anime into series
         const trendingList = Array.isArray(trending) ? trending : []
         const groupedTrending = groupAnimeIntoSeries(trendingList)
         setTrendingAnime(groupedTrending)
-        
+
         setIsLoading(false)
-        
+
         // Load secondary data in background (non-blocking)
         setTimeout(() => {
           loadSecondaryData()
         }, 100)
-        
+
         // Load personalized recommendations if authenticated (also background)
         if (isAuthenticated) {
           setTimeout(() => {
@@ -140,38 +148,35 @@ export default function DashboardPage() {
     }
 
     loadAnime()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated])
-  
+
   // Load secondary data (top rated, recently added) in background
   async function loadSecondaryData() {
     try {
-      const [all, series] = await Promise.all([
-        apiGetAllAnime(),
-        apiGetAllSeries()
-      ])
-      
+      const [all, series] = await Promise.all([apiGetAllAnime(), apiGetAllSeries()])
+
       // Store series data
       if (series && typeof series === 'object' && 'series' in series) {
         const seriesList = Array.isArray(series.series) ? series.series : []
         setAllSeries(seriesList)
-        
+
         // Top Rated Series
         const topRated = [...seriesList]
-          .filter(s => s.rating && s.rating > 0)
+          .filter((s) => s.rating && s.rating > 0)
           .sort((a, b) => (b.rating || 0) - (a.rating || 0))
           .slice(0, 20)
         setTopRatedSeries(topRated)
       }
-      
+
       if (all && typeof all === 'object' && 'anime' in all) {
         const animeList = Array.isArray(all.anime) ? all.anime : []
         setAllAnime(animeList)
-        
+
         // Group all anime and generate sections
         if (animeList.length > 0) {
           const allGrouped = groupAnimeIntoSeries(animeList)
-          
+
           // Recently Added: Sort by most recent year
           const recentlyAdded = [...allGrouped]
             .sort((a, b) => {
@@ -190,40 +195,62 @@ export default function DashboardPage() {
   async function loadPersonalizedRecommendations() {
     try {
       const headers = getAuthHeaders()
-      const [forYou, fansLikeYou, friendRecs, hiddenGems, discovery, continueWatch, newAnime] = await Promise.all([
-        fetch(`${API_URL}/recommendations.getForYou?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`, {
-          method: 'GET',
-          headers
-        }).then(r => r.json()),
-        fetch(`${API_URL}/recommendations.getFansLikeYou?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`, {
-          method: 'GET',
-          headers
-        }).then(r => r.json()),
-        fetch(`${API_URL}/social.getFriendRecommendations?input=${encodeURIComponent(JSON.stringify({ limit: 12 }))}`, {
-          method: 'GET',
-          headers
-        }).then(r => r.json()),
-        fetch(`${API_URL}/recommendations.getHiddenGems?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`, {
-          method: 'GET',
-          headers
-        }).then(r => r.json()),
-        fetch(`${API_URL}/recommendations.getDiscovery?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`, {
-          method: 'GET',
-          headers
-        }).then(r => r.json()),
-        fetch(`${API_URL}/recommendations.getContinueWatching?input=${encodeURIComponent(JSON.stringify({ limit: 10 }))}`, {
-          method: 'GET',
-          headers
-        }).then(r => r.json()),
-        fetch(`${API_URL}/recommendations.getNewReleases?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`, {
-          method: 'GET',
-          headers
-        }).then(r => r.json())
-      ])
+      const [forYou, fansLikeYou, friendRecs, hiddenGems, discovery, continueWatch, newAnime] =
+        await Promise.all([
+          fetch(
+            `${API_URL}/recommendations.getForYou?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`,
+            {
+              method: 'GET',
+              headers,
+            }
+          ).then((r) => r.json()),
+          fetch(
+            `${API_URL}/recommendations.getFansLikeYou?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`,
+            {
+              method: 'GET',
+              headers,
+            }
+          ).then((r) => r.json()),
+          fetch(
+            `${API_URL}/social.getFriendRecommendations?input=${encodeURIComponent(JSON.stringify({ limit: 12 }))}`,
+            {
+              method: 'GET',
+              headers,
+            }
+          ).then((r) => r.json()),
+          fetch(
+            `${API_URL}/recommendations.getHiddenGems?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`,
+            {
+              method: 'GET',
+              headers,
+            }
+          ).then((r) => r.json()),
+          fetch(
+            `${API_URL}/recommendations.getDiscovery?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`,
+            {
+              method: 'GET',
+              headers,
+            }
+          ).then((r) => r.json()),
+          fetch(
+            `${API_URL}/recommendations.getContinueWatching?input=${encodeURIComponent(JSON.stringify({ limit: 10 }))}`,
+            {
+              method: 'GET',
+              headers,
+            }
+          ).then((r) => r.json()),
+          fetch(
+            `${API_URL}/recommendations.getNewReleases?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`,
+            {
+              method: 'GET',
+              headers,
+            }
+          ).then((r) => r.json()),
+        ])
 
       // Filter out any undefined/null items and ensure anime object exists
       const filterValidRecs = (recs: any[]) => {
-        return (recs || []).filter(r => r && r.anime && r.anime.slug)
+        return (recs || []).filter((r) => r && r.anime && r.anime.slug)
       }
 
       setForYouRecs(filterValidRecs(forYou.result?.data?.recommendations))
@@ -237,14 +264,14 @@ export default function DashboardPage() {
       // Log error to help debug recommendation loading issues
       logger.error('Failed to load personalized recommendations', {
         error: err instanceof Error ? err.message : String(err),
-        userId: isAuthenticated ? 'authenticated' : 'guest'
+        userId: isAuthenticated ? 'authenticated' : 'guest',
       })
       captureException(err, {
-        context: { 
+        context: {
           operation: 'load_personalized_recommendations',
-          isAuthenticated 
+          isAuthenticated,
         },
-        tags: { feature: 'recommendations' }
+        tags: { feature: 'recommendations' },
       })
       // Non-critical, just won't show personalized recommendations
     }
@@ -257,15 +284,15 @@ export default function DashboardPage() {
         headers: getAuthHeaders(),
         body: JSON.stringify({
           animeId,
-          feedbackType: 'dismiss'
-        })
+          feedbackType: 'dismiss',
+        }),
       })
 
       // Remove from all recommendation lists
-      setForYouRecs(forYouRecs.filter(r => r.anime.id !== animeId))
-      setFansLikeYouRecs(fansLikeYouRecs.filter(r => r.anime.id !== animeId))
-      setHiddenGemsRecs(hiddenGemsRecs.filter(r => r.anime.id !== animeId))
-      setDiscoveryRecs(discoveryRecs.filter(r => r.anime.id !== animeId))
+      setForYouRecs(forYouRecs.filter((r) => r.anime.id !== animeId))
+      setFansLikeYouRecs(fansLikeYouRecs.filter((r) => r.anime.id !== animeId))
+      setHiddenGemsRecs(hiddenGemsRecs.filter((r) => r.anime.id !== animeId))
+      setDiscoveryRecs(discoveryRecs.filter((r) => r.anime.id !== animeId))
     } catch (err) {
       // Fail silently
     }
@@ -322,134 +349,364 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
-      </div>
+    <>
+      {/* SEO Metadata */}
+      <SEOMetadata
+        title="Dashboard"
+        description="Your personalized anime dashboard. Discover recommendations, trending anime, and manage your watchlist."
+        keywords={['anime dashboard', 'anime recommendations', 'my anime list', 'watchlist']}
+      />
 
-      <main className="container px-3 sm:px-6 lg:px-8 pt-20 sm:pt-28 lg:pt-32 pb-8 sm:pb-16 lg:pb-20 relative z-10">
-        {/* Email Verification Banner */}
-        {isAuthenticated && user && !user.emailVerified && (
-          <EmailVerificationBanner email={user.email} />
-        )}
-
-        {/* Onboarding Banner - Responsive */}
-        {showOnboarding && isAuthenticated && (
-          <div className="glass rounded-xl sm:rounded-2xl p-3 sm:p-6 mb-4 sm:mb-8 border-2 border-primary-500/30">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-              <div className="flex items-start sm:items-center gap-3 sm:gap-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary-500/30">
-                  <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-          </div>
-                <div>
-                  <h3 className="text-base sm:text-xl font-bold text-white mb-1">
-                    Get Personalized Recommendations!
-                  </h3>
-                  <p className="text-xs sm:text-base text-gray-300">
-                    Tell us what you like and Senpai will find your perfect anime match ✨
-          </p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
         </div>
-              </div>
-              <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
-                <Button
-                  onClick={() => setShowOnboarding(false)}
-                  variant="outline"
-                  className="border-white/20 text-white hover:bg-white/10 flex-1 sm:flex-initial text-sm sm:text-base"
-                >
-                  Later
-                </Button>
-                <Button
-                  onClick={() => router.push('/onboarding')}
-                  className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 flex-1 sm:flex-initial text-sm sm:text-base shadow-lg shadow-primary-500/30"
-                >
-                  Let's Go!
-                </Button>
+
+        <main className="container px-3 sm:px-6 lg:px-8 pt-20 sm:pt-28 lg:pt-32 pb-8 sm:pb-16 lg:pb-20 relative z-10">
+          {/* Email Verification Banner */}
+          {isAuthenticated && user && !user.emailVerified && (
+            <EmailVerificationBanner email={user.email} />
+          )}
+
+          {/* Onboarding Banner - Responsive */}
+          {showOnboarding && isAuthenticated && (
+            <div className="glass rounded-xl sm:rounded-2xl p-3 sm:p-6 mb-4 sm:mb-8 border-2 border-primary-500/30">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary-500/30">
+                    <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-xl font-bold text-white mb-1">
+                      Get Personalized Recommendations!
+                    </h3>
+                    <p className="text-xs sm:text-base text-gray-300">
+                      Tell us what you like and Senpai will find your perfect anime match ✨
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+                  <Button
+                    onClick={() => setShowOnboarding(false)}
+                    variant="outline"
+                    className="border-white/20 text-white hover:bg-white/10 flex-1 sm:flex-initial text-sm sm:text-base"
+                  >
+                    Later
+                  </Button>
+                  <Button
+                    onClick={() => router.push('/onboarding')}
+                    className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 flex-1 sm:flex-initial text-sm sm:text-base shadow-lg shadow-primary-500/30"
+                  >
+                    Let's Go!
+                  </Button>
+                </div>
               </div>
             </div>
+          )}
+
+          {/* Hero Section - Responsive */}
+          <div className="mb-6 sm:mb-10 lg:mb-12 text-center">
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-3 sm:mb-6">
+              <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary-400" />
+              <span className="text-xs sm:text-sm text-gray-300">
+                {isAuthenticated ? 'Your Personalized Dashboard' : 'Discover Your Next Obsession'}
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold mb-2 sm:mb-4 bg-gradient-to-r from-white via-primary-400 to-secondary-400 bg-clip-text text-transparent px-4">
+              {isAuthenticated
+                ? `Welcome Back${user?.name ? `, ${user.name}` : ''}!`
+                : 'Discover Amazing Anime'}
+            </h1>
+            <p className="text-sm sm:text-lg lg:text-xl text-gray-300 max-w-2xl mx-auto px-4">
+              {isAuthenticated
+                ? 'Here are anime recommendations just for you'
+                : 'Personalized recommendations powered by your taste'}
+            </p>
           </div>
-        )}
 
-        {/* Hero Section - Responsive */}
-        <div className="mb-6 sm:mb-10 lg:mb-12 text-center">
-          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-3 sm:mb-6">
-            <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary-400" />
-            <span className="text-xs sm:text-sm text-gray-300">
-              {isAuthenticated ? 'Your Personalized Dashboard' : 'Discover Your Next Obsession'}
-            </span>
+          {/* Discovery Quick Links */}
+          <div className="mb-8 sm:mb-12">
+            <h2 className="text-lg sm:text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <Compass className="w-5 h-5 text-primary-400" />
+              Quick Discovery
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+              <Link href="/seasonal">
+                <div className="glass rounded-xl p-4 sm:p-6 hover:bg-white/10 transition-all cursor-pointer group border border-white/10 hover:border-blue-400/30 h-full">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                    <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <h3 className="text-sm sm:text-base font-bold text-white mb-1 sm:mb-2 group-hover:text-primary-300 transition-colors">
+                    This Season
+                  </h3>
+                  <p className="text-xs text-gray-400 hidden sm:block">Currently airing</p>
+                </div>
+              </Link>
+
+              <Link href="/top-rated">
+                <div className="glass rounded-xl p-4 sm:p-6 hover:bg-white/10 transition-all cursor-pointer group border border-white/10 hover:border-yellow-400/30 h-full">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                    <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <h3 className="text-sm sm:text-base font-bold text-white mb-1 sm:mb-2 group-hover:text-yellow-300 transition-colors">
+                    Top Rated
+                  </h3>
+                  <p className="text-xs text-gray-400 hidden sm:block">Highest rated</p>
+                </div>
+              </Link>
+
+              <Link href="/genres">
+                <div className="glass rounded-xl p-4 sm:p-6 hover:bg-white/10 transition-all cursor-pointer group border border-white/10 hover:border-purple-400/30 h-full">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                    <Tag className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <h3 className="text-sm sm:text-base font-bold text-white mb-1 sm:mb-2 group-hover:text-purple-300 transition-colors">
+                    Genres
+                  </h3>
+                  <p className="text-xs text-gray-400 hidden sm:block">Explore by genre</p>
+                </div>
+              </Link>
+
+              <Link href="/search">
+                <div className="glass rounded-xl p-4 sm:p-6 hover:bg-white/10 transition-all cursor-pointer group border border-white/10 hover:border-green-400/30 h-full">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                    <Filter className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <h3 className="text-sm sm:text-base font-bold text-white mb-1 sm:mb-2 group-hover:text-green-300 transition-colors">
+                    Advanced Search
+                  </h3>
+                  <p className="text-xs text-gray-400 hidden sm:block">Filter & sort</p>
+                </div>
+              </Link>
+            </div>
           </div>
-          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold mb-2 sm:mb-4 bg-gradient-to-r from-white via-primary-400 to-secondary-400 bg-clip-text text-transparent px-4">
-            {isAuthenticated ? `Welcome Back${user?.name ? `, ${user.name}` : ''}!` : 'Discover Amazing Anime'}
-          </h1>
-          <p className="text-sm sm:text-lg lg:text-xl text-gray-300 max-w-2xl mx-auto px-4">
-            {isAuthenticated 
-              ? 'Here are anime recommendations just for you'
-              : 'Personalized recommendations powered by your taste'
-            }
-          </p>
-        </div>
 
-        {/* Personalized Recommendations (Authenticated Users Only) */}
-        {isAuthenticated && (
-          <>
-            {/* Continue Watching */}
-            {continueWatching.length > 0 && (
-              <RecommendationCarousel
-                title="Continue Watching"
-                icon={<Clock className="h-5 w-5 text-primary-400" />}
-                recommendations={continueWatching}
-                onDismiss={handleDismissRecommendation}
-                showReasons={false}
-              />
-            )}
+          {/* Personalized Recommendations (Authenticated Users Only) */}
+          {isAuthenticated && (
+            <>
+              {/* Continue Watching */}
+              {continueWatching.length > 0 && (
+                <RecommendationCarousel
+                  title="Continue Watching"
+                  icon={<Clock className="h-5 w-5 text-primary-400" />}
+                  recommendations={continueWatching}
+                  onDismiss={handleDismissRecommendation}
+                  showReasons={false}
+                />
+              )}
 
-            {/* For You - Main Personalized Feed (Hybrid: Content + Collaborative) */}
-            {forYouRecs.length > 0 && (
-              <RecommendationCarousel
-                title="For You"
-                icon={<Heart className="h-5 w-5 text-primary-400" />}
-                recommendations={forYouRecs}
-                onDismiss={handleDismissRecommendation}
-                showReasons={true}
-              />
-            )}
+              {/* For You - Main Personalized Feed (Hybrid: Content + Collaborative) */}
+              {forYouRecs.length > 0 && (
+                <RecommendationCarousel
+                  title="For You"
+                  icon={<Heart className="h-5 w-5 text-primary-400" />}
+                  recommendations={forYouRecs}
+                  onDismiss={handleDismissRecommendation}
+                  showReasons={true}
+                />
+              )}
 
-            {/* Trending Now - For logged-in users too - Grouped by series */}
-            {trendingAnime.length > 0 && (
-              <RecommendationCarousel
-                title="Trending Now"
-                icon={<TrendingUp className="h-5 w-5 text-secondary-400" />}
-                recommendations={trendingAnime.filter(series => series && series.slug).map(series => ({
-                  anime: {
-                    id: series.id,
-                    slug: series.slug,
-                    title: series.title,
-                    titleEnglish: series.titleEnglish || series.displayTitle,
-                    titleJapanese: series.titleJapanese,
-                    titleSynonyms: series.titleSynonyms,
-                    coverImage: series.coverImage ?? null,
-                    year: series.year ?? null,
-                    averageRating: series.rating || series.averageRating || null,
-                    genres: series.genres || [],
-                    seasonCount: series.seasonCount,
-                    totalEpisodes: series.totalEpisodes
+              {/* Trending Now - For logged-in users too - Grouped by series */}
+              {trendingAnime.length > 0 && (
+                <RecommendationCarousel
+                  title="Trending Now"
+                  icon={<TrendingUp className="h-5 w-5 text-secondary-400" />}
+                  recommendations={
+                    trendingAnime
+                      .filter((series) => series && series.slug)
+                      .map((series) => ({
+                        anime: {
+                          id: series.id,
+                          slug: series.slug,
+                          title: series.title,
+                          titleEnglish: series.titleEnglish || series.displayTitle,
+                          titleJapanese: series.titleJapanese,
+                          titleSynonyms: series.titleSynonyms,
+                          coverImage: series.coverImage ?? null,
+                          year: series.year ?? null,
+                          averageRating: series.rating || series.averageRating || null,
+                          genres: series.genres || [],
+                          seasonCount: series.seasonCount,
+                          totalEpisodes: series.totalEpisodes,
+                        },
+                      })) as any
                   }
-                })) as any}
-                showReasons={false}
-              />
-            )}
+                  showReasons={false}
+                />
+              )}
 
-            {/* Friends Are Watching - Social Recommendations */}
-            <FriendsWatching />
+              {/* Friends Are Watching - Social Recommendations */}
+              <FriendsWatching />
 
-            {/* Popular Series - Grouped by series like Crunchyroll */}
-            {allSeries.length > 0 && (
-              <RecommendationCarousel
-                title="Popular Anime"
-                icon={<Sparkles className="h-5 w-5 text-primary-400" />}
-                recommendations={allSeries.slice(0, 20).filter(series => series && series.slug).map(series => ({
+              {/* Popular Series - Grouped by series like Crunchyroll */}
+              {allSeries.length > 0 && (
+                <RecommendationCarousel
+                  title="Popular Anime"
+                  icon={<Sparkles className="h-5 w-5 text-primary-400" />}
+                  recommendations={allSeries
+                    .slice(0, 20)
+                    .filter((series) => series && series.slug)
+                    .map((series) => ({
+                      anime: {
+                        id: series.id,
+                        slug: series.slug,
+                        title: series.title,
+                        titleEnglish: series.titleEnglish || series.displayTitle,
+                        titleJapanese: series.titleJapanese,
+                        titleSynonyms: series.titleSynonyms,
+                        coverImage: series.coverImage ?? null,
+                        year: series.year ?? null,
+                        averageRating: series.rating ?? null,
+                        genres: series.genres || [],
+                        // Add season metadata for badge display
+                        seasonCount: series.seasonCount,
+                        totalEpisodes: series.totalEpisodes,
+                      },
+                    }))}
+                  showReasons={false}
+                />
+              )}
+
+              {/* Fans Like You Also Watched - Pure Collaborative Filtering */}
+              {fansLikeYouRecs.length > 0 && (
+                <RecommendationCarousel
+                  title="Fans Like You Also Watched"
+                  icon={<Target className="h-5 w-5 text-secondary-400" />}
+                  recommendations={fansLikeYouRecs}
+                  onDismiss={handleDismissRecommendation}
+                  showReasons={true}
+                />
+              )}
+
+              {/* Hidden Gems */}
+              {hiddenGemsRecs.length > 0 && (
+                <RecommendationCarousel
+                  title="Hidden Gems You'll Love"
+                  icon={<Gem className="h-5 w-5 text-primary-400" />}
+                  recommendations={hiddenGemsRecs}
+                  onDismiss={handleDismissRecommendation}
+                  showReasons={true}
+                />
+              )}
+
+              {/* Top Rated Series - Grouped */}
+              {topRatedSeries.length > 0 && (
+                <RecommendationCarousel
+                  title="Top Rated Anime"
+                  icon={<Star className="h-5 w-5 text-warning-400" />}
+                  recommendations={topRatedSeries
+                    .filter((series) => series && series.slug)
+                    .map((series) => ({
+                      anime: {
+                        id: series.id,
+                        slug: series.slug,
+                        title: series.title,
+                        titleEnglish: series.titleEnglish || series.displayTitle,
+                        titleJapanese: series.titleJapanese,
+                        titleSynonyms: series.titleSynonyms,
+                        coverImage: series.coverImage ?? null,
+                        year: series.year ?? null,
+                        averageRating: series.rating ?? null,
+                        genres: series.genres || [],
+                        seasonCount: series.seasonCount,
+                        totalEpisodes: series.totalEpisodes,
+                      },
+                    }))}
+                  showReasons={false}
+                />
+              )}
+
+              {/* Expand Your Horizons */}
+              {discoveryRecs.length > 0 && (
+                <RecommendationCarousel
+                  title="Expand Your Horizons"
+                  icon={<Compass className="h-5 w-5 text-primary-400" />}
+                  recommendations={discoveryRecs}
+                  onDismiss={handleDismissRecommendation}
+                  showReasons={true}
+                />
+              )}
+
+              {/* Recently Added - Grouped Series */}
+              {recentlyAddedSeries.length > 0 && (
+                <RecommendationCarousel
+                  title="Recently Added"
+                  icon={<Calendar className="h-5 w-5 text-success-400" />}
+                  recommendations={recentlyAddedSeries
+                    .filter((series) => series && series.slug)
+                    .map((series) => ({
+                      anime: {
+                        id: series.id,
+                        slug: series.slug,
+                        title: series.title,
+                        titleEnglish: series.titleEnglish || series.displayTitle,
+                        titleJapanese: series.titleJapanese,
+                        titleSynonyms: series.titleSynonyms,
+                        coverImage: series.coverImage ?? null,
+                        year: series.year ?? null,
+                        averageRating: series.rating ?? null,
+                        seasonCount: series.seasonCount,
+                        totalEpisodes: series.totalEpisodes,
+                        genres: series.genres || [],
+                      },
+                    }))}
+                  showReasons={false}
+                />
+              )}
+            </>
+          )}
+
+          {/* New Releases Section */}
+          {newReleases.length > 0 && (
+            <RecommendationCarousel
+              title="New on AnimeSenpai"
+              icon={<Calendar className="h-5 w-5 text-primary-400" />}
+              recommendations={newReleases}
+              showReasons={false}
+            />
+          )}
+
+          {/* Trending Series - Use carousel for consistency - Guest users */}
+          {!isAuthenticated && trendingAnime.length > 0 && (
+            <RecommendationCarousel
+              title="Trending Now"
+              icon={<TrendingUp className="h-5 w-5 text-primary-400" />}
+              recommendations={
+                trendingAnime
+                  .filter((series) => series && series.slug)
+                  .map((series) => ({
+                    anime: {
+                      id: series.id,
+                      slug: series.slug,
+                      title: series.title,
+                      titleEnglish: series.titleEnglish || series.displayTitle,
+                      titleJapanese: series.titleJapanese,
+                      titleSynonyms: series.titleSynonyms,
+                      coverImage: series.coverImage ?? null,
+                      year: series.year ?? null,
+                      averageRating: series.rating || series.averageRating || null,
+                      genres: series.genres || [],
+                      seasonCount: series.seasonCount,
+                      totalEpisodes: series.totalEpisodes,
+                    },
+                  })) as any
+              }
+              showReasons={false}
+            />
+          )}
+
+          {/* Popular Series - Use carousel for consistency - Guest users */}
+          {!isAuthenticated && allSeries.length > 0 && (
+            <RecommendationCarousel
+              title="Popular Anime"
+              icon={<Sparkles className="h-5 w-5 text-primary-400" />}
+              recommendations={allSeries
+                .slice(0, 20)
+                .filter((series) => series && series.slug)
+                .map((series) => ({
                   anime: {
                     id: series.id,
                     slug: series.slug,
@@ -461,171 +718,26 @@ export default function DashboardPage() {
                     year: series.year ?? null,
                     averageRating: series.rating ?? null,
                     genres: series.genres || [],
-                    // Add season metadata for badge display
-                    seasonCount: series.seasonCount,
-                    totalEpisodes: series.totalEpisodes
-                  }
-                }))}
-                showReasons={false}
-              />
-            )}
-
-            {/* Fans Like You Also Watched - Pure Collaborative Filtering */}
-            {fansLikeYouRecs.length > 0 && (
-              <RecommendationCarousel
-                title="Fans Like You Also Watched"
-                icon={<Target className="h-5 w-5 text-secondary-400" />}
-                recommendations={fansLikeYouRecs}
-                onDismiss={handleDismissRecommendation}
-                showReasons={true}
-              />
-            )}
-
-            {/* Hidden Gems */}
-            {hiddenGemsRecs.length > 0 && (
-              <RecommendationCarousel
-                title="Hidden Gems You'll Love"
-                icon={<Gem className="h-5 w-5 text-primary-400" />}
-                recommendations={hiddenGemsRecs}
-                onDismiss={handleDismissRecommendation}
-                showReasons={true}
-              />
-            )}
-
-            {/* Top Rated Series - Grouped */}
-            {topRatedSeries.length > 0 && (
-              <RecommendationCarousel
-                title="Top Rated Anime"
-                icon={<Star className="h-5 w-5 text-warning-400" />}
-                recommendations={topRatedSeries.filter(series => series && series.slug).map(series => ({
-                  anime: {
-                    id: series.id,
-                    slug: series.slug,
-                    title: series.title,
-                    titleEnglish: series.titleEnglish || series.displayTitle,
-                    titleJapanese: series.titleJapanese,
-                    titleSynonyms: series.titleSynonyms,
-                    coverImage: series.coverImage ?? null,
-                    year: series.year ?? null,
-                    averageRating: series.rating ?? null,
-                    genres: series.genres || [],
-                    seasonCount: series.seasonCount,
-                    totalEpisodes: series.totalEpisodes
-                  }
-                }))}
-                showReasons={false}
-              />
-            )}
-
-            {/* Expand Your Horizons */}
-            {discoveryRecs.length > 0 && (
-              <RecommendationCarousel
-                title="Expand Your Horizons"
-                icon={<Compass className="h-5 w-5 text-primary-400" />}
-                recommendations={discoveryRecs}
-                onDismiss={handleDismissRecommendation}
-                showReasons={true}
-              />
-            )}
-
-          {/* Recently Added - Grouped Series */}
-            {recentlyAddedSeries.length > 0 && (
-              <RecommendationCarousel
-                title="Recently Added"
-                icon={<Calendar className="h-5 w-5 text-success-400" />}
-                recommendations={recentlyAddedSeries.filter(series => series && series.slug).map(series => ({
-                  anime: {
-                    id: series.id,
-                    slug: series.slug,
-                    title: series.title,
-                    titleEnglish: series.titleEnglish || series.displayTitle,
-                    titleJapanese: series.titleJapanese,
-                    titleSynonyms: series.titleSynonyms,
-                    coverImage: series.coverImage ?? null,
-                    year: series.year ?? null,
-                    averageRating: series.rating ?? null,
                     seasonCount: series.seasonCount,
                     totalEpisodes: series.totalEpisodes,
-                    genres: series.genres || []
-                  }
+                  },
                 }))}
-                showReasons={false}
-              />
-            )}
-          </>
-        )}
+              showReasons={false}
+            />
+          )}
 
-        {/* New Releases Section */}
-        {newReleases.length > 0 && (
-          <RecommendationCarousel
-            title="New on AnimeSenpai"
-            icon={<Calendar className="h-5 w-5 text-primary-400" />}
-            recommendations={newReleases}
-            showReasons={false}
-          />
-        )}
-
-        {/* Trending Series - Use carousel for consistency - Guest users */}
-        {!isAuthenticated && trendingAnime.length > 0 && (
-          <RecommendationCarousel
-            title="Trending Now"
-            icon={<TrendingUp className="h-5 w-5 text-primary-400" />}
-            recommendations={trendingAnime.filter(series => series && series.slug).map(series => ({
-              anime: {
-                id: series.id,
-                slug: series.slug,
-                title: series.title,
-                titleEnglish: series.titleEnglish || series.displayTitle,
-                titleJapanese: series.titleJapanese,
-                titleSynonyms: series.titleSynonyms,
-                coverImage: series.coverImage ?? null,
-                year: series.year ?? null,
-                averageRating: series.rating || series.averageRating || null,
-                genres: series.genres || [],
-                seasonCount: series.seasonCount,
-                totalEpisodes: series.totalEpisodes
-              }
-            })) as any}
-            showReasons={false}
-          />
-        )}
-
-        {/* Popular Series - Use carousel for consistency - Guest users */}
-        {!isAuthenticated && allSeries.length > 0 && (
-          <RecommendationCarousel
-            title="Popular Anime"
-            icon={<Sparkles className="h-5 w-5 text-primary-400" />}
-            recommendations={allSeries.slice(0, 20).filter(series => series && series.slug).map(series => ({
-              anime: {
-                id: series.id,
-                slug: series.slug,
-                title: series.title,
-                titleEnglish: series.titleEnglish || series.displayTitle,
-                titleJapanese: series.titleJapanese,
-                titleSynonyms: series.titleSynonyms,
-                coverImage: series.coverImage ?? null,
-                year: series.year ?? null,
-                averageRating: series.rating ?? null,
-                genres: series.genres || [],
-                seasonCount: series.seasonCount,
-                totalEpisodes: series.totalEpisodes
-              }
-            }))}
-            showReasons={false}
-          />
-        )}
-
-        {/* Empty State for Guests */}
-        {!isAuthenticated && trendingAnime.length === 0 && allAnime.length === 0 && (
-          <EmptyState
-            icon={<Sparkles className="h-12 w-12 text-gray-500" />}
-            title="No Anime Yet"
-            message="The anime database is being populated. Check back soon for thousands of titles!"
-            actionLabel="Sign In for Personalized Recommendations"
-            onAction={() => router.push('/auth/signin')}
-          />
-        )}
-      </main>
-    </div>
+          {/* Empty State for Guests */}
+          {!isAuthenticated && trendingAnime.length === 0 && allAnime.length === 0 && (
+            <EmptyState
+              icon={<Sparkles className="h-12 w-12 text-gray-500" />}
+              title="No Anime Yet"
+              message="The anime database is being populated. Check back soon for thousands of titles!"
+              actionLabel="Sign In for Personalized Recommendations"
+              onAction={() => router.push('/auth/signin')}
+            />
+          )}
+        </main>
+      </div>
+    </>
   )
 }

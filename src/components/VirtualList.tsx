@@ -16,7 +16,7 @@ interface VirtualListProps<T> {
 /**
  * Virtual List Component
  * Renders only visible items for optimal performance with large lists
- * 
+ *
  * @example
  * ```tsx
  * <VirtualList
@@ -70,11 +70,7 @@ export function VirtualList<T>({
   const visibleItems = items.slice(startIndex, endIndex + 1)
 
   return (
-    <div
-      ref={containerRef}
-      className={`overflow-y-auto relative ${className}`}
-      style={{ height }}
-    >
+    <div ref={containerRef} className={`overflow-y-auto relative ${className}`} style={{ height }}>
       {/* Spacer to maintain total height */}
       <div style={{ height: totalHeight, position: 'relative' }}>
         {/* Visible items container */}
@@ -90,7 +86,7 @@ export function VirtualList<T>({
           {visibleItems.map((item, i) => (
             <div
               key={startIndex + i}
-              style={{ 
+              style={{
                 height: itemHeight,
                 marginBottom: gap,
               }}
@@ -154,27 +150,26 @@ export function VirtualGrid<T>({
   const endRow = Math.min(totalRows - 1, Math.ceil((scrollTop + height) / rowHeight) + 2)
 
   const visibleItems: Array<{ item: T; index: number; row: number; col: number }> = []
-  
+
   for (let row = startRow; row <= endRow; row++) {
     for (let col = 0; col < columns; col++) {
       const index = row * columns + col
       if (index < items.length) {
-        visibleItems.push({
-          item: items[index],
-          index,
-          row,
-          col,
-        })
+        const item = items[index]
+        if (item !== undefined) {
+          visibleItems.push({
+            item,
+            index,
+            row,
+            col,
+          })
+        }
       }
     }
   }
 
   return (
-    <div
-      ref={containerRef}
-      className={`overflow-y-auto relative ${className}`}
-      style={{ height }}
-    >
+    <div ref={containerRef} className={`overflow-y-auto relative ${className}`} style={{ height }}>
       <div style={{ height: totalHeight, position: 'relative' }}>
         {visibleItems.map(({ item, index, row, col }) => (
           <div
@@ -258,11 +253,8 @@ export function InfiniteScroll({
         </div>
       )}
       {!hasMore && !loading && (
-        <div className="text-center py-8 text-gray-500 text-sm">
-          No more items to load
-        </div>
+        <div className="text-center py-8 text-gray-500 text-sm">No more items to load</div>
       )}
     </div>
   )
 }
-

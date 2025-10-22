@@ -4,7 +4,20 @@ import { useEffect, useState } from 'react'
 import { apiGetAdminStats } from '../../lib/api'
 import { LoadingState } from '../../../components/ui/loading-state'
 import { ErrorState } from '../../../components/ui/error-state'
-import { Users, Film, TrendingUp, UserPlus, Database, Shield, Activity, RefreshCw, Star, Eye, MessageSquare, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import {
+  Users,
+  Film,
+  TrendingUp,
+  UserPlus,
+  Database,
+  Shield,
+  Activity,
+  RefreshCw,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+} from 'lucide-react'
 import { Button } from '../../../components/ui/button'
 
 interface Stats {
@@ -48,7 +61,7 @@ export function DashboardTab() {
   const loadStats = async () => {
     try {
       setLoading(true)
-      const data = await apiGetAdminStats() as any
+      const data = (await apiGetAdminStats()) as any
       setStats(data)
       setLastRefresh(new Date())
     } catch (error: any) {
@@ -65,10 +78,10 @@ export function DashboardTab() {
 
   const getSystemHealth = () => {
     if (!stats) return 'unknown'
-    
+
     const totalUsers = stats.users.total
     const totalAnime = stats.content.anime
-    
+
     if (totalUsers >= 100 && totalAnime >= 1000) return 'excellent'
     if (totalUsers >= 10 && totalAnime >= 100) return 'good'
     if (totalUsers >= 1 && totalAnime >= 10) return 'fair'
@@ -77,21 +90,31 @@ export function DashboardTab() {
 
   const getHealthColor = (health: string) => {
     switch (health) {
-      case 'excellent': return 'text-green-400'
-      case 'good': return 'text-blue-400'
-      case 'fair': return 'text-yellow-400'
-      case 'poor': return 'text-red-400'
-      default: return 'text-gray-400'
+      case 'excellent':
+        return 'text-green-400'
+      case 'good':
+        return 'text-blue-400'
+      case 'fair':
+        return 'text-yellow-400'
+      case 'poor':
+        return 'text-red-400'
+      default:
+        return 'text-gray-400'
     }
   }
 
   const getHealthIcon = (health: string) => {
     switch (health) {
-      case 'excellent': return <CheckCircle className="h-5 w-5 text-green-400" />
-      case 'good': return <CheckCircle className="h-5 w-5 text-blue-400" />
-      case 'fair': return <AlertCircle className="h-5 w-5 text-yellow-400" />
-      case 'poor': return <XCircle className="h-5 w-5 text-red-400" />
-      default: return <Activity className="h-5 w-5 text-gray-400" />
+      case 'excellent':
+        return <CheckCircle className="h-5 w-5 text-green-400" />
+      case 'good':
+        return <CheckCircle className="h-5 w-5 text-blue-400" />
+      case 'fair':
+        return <AlertCircle className="h-5 w-5 text-yellow-400" />
+      case 'poor':
+        return <XCircle className="h-5 w-5 text-red-400" />
+      default:
+        return <Activity className="h-5 w-5 text-gray-400" />
     }
   }
 
@@ -171,7 +194,11 @@ export function DashboardTab() {
             onClick={() => setAutoRefresh(!autoRefresh)}
             variant={autoRefresh ? 'default' : 'outline'}
             size="sm"
-            className={autoRefresh ? 'bg-primary-500 hover:bg-primary-600' : 'border-white/20 text-white hover:bg-white/10'}
+            className={
+              autoRefresh
+                ? 'bg-primary-500 hover:bg-primary-600'
+                : 'border-white/20 text-white hover:bg-white/10'
+            }
           >
             <Activity className="h-4 w-4 mr-2" />
             {autoRefresh ? 'Auto: ON' : 'Auto: OFF'}
@@ -194,10 +221,13 @@ export function DashboardTab() {
               {systemHealth}
             </p>
             <p className="text-xs text-gray-500 mt-1">
-              {systemHealth === 'excellent' ? 'All systems operational' :
-               systemHealth === 'good' ? 'Running smoothly' :
-               systemHealth === 'fair' ? 'Needs attention' :
-               'Critical - needs immediate action'}
+              {systemHealth === 'excellent'
+                ? 'All systems operational'
+                : systemHealth === 'good'
+                  ? 'Running smoothly'
+                  : systemHealth === 'fair'
+                    ? 'Needs attention'
+                    : 'Critical - needs immediate action'}
             </p>
           </div>
         </div>
@@ -213,7 +243,9 @@ export function DashboardTab() {
               className="bg-white/5 border border-white/10 rounded-xl p-6 hover:border-primary-500/30 transition-colors"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className={`w-12 h-12 rounded-lg bg-${card.color}-500/10 flex items-center justify-center`}>
+                <div
+                  className={`w-12 h-12 rounded-lg bg-${card.color}-500/10 flex items-center justify-center`}
+                >
                   <Icon className={`h-6 w-6 text-${card.color}-400`} />
                 </div>
               </div>
@@ -240,14 +272,18 @@ export function DashboardTab() {
           </div>
           <div className="bg-white/5 rounded-lg p-4">
             <p className="text-gray-400 text-sm mb-1">Moderators</p>
-            <p className="text-2xl font-bold text-blue-400">{stats.users.testers.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-blue-400">
+              {stats.users.testers.toLocaleString()}
+            </p>
             <p className="text-xs text-gray-500 mt-1">
               {((stats.users.testers / stats.users.total) * 100).toFixed(1)}% of total
             </p>
           </div>
           <div className="bg-white/5 rounded-lg p-4">
             <p className="text-gray-400 text-sm mb-1">Admins</p>
-            <p className="text-2xl font-bold text-yellow-400">{stats.users.admins.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-yellow-400">
+              {stats.users.admins.toLocaleString()}
+            </p>
             <p className="text-xs text-gray-500 mt-1">
               {((stats.users.admins / stats.users.total) * 100).toFixed(1)}% of total
             </p>
@@ -269,12 +305,16 @@ export function DashboardTab() {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-gray-400 text-sm">List Entries</span>
-              <span className="text-white font-bold">{stats.content.listEntries.toLocaleString()}</span>
+              <span className="text-white font-bold">
+                {stats.content.listEntries.toLocaleString()}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-gray-400 text-sm">Avg. Entries/User</span>
               <span className="text-white font-bold">
-                {stats.users.total > 0 ? (stats.content.listEntries / stats.users.total).toFixed(1) : '0'}
+                {stats.users.total > 0
+                  ? (stats.content.listEntries / stats.users.total).toFixed(1)
+                  : '0'}
               </span>
             </div>
           </div>
@@ -288,12 +328,17 @@ export function DashboardTab() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-gray-400 text-sm">New Users (7d)</span>
-              <span className="text-success-400 font-bold">{stats.users.recentSignups.toLocaleString()}</span>
+              <span className="text-success-400 font-bold">
+                {stats.users.recentSignups.toLocaleString()}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-gray-400 text-sm">Growth Rate</span>
               <span className="text-success-400 font-bold">
-                {stats.users.total > 0 ? ((stats.users.recentSignups / stats.users.total) * 100).toFixed(1) : '0'}%
+                {stats.users.total > 0
+                  ? ((stats.users.recentSignups / stats.users.total) * 100).toFixed(1)
+                  : '0'}
+                %
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -339,7 +384,9 @@ export function DashboardTab() {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-            <div className={`w-10 h-10 rounded-lg bg-${autoRefresh ? 'green' : 'gray'}-500/10 flex items-center justify-center`}>
+            <div
+              className={`w-10 h-10 rounded-lg bg-${autoRefresh ? 'green' : 'gray'}-500/10 flex items-center justify-center`}
+            >
               <Clock className={`h-5 w-5 ${autoRefresh ? 'text-green-400' : 'text-gray-400'}`} />
             </div>
             <div>
@@ -370,4 +417,3 @@ export function DashboardTab() {
     </div>
   )
 }
-

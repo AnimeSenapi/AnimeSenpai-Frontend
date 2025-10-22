@@ -3,7 +3,15 @@
 import { use, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Grid3x3, List as ListIcon, SortDesc, Building2, TvMinimalPlay, Calendar, Star, Loader2, Search } from 'lucide-react'
+import {
+  ArrowLeft,
+  Grid3x3,
+  List as ListIcon,
+  SortDesc,
+  Building2,
+  TvMinimalPlay,
+  Search,
+} from 'lucide-react'
 import { SearchAnimeCard } from '../../../components/anime/SearchAnimeCard'
 import { Button } from '../../../components/ui/button'
 import { LoadingState } from '../../../components/ui/loading-state'
@@ -56,11 +64,11 @@ interface StudioPageData {
 export default function StudioPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params)
   const router = useRouter()
-  
+
   const [studioData, setStudioData] = useState<StudioPageData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
+
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [sortBy, setSortBy] = useState<'rating' | 'year' | 'popularity' | 'title'>('year')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
@@ -75,30 +83,32 @@ export default function StudioPage({ params }: { params: Promise<{ slug: string 
     try {
       setLoading(true)
       setError(null)
-      
+
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003/api/trpc'
-      const url = `${API_URL}/studio.getStudioBySlug?input=${encodeURIComponent(JSON.stringify({
-        slug,
-        page: currentPage,
-        limit: 24,
-        sortBy,
-        order: sortOrder
-      }))}`
-      
+      const url = `${API_URL}/studio.getStudioBySlug?input=${encodeURIComponent(
+        JSON.stringify({
+          slug,
+          page: currentPage,
+          limit: 24,
+          sortBy,
+          order: sortOrder,
+        })
+      )}`
+
       const response = await fetch(url, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       })
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch studio data')
       }
-      
+
       const json = await response.json()
       if (json.error) {
         throw new Error(json.error.message || 'Failed to load studio')
       }
-      
+
       setStudioData(json.result.data as StudioPageData)
     } catch (err: any) {
       setError(err.message || 'Failed to load studio')
@@ -108,15 +118,16 @@ export default function StudioPage({ params }: { params: Promise<{ slug: string 
   }
 
   // Filter anime by search query (client-side)
-  const filteredAnime = studioData?.anime.filter(anime => {
-    if (!searchQuery) return true
-    const query = searchQuery.toLowerCase()
-    return (
-      anime.title.toLowerCase().includes(query) ||
-      anime.titleEnglish?.toLowerCase().includes(query) ||
-      anime.titleJapanese?.toLowerCase().includes(query)
-    )
-  }) || []
+  const filteredAnime =
+    studioData?.anime.filter((anime) => {
+      if (!searchQuery) return true
+      const query = searchQuery.toLowerCase()
+      return (
+        anime.title.toLowerCase().includes(query) ||
+        anime.titleEnglish?.toLowerCase().includes(query) ||
+        anime.titleJapanese?.toLowerCase().includes(query)
+      )
+    }) || []
 
   if (loading && !studioData) {
     return <LoadingState text="Loading studio..." />
@@ -128,7 +139,7 @@ export default function StudioPage({ params }: { params: Promise<{ slug: string 
         <EmptyState
           icon={<Building2 className="h-12 w-12 text-gray-500" />}
           title="Studio Not Found"
-          message={error || 'The studio you\'re looking for doesn\'t exist or has no anime yet.'}
+          message={error || "The studio you're looking for doesn't exist or has no anime yet."}
           actionLabel="Back to Search"
           onAction={() => router.push('/search')}
         />
@@ -144,10 +155,10 @@ export default function StudioPage({ params }: { params: Promise<{ slug: string 
       <div className="relative">
         {/* Background Gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary-900/20 via-transparent to-transparent h-96" />
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
           {/* Back Button */}
-          <Link 
+          <Link
             href="/search"
             className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 group"
           >
@@ -167,7 +178,7 @@ export default function StudioPage({ params }: { params: Promise<{ slug: string 
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 bg-gradient-to-r from-white via-gray-100 to-gray-400 bg-clip-text text-transparent">
                 {studio.displayName}
               </h1>
-              
+
               <div className="flex flex-wrap items-center gap-4 text-gray-400 mb-4">
                 <div className="flex items-center gap-2">
                   <TvMinimalPlay className="h-4 w-4" />
@@ -176,7 +187,7 @@ export default function StudioPage({ params }: { params: Promise<{ slug: string 
               </div>
 
               <p className="text-gray-300 text-sm sm:text-base max-w-3xl">
-                Browse all anime produced by {studio.displayName}. 
+                Browse all anime produced by {studio.displayName}.
                 {studio.animeCount > 1 && ` Discover ${studio.animeCount} titles from this studio.`}
               </p>
             </div>
@@ -203,18 +214,26 @@ export default function StudioPage({ params }: { params: Promise<{ slug: string 
             </div>
 
             {/* Sort By */}
-            <select 
-              value={sortBy} 
+            <select
+              value={sortBy}
               onChange={(e: any) => {
                 setSortBy(e.target.value as 'rating' | 'year' | 'popularity' | 'title')
                 setCurrentPage(1)
               }}
               className="w-full lg:w-48 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-primary-500/50"
             >
-              <option value="year" className="bg-gray-800">Release Year</option>
-              <option value="rating" className="bg-gray-800">Highest Rated</option>
-              <option value="popularity" className="bg-gray-800">Most Popular</option>
-              <option value="title" className="bg-gray-800">Title (A-Z)</option>
+              <option value="year" className="bg-gray-800">
+                Release Year
+              </option>
+              <option value="rating" className="bg-gray-800">
+                Highest Rated
+              </option>
+              <option value="popularity" className="bg-gray-800">
+                Most Popular
+              </option>
+              <option value="title" className="bg-gray-800">
+                Title (A-Z)
+              </option>
             </select>
 
             {/* Sort Order */}
@@ -228,10 +247,9 @@ export default function StudioPage({ params }: { params: Promise<{ slug: string 
               className="border-white/20 text-white hover:bg-white/10"
               title={sortOrder === 'desc' ? 'Descending' : 'Ascending'}
             >
-              <SortDesc className={cn(
-                "h-5 w-5 transition-transform",
-                sortOrder === 'asc' && "rotate-180"
-              )} />
+              <SortDesc
+                className={cn('h-5 w-5 transition-transform', sortOrder === 'asc' && 'rotate-180')}
+              />
             </Button>
 
             {/* View Mode */}
@@ -270,9 +288,14 @@ export default function StudioPage({ params }: { params: Promise<{ slug: string 
         <div className="flex items-center justify-between mb-6">
           <p className="text-gray-400">
             {searchQuery ? (
-              <>Showing {filteredAnime.length} of {pagination.total} results</>
+              <>
+                Showing {filteredAnime.length} of {pagination.total} results
+              </>
             ) : (
-              <>Showing {filteredAnime.length} anime{pagination.totalPages > 1 && ` (Page ${currentPage} of ${pagination.totalPages})`}</>
+              <>
+                Showing {filteredAnime.length} anime
+                {pagination.totalPages > 1 && ` (Page ${currentPage} of ${pagination.totalPages})`}
+              </>
             )}
           </p>
         </div>
@@ -284,22 +307,22 @@ export default function StudioPage({ params }: { params: Promise<{ slug: string 
           <EmptyState
             icon={<Search className="h-12 w-12 text-gray-500" />}
             title="No Anime Found"
-            message={searchQuery ? `No results match "${searchQuery}"` : 'No anime from this studio yet.'}
+            message={
+              searchQuery ? `No results match "${searchQuery}"` : 'No anime from this studio yet.'
+            }
             actionLabel={searchQuery ? 'Clear Search' : 'Browse All Anime'}
-            onAction={() => searchQuery ? setSearchQuery('') : router.push('/search')}
+            onAction={() => (searchQuery ? setSearchQuery('') : router.push('/search'))}
           />
         ) : (
-          <div className={cn(
-            viewMode === 'grid'
-              ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 lg:gap-6'
-              : 'space-y-4'
-          )}>
+          <div
+            className={cn(
+              viewMode === 'grid'
+                ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 lg:gap-6'
+                : 'space-y-4'
+            )}
+          >
             {filteredAnime.map((anime) => (
-              <SearchAnimeCard
-                key={anime.id}
-                anime={anime as any}
-                variant={viewMode}
-              />
+              <SearchAnimeCard key={anime.id} anime={anime as any} variant={viewMode} />
             ))}
           </div>
         )}
@@ -315,7 +338,7 @@ export default function StudioPage({ params }: { params: Promise<{ slug: string 
             >
               Previous
             </Button>
-            
+
             <div className="flex items-center gap-2">
               {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
                 let pageNum
@@ -328,7 +351,7 @@ export default function StudioPage({ params }: { params: Promise<{ slug: string 
                 } else {
                   pageNum = currentPage - 2 + i
                 }
-                
+
                 return (
                   <Button
                     key={pageNum}
@@ -345,7 +368,7 @@ export default function StudioPage({ params }: { params: Promise<{ slug: string 
                 )
               })}
             </div>
-            
+
             <Button
               variant="outline"
               onClick={() => setCurrentPage(Math.min(pagination.totalPages, currentPage + 1))}
@@ -360,4 +383,3 @@ export default function StudioPage({ params }: { params: Promise<{ slug: string 
     </div>
   )
 }
-

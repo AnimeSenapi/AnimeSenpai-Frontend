@@ -4,20 +4,11 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { formatDistanceToNow } from 'date-fns'
-import { 
-  Heart, 
-  MessageCircle, 
-  Star, 
-  Eye, 
-  EyeOff, 
-  Trash2,
-  Send,
-  Loader2
-} from 'lucide-react'
+import { Heart, MessageCircle, Star, Trash2, Send, Loader2 } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
 import { useAuth } from '../../app/lib/auth-context'
-import { useToast } from '../../lib/toast-context'
+import { useToast } from '../ui/toast'
 import { cn } from '../../app/lib/utils'
 
 interface Review {
@@ -57,17 +48,17 @@ interface ReviewCardProps {
   commentCount?: number
 }
 
-export function ReviewCard({ 
-  review, 
-  onLike, 
-  onUnlike, 
+export function ReviewCard({
+  review,
+  onLike,
+  onUnlike,
   onDelete,
   isLiked = false,
-  commentCount = 0
+  commentCount = 0,
 }: ReviewCardProps) {
   const { user: currentUser, isAuthenticated } = useAuth()
   const toast = useToast()
-  
+
   const [showComments, setShowComments] = useState(false)
   const [comments, setComments] = useState<any[]>([])
   const [newComment, setNewComment] = useState('')
@@ -80,7 +71,7 @@ export function ReviewCard({
     const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
     return {
       'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
+      ...(token && { Authorization: `Bearer ${token}` }),
     }
   }
 
@@ -91,27 +82,27 @@ export function ReviewCard({
     }
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
       const endpoint = liked ? 'unlikeReview' : 'likeReview'
-      
+
       const response = await fetch(`${API_URL}/reviewInteractions.${endpoint}`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
-          reviewId: review.id
-        })
+          reviewId: review.id,
+        }),
       })
-      
+
       if (!response.ok) {
         throw new Error('Failed to update like')
       }
-      
+
       setLiked(!liked)
-      setLikeCount(prev => liked ? prev - 1 : prev + 1)
-      
+      setLikeCount((prev) => (liked ? prev - 1 : prev + 1))
+
       if (onLike && !liked) onLike(review.id)
       if (onUnlike && liked) onUnlike(review.id)
-      
     } catch (error) {
       console.error('Failed to update like:', error)
       toast.error('Failed to update like', 'Error')
@@ -126,25 +117,28 @@ export function ReviewCard({
 
     try {
       setLoadingComments(true)
-      
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
-      const url = `${API_URL}/reviewInteractions.getComments?input=${encodeURIComponent(JSON.stringify({
-        reviewId: review.id,
-        limit: 20
-      }))}`
-      
+
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+      const url = `${API_URL}/reviewInteractions.getComments?input=${encodeURIComponent(
+        JSON.stringify({
+          reviewId: review.id,
+          limit: 20,
+        })
+      )}`
+
       const response = await fetch(url, {
         method: 'GET',
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       })
-      
+
       if (!response.ok) {
         throw new Error('Failed to load comments')
       }
-      
+
       const json = await response.json()
       const data = json.result?.data
-      
+
       if (data?.comments) {
         setComments(data.comments)
         setShowComments(true)
@@ -167,27 +161,28 @@ export function ReviewCard({
 
     try {
       setSubmittingComment(true)
-      
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
-      
+
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+
       const response = await fetch(`${API_URL}/reviewInteractions.addComment`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
           reviewId: review.id,
-          content: newComment
-        })
+          content: newComment,
+        }),
       })
-      
+
       if (!response.ok) {
         throw new Error('Failed to add comment')
       }
-      
+
       const json = await response.json()
       const data = json.result?.data
-      
+
       if (data?.comment) {
-        setComments(prev => [data.comment, ...prev])
+        setComments((prev) => [data.comment, ...prev])
         setNewComment('')
         toast.success('Comment added!', 'Success')
       }
@@ -209,8 +204,8 @@ export function ReviewCard({
           <Link href={`/user/${review.user.username}`}>
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 overflow-hidden border border-white/10">
               {review.user.avatar ? (
-                <Image 
-                  src={review.user.avatar} 
+                <Image
+                  src={review.user.avatar}
                   alt={review.user.username}
                   width={40}
                   height={40}
@@ -218,14 +213,17 @@ export function ReviewCard({
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-sm font-bold text-primary-400">
-                  {review.user.username[0].toUpperCase()}
+                  {review.user.username?.[0]?.toUpperCase() || 'U'}
                 </div>
               )}
             </div>
           </Link>
-          
+
           <div>
-            <Link href={`/user/${review.user.username}`} className="font-semibold text-white hover:text-primary-400">
+            <Link
+              href={`/user/${review.user.username}`}
+              className="font-semibold text-white hover:text-primary-400"
+            >
               {review.user.name || review.user.username}
             </Link>
             <div className="flex items-center gap-2 text-xs text-gray-400">
@@ -252,8 +250,8 @@ export function ReviewCard({
           <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-all">
             {review.anime.coverImage && (
               <div className="w-12 h-16 rounded overflow-hidden flex-shrink-0 relative">
-                <Image 
-                  src={review.anime.coverImage} 
+                <Image
+                  src={review.anime.coverImage}
                   alt={review.anime.title}
                   fill
                   className="object-cover"
@@ -275,9 +273,7 @@ export function ReviewCard({
       <h3 className="text-lg font-semibold text-white mb-2">{review.title}</h3>
 
       {/* Review Content */}
-      <p className="text-gray-300 leading-relaxed mb-4 whitespace-pre-wrap">
-        {review.content}
-      </p>
+      <p className="text-gray-300 leading-relaxed mb-4 whitespace-pre-wrap">{review.content}</p>
 
       {/* Actions */}
       <div className="flex items-center gap-4 pt-4 border-t border-white/10">
@@ -285,13 +281,13 @@ export function ReviewCard({
         <button
           onClick={handleLike}
           className={cn(
-            "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all",
-            liked 
-              ? 'bg-error-500/20 text-error-400 hover:bg-error-500/30' 
+            'flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all',
+            liked
+              ? 'bg-error-500/20 text-error-400 hover:bg-error-500/30'
               : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
           )}
         >
-          <Heart className={cn("h-4 w-4", liked && "fill-current")} />
+          <Heart className={cn('h-4 w-4', liked && 'fill-current')} />
           <span className="text-sm font-medium">{likeCount}</span>
         </button>
 
@@ -360,8 +356,8 @@ export function ReviewCard({
                   <Link href={`/user/${comment.user.username}`}>
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 overflow-hidden border border-white/10">
                       {comment.user.avatar ? (
-                        <Image 
-                          src={comment.user.avatar} 
+                        <Image
+                          src={comment.user.avatar}
                           alt={comment.user.username}
                           width={32}
                           height={32}
@@ -374,10 +370,13 @@ export function ReviewCard({
                       )}
                     </div>
                   </Link>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <Link href={`/user/${comment.user.username}`} className="font-semibold text-white text-sm hover:text-primary-400">
+                      <Link
+                        href={`/user/${comment.user.username}`}
+                        className="font-semibold text-white text-sm hover:text-primary-400"
+                      >
                         {comment.user.name || comment.user.username}
                       </Link>
                       <span className="text-xs text-gray-500">
@@ -395,4 +394,3 @@ export function ReviewCard({
     </div>
   )
 }
-

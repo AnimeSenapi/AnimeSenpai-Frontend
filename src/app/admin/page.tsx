@@ -2,25 +2,43 @@
 
 import { useState } from 'react'
 import { AdminRoute } from '../lib/admin-route'
-import { 
-  LayoutDashboard, 
-  Users, 
-  MessageSquare, 
-  Film, 
+import {
+  LayoutDashboard,
+  Users,
+  MessageSquare,
+  Film,
+  Activity,
+  BarChart3,
   Settings,
-  Shield
+  Shield,
+  Lock,
 } from 'lucide-react'
 
 // Import tab components dynamically for code splitting (lazy load)
-import { 
-  DynamicDashboardTab, 
-  DynamicUsersTab, 
-  DynamicAnimeTab, 
-  DynamicSettingsTab 
+import {
+  DynamicDashboardTab,
+  DynamicUsersTab,
+  DynamicAnimeTab,
+  DynamicSettingsTab,
 } from '../../components/DynamicComponents'
 import { ContentTab } from './components/ContentTab'
+import { PerformanceTab } from './components/PerformanceTab'
+import { AnalyticsTab } from './components/AnalyticsTab'
+import { RoleManagementTab } from './components/RoleManagementTab'
+import PermissionsTab from './components/PermissionsTab'
+import { SystemSettingsTab } from './components/SystemSettingsTab'
 
-type Tab = 'dashboard' | 'users' | 'content' | 'anime' | 'settings'
+type Tab =
+  | 'dashboard'
+  | 'users'
+  | 'roles'
+  | 'permissions'
+  | 'content'
+  | 'anime'
+  | 'performance'
+  | 'analytics'
+  | 'settings'
+  | 'system'
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard')
@@ -28,9 +46,14 @@ export default function AdminPage() {
   const tabs = [
     { id: 'dashboard' as Tab, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'users' as Tab, label: 'Users', icon: Users },
+    { id: 'roles' as Tab, label: 'Roles', icon: Shield },
+    { id: 'permissions' as Tab, label: 'Permissions', icon: Lock },
     { id: 'content' as Tab, label: 'Content', icon: MessageSquare },
     { id: 'anime' as Tab, label: 'Anime', icon: Film },
-    { id: 'settings' as Tab, label: 'Settings', icon: Settings },
+    { id: 'performance' as Tab, label: 'Performance', icon: Activity },
+    { id: 'analytics' as Tab, label: 'Analytics', icon: BarChart3 },
+    { id: 'system' as Tab, label: 'System', icon: Settings },
+    { id: 'settings' as Tab, label: 'User Settings', icon: Settings },
   ]
 
   return (
@@ -54,7 +77,9 @@ export default function AdminPage() {
                   <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                     Admin Panel
                   </h1>
-                  <p className="text-gray-400 text-xs sm:text-sm">Manage your AnimeSenpai platform</p>
+                  <p className="text-gray-400 text-xs sm:text-sm">
+                    Manage your AnimeSenpai platform
+                  </p>
                 </div>
               </div>
             </div>
@@ -87,8 +112,13 @@ export default function AdminPage() {
             <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10">
               {activeTab === 'dashboard' && <DynamicDashboardTab />}
               {activeTab === 'users' && <DynamicUsersTab />}
+              {activeTab === 'roles' && <RoleManagementTab />}
+              {activeTab === 'permissions' && <PermissionsTab />}
               {activeTab === 'content' && <ContentTab />}
               {activeTab === 'anime' && <DynamicAnimeTab />}
+              {activeTab === 'performance' && <PerformanceTab />}
+              {activeTab === 'analytics' && <AnalyticsTab />}
+              {activeTab === 'system' && <SystemSettingsTab />}
               {activeTab === 'settings' && <DynamicSettingsTab />}
             </div>
           </div>
@@ -97,4 +127,3 @@ export default function AdminPage() {
     </AdminRoute>
   )
 }
-

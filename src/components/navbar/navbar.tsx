@@ -3,24 +3,17 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Button } from '../ui/button'
 import { GuestAuth } from './GuestAuth'
 import { StandaloneDropdown } from './StandaloneDropdown'
 import { SearchBar } from '../search/SearchBar'
 import { NotificationsDropdown } from './NotificationsDropdown'
+import { SectionErrorBoundary } from '../SectionErrorBoundary'
 import { useAuth } from '../../app/lib/auth-context'
 import { cn } from '../../app/lib/utils'
-import {
-  Home,
-  Bookmark,
-  Search,
-  Menu,
-  X
-} from 'lucide-react'
+import { Home, Bookmark, Search, Menu, X } from 'lucide-react'
 
 export function Navbar() {
   const { isAuthenticated, user, isLoading } = useAuth()
-  const [isSearchFocused, setIsSearchFocused] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const navItems = [
@@ -30,15 +23,23 @@ export function Navbar() {
   ]
 
   return (
-    <>
-      <nav className="fixed top-2 sm:top-4 left-1/2 transform -translate-x-1/2 z-50 w-[96%] sm:w-[95%] max-w-7xl px-2 sm:px-0 safe-area-top" role="navigation" aria-label="Main navigation">
+    <SectionErrorBoundary sectionName="Navbar">
+      <nav
+        className="fixed top-2 sm:top-4 left-1/2 transform -translate-x-1/2 z-50 w-[96%] sm:w-[95%] max-w-7xl px-2 sm:px-0 safe-area-top"
+        role="navigation"
+        aria-label="Main navigation"
+      >
         <div className="bg-gray-950/95 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl px-3 sm:px-6 lg:px-8 py-2 sm:py-2 lg:py-2.5 overflow-visible transition-all duration-300 touch-manipulation shadow-2xl">
           <div className="flex items-center justify-between gap-2 sm:gap-4 lg:gap-6">
             {/* Logo Section - Responsive */}
-            <Link href="/dashboard" className="flex items-center flex-shrink-0" aria-label="AnimeSenpai home">
-              <Image 
-                src="/assets/logo/AnimeSenpai_Inline.svg" 
-                alt="AnimeSenpai" 
+            <Link
+              href="/dashboard"
+              className="flex items-center flex-shrink-0"
+              aria-label="AnimeSenpai home"
+            >
+              <Image
+                src="/assets/logo/AnimeSenpai_Inline.svg"
+                alt="AnimeSenpai"
                 width={450}
                 height={112}
                 className="h-10 sm:h-16 lg:h-20 xl:h-24 w-auto invert drop-shadow-lg"
@@ -49,7 +50,7 @@ export function Navbar() {
             {/* Navigation Items - Desktop */}
             <div className="hidden lg:flex items-center gap-2">
               {navItems
-                .filter(item => !item.authOnly || isAuthenticated)
+                .filter((item) => !item.authOnly || isAuthenticated)
                 .map((item) => {
                   const Icon = item.icon
                   return (
@@ -66,13 +67,13 @@ export function Navbar() {
             </div>
 
             {/* Enhanced Search Bar - Responsive */}
-            <div className="hidden sm:block w-48 lg:w-56 xl:w-64 transition-all duration-300" role="search" aria-label="Search anime" id="search">
-              <SearchBar
-                placeholder="Search..."
-                showDropdown={true}
-                size="sm"
-                variant="navbar"
-              />
+            <div
+              className="hidden sm:block w-48 lg:w-56 xl:w-64 transition-all duration-300"
+              role="search"
+              aria-label="Search anime"
+              id="search"
+            >
+              <SearchBar placeholder="Search..." showDropdown={true} size="sm" variant="navbar" />
             </div>
 
             {/* Auth Section */}
@@ -85,7 +86,7 @@ export function Navbar() {
                   <div className="hidden sm:block">
                     <NotificationsDropdown />
                   </div>
-                  
+
                   {/* User Dropdown */}
                   <StandaloneDropdown
                     user={{
@@ -93,7 +94,7 @@ export function Navbar() {
                       name: user.username || user.name || 'User',
                       email: user.email,
                       avatar: user.avatar,
-                      role: user.role
+                      role: user.role,
                     }}
                   />
                 </>
@@ -102,17 +103,17 @@ export function Navbar() {
                   <GuestAuth />
                 </div>
               )}
-              
+
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className={cn(
-                  "lg:hidden flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 touch-manipulation active:scale-95",
-                  isMobileMenuOpen 
-                    ? "bg-primary-500/20 text-primary-400" 
-                    : "text-gray-300 hover:text-white hover:bg-white/10"
+                  'lg:hidden flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 touch-manipulation active:scale-95',
+                  isMobileMenuOpen
+                    ? 'bg-primary-500/20 text-primary-400'
+                    : 'text-gray-300 hover:text-white hover:bg-white/10'
                 )}
-                aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+                aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
                 aria-expanded={isMobileMenuOpen}
                 aria-controls="mobile-menu"
               >
@@ -125,7 +126,7 @@ export function Navbar() {
 
       {/* Mobile Menu - Slide down */}
       {isMobileMenuOpen && (
-        <div 
+        <div
           id="mobile-menu"
           className="fixed top-16 sm:top-20 left-1/2 transform -translate-x-1/2 z-40 w-[96%] sm:w-[95%] max-w-7xl px-2 sm:px-0 lg:hidden"
           role="dialog"
@@ -145,7 +146,7 @@ export function Navbar() {
             {/* Mobile Navigation */}
             <nav className="space-y-1.5" aria-label="Mobile menu navigation">
               {navItems
-                .filter(item => !item.authOnly || isAuthenticated)
+                .filter((item) => !item.authOnly || isAuthenticated)
                 .map((item) => {
                   const Icon = item.icon
                   return (
@@ -156,11 +157,14 @@ export function Navbar() {
                       className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 active:bg-white/15 transition-all duration-200 text-base font-medium touch-manipulation group"
                       aria-label={`Go to ${item.name}`}
                     >
-                    <Icon className="h-5 w-5 group-hover:scale-110 transition-transform" aria-hidden="true" />
-                    <span>{item.name}</span>
-                  </Link>
-                )
-              })}
+                      <Icon
+                        className="h-5 w-5 group-hover:scale-110 transition-transform"
+                        aria-hidden="true"
+                      />
+                      <span>{item.name}</span>
+                    </Link>
+                  )
+                })}
             </nav>
 
             {/* Mobile Notifications */}
@@ -182,6 +186,6 @@ export function Navbar() {
           </div>
         </div>
       )}
-    </>
+    </SectionErrorBoundary>
   )
 }

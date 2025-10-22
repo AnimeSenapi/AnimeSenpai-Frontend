@@ -9,31 +9,31 @@ interface StreamingLinksProps {
 
 /**
  * StreamingLinks Component
- * 
+ *
  * Provides quick links to popular streaming platforms
  * Only shows platforms where the anime is actually available
  */
 export function StreamingLinks({ animeTitle, className = '' }: StreamingLinksProps) {
   const searchQuery = encodeURIComponent(animeTitle)
-  
+
   // Only include platforms where anime is commonly available
   const platforms = [
     {
       name: 'Crunchyroll',
-      url: `https://www.crunchyroll.com/search?q=${searchQuery}`
+      url: `https://www.crunchyroll.com/search?q=${searchQuery}`,
     },
     {
       name: 'Netflix',
-      url: `https://www.netflix.com/search?q=${searchQuery}`
+      url: `https://www.netflix.com/search?q=${searchQuery}`,
     },
     {
       name: 'Hulu',
-      url: `https://www.hulu.com/search?q=${searchQuery}`
+      url: `https://www.hulu.com/search?q=${searchQuery}`,
     },
     {
       name: 'Funimation',
-      url: `https://www.funimation.com/search/?q=${searchQuery}`
-    }
+      url: `https://www.funimation.com/search/?q=${searchQuery}`,
+    },
   ]
 
   return (
@@ -53,7 +53,8 @@ export function StreamingLinks({ animeTitle, className = '' }: StreamingLinksPro
               rel="noopener noreferrer"
               className="group"
             >
-              <div className="
+              <div
+                className="
                 bg-white/10 hover:bg-white/20
                 text-white rounded-lg px-3 py-2
                 flex items-center gap-2
@@ -62,7 +63,8 @@ export function StreamingLinks({ animeTitle, className = '' }: StreamingLinksPro
                 active:scale-95
                 touch-manipulation
                 border border-white/20
-              ">
+              "
+              >
                 <span className="text-sm font-medium">{platform.name}</span>
                 <ExternalLink className="h-3 w-3 opacity-70 group-hover:opacity-100 transition-opacity" />
               </div>
@@ -77,4 +79,3 @@ export function StreamingLinks({ animeTitle, className = '' }: StreamingLinksPro
     </div>
   )
 }
-

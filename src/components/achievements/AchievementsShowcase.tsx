@@ -1,7 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Achievement, AchievementCategory, groupAchievementsByCategory, TIER_INFO } from '../../lib/achievements'
+import {
+  Achievement,
+  AchievementCategory,
+  groupAchievementsByCategory,
+} from '../../lib/achievements'
 import { AchievementBadge } from './AchievementBadge'
 import { Trophy, Star, Heart, Compass, Sparkles } from 'lucide-react'
 import { Button } from '../ui/button'
@@ -27,39 +31,39 @@ const CATEGORY_INFO = {
   watching: {
     name: 'Watching',
     icon: Trophy,
-    color: 'text-primary-400'
+    color: 'text-primary-400',
   },
   rating: {
     name: 'Rating',
     icon: Star,
-    color: 'text-yellow-400'
+    color: 'text-yellow-400',
   },
   social: {
     name: 'Social',
     icon: Heart,
-    color: 'text-pink-400'
+    color: 'text-pink-400',
   },
   exploration: {
     name: 'Exploration',
     icon: Compass,
-    color: 'text-blue-400'
+    color: 'text-blue-400',
   },
   special: {
     name: 'Special',
     icon: Sparkles,
-    color: 'text-purple-400'
-  }
+    color: 'text-purple-400',
+  },
 }
 
 export function AchievementsShowcase({
   achievements,
   allAchievements,
   stats,
-  compact = false
+  compact = false,
 }: AchievementsShowcaseProps) {
   const [selectedCategory, setSelectedCategory] = useState<AchievementCategory | 'all'>('all')
-  
-  const unlockedIds = new Set(achievements.map(a => a.id))
+
+  const unlockedIds = new Set(achievements.map((a) => a.id))
   const groupedUnlocked = groupAchievementsByCategory(achievements)
   const groupedAll = groupAchievementsByCategory(allAchievements)
 
@@ -69,9 +73,8 @@ export function AchievementsShowcase({
   const completionPercentage = (unlockedCount / totalAchievements) * 100
 
   // Get achievements to display
-  const achievementsToShow = selectedCategory === 'all'
-    ? allAchievements
-    : groupedAll[selectedCategory]
+  const achievementsToShow =
+    selectedCategory === 'all' ? allAchievements : groupedAll[selectedCategory]
 
   // Calculate progress for each achievement
   const getProgress = (achievement: Achievement): number => {
@@ -156,7 +159,7 @@ export function AchievementsShowcase({
               {unlockedCount} of {totalAchievements} unlocked
             </p>
           </div>
-          
+
           <div className="text-right">
             <div className="text-3xl font-bold text-transparent bg-gradient-to-r from-primary-400 to-secondary-400 bg-clip-text">
               {completionPercentage.toFixed(0)}%
@@ -238,9 +241,8 @@ export function AchievementsShowcase({
           return (
             <AchievementBadge
               key={achievement.id}
-              achievement={isUnlocked 
-                ? achievements.find(a => a.id === achievement.id)! 
-                : achievement
+              achievement={
+                isUnlocked ? achievements.find((a) => a.id === achievement.id)! : achievement
               }
               unlocked={isUnlocked}
               progress={progress}
@@ -253,4 +255,3 @@ export function AchievementsShowcase({
     </div>
   )
 }
-

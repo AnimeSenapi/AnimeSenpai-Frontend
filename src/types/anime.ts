@@ -1,5 +1,3 @@
-import { Tag } from './tags'
-
 export interface Genre {
   id: string
   name: string
@@ -8,6 +6,7 @@ export interface Genre {
 }
 
 export interface Anime {
+  popularity: number
   id: string
   slug: string
   title: string // Romanized Japanese title

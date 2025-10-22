@@ -4,9 +4,17 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { 
-  Bell, BellOff, Check, X, User, UserPlus, Heart, 
-  MessageCircle, Share2, Loader2, CheckCheck, Trash2
+import {
+  Bell,
+  BellOff,
+  Check,
+  X,
+  User,
+  UserPlus,
+  Heart,
+  MessageCircle,
+  Share2,
+  CheckCheck,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -19,7 +27,7 @@ import {
   apiMarkAllNotificationsAsRead,
   apiGetPendingFriendRequests,
   apiAcceptFriendRequest,
-  apiDeclineFriendRequest
+  apiDeclineFriendRequest,
 } from '@/app/lib/api'
 import { cn } from '@/app/lib/utils'
 import { formatDistanceToNow } from 'date-fns'
@@ -50,7 +58,7 @@ interface FriendRequest {
 export default function NotificationsPage() {
   const router = useRouter()
   const { user, isLoading: authLoading } = useAuth()
-  
+
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
   const [loading, setLoading] = useState(true)
@@ -69,7 +77,10 @@ export default function NotificationsPage() {
   const loadNotifications = async () => {
     try {
       setLoading(true)
-      const data = await apiGetNotifications({ limit: 50, unreadOnly: filter === 'unread' }) as any
+      const data = (await apiGetNotifications({
+        limit: 50,
+        unreadOnly: filter === 'unread',
+      })) as any
       setNotifications(data.notifications)
       setUnreadCount(data.notifications.filter((n: any) => !n.isRead).length)
     } catch (error) {
@@ -81,7 +92,7 @@ export default function NotificationsPage() {
 
   const loadFriendRequests = async () => {
     try {
-      const data = await apiGetPendingFriendRequests() as any
+      const data = (await apiGetPendingFriendRequests()) as any
       setFriendRequests(data.requests)
     } catch (error) {
       console.error('Failed to load friend requests:', error)
@@ -91,9 +102,9 @@ export default function NotificationsPage() {
   const handleMarkRead = async (notificationId: string) => {
     try {
       await apiMarkNotificationAsRead(notificationId)
-      setNotifications(notifications.map(n => 
-        n.id === notificationId ? { ...n, isRead: true } : n
-      ))
+      setNotifications(
+        notifications.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n))
+      )
       setUnreadCount(Math.max(0, unreadCount - 1))
     } catch (error) {
       console.error('Failed to mark as read:', error)
@@ -103,7 +114,7 @@ export default function NotificationsPage() {
   const handleMarkAllRead = async () => {
     try {
       await apiMarkAllNotificationsAsRead()
-      setNotifications(notifications.map(n => ({ ...n, isRead: true })))
+      setNotifications(notifications.map((n) => ({ ...n, isRead: true })))
       setUnreadCount(0)
     } catch (error) {
       console.error('Failed to mark all as read:', error)
@@ -113,7 +124,7 @@ export default function NotificationsPage() {
   const handleAcceptFriendRequest = async (requestId: string) => {
     try {
       await apiAcceptFriendRequest(requestId)
-      setFriendRequests(friendRequests.filter(r => r.id !== requestId))
+      setFriendRequests(friendRequests.filter((r) => r.id !== requestId))
       await loadNotifications()
     } catch (error) {
       console.error('Failed to accept friend request:', error)
@@ -123,7 +134,7 @@ export default function NotificationsPage() {
   const handleDeclineFriendRequest = async (requestId: string) => {
     try {
       await apiDeclineFriendRequest(requestId)
-      setFriendRequests(friendRequests.filter(r => r.id !== requestId))
+      setFriendRequests(friendRequests.filter((r) => r.id !== requestId))
     } catch (error) {
       console.error('Failed to decline friend request:', error)
     }
@@ -166,7 +177,7 @@ export default function NotificationsPage() {
               {unreadCount > 0 ? (
                 <span className="text-primary-400 font-semibold">{unreadCount} unread</span>
               ) : (
-                'You\'re all caught up!'
+                "You're all caught up!"
               )}
             </p>
           </div>
@@ -248,7 +259,8 @@ export default function NotificationsPage() {
                           {request.sender.name || request.sender.username}
                         </Link>
                         <p className="text-sm text-gray-400 truncate">
-                          @{request.sender.username} • {formatDistanceToNow(new Date(request.createdAt), { addSuffix: true })}
+                          @{request.sender.username} •{' '}
+                          {formatDistanceToNow(new Date(request.createdAt), { addSuffix: true })}
                         </p>
                       </div>
                     </div>
@@ -283,9 +295,19 @@ export default function NotificationsPage() {
         {/* Notifications List */}
         {notifications.length === 0 ? (
           <EmptyState
-            icon={filter === 'unread' ? <CheckCheck className="h-12 w-12 text-gray-500" /> : <BellOff className="h-12 w-12 text-gray-500" />}
+            icon={
+              filter === 'unread' ? (
+                <CheckCheck className="h-12 w-12 text-gray-500" />
+              ) : (
+                <BellOff className="h-12 w-12 text-gray-500" />
+              )
+            }
             title={filter === 'unread' ? 'No Unread Notifications' : 'No Notifications'}
-            message={filter === 'unread' ? 'You\'re all caught up! Check back later for updates.' : 'You haven\'t received any notifications yet.'}
+            message={
+              filter === 'unread'
+                ? "You're all caught up! Check back later for updates."
+                : "You haven't received any notifications yet."
+            }
             actionLabel={filter === 'unread' ? 'Show All' : undefined}
             onAction={filter === 'unread' ? () => setFilter('all') : undefined}
           />
@@ -295,7 +317,7 @@ export default function NotificationsPage() {
               <div
                 key={notification.id}
                 className={cn(
-                  "glass rounded-xl p-4 border transition-all hover:border-white/20 cursor-pointer",
+                  'glass rounded-xl p-4 border transition-all hover:border-white/20 cursor-pointer',
                   notification.isRead
                     ? 'border-white/5 bg-white/0'
                     : 'border-primary-500/30 bg-primary-500/5'
@@ -317,10 +339,12 @@ export default function NotificationsPage() {
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <p className={cn(
-                      "text-sm mb-1",
-                      notification.isRead ? 'text-gray-400' : 'text-white font-medium'
-                    )}>
+                    <p
+                      className={cn(
+                        'text-sm mb-1',
+                        notification.isRead ? 'text-gray-400' : 'text-white font-medium'
+                      )}
+                    >
                       {notification.message}
                     </p>
                     <p className="text-xs text-gray-500">
@@ -343,4 +367,3 @@ export default function NotificationsPage() {
     </div>
   )
 }
-

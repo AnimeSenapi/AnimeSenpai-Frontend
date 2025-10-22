@@ -3,16 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { 
-  Trophy, 
-  Medal, 
-  Star, 
-  Users, 
-  MessageSquare,
-  Crown,
-  TrendingUp
-} from 'lucide-react'
-import { Badge } from '../../components/ui/badge'
+import { Trophy, Medal, Users, MessageSquare, Crown, TrendingUp } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { LoadingState } from '../../components/ui/loading-state'
 import { cn } from '../lib/utils'
@@ -32,7 +23,9 @@ export default function LeaderboardsPage() {
   const [topWatchers, setTopWatchers] = useState<LeaderboardEntry[]>([])
   const [topReviewers, setTopReviewers] = useState<LeaderboardEntry[]>([])
   const [mostSocial, setMostSocial] = useState<LeaderboardEntry[]>([])
-  const [selectedBoard, setSelectedBoard] = useState<'watchers' | 'reviewers' | 'social'>('watchers')
+  const [selectedBoard, setSelectedBoard] = useState<'watchers' | 'reviewers' | 'social'>(
+    'watchers'
+  )
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'all'>('all')
   const [loading, setLoading] = useState(true)
 
@@ -43,15 +36,15 @@ export default function LeaderboardsPage() {
   const loadLeaderboards = async () => {
     try {
       setLoading(true)
-      
+
       const { apiGetTopWatchers, apiGetTopReviewers, apiGetMostSocial } = await import('../lib/api')
-      
-      const [watchers, reviewers, social] = await Promise.all([
+
+      const [watchers, reviewers, social] = (await Promise.all([
         apiGetTopWatchers({ limit: 50, timeRange }),
         apiGetTopReviewers({ limit: 50 }),
-        apiGetMostSocial({ limit: 50 })
-      ]) as any[]
-      
+        apiGetMostSocial({ limit: 50 }),
+      ])) as any[]
+
       setTopWatchers(watchers?.leaderboard || [])
       setTopReviewers(reviewers?.leaderboard || [])
       setMostSocial(social?.leaderboard || [])
@@ -72,11 +65,12 @@ export default function LeaderboardsPage() {
     return null
   }
 
-  const currentLeaderboard = selectedBoard === 'watchers' 
-    ? topWatchers 
-    : selectedBoard === 'reviewers'
-    ? topReviewers
-    : mostSocial
+  const currentLeaderboard =
+    selectedBoard === 'watchers'
+      ? topWatchers
+      : selectedBoard === 'reviewers'
+        ? topReviewers
+        : mostSocial
 
   const getCountLabel = () => {
     switch (selectedBoard) {
@@ -151,7 +145,7 @@ export default function LeaderboardsPage() {
           {/* Time Range (only for watchers) */}
           {selectedBoard === 'watchers' && (
             <div className="flex gap-2">
-              {(['week', 'month', 'all'] as const).map(range => (
+              {(['week', 'month', 'all'] as const).map((range) => (
                 <Button
                   key={range}
                   variant={timeRange === range ? 'default' : 'outline'}
@@ -179,7 +173,7 @@ export default function LeaderboardsPage() {
             </div>
           ) : (
             <div className="divide-y divide-white/10">
-              {currentLeaderboard.map((entry, index) => (
+              {currentLeaderboard.map((entry) => (
                 <Link
                   key={entry.user.id}
                   href={`/user/${entry.user.username}`}
@@ -195,8 +189,8 @@ export default function LeaderboardsPage() {
                   {/* User */}
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 overflow-hidden border border-white/10 flex-shrink-0">
                     {entry.user.avatar ? (
-                      <Image 
-                        src={entry.user.avatar} 
+                      <Image
+                        src={entry.user.avatar}
                         alt={entry.user.username}
                         width={48}
                         height={48}
@@ -204,7 +198,7 @@ export default function LeaderboardsPage() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-lg font-bold text-primary-400">
-                        {entry.user.username[0].toUpperCase()}
+                        {entry.user.username?.[0]?.toUpperCase() || 'U'}
                       </div>
                     )}
                   </div>
@@ -213,14 +207,14 @@ export default function LeaderboardsPage() {
                     <div className="font-semibold text-white truncate">
                       {entry.user.name || entry.user.username}
                     </div>
-                    <div className="text-sm text-gray-400 truncate">
-                      @{entry.user.username}
-                    </div>
+                    <div className="text-sm text-gray-400 truncate">@{entry.user.username}</div>
                   </div>
 
                   {/* Count */}
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-white">{entry.count.toLocaleString()}</div>
+                    <div className="text-2xl font-bold text-white">
+                      {entry.count.toLocaleString()}
+                    </div>
                     <div className="text-xs text-gray-400">{getCountLabel()}</div>
                   </div>
                 </Link>
@@ -232,4 +226,3 @@ export default function LeaderboardsPage() {
     </div>
   )
 }
-
