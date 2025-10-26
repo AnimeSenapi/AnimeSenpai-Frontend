@@ -32,7 +32,7 @@ export default function SignUpPage() {
     'idle'
   )
   const { signup, isLoading, error, clearError } = useAuth()
-  const toast = useToast()
+  const { addToast } = useToast()
   const router = useRouter()
 
   // Debounced username availability check
@@ -140,23 +140,31 @@ export default function SignUpPage() {
       await new Promise((resolve) => setTimeout(resolve, 100))
 
       // Show success message with email verification reminder
-      toast.success(
+      addToast({
+        title: 'Account Created! 🎉'
+      ,
+        description: 
         `Check your email (${formData.email}) to verify your account!`,
-        'Account Created! 🎉'
-      )
+        variant: 'success',
+      })
 
       // Show secondary toast with next steps
       setTimeout(() => {
-        toast.info(
-          'You can start exploring anime now, but verify your email to unlock all features!',
-          'Quick Tip'
-        )
+        addToast({
+          title: 'Quick Tip',
+          description: 'You can start exploring anime now, but verify your email to unlock all features!',
+          variant: 'default',
+      })
       }, 3000)
 
       router.push('/dashboard')
     } catch (err) {
       if (error) {
-        toast.error(error, 'Sign Up Failed')
+        addToast({
+        title: 'Sign Up Failed',
+        description: error,
+        variant: 'destructive',
+      })
       }
     }
   }

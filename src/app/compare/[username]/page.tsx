@@ -14,7 +14,7 @@ export default function CompareListsPage({ params }: { params: Promise<{ usernam
   const { username } = use(params)
   const router = useRouter()
   const { isAuthenticated } = useAuth()
-  const toast = useToast()
+  const { addToast } = useToast()
 
   const [comparison, setComparison] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -58,7 +58,11 @@ export default function CompareListsPage({ params }: { params: Promise<{ usernam
       }
     } catch (error) {
       console.error('Failed to load friend:', error)
-      toast.error('Failed to load user', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to load user',
+        variant: 'destructive',
+      })
       setLoading(false)
     }
   }
@@ -92,7 +96,11 @@ export default function CompareListsPage({ params }: { params: Promise<{ usernam
       }
     } catch (error) {
       console.error('Failed to load comparison:', error)
-      toast.error('Failed to compare lists', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to compare lists',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }

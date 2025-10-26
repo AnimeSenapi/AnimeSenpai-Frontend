@@ -26,7 +26,7 @@ export function FollowButton({
   variant = 'default',
 }: FollowButtonProps) {
   const { user, getAuthHeaders } = useAuth()
-  const toast = useToast()
+  const { addToast } = useToast()
   const [isFollowing, setIsFollowing] = useState(initialFollowing)
   const [isLoading, setIsLoading] = useState(false)
   const [isCheckingStatus, setIsCheckingStatus] = useState(true)
@@ -67,12 +67,20 @@ export function FollowButton({
 
   const handleFollow = async () => {
     if (!user) {
-      toast.error('Please sign in to follow users', 'Sign In Required')
+      addToast({
+        title: 'Sign In Required',
+        description: 'Please sign in to follow users',
+        variant: 'destructive',
+      })
       return
     }
 
     if (user.id === userId) {
-      toast.error('You cannot follow yourself!', 'Invalid Action')
+      addToast({
+        title: 'Invalid Action',
+        description: 'You cannot follow yourself!',
+        variant: 'destructive',
+      })
       return
     }
 
@@ -90,7 +98,11 @@ export function FollowButton({
       const data = await response.json()
 
       if (data.error) {
-        toast.error(data.error.message || 'Failed to update follow status', 'Error')
+        addToast({
+        title: 'Error',
+        description: data.error.message || 'Failed to update follow status',
+        variant: 'destructive',
+      })
         return
       }
 
@@ -99,13 +111,25 @@ export function FollowButton({
       onFollowChange?.(newFollowingState)
 
       if (newFollowingState) {
-        toast.success(`You are now following ${username}!`, 'Following')
+        addToast({
+        title: 'Following',
+        description: `You are now following ${username}!`,
+        variant: 'success',
+      })
       } else {
-        toast.info(`You unfollowed ${username}`, 'Unfollowed')
+        addToast({
+        title: 'Unfollowed',
+        description: `You unfollowed ${username}`,
+        variant: 'default',
+      })
       }
     } catch (error) {
       console.error('Error toggling follow:', error)
-      toast.error('Failed to update follow status. Please try again.', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to update follow status. Please try again.',
+        variant: 'destructive',
+      })
     } finally {
       setIsLoading(false)
     }
@@ -122,7 +146,11 @@ export function FollowButton({
       <Button
         variant="outline"
         size={size}
-        onClick={() => toast.info('Please sign in to follow users', 'Sign In Required')}
+        onClick={() => addToast({
+        title: 'Sign In Required',
+        description: 'Please sign in to follow users',
+        variant: 'default',
+      })}
         className="border-white/20 text-white hover:bg-white/10"
       >
         <UserPlus className="h-4 w-4 mr-2" />

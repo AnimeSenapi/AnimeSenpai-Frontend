@@ -24,7 +24,7 @@ export function ShareButton({
   size = 'default',
   showLabel = true,
 }: ShareButtonProps) {
-  const toast = useToast()
+  const { addToast } = useToast()
   const [showMenu, setShowMenu] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -55,7 +55,11 @@ export function ShareButton({
           text: description || title,
           url: fullUrl,
         })
-        toast.success('Shared successfully!', 'Success')
+        addToast({
+        title: 'Success',
+        description: 'Shared successfully!',
+        variant: 'success',
+      })
         setShowMenu(false)
       } catch (err) {
         // User cancelled or error
@@ -74,14 +78,22 @@ export function ShareButton({
     try {
       await navigator.clipboard.writeText(fullUrl)
       setCopied(true)
-      toast.success('Link copied to clipboard!', 'Copied')
+      addToast({
+        title: 'Copied',
+        description: 'Link copied to clipboard!',
+        variant: 'success',
+      })
       setTimeout(() => {
         setCopied(false)
         setShowMenu(false)
       }, 2000)
     } catch (err) {
       console.error('Copy failed:', err)
-      toast.error('Failed to copy link', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to copy link',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -89,13 +101,20 @@ export function ShareButton({
   const handleShare = (platform: keyof typeof shareUrls) => {
     if (platform === 'discord') {
       handleCopyLink()
-      toast.info('Link copied! Paste it in Discord', 'Discord')
+      addToast({
+        title: 'Discord',
+        description: 'Link copied! Paste it in Discord',
+        variant: 'default',
+      })
     } else {
       window.open(shareUrls[platform], '_blank', 'width=600,height=400')
-      toast.success(
+      addToast({
+        title: 'Shared'
+      ,
+        description: 
         `Sharing to ${platform.charAt(0).toUpperCase() + platform.slice(1)}...`,
-        'Shared'
-      )
+        variant: 'success',
+      })
     }
     setShowMenu(false)
   }

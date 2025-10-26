@@ -51,7 +51,7 @@ export function CustomListEditor({
   const [isPublic, setIsPublic] = useState(list?.isPublic ?? false)
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const { toast } = useToast()
+  const { addToast } = useToast()
 
   useEffect(() => {
     if (list) {
@@ -67,10 +67,10 @@ export function CustomListEditor({
 
   const handleSave = async () => {
     if (!name.trim()) {
-      toast({
+      addToast({
         title: 'Name required',
-        message: 'Please enter a name for your list.',
-        type: 'error',
+        description: 'Please enter a name for your list.',
+        variant: 'destructive',
       })
       return
     }
@@ -83,19 +83,19 @@ export function CustomListEditor({
         isPublic,
       })
       
-      toast({
+      addToast({
         title: list ? 'List updated!' : 'List created!',
-        message: `"${name.trim()}" has been ${list ? 'updated' : 'created'}.`,
-        type: 'success',
+        description: `"${name.trim()}" has been ${list ? 'updated' : 'created'}.`,
+        variant: 'success',
       })
       
       onClose?.()
     } catch (error) {
       console.error('Failed to save list:', error)
-      toast({
+      addToast({
         title: 'Failed to save list',
-        message: 'Please try again.',
-        type: 'error',
+        description: 'Please try again.',
+        variant: 'destructive',
       })
     } finally {
       setIsSaving(false)
@@ -111,18 +111,18 @@ export function CustomListEditor({
     setIsDeleting(true)
     try {
       await onDelete()
-      toast({
+      addToast({
         title: 'List deleted',
-        message: `"${list.name}" has been deleted.`,
-        type: 'success',
+        description: `"${list.name}" has been deleted.`,
+        variant: 'success',
       })
       onClose?.()
     } catch (error) {
       console.error('Failed to delete list:', error)
-      toast({
+      addToast({
         title: 'Failed to delete list',
-        message: 'Please try again.',
-        type: 'error',
+        description: 'Please try again.',
+        variant: 'destructive',
       })
     } finally {
       setIsDeleting(false)

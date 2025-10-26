@@ -34,7 +34,7 @@ interface CustomList {
 
 export default function CustomListsPage() {
   const { isAuthenticated, user } = useAuth()
-  const { toast } = useToast()
+  const { addToast } = useToast()
   
   const [lists, setLists] = useState<CustomList[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -151,10 +151,10 @@ export default function CustomListsPage() {
     try {
       // TODO: Replace with actual API call
       // This would import anime to the user's main list
-      toast({
+      addToast({
         title: 'Import successful!',
-        message: `Imported ${anime.length} anime to your list.`,
-        type: 'success',
+        description: `Imported ${anime.length} anime to your list.`,
+        variant: 'success',
       })
     } catch (error) {
       console.error('Failed to import anime:', error)

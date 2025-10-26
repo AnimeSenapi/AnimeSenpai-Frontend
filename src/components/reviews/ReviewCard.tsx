@@ -57,7 +57,7 @@ export function ReviewCard({
   commentCount = 0,
 }: ReviewCardProps) {
   const { user: currentUser, isAuthenticated } = useAuth()
-  const toast = useToast()
+  const { addToast } = useToast()
 
   const [showComments, setShowComments] = useState(false)
   const [comments, setComments] = useState<any[]>([])
@@ -77,7 +77,11 @@ export function ReviewCard({
 
   const handleLike = async () => {
     if (!isAuthenticated) {
-      toast.info('Please sign in to like reviews', 'Sign In Required')
+      addToast({
+        title: 'Sign In Required',
+        description: 'Please sign in to like reviews',
+        variant: 'default',
+      })
       return
     }
 
@@ -105,7 +109,11 @@ export function ReviewCard({
       if (onUnlike && liked) onUnlike(review.id)
     } catch (error) {
       console.error('Failed to update like:', error)
-      toast.error('Failed to update like', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to update like',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -145,7 +153,11 @@ export function ReviewCard({
       }
     } catch (error) {
       console.error('Failed to load comments:', error)
-      toast.error('Failed to load comments', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to load comments',
+        variant: 'destructive',
+      })
     } finally {
       setLoadingComments(false)
     }
@@ -153,7 +165,11 @@ export function ReviewCard({
 
   const handleAddComment = async () => {
     if (!isAuthenticated) {
-      toast.info('Please sign in to comment', 'Sign In Required')
+      addToast({
+        title: 'Sign In Required',
+        description: 'Please sign in to comment',
+        variant: 'default',
+      })
       return
     }
 
@@ -184,11 +200,19 @@ export function ReviewCard({
       if (data?.comment) {
         setComments((prev) => [data.comment, ...prev])
         setNewComment('')
-        toast.success('Comment added!', 'Success')
+        addToast({
+        title: 'Success',
+        description: 'Comment added!',
+        variant: 'success',
+      })
       }
     } catch (error) {
       console.error('Failed to add comment:', error)
-      toast.error('Failed to add comment', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to add comment',
+        variant: 'destructive',
+      })
     } finally {
       setSubmittingComment(false)
     }

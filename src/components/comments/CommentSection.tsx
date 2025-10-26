@@ -40,7 +40,7 @@ interface CommentSectionProps {
 
 export function CommentSection({ targetId, targetType, comments, onUpdate }: CommentSectionProps) {
   const { user, isAuthenticated } = useAuth()
-  const toast = useToast()
+  const { addToast } = useToast()
   const [newComment, setNewComment] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
@@ -66,10 +66,18 @@ export function CommentSection({ targetId, targetType, comments, onUpdate }: Com
       })
 
       setNewComment('')
-      toast.success('Comment posted!')
+      addToast({
+        title: 'Success',
+        description: 'Comment posted!',
+        variant: 'success',
+      })
       onUpdate()
     } catch (error) {
-      toast.error('Failed to post comment')
+      addToast({
+        title: 'Error',
+        description: 'Failed to post comment',
+        variant: 'destructive',
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -93,16 +101,28 @@ export function CommentSection({ targetId, targetType, comments, onUpdate }: Com
 
       setReplyText('')
       setReplyingTo(null)
-      toast.success('Reply posted!')
+      addToast({
+        title: 'Success',
+        description: 'Reply posted!',
+        variant: 'success',
+      })
       onUpdate()
     } catch (error) {
-      toast.error('Failed to post reply')
+      addToast({
+        title: 'Error',
+        description: 'Failed to post reply',
+        variant: 'destructive',
+      })
     }
   }
 
   const handleLike = async (commentId: string) => {
     if (!isAuthenticated) {
-      toast.info('Sign in to like comments')
+      addToast({
+        title: 'Sign In Required',
+        description: 'Sign in to like comments',
+        variant: 'default',
+      })
       return
     }
 
@@ -118,7 +138,11 @@ export function CommentSection({ targetId, targetType, comments, onUpdate }: Com
 
       onUpdate()
     } catch (error) {
-      toast.error('Failed to like comment')
+      addToast({
+        title: 'Error',
+        description: 'Failed to like comment',
+        variant: 'destructive',
+      })
     }
   }
 

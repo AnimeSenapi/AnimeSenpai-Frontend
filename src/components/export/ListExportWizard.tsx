@@ -61,7 +61,7 @@ export function ListExportWizard({
   })
   const [isExporting, setIsExporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { toast } = useToast()
+  const { addToast } = useToast()
 
   const steps: ExportStep[] = [
     {
@@ -102,18 +102,18 @@ export function ListExportWizard({
       URL.revokeObjectURL(url)
       
       setCurrentStep(2)
-      toast({
+      addToast({
         title: 'Export successful!',
-        message: 'Your anime list has been downloaded.',
-        type: 'success',
+        description: 'Your anime list has been downloaded.',
+        variant: 'success',
       })
     } catch (err) {
       console.error('Failed to export:', err)
       setError(err instanceof Error ? err.message : 'Failed to export list')
-      toast({
+      addToast({
         title: 'Export failed',
-        message: 'Please try again.',
-        type: 'error',
+        description: 'Please try again.',
+        variant: 'destructive',
       })
     } finally {
       setIsExporting(false)

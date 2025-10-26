@@ -57,7 +57,7 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState<'day' | 'week' | 'month' | 'year'>('week')
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
-  const { toast } = useToast()
+  const { addToast } = useToast()
 
   const fetchAnalyticsData = async () => {
     try {
@@ -93,10 +93,10 @@ export default function AnalyticsPage() {
       setLastRefresh(new Date())
     } catch (error) {
       console.error('Failed to fetch analytics data:', error)
-      toast({
+      addToast({
         title: 'Failed to fetch analytics data',
-        message: 'Please try again later.',
-        type: 'error'
+        description: 'Please try again later.',
+        variant: 'default',
       })
     } finally {
       setLoading(false)

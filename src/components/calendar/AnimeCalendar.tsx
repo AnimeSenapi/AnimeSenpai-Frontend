@@ -59,7 +59,7 @@ export function AnimeCalendar({
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week')
   const [filterStatus, setFilterStatus] = useState<'all' | 'watching' | 'new'>('all')
   const [sortBy, setSortBy] = useState<'time' | 'anime' | 'episode'>('time')
-  const { toast } = useToast()
+  const { addToast } = useToast()
 
   // Mock data for demonstration
   const mockEpisodes: Episode[] = useMemo(() => [
@@ -217,11 +217,11 @@ export function AnimeCalendar({
 
   const handleEpisodeClick = (episode: Episode) => {
     onEpisodeClick?.(episode)
-    toast({
-      title: 'Episode clicked',
-      message: `${episode.animeTitle} Episode ${episode.episodeNumber}`,
-      type: 'info',
-    })
+    addToast({
+        title: 'Episode clicked',
+        description: `${episode.animeTitle} Episode ${episode.episodeNumber}`,
+        variant: 'default',
+      })
   }
 
   const handleAnimeClick = (animeId: string) => {

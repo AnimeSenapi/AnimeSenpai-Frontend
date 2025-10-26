@@ -21,7 +21,7 @@ export function BlockReportModal({
   onBlock,
   onReport,
 }: BlockReportModalProps) {
-  const toast = useToast()
+  const { addToast } = useToast()
 
   const [mode, setMode] = useState<'menu' | 'block' | 'report'>('menu')
   const [reportReason, setReportReason] = useState<
@@ -59,12 +59,20 @@ export function BlockReportModal({
         throw new Error('Failed to block user')
       }
 
-      toast.success(`Blocked @${username}`, 'User Blocked')
+      addToast({
+        title: 'User Blocked',
+        description: `Blocked @${username}`,
+        variant: 'success',
+      })
       if (onBlock) onBlock()
       onClose()
     } catch (error) {
       console.error('Failed to block user:', error)
-      toast.error('Failed to block user', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to block user',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }
@@ -72,7 +80,11 @@ export function BlockReportModal({
 
   const handleReport = async () => {
     if (reportDescription.length < 10) {
-      toast.error('Please provide more details (at least 10 characters)', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Please provide more details (at least 10 characters)',
+        variant: 'destructive',
+      })
       return
     }
 
@@ -96,12 +108,20 @@ export function BlockReportModal({
         throw new Error('Failed to report user')
       }
 
-      toast.success('Report submitted. Our team will review it.', 'Report Submitted')
+      addToast({
+        title: 'Report Submitted',
+        description: 'Report submitted. Our team will review it.',
+        variant: 'success',
+      })
       if (onReport) onReport()
       onClose()
     } catch (error) {
       console.error('Failed to report user:', error)
-      toast.error('Failed to submit report', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to submit report',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }

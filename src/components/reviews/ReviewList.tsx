@@ -41,7 +41,7 @@ interface ReviewListProps {
 
 export function ReviewList({ animeId: _animeId, reviews, onReviewUpdate }: ReviewListProps) {
   const { user } = useAuth()
-  const toast = useToast()
+  const { addToast } = useToast()
   const [expandedReviews, setExpandedReviews] = useState<Set<string>>(new Set())
   const [likedReviews, setLikedReviews] = useState<Set<string>>(new Set())
 
@@ -95,7 +95,11 @@ export function ReviewList({ animeId: _animeId, reviews, onReviewUpdate }: Revie
         }
         return next
       })
-      toast.error('Failed to update like')
+      addToast({
+        title: 'Success',
+        description: 'Like updated successfully',
+        variant: 'success',
+      })
     }
   }
 
@@ -104,7 +108,7 @@ export function ReviewList({ animeId: _animeId, reviews, onReviewUpdate }: Revie
 
     try {
       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews.delete`, {
-        method: 'POST',
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')}`,
@@ -112,10 +116,18 @@ export function ReviewList({ animeId: _animeId, reviews, onReviewUpdate }: Revie
         body: JSON.stringify({ reviewId }),
       })
 
-      toast.success('Review deleted successfully')
+      addToast({
+        title: 'Success',
+        description: 'Review deleted successfully',
+        variant: 'success',
+      })
       onReviewUpdate()
     } catch (error) {
-      toast.error('Failed to delete review')
+      addToast({
+        title: 'Error',
+        description: 'Failed to delete review',
+        variant: 'destructive',
+      })
     }
   }
 

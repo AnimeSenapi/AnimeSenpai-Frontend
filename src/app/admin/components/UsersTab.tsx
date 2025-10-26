@@ -91,7 +91,7 @@ interface UserActivity {
 }
 
 export function UsersTab() {
-  const toast = useToast()
+  const { addToast } = useToast()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -166,9 +166,17 @@ export function UsersTab() {
     try {
       await apiUpdateUserRole(userId, newRole)
       loadUsers()
-      toast.success(`User role updated to ${newRole}`, 'Success')
+      addToast({
+        title: 'Success',
+        description: `User role updated to ${newRole}`,
+        variant: 'success',
+      })
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update user role', 'Error')
+      addToast({
+        title: 'Error',
+        description: error.message || 'Failed to update user role',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -187,12 +195,19 @@ export function UsersTab() {
       setShowUserModal(false)
       setShowDeleteConfirm(false)
       setUserToDelete(null)
-      toast.success(
+      addToast({
+        title: 'Deleted'
+      ,
+        description: 
         `User ${userToDelete.name || userToDelete.email} deleted successfully`,
-        'Deleted'
-      )
+        variant: 'success',
+      })
     } catch (error: any) {
-      toast.error(error.message || 'Failed to delete user', 'Error')
+      addToast({
+        title: 'Error',
+        description: error.message || 'Failed to delete user',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -208,7 +223,11 @@ export function UsersTab() {
       setShowUserModal(true)
     } catch (error) {
       console.error('Failed to load user details:', error)
-      toast.error('Failed to load user details', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to load user details',
+        variant: 'destructive',
+      })
     } finally {
       setLoadingActivity(false)
     }
@@ -217,9 +236,17 @@ export function UsersTab() {
   const handleSendPasswordReset = async (user: User) => {
     try {
       await apiSendPasswordResetEmail(user.id)
-      toast.success(`Password reset email sent to ${user.email}`, 'Email Sent')
+      addToast({
+        title: 'Email Sent',
+        description: `Password reset email sent to ${user.email}`,
+        variant: 'success',
+      })
     } catch (error: any) {
-      toast.error(error.message || 'Failed to send password reset email', 'Error')
+      addToast({
+        title: 'Error',
+        description: error.message || 'Failed to send password reset email',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -229,9 +256,17 @@ export function UsersTab() {
     try {
       await apiToggleEmailVerification(user.id, !user.emailVerified)
       loadUsers()
-      toast.success(`Email ${action}ed successfully`, 'Success')
+      addToast({
+        title: 'Success',
+        description: `Email ${action}ed successfully`,
+        variant: 'success',
+      })
     } catch (error: any) {
-      toast.error(error.message || `Failed to ${action} email`, 'Error')
+      addToast({
+        title: 'Error',
+        description: error.message || `Failed to ${action} email`,
+        variant: 'destructive',
+      })
     }
   }
 
@@ -250,12 +285,20 @@ export function UsersTab() {
 
     // Validate inputs
     if (editForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.email)) {
-      toast.error('Please enter a valid email address', 'Invalid Email')
+      addToast({
+        title: 'Invalid Email',
+        description: 'Please enter a valid email address',
+        variant: 'destructive',
+      })
       return
     }
 
     if (editForm.username && (editForm.username.length < 3 || editForm.username.length > 30)) {
-      toast.error('Username must be between 3 and 30 characters', 'Invalid Username')
+      addToast({
+        title: 'Invalid Username',
+        description: 'Username must be between 3 and 30 characters',
+        variant: 'destructive',
+      })
       return
     }
 
@@ -265,7 +308,11 @@ export function UsersTab() {
       editForm.username === (userToEdit.username || '') &&
       editForm.email === userToEdit.email
     ) {
-      toast.error('No changes detected', 'No Changes')
+      addToast({
+        title: 'No Changes',
+        description: 'No changes detected',
+        variant: 'destructive',
+      })
       return
     }
 
@@ -280,9 +327,17 @@ export function UsersTab() {
       loadUsers()
       setShowEditModal(false)
       setUserToEdit(null)
-      toast.success('User details updated successfully', 'Success')
+      addToast({
+        title: 'Success',
+        description: 'User details updated successfully',
+        variant: 'success',
+      })
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update user details', 'Error')
+      addToast({
+        title: 'Error',
+        description: error.message || 'Failed to update user details',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -294,7 +349,11 @@ export function UsersTab() {
 
   const handleSendEmail = async () => {
     if (!userToEmail || !emailForm.subject || !emailForm.message) {
-      toast.error('Please fill in all fields', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Please fill in all fields',
+        variant: 'destructive',
+      })
       return
     }
 
@@ -302,9 +361,17 @@ export function UsersTab() {
       await apiSendCustomEmail(userToEmail.id, emailForm.subject, emailForm.message)
       setShowEmailModal(false)
       setUserToEmail(null)
-      toast.success('Email sent successfully', 'Success')
+      addToast({
+        title: 'Success',
+        description: 'Email sent successfully',
+        variant: 'success',
+      })
     } catch (error: any) {
-      toast.error(error.message || 'Failed to send email', 'Error')
+      addToast({
+        title: 'Error',
+        description: error.message || 'Failed to send email',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -346,9 +413,17 @@ export function UsersTab() {
       }
       loadUsers()
       setSelectedUsers(new Set())
-      toast.success(`Deleted ${selectedUsers.size} users`, 'Success')
+      addToast({
+        title: 'Success',
+        description: `Deleted ${selectedUsers.size} users`,
+        variant: 'success',
+      })
     } catch (error: any) {
-      toast.error('Failed to delete some users', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to delete some users',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -380,7 +455,11 @@ export function UsersTab() {
     a.download = `animesenpai-users-${new Date().toISOString().split('T')[0]}.csv`
     a.click()
     URL.revokeObjectURL(url)
-    toast.success('Users exported to CSV', 'Exported')
+    addToast({
+        title: 'Exported',
+        description: 'Users exported to CSV',
+        variant: 'success',
+      })
   }
 
   const getFilteredAndSortedUsers = () => {

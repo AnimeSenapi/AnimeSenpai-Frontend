@@ -70,7 +70,7 @@ interface Message {
 export default function MessagesPage() {
   const router = useRouter()
   const { isAuthenticated, user, isLoading: authLoading } = useAuth()
-  const toast = useToast()
+  const { addToast } = useToast()
 
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
@@ -125,10 +125,18 @@ export default function MessagesPage() {
 
       // Check if it's an auth error
       if (error.message?.includes('No authentication') || error.message?.includes('UNAUTHORIZED')) {
-        toast.error('Please sign in to view messages', 'Authentication Required')
+        addToast({
+        title: 'Authentication Required',
+        description: 'Please sign in to view messages',
+        variant: 'destructive',
+      })
         router.push('/auth/signin')
       } else {
-        toast.error(error.message || 'Failed to load conversations', 'Error')
+        addToast({
+        title: 'Error',
+        description: error.message || 'Failed to load conversations',
+        variant: 'destructive',
+      })
       }
       setConversations([])
     } finally {
@@ -154,7 +162,11 @@ export default function MessagesPage() {
       }
     } catch (error) {
       console.error('Failed to load messages:', error)
-      toast.error('Failed to load messages', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to load messages',
+        variant: 'destructive',
+      })
       setMessages([])
     } finally {
       setLoadingMessages(false)
@@ -180,11 +192,19 @@ export default function MessagesPage() {
             conv.user.id === selectedConversation ? { ...conv, lastMessage: data.message } : conv
           )
         )
-        toast.success('Message sent!', 'Success')
+        addToast({
+        title: 'Success',
+        description: 'Message sent!',
+        variant: 'success',
+      })
       }
     } catch (error) {
       console.error('Failed to send message:', error)
-      toast.error('Failed to send message', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to send message',
+        variant: 'destructive',
+      })
     } finally {
       setSending(false)
     }
@@ -198,7 +218,11 @@ export default function MessagesPage() {
       setFriends(data?.friends || [])
     } catch (error) {
       console.error('Failed to load friends:', error)
-      toast.error('Failed to load friends', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to load friends',
+        variant: 'destructive',
+      })
     } finally {
       setLoadingFriends(false)
     }

@@ -59,7 +59,7 @@ interface AnimeListItem {
 export default function ProfilePage() {
   const router = useRouter()
   const { user, isAuthenticated, refreshUser } = useAuth()
-  const toast = useToast()
+  const { addToast } = useToast()
   const [stats, setStats] = useState<UserStats | null>(null)
   const [recentAnime, setRecentAnime] = useState<any[]>([])
   const [favoriteAnime, setFavoriteAnime] = useState<any[]>([])
@@ -136,10 +136,18 @@ export default function ProfilePage() {
       // Refresh user data
       await refreshUser()
       setAvatarFile(null)
-      toast.success('Avatar updated successfully!', 'Success')
+      addToast({
+        title: 'Success',
+        description: 'Avatar updated successfully!',
+        variant: 'success',
+      })
     } catch (err) {
       setAvatarError('Failed to upload avatar')
-      toast.error('Failed to upload avatar. Please try again.', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to upload avatar. Please try again.',
+        variant: 'destructive',
+      })
     } finally {
       setIsUploadingAvatar(false)
     }

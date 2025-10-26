@@ -27,7 +27,7 @@ interface ShareAnimeCardProps {
 }
 
 export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCardProps) {
-  const toast = useToast()
+  const { addToast } = useToast()
   const { user } = useAuth()
   const [showModal, setShowModal] = useState(false)
   const [showFriendSelector, setShowFriendSelector] = useState(false)
@@ -56,12 +56,20 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
     const hashtags = 'AnimeSenpai,Anime'
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(animeUrl)}&hashtags=${hashtags}`
     window.open(url, '_blank', 'width=600,height=400')
-    toast.success('Sharing to Twitter...', 'Success')
+    addToast({
+        title: 'Success',
+        description: 'Sharing to Twitter...',
+        variant: 'success',
+      })
   }
 
   // Generate share image (for future implementation)
   const generateShareImage = async () => {
-    toast.info('Share image generation coming soon!', 'Feature Preview')
+    addToast({
+        title: 'Feature Preview',
+        description: 'Share image generation coming soon!',
+        variant: 'default',
+      })
     // Future: Generate a beautiful card with anime info for sharing
   }
 
@@ -79,7 +87,11 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
       setFriends(data?.friends || [])
     } catch (error) {
       console.error('Failed to load friends:', error)
-      toast.error('Failed to load friends', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to load friends',
+        variant: 'destructive',
+      })
     } finally {
       setLoadingFriends(false)
     }
@@ -93,12 +105,20 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
       const message = getShareText() + `\n${animeUrl}`
       await apiSendMessage(friendId, message, anime.id)
 
-      toast.success(`Shared with ${friendName}!`, 'Success')
+      addToast({
+        title: 'Success',
+        description: `Shared with ${friendName}!`,
+        variant: 'success',
+      })
       setShowFriendSelector(false)
       setShowModal(false)
     } catch (error) {
       console.error('Failed to share with friend:', error)
-      toast.error('Failed to send message', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to send message',
+        variant: 'destructive',
+      })
     } finally {
       setSendingTo(null)
     }
@@ -262,7 +282,11 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(animeUrl)
-                    toast.success('Link copied to clipboard!', 'Copied')
+                    addToast({
+        title: 'Copied',
+        description: 'Link copied to clipboard!',
+        variant: 'success',
+      })
                   }}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors group"
                 >

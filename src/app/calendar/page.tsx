@@ -16,7 +16,7 @@ import {
 
 export default function CalendarPage() {
   const { isAuthenticated } = useAuth()
-  const { toast } = useToast()
+  const { addToast } = useToast()
   
   const [activeTab, setActiveTab] = useState<'episodes' | 'seasonal'>('episodes')
   const [isLoading] = useState(false)
@@ -24,28 +24,28 @@ export default function CalendarPage() {
 
   const handleEpisodeClick = (episode: any) => {
     console.log('Episode clicked:', episode)
-    toast({
-      title: 'Episode clicked',
-      message: `${episode.animeTitle} Episode ${episode.episodeNumber}`,
-      type: 'info',
-    })
+    addToast({
+        title: 'Episode clicked',
+        description: `${episode.animeTitle} Episode ${episode.episodeNumber}`,
+        variant: 'default',
+      })
   }
 
   const handleAnimeClick = (animeId: string) => {
     console.log('Anime clicked:', animeId)
-    toast({
-      title: 'Anime clicked',
-      message: 'Redirecting to anime page...',
-      type: 'info',
-    })
+    addToast({
+        title: 'Anime clicked',
+        description: 'Redirecting to anime page...',
+        variant: 'default',
+      })
   }
 
   const handleStatusChange = (animeId: string, status: string) => {
     console.log('Status changed:', animeId, status)
-    toast({
+    addToast({
       title: 'Status updated',
-      message: `Added to ${status.replace('-', ' ')}`,
-      type: 'success',
+      description: `Added to ${status.replace('-', ' ')}`,
+      variant: 'success',
     })
   }
 

@@ -46,7 +46,7 @@ export function CustomListCard({
   className
 }: CustomListCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
-  const { toast } = useToast()
+  const { addToast } = useToast()
 
   const handleDelete = async () => {
     if (!onDelete) return
@@ -57,17 +57,17 @@ export function CustomListCard({
     setIsDeleting(true)
     try {
       await onDelete(list)
-      toast({
+      addToast({
         title: 'List deleted',
-        message: `"${list.name}" has been deleted.`,
-        type: 'success',
+        description: `"${list.name}" has been deleted.`,
+        variant: 'success',
       })
     } catch (error) {
       console.error('Failed to delete list:', error)
-      toast({
+      addToast({
         title: 'Failed to delete list',
-        message: 'Please try again.',
-        type: 'error',
+        description: 'Please try again.',
+        variant: 'destructive',
       })
     } finally {
       setIsDeleting(false)

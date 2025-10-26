@@ -33,7 +33,7 @@ interface SystemSettings {
 }
 
 export function SystemSettingsTab() {
-  const toast = useToast()
+  const { addToast } = useToast()
   const [_settings, setSettings] = useState<SystemSettings | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -79,7 +79,11 @@ export function SystemSettingsTab() {
       })
     } catch (error) {
       console.error('Failed to load system settings:', error)
-      toast.error('Failed to load settings')
+      addToast({
+        title: 'Error',
+        description: 'Failed to load settings',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }
@@ -89,11 +93,19 @@ export function SystemSettingsTab() {
     setSaving(true)
     try {
       await api.trpcMutation('systemSettings.updateSettings', formData)
-      toast.success('System settings updated successfully')
+      addToast({
+        title: 'Success',
+        description: 'System settings updated successfully',
+        variant: 'success',
+      })
       await loadSettings()
     } catch (error) {
       console.error('Failed to save settings:', error)
-      toast.error('Failed to save settings')
+      addToast({
+        title: 'Error',
+        description: 'Failed to save settings',
+        variant: 'destructive',
+      })
     } finally {
       setSaving(false)
     }
@@ -105,11 +117,19 @@ export function SystemSettingsTab() {
     setSaving(true)
     try {
       await api.trpcMutation('systemSettings.resetToDefaults', {})
-      toast.success('Settings reset to defaults')
+      addToast({
+        title: 'Success',
+        description: 'Settings reset to defaults',
+        variant: 'success',
+      })
       await loadSettings()
     } catch (error) {
       console.error('Failed to reset settings:', error)
-      toast.error('Failed to reset settings')
+      addToast({
+        title: 'Error',
+        description: 'Failed to reset settings',
+        variant: 'destructive',
+      })
     } finally {
       setSaving(false)
     }

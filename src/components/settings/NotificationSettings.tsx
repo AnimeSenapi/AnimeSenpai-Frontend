@@ -15,7 +15,7 @@ import {
 } from '../../lib/push-notifications'
 
 export function NotificationSettings() {
-  const toast = useToast()
+  const { addToast } = useToast()
 
   const [isSupported, setIsSupported] = useState(false)
   const [permission, setPermission] = useState<NotificationPermission>('default')
@@ -51,7 +51,11 @@ export function NotificationSettings() {
       const granted = await requestNotificationPermission()
 
       if (!granted) {
-        toast.error('Notification permission denied', 'Error')
+        addToast({
+        title: 'Error',
+        description: 'Notification permission denied',
+        variant: 'destructive',
+      })
         setPermission('denied')
         setLoading(false)
         return
@@ -64,7 +68,11 @@ export function NotificationSettings() {
 
       if (subscription) {
         setIsSubscribed(true)
-        toast.success('Push notifications enabled!', 'Success')
+        addToast({
+        title: 'Success',
+        description: 'Push notifications enabled!',
+        variant: 'success',
+      })
 
         // Show a test notification
         await pushNotificationService.showLocalNotification('Notifications Enabled! 🎉', {
@@ -72,11 +80,19 @@ export function NotificationSettings() {
           icon: '/favicon.ico',
         })
       } else {
-        toast.error('Failed to enable notifications', 'Error')
+        addToast({
+        title: 'Error',
+        description: 'Failed to enable notifications',
+        variant: 'destructive',
+      })
       }
     } catch (error) {
       console.error('Failed to enable notifications:', error)
-      toast.error('Failed to enable notifications', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to enable notifications',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }
@@ -90,13 +106,25 @@ export function NotificationSettings() {
 
       if (success) {
         setIsSubscribed(false)
-        toast.success('Push notifications disabled', 'Success')
+        addToast({
+        title: 'Success',
+        description: 'Push notifications disabled',
+        variant: 'success',
+      })
       } else {
-        toast.error('Failed to disable notifications', 'Error')
+        addToast({
+        title: 'Error',
+        description: 'Failed to disable notifications',
+        variant: 'destructive',
+      })
       }
     } catch (error) {
       console.error('Failed to disable notifications:', error)
-      toast.error('Failed to disable notifications', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to disable notifications',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }

@@ -66,7 +66,7 @@ export function SeasonalCalendar({
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [filterStatus, setFilterStatus] = useState<'all' | 'airing' | 'upcoming' | 'watching'>('all')
   const [sortBy, setSortBy] = useState<'popularity' | 'score' | 'title' | 'airDate'>('popularity')
-  const { toast } = useToast()
+  const { addToast } = useToast()
 
   // Mock data for demonstration
   const mockAnime: SeasonalAnime[] = useMemo(() => [
@@ -252,10 +252,10 @@ export function SeasonalCalendar({
 
   const handleStatusChange = (animeId: string, newStatus: string) => {
     onStatusChange?.(animeId, newStatus)
-    toast({
+    addToast({
       title: 'Status updated',
-      message: `Added to ${newStatus.replace('-', ' ')}`,
-      type: 'success',
+      description: `Added to ${newStatus.replace('-', ' ')}`,
+      variant: 'success',
     })
   }
 

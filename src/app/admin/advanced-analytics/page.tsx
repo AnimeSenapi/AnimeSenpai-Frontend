@@ -80,7 +80,7 @@ export default function AdvancedAnalyticsPage() {
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'quarter'>('month')
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
-  const { toast } = useToast()
+  const { addToast } = useToast()
 
   const fetchAdvancedAnalytics = async () => {
     try {
@@ -176,10 +176,10 @@ export default function AdvancedAnalyticsPage() {
       setLastRefresh(new Date())
     } catch (error) {
       console.error('Failed to fetch advanced analytics:', error)
-      toast({
+      addToast({
         title: 'Failed to fetch advanced analytics',
-        message: 'Please try again later.',
-        type: 'error'
+        description: 'Please try again later.',
+        variant: 'destructive'
       })
     } finally {
       setLoading(false)

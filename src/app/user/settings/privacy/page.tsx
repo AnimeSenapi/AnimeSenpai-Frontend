@@ -38,7 +38,7 @@ interface PrivacySettings {
 export default function PrivacySettingsPage() {
   const router = useRouter()
   const { isAuthenticated } = useAuth()
-  const toast = useToast()
+  const { addToast } = useToast()
 
   const [settings, setSettings] = useState<PrivacySettings | null>(null)
   const [loading, setLoading] = useState(true)
@@ -86,7 +86,11 @@ export default function PrivacySettingsPage() {
       }
     } catch (error) {
       console.error('Failed to load privacy settings:', error)
-      toast.error('Failed to load privacy settings', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to load privacy settings',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }
@@ -119,11 +123,19 @@ export default function PrivacySettingsPage() {
 
       if (data?.settings) {
         setSettings(data.settings)
-        toast.success('Privacy settings updated', 'Success')
+        addToast({
+        title: 'Success',
+        description: 'Privacy settings updated',
+        variant: 'success',
+      })
       }
     } catch (error) {
       console.error('Failed to update privacy settings:', error)
-      toast.error('Failed to update privacy settings', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to update privacy settings',
+        variant: 'destructive',
+      })
     } finally {
       setSaving(false)
     }
@@ -154,11 +166,19 @@ export default function PrivacySettingsPage() {
 
       if (data?.settings) {
         setSettings(data.settings)
-        toast.success(`Applied "${preset.replace('_', ' ')}" preset`, 'Success')
+        addToast({
+          title: 'Success',
+          description: `Applied "${preset.replace('_', ' ')}" preset`,
+          variant: 'success',
+        })
       }
     } catch (error) {
       console.error('Failed to apply preset:', error)
-      toast.error('Failed to apply preset', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to apply preset',
+        variant: 'destructive',
+      })
     } finally {
       setSaving(false)
     }

@@ -17,7 +17,7 @@ export default function SignInPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [formErrors, setFormErrors] = useState<{ email?: string; password?: string }>({})
   const { signin, isLoading, error, clearError } = useAuth()
-  const toast = useToast()
+  const { addToast } = useToast()
   const router = useRouter()
 
   const validateForm = () => {
@@ -53,11 +53,19 @@ export default function SignInPage() {
 
       await new Promise((resolve) => setTimeout(resolve, 100))
 
-      toast.success('Welcome back!', 'Signed In')
+      addToast({
+        title: 'Signed In',
+        description: 'Welcome back!',
+        variant: 'success',
+      })
       router.push('/dashboard')
     } catch (err) {
       if (error) {
-        toast.error(error, 'Sign In Failed')
+        addToast({
+        title: 'Sign In Failed',
+        description: error,
+        variant: 'destructive',
+      })
       }
     }
   }

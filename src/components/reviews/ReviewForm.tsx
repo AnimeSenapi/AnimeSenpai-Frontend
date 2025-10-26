@@ -24,7 +24,7 @@ export function ReviewForm({
   onSuccess,
   onCancel,
 }: ReviewFormProps) {
-  const toast = useToast()
+  const { addToast } = useToast()
   const [rating, setRating] = useState(existingReview?.rating || 0)
   const [hoverRating, setHoverRating] = useState(0)
   const [comment, setComment] = useState(existingReview?.comment || '')
@@ -74,11 +74,19 @@ export function ReviewForm({
         throw new Error('Failed to submit review')
       }
 
-      toast.success('Review submitted successfully!')
+      addToast({
+        title: 'Success',
+        description: 'Review submitted successfully!',
+        variant: 'success',
+      })
       onSuccess()
     } catch (error) {
       console.error('Failed to submit review:', error)
-      toast.error('Failed to submit review. Please try again.')
+      addToast({
+        title: 'Error',
+        description: 'Failed to submit review',
+        variant: 'destructive',
+      })
     } finally {
       setIsSubmitting(false)
     }

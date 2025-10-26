@@ -18,7 +18,7 @@ export function EmailVerificationBanner({ email, onDismiss }: EmailVerificationB
   const [isDismissed, setIsDismissed] = useState(false)
   const [isResending, setIsResending] = useState(false)
   const [resendSuccess, setResendSuccess] = useState(false)
-  const toast = useToast()
+  const { addToast } = useToast()
 
   const handleResend = async () => {
     try {
@@ -43,14 +43,22 @@ export function EmailVerificationBanner({ email, onDismiss }: EmailVerificationB
       }
 
       setResendSuccess(true)
-      toast.success('Verification email sent!', 'Check your inbox')
+      addToast({
+        title: 'Check your inbox',
+        description: 'Verification email sent!',
+        variant: 'success',
+      })
 
       // Auto-hide success message after 5 seconds
       setTimeout(() => {
         setResendSuccess(false)
       }, 5000)
     } catch (error: any) {
-      toast.error(error.message || 'Failed to resend email', 'Please try again')
+      addToast({
+        title: 'Please try again',
+        description: error.message || 'Failed to resend email',
+        variant: 'destructive',
+      })
     } finally {
       setIsResending(false)
     }
@@ -158,7 +166,7 @@ export function EmailVerificationBanner({ email, onDismiss }: EmailVerificationB
 export function EmailVerificationPrompt({ email }: { email: string }) {
   const [isResending, setIsResending] = useState(false)
   const [resendSuccess, setResendSuccess] = useState(false)
-  const toast = useToast()
+  const { addToast } = useToast()
 
   const handleResend = async () => {
     try {
@@ -183,11 +191,19 @@ export function EmailVerificationPrompt({ email }: { email: string }) {
       }
 
       setResendSuccess(true)
-      toast.success('Verification email sent!', 'Check your inbox')
+      addToast({
+        title: 'Check your inbox',
+        description: 'Verification email sent!',
+        variant: 'success',
+      })
 
       setTimeout(() => setResendSuccess(false), 5000)
     } catch (error: any) {
-      toast.error(error.message || 'Failed to resend email', 'Please try again')
+      addToast({
+        title: 'Please try again',
+        description: error.message || 'Failed to resend email',
+        variant: 'destructive',
+      })
     } finally {
       setIsResending(false)
     }

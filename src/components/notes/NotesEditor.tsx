@@ -46,7 +46,7 @@ export function NotesEditor({
   const [isSaving, setIsSaving] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
-  const { toast } = useToast()
+  const { addToast } = useToast()
 
   useEffect(() => {
     setNotes(initialNotes || '')
@@ -71,17 +71,17 @@ export function NotesEditor({
       await onSave(notes)
       setIsEditing(false)
       setHasChanges(false)
-      toast({
+      addToast({
         title: 'Notes saved!',
-        message: `Your notes for ${animeTitle} have been saved.`,
-        type: 'success',
+        description: `Your notes for ${animeTitle} have been saved.`,
+        variant: 'success',
       })
     } catch (error) {
       console.error('Failed to save notes:', error)
-      toast({
+      addToast({
         title: 'Failed to save notes',
-        message: 'Please try again.',
-        type: 'error',
+        description: 'Please try again.',
+        variant: 'destructive',
       })
     } finally {
       setIsSaving(false)

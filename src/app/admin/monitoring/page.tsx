@@ -62,7 +62,7 @@ export default function MonitoringPage() {
   const [queryStats, setQueryStats] = useState<QueryStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
-  const { toast } = useToast()
+  const { addToast } = useToast()
 
   const fetchMonitoringData = async () => {
     try {
@@ -95,10 +95,10 @@ export default function MonitoringPage() {
       setLastRefresh(new Date())
     } catch (error) {
       console.error('Failed to fetch monitoring data:', error)
-      toast({
+      addToast({
         title: 'Failed to fetch monitoring data',
-        message: 'Please try again later.',
-        type: 'error'
+        description: 'Please try again later.',
+        variant: 'default',
       })
     } finally {
       setLoading(false)

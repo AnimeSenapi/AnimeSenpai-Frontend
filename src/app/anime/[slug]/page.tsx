@@ -65,7 +65,7 @@ export default function AnimePage() {
   const params = useParams()
   const router = useRouter()
   const { isAuthenticated, user } = useAuth()
-  const toast = useToast()
+  const { addToast } = useToast()
   const slug = params?.slug as string
 
   const [anime, setAnime] = useState<AnimeDetail | null>(null)
@@ -236,10 +236,11 @@ export default function AnimePage() {
 
     // Check email verification
     if (!user?.emailVerified) {
-      toast.error(
-        'Email Verification Required',
-        'Please verify your email to add anime to your list. Check your inbox for the verification link.'
-      )
+      addToast({
+        title: 'Email Verification Required',
+        description: 'Please verify your email to add anime to your list. Check your inbox for the verification link.',
+        variant: 'destructive',
+      })
       return
     }
 
@@ -261,7 +262,11 @@ export default function AnimePage() {
       const data = await response.json()
 
       if (data.error) {
-        toast.error(isUpdating ? 'Failed to update list' : 'Failed to add to list', 'Error')
+        addToast({
+        title: 'Error',
+        description: isUpdating ? 'Failed to update list' : 'Failed to add to list',
+        variant: 'destructive',
+      })
         return
       }
 
@@ -272,20 +277,22 @@ export default function AnimePage() {
         score: listStatus.score,
       })
       setShowAddToListModal(false)
-      toast.success(
-        isUpdating
+      addToast({
+        title: 'Success',
+        description: isUpdating
           ? `Moved to ${selectedListStatus.replace('-', ' ')} list!`
           : `Added to ${selectedListStatus.replace('-', ' ')} list!`,
-        'Success'
-      )
+        variant: 'success',
+      })
     } catch (err) {
       console.error('Failed to add to list:', err)
-      toast.error(
-        isUpdating
+      addToast({
+        title: 'Error',
+        description: isUpdating
           ? 'Failed to update list. Please try again.'
           : 'Failed to add to list. Please try again.',
-        'Error'
-      )
+        variant: 'destructive',
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -309,15 +316,27 @@ export default function AnimePage() {
       const data = await response.json()
 
       if (data.error) {
-        toast.error('Failed to remove from list', 'Error')
+        addToast({
+        title: 'Error',
+        description: 'Failed to remove from list',
+        variant: 'destructive',
+      })
         return
       }
 
       setListStatus({ inList: false })
-      toast.success('Removed from your list', 'Success')
+      addToast({
+        title: 'Success',
+        description: 'Removed from your list',
+        variant: 'success',
+      })
     } catch (err) {
       console.error('Failed to remove from list:', err)
-      toast.error('Failed to remove from list', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to remove from list',
+        variant: 'destructive',
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -328,10 +347,11 @@ export default function AnimePage() {
 
     // Check email verification
     if (!user?.emailVerified) {
-      toast.error(
-        'Email Verification Required',
-        'Please verify your email to rate anime. Check your inbox for the verification link.'
-      )
+      addToast({
+        title: 'Email Verification Required',
+        description: 'Please verify your email to rate anime. Check your inbox for the verification link.',
+        variant: 'destructive',
+      })
       setShowRatingModal(false)
       return
     }
@@ -351,17 +371,29 @@ export default function AnimePage() {
       const data = await response.json()
 
       if (data.error) {
-        toast.error('Failed to submit rating', 'Error')
+        addToast({
+        title: 'Error',
+        description: 'Failed to submit rating',
+        variant: 'destructive',
+      })
         return
       }
 
       setListStatus((prev) => ({ ...prev, score: userRating }))
       setShowRatingModal(false)
       setUserReview('')
-      toast.success(`Rated ${userRating}/10!`, 'Rating Submitted')
+      addToast({
+        title: 'Rating Submitted',
+        description: `Rated ${userRating}/10!`,
+        variant: 'success',
+      })
     } catch (err) {
       console.error('Failed to submit rating:', err)
-      toast.error('Failed to submit rating', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to submit rating',
+        variant: 'destructive',
+      })
     } finally {
       setIsSubmitting(false)
     }

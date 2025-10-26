@@ -48,7 +48,7 @@ export function RecommendationCarousel({
   const [scrollPosition, setScrollPosition] = useState(0)
   const { isAuthenticated } = useAuth()
   const { isFavorited, toggleFavorite } = useFavorites()
-  const toast = useToast()
+  const { addToast } = useToast()
 
   if (recommendations.length === 0) {
     return null
@@ -68,7 +68,11 @@ export function RecommendationCarousel({
 
   const handleFavorite = async (animeId: string, animeTitle: string) => {
     if (!isAuthenticated) {
-      toast.info('Please sign in to favorite anime', 'Sign In Required')
+      addToast({
+        title: 'Sign In Required',
+        description: 'Please sign in to favorite anime',
+        variant: 'default',
+      })
       return
     }
 
@@ -77,9 +81,17 @@ export function RecommendationCarousel({
 
     // Show success message
     if (wasFavorited) {
-      toast.success(`Removed "${animeTitle}" from favorites`, 'Success')
+      addToast({
+        title: 'Success',
+        description: `Removed "${animeTitle}" from favorites`,
+        variant: 'success',
+      })
     } else {
-      toast.success(`Added "${animeTitle}" to favorites!`, 'Success')
+      addToast({
+        title: 'Success',
+        description: `Added "${animeTitle}" to favorites!`,
+        variant: 'success',
+      })
     }
   }
 

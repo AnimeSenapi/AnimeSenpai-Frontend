@@ -54,7 +54,7 @@ export function ListImportWizard({
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { toast } = useToast()
+  const { addToast } = useToast()
 
   const steps: ImportStep[] = [
     {
@@ -92,18 +92,18 @@ export function ListImportWizard({
       const data = parseImportFile(text, file.name)
       setImportedData(data)
       setCurrentStep(2)
-      toast({
+      addToast({
         title: 'File processed!',
-        message: `Found ${data.length} anime entries.`,
-        type: 'success',
+        description: `Found ${data.length} anime entries.`,
+        variant: 'success',
       })
     } catch (err) {
       console.error('Failed to process file:', err)
       setError(err instanceof Error ? err.message : 'Failed to process file')
-      toast({
+      addToast({
         title: 'Import failed',
-        message: 'Please check your file format and try again.',
-        type: 'error',
+        description: 'Please check your file format and try again.',
+        variant: 'destructive',
       })
     } finally {
       setIsProcessing(false)
@@ -230,17 +230,17 @@ export function ListImportWizard({
     try {
       await onImport(importedData)
       setCurrentStep(3)
-      toast({
+      addToast({
         title: 'Import successful!',
-        message: `Imported ${importedData.length} anime to your list.`,
-        type: 'success',
+        description: `Imported ${importedData.length} anime to your list.`,
+        variant: 'success',
       })
     } catch (err) {
       console.error('Failed to import:', err)
-      toast({
+      addToast({
         title: 'Import failed',
-        message: 'Some anime could not be imported. Please try again.',
-        type: 'error',
+        description: 'Some anime could not be imported. Please try again.',
+        variant: 'destructive',
       })
     } finally {
       setIsProcessing(false)
@@ -360,11 +360,11 @@ export function ListImportWizard({
                       </p>
                       <Button
                         onClick={() => {
-                          toast({
-                            title: 'Coming Soon',
-                            message: 'Direct service integration will be available soon.',
-                            type: 'info',
-                          })
+                          addToast({
+        title: 'Coming Soon',
+        description: 'Direct service integration will be available soon.',
+        variant: 'default',
+      })
                         }}
                         className="w-full"
                         variant="outline"

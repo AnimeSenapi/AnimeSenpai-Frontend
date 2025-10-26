@@ -47,7 +47,7 @@ interface UserPreferences {
 export default function UserSettingsPage() {
   const router = useRouter()
   const { user, refreshUser } = useAuth()
-  const toast = useToast()
+  const { addToast } = useToast()
   const [preferences, setPreferences] = useState<UserPreferences>({})
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -134,10 +134,18 @@ export default function UserSettingsPage() {
       setTwoFactorError(null)
       await apiEnable2FA()
       setTwoFactorStep('verify')
-      toast.success('Code sent to your email!', 'Check your inbox')
+      addToast({
+        title: 'Check your inbox',
+        description: 'Code sent to your email!',
+        variant: 'success',
+      })
     } catch (error: any) {
       setTwoFactorError(error.message || 'Failed to enable 2FA')
-      toast.error(error.message || 'Failed to enable 2FA', 'Error')
+      addToast({
+        title: 'Error',
+        description: error.message || 'Failed to enable 2FA',
+        variant: 'destructive',
+      })
     } finally {
       setTwoFactorLoading(false)
     }
@@ -156,11 +164,19 @@ export default function UserSettingsPage() {
       setTwoFactorEnabled(true)
       setTwoFactorStep('status')
       setTwoFactorCode('')
-      toast.success('2FA enabled successfully!', 'Your account is now more secure')
+      addToast({
+        title: 'Your account is now more secure',
+        description: '2FA enabled successfully!',
+        variant: 'success',
+      })
     } catch (error: any) {
       setTwoFactorError(error.message || 'Invalid code')
       setTwoFactorCode('')
-      toast.error(error.message || 'Invalid code', 'Error')
+      addToast({
+        title: 'Error',
+        description: error.message || 'Invalid code',
+        variant: 'destructive',
+      })
     } finally {
       setTwoFactorLoading(false)
     }
@@ -179,10 +195,18 @@ export default function UserSettingsPage() {
       setTwoFactorEnabled(false)
       setTwoFactorStep('status')
       setTwoFactorPassword('')
-      toast.success('2FA disabled successfully', 'Your account security has been updated')
+      addToast({
+        title: 'Your account security has been updated',
+        description: '2FA disabled successfully',
+        variant: 'success',
+      })
     } catch (error: any) {
       setTwoFactorError(error.message || 'Failed to disable 2FA')
-      toast.error(error.message || 'Failed to disable 2FA', 'Error')
+      addToast({
+        title: 'Error',
+        description: error.message || 'Failed to disable 2FA',
+        variant: 'destructive',
+      })
     } finally {
       setTwoFactorLoading(false)
     }
@@ -205,17 +229,29 @@ export default function UserSettingsPage() {
       const data = await response.json()
       if (data.error) {
         setError(data.error.message || 'Failed to update profile')
-        toast.error(data.error.message || 'Failed to update profile', 'Error')
+        addToast({
+        title: 'Error',
+        description: data.error.message || 'Failed to update profile',
+        variant: 'destructive',
+      })
         return
       }
 
       setSaveSuccess(true)
       await refreshUser()
-      toast.success('Profile updated successfully!', 'Success')
+      addToast({
+        title: 'Success',
+        description: 'Profile updated successfully!',
+        variant: 'success',
+      })
       setTimeout(() => setSaveSuccess(false), 3000)
     } catch (err) {
       setError('Failed to update profile. Please try again.')
-      toast.error('Failed to update profile. Please try again.', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to update profile. Please try again.',
+        variant: 'destructive',
+      })
     } finally {
       setIsSaving(false)
     }
@@ -283,7 +319,11 @@ export default function UserSettingsPage() {
       const data = await response.json()
       if (data.error) {
         setPasswordError(data.error.message || 'Failed to change password')
-        toast.error(data.error.message || 'Failed to change password', 'Error')
+        addToast({
+        title: 'Error',
+        description: data.error.message || 'Failed to change password',
+        variant: 'destructive',
+      })
         return
       }
 
@@ -291,11 +331,19 @@ export default function UserSettingsPage() {
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
-      toast.success('Password changed successfully!', 'Success')
+      addToast({
+        title: 'Success',
+        description: 'Password changed successfully!',
+        variant: 'success',
+      })
       setTimeout(() => setPasswordSuccess(false), 3000)
     } catch (err) {
       setPasswordError('Failed to change password. Please try again.')
-      toast.error('Failed to change password. Please try again.', 'Error')
+      addToast({
+        title: 'Error',
+        description: 'Failed to change password. Please try again.',
+        variant: 'destructive',
+      })
     } finally {
       setIsSaving(false)
     }

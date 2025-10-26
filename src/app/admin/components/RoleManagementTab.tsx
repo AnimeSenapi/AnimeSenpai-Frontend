@@ -68,7 +68,7 @@ interface User {
 }
 
 export function RoleManagementTab() {
-  const toast = useToast()
+  const { addToast } = useToast()
   const [activeTab, setActiveTab] = useState<'roles' | 'permissions' | 'assignments'>('roles')
 
   // Roles state
@@ -135,7 +135,11 @@ export function RoleManagementTab() {
       }
     } catch (error: any) {
       console.error('Failed to load data:', error)
-      toast.error(error.message || 'Failed to load data', 'Error')
+      addToast({
+        title: 'Error',
+        description: error.message || 'Failed to load data',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }
@@ -143,24 +147,40 @@ export function RoleManagementTab() {
 
   const handleCreateRole = async () => {
     if (!roleForm.name || !roleForm.displayName) {
-      toast.error('Please fill in all required fields', 'Validation Error')
+      addToast({
+        title: 'Validation Error',
+        description: 'Please fill in all required fields',
+        variant: 'destructive',
+      })
       return
     }
 
     try {
       await apiCreateRole(roleForm)
-      toast.success('Role created successfully', 'Success')
+      addToast({
+        title: 'Success',
+        description: 'Role created successfully',
+        variant: 'success',
+      })
       setShowCreateRole(false)
       setRoleForm({ name: '', displayName: '', description: '', priority: 0, permissionIds: [] })
       loadData()
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create role', 'Error')
+      addToast({
+        title: 'Error',
+        description: error.message || 'Failed to create role',
+        variant: 'destructive',
+      })
     }
   }
 
   const handleEditRole = async () => {
     if (!selectedRole || !roleForm.displayName) {
-      toast.error('Please fill in all required fields', 'Validation Error')
+      addToast({
+        title: 'Validation Error',
+        description: 'Please fill in all required fields',
+        variant: 'destructive',
+      })
       return
     }
 
@@ -172,12 +192,20 @@ export function RoleManagementTab() {
         priority: roleForm.priority,
         permissionIds: roleForm.permissionIds,
       })
-      toast.success('Role updated successfully', 'Success')
+      addToast({
+        title: 'Success',
+        description: 'Role updated successfully',
+        variant: 'success',
+      })
       setShowEditRole(false)
       setSelectedRole(null)
       loadData()
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update role', 'Error')
+      addToast({
+        title: 'Error',
+        description: error.message || 'Failed to update role',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -186,29 +214,49 @@ export function RoleManagementTab() {
 
     try {
       await apiDeleteRole(selectedRole.id)
-      toast.success('Role deleted successfully', 'Success')
+      addToast({
+        title: 'Success',
+        description: 'Role deleted successfully',
+        variant: 'success',
+      })
       setShowDeleteRole(false)
       setSelectedRole(null)
       loadData()
     } catch (error: any) {
-      toast.error(error.message || 'Failed to delete role', 'Error')
+      addToast({
+        title: 'Error',
+        description: error.message || 'Failed to delete role',
+        variant: 'destructive',
+      })
     }
   }
 
   const handleCreatePermission = async () => {
     if (!permissionForm.key || !permissionForm.name) {
-      toast.error('Please fill in all required fields', 'Validation Error')
+      addToast({
+        title: 'Validation Error',
+        description: 'Please fill in all required fields',
+        variant: 'destructive',
+      })
       return
     }
 
     try {
       await apiCreatePermission(permissionForm)
-      toast.success('Permission created successfully', 'Success')
+      addToast({
+        title: 'Success',
+        description: 'Permission created successfully',
+        variant: 'success',
+      })
       setShowCreatePermission(false)
       setPermissionForm({ key: '', name: '', description: '', category: 'general' })
       loadData()
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create permission', 'Error')
+      addToast({
+        title: 'Error',
+        description: error.message || 'Failed to create permission',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -222,12 +270,20 @@ export function RoleManagementTab() {
         description: permissionForm.description,
         category: permissionForm.category,
       })
-      toast.success('Permission updated successfully', 'Success')
+      addToast({
+        title: 'Success',
+        description: 'Permission updated successfully',
+        variant: 'success',
+      })
       setShowEditPermission(false)
       setSelectedPermission(null)
       loadData()
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update permission', 'Error')
+      addToast({
+        title: 'Error',
+        description: error.message || 'Failed to update permission',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -236,40 +292,68 @@ export function RoleManagementTab() {
 
     try {
       await apiDeletePermission(selectedPermission.id)
-      toast.success('Permission deleted successfully', 'Success')
+      addToast({
+        title: 'Success',
+        description: 'Permission deleted successfully',
+        variant: 'success',
+      })
       setShowDeletePermission(false)
       setSelectedPermission(null)
       loadData()
     } catch (error: any) {
-      toast.error(error.message || 'Failed to delete permission', 'Error')
+      addToast({
+        title: 'Error',
+        description: error.message || 'Failed to delete permission',
+        variant: 'destructive',
+      })
     }
   }
 
   const handleAssignRole = async () => {
     if (!selectedUser || !selectedRoleForUser) {
-      toast.error('Please select a user and role', 'Validation Error')
+      addToast({
+        title: 'Validation Error',
+        description: 'Please select a user and role',
+        variant: 'destructive',
+      })
       return
     }
 
     try {
       await apiAssignRoleToUser(selectedUser.id, selectedRoleForUser)
-      toast.success('Role assigned successfully', 'Success')
+      addToast({
+        title: 'Success',
+        description: 'Role assigned successfully',
+        variant: 'success',
+      })
       setShowAssignRole(false)
       setSelectedUser(null)
       setSelectedRoleForUser('')
       loadData()
     } catch (error: any) {
-      toast.error(error.message || 'Failed to assign role', 'Error')
+      addToast({
+        title: 'Error',
+        description: error.message || 'Failed to assign role',
+        variant: 'destructive',
+      })
     }
   }
 
   const handleRemoveRole = async (user: User) => {
     try {
       await apiRemoveRoleFromUser(user.id)
-      toast.success('Role removed successfully', 'Success')
+      addToast({
+        title: 'Success',
+        description: 'Role removed successfully',
+        variant: 'success',
+      })
       loadData()
     } catch (error: any) {
-      toast.error(error.message || 'Failed to remove role', 'Error')
+      addToast({
+        title: 'Error',
+        description: error.message || 'Failed to remove role',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -357,7 +441,11 @@ export function RoleManagementTab() {
     a.download = `animesenpai-roles-${new Date().toISOString().split('T')[0]}.csv`
     a.click()
     URL.revokeObjectURL(url)
-    toast.success('Roles exported to CSV', 'Exported')
+    addToast({
+        title: 'Exported',
+        description: 'Roles exported to CSV',
+        variant: 'success',
+      })
   }
 
   const getFilteredRoles = () => {

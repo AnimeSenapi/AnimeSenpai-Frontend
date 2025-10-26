@@ -35,7 +35,7 @@ export function FriendRecommendations({
   recommendations,
   onAddToList,
 }: FriendRecommendationsProps) {
-  const toast = useToast()
+  const { addToast } = useToast()
   const [added, setAdded] = useState<Set<string>>(new Set())
 
   const handleAdd = async (animeId: string) => {
@@ -44,7 +44,11 @@ export function FriendRecommendations({
     }
 
     setAdded((prev) => new Set([...prev, animeId]))
-    toast.success('Added to your list!')
+    addToast({
+        title: 'Success',
+        description: 'Added to your list!',
+        variant: 'success',
+    })
   }
 
   if (recommendations.length === 0) {

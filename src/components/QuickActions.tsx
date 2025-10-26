@@ -30,7 +30,7 @@ export function QuickActions({
   const [isLoading, setIsLoading] = useState(false)
   const [status, setStatus] = useState<ListStatus | null>(currentStatus || null)
   const [favorite, setFavorite] = useState(isFavorite)
-  const { toast } = useToast()
+  const { addToast } = useToast()
 
   const handleAddToList = async (newStatus: ListStatus) => {
     setIsLoading(true)
@@ -44,16 +44,16 @@ export function QuickActions({
       setStatus(newStatus)
       onUpdate?.()
 
-      toast({
+      addToast({
         title: 'Added to list!',
-        message: `${anime.title} added to ${newStatus.replace('-', ' ')}`,
-        type: 'success',
+        description: `${anime.title} added to ${newStatus.replace('-', ' ')}`,
+        variant: 'success',
       })
     } catch (error) {
-      toast({
+      addToast({
         title: 'Failed to add',
-        message: error instanceof Error ? error.message : 'Please try again',
-        type: 'error',
+        description: error instanceof Error ? error.message : 'Please try again',
+        variant: 'destructive',
       })
     } finally {
       setIsLoading(false)
@@ -69,16 +69,16 @@ export function QuickActions({
       setStatus(null)
       onUpdate?.()
 
-      toast({
+      addToast({
         title: 'Removed from list',
-        message: `${anime.title} has been removed`,
-        type: 'success',
+        description: `${anime.title} has been removed`,
+        variant: 'success',
       })
     } catch (error) {
-      toast({
+      addToast({
         title: 'Failed to remove',
-        message: error instanceof Error ? error.message : 'Please try again',
-        type: 'error',
+        description: error instanceof Error ? error.message : 'Please try again',
+        variant: 'destructive',
       })
     } finally {
       setIsLoading(false)
@@ -100,16 +100,16 @@ export function QuickActions({
       }
       onUpdate?.()
 
-      toast({
+      addToast({
         title: !favorite ? 'Added to favorites' : 'Removed from favorites',
-        message: anime.title,
-        type: 'success',
+        description: anime.title,
+        variant: 'success',
       })
     } catch (error) {
-      toast({
+      addToast({
         title: 'Failed to update',
-        message: error instanceof Error ? error.message : 'Please try again',
-        type: 'error',
+        description: error instanceof Error ? error.message : 'Please try again',
+        variant: 'destructive',
       })
     } finally {
       setIsLoading(false)

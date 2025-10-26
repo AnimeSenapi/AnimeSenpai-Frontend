@@ -20,7 +20,7 @@ import { useToast } from '../../components/ui/toast'
 import { api } from '../lib/api'
 
 export default function StatsPage() {
-  const toast = useToast()
+  const { addToast } = useToast()
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'leaderboards'>(
     'overview'
   )
@@ -63,7 +63,11 @@ export default function StatsPage() {
       }
     } catch (error) {
       console.error('Failed to load gamification data:', error)
-      toast.error('Failed to load stats')
+      addToast({
+        title: 'Error',
+        description: 'Failed to load stats',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }
@@ -84,18 +88,8 @@ export default function StatsPage() {
       return (
         data || {
           totalAnime: 0,
-          totalEpisodes: 0,
-          totalHours: 0,
-          favorites: 0,
-          watching: 0,
-          completed: 0,
-          planToWatch: 0,
-          averageRating: 0,
-          totalRatings: 0,
-          totalReviews: 0,
-          completionRate: 0,
-        }
-      )
+        variant: 'destructive',
+      })
     } catch (error) {
       return null
     }
