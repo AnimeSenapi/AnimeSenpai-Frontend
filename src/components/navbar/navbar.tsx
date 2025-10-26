@@ -8,13 +8,16 @@ import { StandaloneDropdown } from './StandaloneDropdown'
 import { SearchBar } from '../search/SearchBar'
 import { NotificationsDropdown } from './NotificationsDropdown'
 import { SectionErrorBoundary } from '../SectionErrorBoundary'
+import { MobileNavigationDrawer } from './MobileNavigationDrawer'
+import { AuthDrawer } from './AuthDrawer'
 import { useAuth } from '../../app/lib/auth-context'
 import { cn } from '../../app/lib/utils'
-import { Home, Bookmark, Search, Menu, X } from 'lucide-react'
+import { Home, Bookmark, Search, Menu, X, User } from 'lucide-react'
 
 export function Navbar() {
   const { isAuthenticated, user, isLoading } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isAuthDrawerOpen, setIsAuthDrawerOpen] = useState(false)
 
   const navItems = [
     { name: 'Home', href: '/dashboard', icon: Home },
@@ -87,21 +90,69 @@ export function Navbar() {
                     <NotificationsDropdown />
                   </div>
 
-                  {/* User Dropdown */}
-                  <StandaloneDropdown
-                    user={{
-                      id: user.id,
-                      name: user.username || user.name || 'User',
-                      email: user.email,
-                      avatar: user.avatar,
-                      role: user.role,
-                    }}
-                  />
+                  {/* Desktop User Dropdown */}
+                  <div className="hidden sm:block">
+                    <StandaloneDropdown
+                      user={{
+                        id: user.id,
+                        name: user.username || user.name || 'User',
+                        email: user.email,
+                        avatar: user.avatar,
+                        role: user.role,
+                      }}
+                    />
+                  </div>
+
+                  {/* Mobile User Avatar Button */}
+                  <button
+                    onClick={() => setIsAuthDrawerOpen(!isAuthDrawerOpen)}
+                    className={cn(
+                      'sm:hidden flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 touch-manipulation active:scale-95',
+                      isAuthDrawerOpen
+                        ? 'bg-primary-500/20 text-primary-400'
+                        : 'text-gray-300 hover:text-white hover:bg-white/10'
+                    )}
+                    aria-label={isAuthDrawerOpen ? 'Close account menu' : 'Open account menu'}
+                    aria-expanded={isAuthDrawerOpen}
+                    aria-controls="mobile-auth-menu"
+                  >
+                    {user.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt={user.username || user.name || 'User'}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">
+                          {(user.username || user.name || 'U').charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                  </button>
                 </>
               ) : (
-                <div className="hidden sm:block">
-                  <GuestAuth />
-                </div>
+                <>
+                  <div className="hidden sm:block">
+                    <GuestAuth />
+                  </div>
+                  
+                  {/* Mobile Auth Button for guests */}
+                  <button
+                    onClick={() => setIsAuthDrawerOpen(!isAuthDrawerOpen)}
+                    className={cn(
+                      'sm:hidden flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 touch-manipulation active:scale-95',
+                      isAuthDrawerOpen
+                        ? 'bg-primary-500/20 text-primary-400'
+                        : 'text-gray-300 hover:text-white hover:bg-white/10'
+                    )}
+                    aria-label={isAuthDrawerOpen ? 'Close account menu' : 'Open account menu'}
+                    aria-expanded={isAuthDrawerOpen}
+                    aria-controls="mobile-auth-menu"
+                  >
+                    <User className="h-5 w-5" />
+                  </button>
+                </>
               )}
 
               {/* Mobile Menu Button */}
@@ -124,68 +175,17 @@ export function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile Menu - Slide down */}
-      {isMobileMenuOpen && (
-        <div
-          id="mobile-menu"
-          className="fixed top-16 sm:top-20 left-1/2 transform -translate-x-1/2 z-40 w-[96%] sm:w-[95%] max-w-7xl px-2 sm:px-0 lg:hidden"
-          role="dialog"
-          aria-label="Mobile navigation menu"
-        >
-          <div className="bg-gray-950/95 backdrop-blur-xl border border-white/10 rounded-xl p-4 shadow-2xl animate-in slide-in-from-top-2 duration-200 space-y-3">
-            {/* Mobile Search */}
-            <div className="sm:hidden" role="search" aria-label="Search anime">
-              <SearchBar
-                placeholder="Search anime..."
-                showDropdown={true}
-                size="sm"
-                variant="navbar"
-              />
-            </div>
+      {/* Mobile Navigation - Portal Component */}
+      <MobileNavigationDrawer
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+      />
 
-            {/* Mobile Navigation */}
-            <nav className="space-y-1.5" aria-label="Mobile menu navigation">
-              {navItems
-                .filter((item) => !item.authOnly || isAuthenticated)
-                .map((item) => {
-                  const Icon = item.icon
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 active:bg-white/15 transition-all duration-200 text-base font-medium touch-manipulation group"
-                      aria-label={`Go to ${item.name}`}
-                    >
-                      <Icon
-                        className="h-5 w-5 group-hover:scale-110 transition-transform"
-                        aria-hidden="true"
-                      />
-                      <span>{item.name}</span>
-                    </Link>
-                  )
-                })}
-            </nav>
-
-            {/* Mobile Notifications */}
-            {isAuthenticated && (
-              <div className="sm:hidden pt-2 border-t border-white/10">
-                <div className="px-4 py-2 text-xs text-gray-400 font-medium uppercase tracking-wider">
-                  Quick Actions
-                </div>
-                <NotificationsDropdown />
-              </div>
-            )}
-
-            {/* Mobile Auth Buttons */}
-            {!isAuthenticated && (
-              <div className="pt-2 border-t border-white/10 sm:hidden">
-                <GuestAuth />
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Mobile Auth Drawer - Portal Component */}
+      <AuthDrawer
+        isOpen={isAuthDrawerOpen}
+        onClose={() => setIsAuthDrawerOpen(false)}
+      />
     </SectionErrorBoundary>
   )
 }

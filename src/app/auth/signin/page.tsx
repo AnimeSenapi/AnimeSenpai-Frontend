@@ -64,7 +64,7 @@ export default function SignInPage() {
 
   return (
     <RequireGuest>
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4 pt-32">
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4 pt-20 sm:pt-32">
         {/* Subtle Background */}
         <div className="absolute inset-0 overflow-hidden opacity-30">
           <div className="absolute top-0 -right-40 w-96 h-96 bg-primary-500/30 rounded-full blur-3xl"></div>
@@ -75,21 +75,21 @@ export default function SignInPage() {
           {/* Back Link */}
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 sm:mb-8 group"
           >
             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
             Back
           </Link>
 
           {/* Main Card */}
-          <div className="glass rounded-3xl p-8 md:p-10 shadow-2xl border border-white/10">
+          <div className="glass rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl border border-white/10">
             {/* Logo & Title */}
-            <div className="text-center mb-10">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary-500/20">
-                <span className="text-white font-bold text-2xl">AS</span>
+            <div className="text-center mb-8 sm:mb-10">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-primary-400 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-xl shadow-primary-500/20">
+                <span className="text-white font-bold text-xl sm:text-2xl">AS</span>
               </div>
-              <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-              <p className="text-gray-400">Sign in to continue your anime journey</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Welcome Back</h1>
+              <p className="text-gray-400 text-sm sm:text-base">Sign in to continue your anime journey</p>
             </div>
 
             {/* Error Message */}
@@ -99,7 +99,7 @@ export default function SignInPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
               {/* Email Field */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
@@ -117,7 +117,7 @@ export default function SignInPage() {
                         setFormErrors({ ...formErrors, email: undefined })
                       }
                     }}
-                    className={`w-full pl-12 pr-4 py-3.5 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all ${
+                    className={`w-full pl-12 pr-4 py-3 sm:py-3.5 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all text-base ${
                       formErrors.email ? 'border-red-500/50' : 'border-white/10'
                     }`}
                     placeholder="you@example.com"
@@ -146,7 +146,7 @@ export default function SignInPage() {
                         setFormErrors({ ...formErrors, password: undefined })
                       }
                     }}
-                    className={`w-full pl-12 pr-12 py-3.5 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all ${
+                    className={`w-full pl-12 pr-12 py-3 sm:py-3.5 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all text-base ${
                       formErrors.password ? 'border-red-500/50' : 'border-white/10'
                     }`}
                     placeholder="••••••••"
@@ -155,7 +155,7 @@ export default function SignInPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors p-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -166,12 +166,13 @@ export default function SignInPage() {
               </div>
 
               {/* Remember Me & Forgot Password */}
-              <div className="flex items-center justify-between pt-1">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1">
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="remember-me"
                     checked={rememberMe}
                     onCheckedChange={(checked) => setRememberMe(checked === true)}
+                    className="h-3 w-3"
                   />
                   <label
                     htmlFor="remember-me"
@@ -182,7 +183,7 @@ export default function SignInPage() {
                 </div>
                 <Link
                   href="/auth/forgot-password"
-                  className="text-sm text-primary-400 hover:text-primary-300 transition-colors"
+                  className="text-sm text-primary-400 hover:text-primary-300 transition-colors text-center sm:text-right"
                 >
                   Forgot password?
                 </Link>
@@ -192,7 +193,7 @@ export default function SignInPage() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary-500/25"
+                className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold py-3 sm:py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary-500/25 min-h-[48px] text-base"
               >
                 {isLoading ? (
                   <span className="flex items-center justify-center gap-2">

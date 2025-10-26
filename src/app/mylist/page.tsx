@@ -456,18 +456,18 @@ export default function MyListPage() {
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
           </div>
 
-          <main className="container px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 lg:pb-20 relative z-10">
+          <main className="container px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-8 sm:pb-12 md:pb-16 lg:pb-20 relative z-10">
             {/* Header Section - Mobile Optimized */}
-            <div className="mb-6 sm:mb-8">
+            <div className="mb-4 sm:mb-6 lg:mb-8">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
                 <div>
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-white via-primary-400 to-secondary-400 bg-clip-text text-transparent">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 bg-gradient-to-r from-white via-primary-400 to-secondary-400 bg-clip-text text-transparent">
                     My List
                   </h1>
-                  <p className="text-lg text-gray-300 flex items-center gap-2">
+                  <p className="text-sm sm:text-base md:text-lg text-gray-300 flex items-center gap-2">
                     {myListAnime.length} anime in your collection
                     {myListAnime.length > 0 && searchQuery && (
-                      <span className="text-sm text-gray-500">({filteredAnime.length} shown)</span>
+                      <span className="text-xs sm:text-sm text-gray-500">({filteredAnime.length} shown)</span>
                     )}
                   </p>
                 </div>
@@ -476,54 +476,54 @@ export default function MyListPage() {
                   size="sm"
                   onClick={refreshList}
                   disabled={isLoading}
-                  className="border-white/20 text-white hover:bg-white/10"
+                  className="border-white/20 text-white hover:bg-white/10 min-h-[44px] min-w-[44px] flex items-center justify-center"
                 >
                   <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
                 </Button>
               </div>
 
               {/* Stats Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="glass rounded-xl p-4 hover:bg-white/10 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-error-500/20 rounded-lg flex items-center justify-center">
-                      <Heart className="h-5 w-5 text-error-400" />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <div className="glass rounded-xl p-3 sm:p-4 hover:bg-white/10 transition-colors">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-error-500/20 rounded-lg flex items-center justify-center">
+                      <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-error-400" />
                     </div>
                     <div>
-                      <div className="text-xl font-bold text-white">{stats.favorites}</div>
+                      <div className="text-lg sm:text-xl font-bold text-white">{stats.favorites}</div>
                       <div className="text-xs text-gray-400">Favorites</div>
                     </div>
                   </div>
                 </div>
-                <div className="glass rounded-xl p-4 hover:bg-white/10 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary-500/20 rounded-lg flex items-center justify-center">
-                      <Play className="h-5 w-5 text-primary-400" />
+                <div className="glass rounded-xl p-3 sm:p-4 hover:bg-white/10 transition-colors">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary-500/20 rounded-lg flex items-center justify-center">
+                      <Play className="h-4 w-4 sm:h-5 sm:w-5 text-primary-400" />
                     </div>
                     <div>
-                      <div className="text-xl font-bold text-white">{stats.watching}</div>
+                      <div className="text-lg sm:text-xl font-bold text-white">{stats.watching}</div>
                       <div className="text-xs text-gray-400">Watching</div>
                     </div>
                   </div>
                 </div>
-                <div className="glass rounded-xl p-4 hover:bg-white/10 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-success-500/20 rounded-lg flex items-center justify-center">
-                      <CheckCircle className="h-5 w-5 text-success-400" />
+                <div className="glass rounded-xl p-3 sm:p-4 hover:bg-white/10 transition-colors">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-success-500/20 rounded-lg flex items-center justify-center">
+                      <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-success-400" />
                     </div>
                     <div>
-                      <div className="text-xl font-bold text-white">{stats.completed}</div>
+                      <div className="text-lg sm:text-xl font-bold text-white">{stats.completed}</div>
                       <div className="text-xs text-gray-400">Completed</div>
                     </div>
                   </div>
                 </div>
-                <div className="glass rounded-xl p-4 hover:bg-white/10 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-warning-500/20 rounded-lg flex items-center justify-center">
-                      <Clock className="h-5 w-5 text-warning-400" />
+                <div className="glass rounded-xl p-3 sm:p-4 hover:bg-white/10 transition-colors">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-warning-500/20 rounded-lg flex items-center justify-center">
+                      <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-warning-400" />
                     </div>
                     <div>
-                      <div className="text-xl font-bold text-white">{stats.planToWatch}</div>
+                      <div className="text-lg sm:text-xl font-bold text-white">{stats.planToWatch}</div>
                       <div className="text-xs text-gray-400">Plan to Watch</div>
                     </div>
                   </div>
@@ -532,8 +532,8 @@ export default function MyListPage() {
             </div>
 
             {/* Category Filter */}
-            <div className="glass rounded-2xl p-4 mb-8">
-              <div className="flex items-center gap-3 overflow-x-auto pb-2">
+            <div className="glass rounded-2xl p-3 sm:p-4 mb-6 sm:mb-8">
+              <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2">
                 <Button
                   variant={selectedCategory === 'all' ? 'default' : 'outline'}
                   size="sm"
@@ -603,31 +603,31 @@ export default function MyListPage() {
             </div>
 
             {/* Search and Controls */}
-            <div className="mb-8 space-y-4">
+            <div className="mb-6 sm:mb-8 space-y-3 sm:space-y-4">
               {/* Search Bar */}
               <div className="glass rounded-xl p-1">
                 <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                   <input
                     type="text"
                     placeholder="Search anime by title or studio..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-10 py-3 bg-transparent text-white placeholder-gray-500 focus:outline-none"
+                    className="w-full pl-10 sm:pl-12 pr-10 py-3 sm:py-3.5 bg-transparent text-white placeholder-gray-500 focus:outline-none text-sm sm:text-base"
                   />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                     >
-                      <X className="h-5 w-5" />
+                      <X className="h-4 w-4 sm:h-5 sm:w-5" />
                     </button>
                   )}
                 </div>
               </div>
 
               {/* Controls Row */}
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center justify-between gap-3 sm:gap-4">
                 {/* Sort Dropdown */}
                 <div className="relative">
                   <Button
@@ -637,10 +637,11 @@ export default function MyListPage() {
                       e.stopPropagation()
                       setShowSortMenu(!showSortMenu)
                     }}
-                    className="border-white/20 text-white hover:bg-white/10"
+                    className="border-white/20 text-white hover:bg-white/10 min-h-[44px]"
                   >
                     <TrendingUp className="h-4 w-4 mr-2" />
-                    {SORT_OPTIONS.find((opt) => opt.value === sortBy)?.label}
+                    <span className="hidden sm:inline">{SORT_OPTIONS.find((opt) => opt.value === sortBy)?.label}</span>
+                    <span className="sm:hidden">Sort</span>
                   </Button>
 
                   {showSortMenu && (
@@ -671,7 +672,7 @@ export default function MyListPage() {
                     variant={viewMode === 'grid' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('grid')}
-                    className={`transition-all ${
+                    className={`transition-all min-h-[44px] min-w-[44px] flex items-center justify-center ${
                       viewMode === 'grid'
                         ? 'bg-gradient-to-r from-primary-500 to-secondary-500'
                         : 'text-white hover:bg-white/10'
@@ -683,7 +684,7 @@ export default function MyListPage() {
                     variant={viewMode === 'list' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('list')}
-                    className={`transition-all ${
+                    className={`transition-all min-h-[44px] min-w-[44px] flex items-center justify-center ${
                       viewMode === 'list'
                         ? 'bg-gradient-to-r from-primary-500 to-secondary-500'
                         : 'text-white hover:bg-white/10'

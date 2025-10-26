@@ -84,42 +84,91 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Tab Navigation - Responsive with horizontal scroll on mobile */}
+            {/* Tab Navigation - Mobile-optimized with better touch targets */}
             <div className="mb-4 sm:mb-6">
-              <div className="glass rounded-xl p-1.5 sm:p-2 border border-white/10 flex gap-1 sm:gap-2 overflow-x-auto scrollbar-hide">
-                {tabs.map((tab) => {
-                  const Icon = tab.icon
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 touch-manipulation ${
-                        activeTab === tab.id
-                          ? 'bg-primary-500/20 text-primary-300 border border-primary-500/30'
-                          : 'text-gray-400 hover:text-white hover:bg-white/5'
-                      }`}
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span className="hidden sm:inline">{tab.label}</span>
-                      <span className="sm:hidden">{tab.label.slice(0, 1)}</span>
-                    </button>
-                  )
-                })}
+              <div className="glass rounded-xl p-2 sm:p-2 border border-white/10">
+                {/* Mobile: Vertical stack for better usability */}
+                <div className="sm:hidden grid grid-cols-2 gap-2">
+                  {tabs.slice(0, 6).map((tab) => {
+                    const Icon = tab.icon
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex items-center gap-2 px-3 py-3 rounded-lg text-sm font-medium transition-all touch-manipulation min-h-[48px] ${
+                          activeTab === tab.id
+                            ? 'bg-primary-500/20 text-primary-300 border border-primary-500/30'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        <Icon className="h-4 w-4 flex-shrink-0" />
+                        <span className="truncate">{tab.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+                
+                {/* Desktop: Horizontal scroll */}
+                <div className="hidden sm:flex gap-1 sm:gap-2 overflow-x-auto scrollbar-hide">
+                  {tabs.map((tab) => {
+                    const Icon = tab.icon
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 touch-manipulation ${
+                          activeTab === tab.id
+                            ? 'bg-primary-500/20 text-primary-300 border border-primary-500/30'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span className="hidden sm:inline">{tab.label}</span>
+                        <span className="sm:hidden">{tab.label.slice(0, 1)}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+                
+                {/* Mobile: Additional tabs in second row if needed */}
+                {tabs.length > 6 && (
+                  <div className="sm:hidden grid grid-cols-2 gap-2 mt-2">
+                    {tabs.slice(6).map((tab) => {
+                      const Icon = tab.icon
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveTab(tab.id)}
+                          className={`flex items-center gap-2 px-3 py-3 rounded-lg text-sm font-medium transition-all touch-manipulation min-h-[48px] ${
+                            activeTab === tab.id
+                              ? 'bg-primary-500/20 text-primary-300 border border-primary-500/30'
+                              : 'text-gray-400 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          <Icon className="h-4 w-4 flex-shrink-0" />
+                          <span className="truncate">{tab.label}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Tab Content - Responsive (lazy loaded for performance) */}
-            <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10">
-              {activeTab === 'dashboard' && <DynamicDashboardTab />}
-              {activeTab === 'users' && <DynamicUsersTab />}
-              {activeTab === 'roles' && <RoleManagementTab />}
-              {activeTab === 'permissions' && <PermissionsTab />}
-              {activeTab === 'content' && <ContentTab />}
-              {activeTab === 'anime' && <DynamicAnimeTab />}
-              {activeTab === 'performance' && <PerformanceTab />}
-              {activeTab === 'analytics' && <AnalyticsTab />}
-              {activeTab === 'system' && <SystemSettingsTab />}
-              {activeTab === 'settings' && <DynamicSettingsTab />}
+            {/* Tab Content - Mobile-optimized with better spacing */}
+            <div className="glass rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/10 min-h-[400px] sm:min-h-[500px]">
+              <div className="space-y-4 sm:space-y-6">
+                {activeTab === 'dashboard' && <DynamicDashboardTab />}
+                {activeTab === 'users' && <DynamicUsersTab />}
+                {activeTab === 'roles' && <RoleManagementTab />}
+                {activeTab === 'permissions' && <PermissionsTab />}
+                {activeTab === 'content' && <ContentTab />}
+                {activeTab === 'anime' && <DynamicAnimeTab />}
+                {activeTab === 'performance' && <PerformanceTab />}
+                {activeTab === 'analytics' && <AnalyticsTab />}
+                {activeTab === 'system' && <SystemSettingsTab />}
+                {activeTab === 'settings' && <DynamicSettingsTab />}
+              </div>
             </div>
           </div>
         </div>

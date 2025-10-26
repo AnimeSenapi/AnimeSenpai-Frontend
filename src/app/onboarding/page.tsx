@@ -309,23 +309,23 @@ export default function OnboardingPage() {
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
         </div>
 
-        <main className="container mx-auto px-4 pt-20 pb-20 relative z-10">
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 lg:pt-28 pb-12 sm:pb-16 lg:pb-20 relative z-10">
           <div className="max-w-4xl mx-auto">
-            {/* Progress Bar - Only show for questions (not welcome) */}
+            {/* Progress Bar - Mobile Optimized */}
             {step > 1 && (
-              <div className="mb-8">
+              <div className="mb-6 sm:mb-8">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-gray-400">
+                  <span className="text-xs sm:text-sm text-gray-400">
                     Question {step - 1} of {totalQuestions}
                   </span>
                   <button
                     onClick={handleSkip}
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
+                    className="text-xs sm:text-sm text-gray-400 hover:text-white transition-colors py-1 px-2 -mr-2"
                   >
                     Skip for now
                   </button>
                 </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-1.5 sm:h-2 bg-white/10 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-primary-500 to-secondary-500 transition-all duration-500"
                     style={{ width: `${((step - 1) / totalQuestions) * 100}%` }}
@@ -334,75 +334,75 @@ export default function OnboardingPage() {
               </div>
             )}
 
-            {/* Step 1: Welcome */}
+            {/* Step 1: Welcome - Mobile Optimized */}
             {step === 1 && (
-              <div className="glass rounded-2xl p-12 text-center">
-                <div className="w-24 h-24 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Sparkles className="h-12 w-12 text-white" />
+              <div className="glass rounded-xl sm:rounded-2xl p-6 sm:p-8 lg:p-12 text-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                  <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-white" />
                 </div>
-                <h1 className="text-4xl font-bold text-white mb-4">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3 sm:mb-4">
                   Welcome to AnimeSenpai{user?.name ? `, ${user.name}` : ''}!
                 </h1>
-                <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+                <p className="text-base sm:text-lg lg:text-xl text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto">
                   Let's find anime you'll love! Answer a few quick questions and Senpai will curate
                   perfect recommendations just for you.
                 </p>
-                <p className="text-gray-400 mb-8">Takes about 2 minutes • Totally worth it</p>
+                <p className="text-sm sm:text-base text-gray-400 mb-6 sm:mb-8">Takes about 2 minutes • Totally worth it</p>
                 <Button
                   onClick={() => setStep(2)}
-                  className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold px-8 py-3 rounded-xl"
+                  className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-sm sm:text-base"
                 >
-                  Let's Go! <ArrowRight className="ml-2 h-5 w-5" />
+                  Let's Go! <ArrowRight className="ml-1.5 sm:ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </div>
             )}
 
-            {/* Step 2: Experience Level */}
+            {/* Step 2: Experience Level - Mobile Optimized */}
             {step === 2 && (
-              <div className="glass rounded-2xl p-8">
-                <h2 className="text-3xl font-bold text-white mb-2">
+              <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1 sm:mb-2">
                   How much anime have you watched?
                 </h2>
-                <p className="text-gray-400 mb-8">
+                <p className="text-sm sm:text-base text-gray-400 mb-6 sm:mb-8">
                   This helps us recommend the right level of content
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
                   {EXPERIENCE_LEVELS.map((level) => (
                     <button
                       key={level.id}
                       onClick={() =>
                         setExperienceLevel(level.id as 'beginner' | 'intermediate' | 'expert')
                       }
-                      className={`p-6 rounded-xl border-2 transition-all duration-200 ${
+                      className={`p-4 sm:p-6 rounded-lg sm:rounded-xl border-2 transition-all duration-200 ${
                         experienceLevel === level.id
                           ? 'bg-primary-500/20 border-primary-500 shadow-lg shadow-primary-500/25'
                           : 'bg-white/5 border-white/10 hover:border-white/30'
                       }`}
                     >
                       <div className="text-center">
-                        <div className="text-4xl mb-3">{level.emoji}</div>
-                        <div className="text-white font-semibold mb-2">{level.name}</div>
-                        <div className="text-sm text-gray-400">{level.description}</div>
+                        <div className="text-3xl sm:text-4xl mb-2 sm:mb-3">{level.emoji}</div>
+                        <div className="text-white font-semibold mb-1 sm:mb-2 text-sm sm:text-base">{level.name}</div>
+                        <div className="text-xs sm:text-sm text-gray-400">{level.description}</div>
                       </div>
                     </button>
                   ))}
                 </div>
 
-                <div className="flex justify-between">
+                <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0">
                   <Button
                     onClick={() => setStep(1)}
                     variant="outline"
-                    className="border-white/20 text-white hover:bg-white/10"
+                    className="border-white/20 text-white hover:bg-white/10 text-sm sm:text-base py-2 sm:py-2.5 px-4 sm:px-6"
                   >
-                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    <ArrowLeft className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     Back
                   </Button>
                   <Button
                     onClick={() => setStep(3)}
-                    className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600"
+                    className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-sm sm:text-base"
                   >
-                    Next <ArrowRight className="ml-2 h-4 w-4" />
+                    Next <ArrowRight className="ml-1.5 sm:ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
                 </div>
               </div>

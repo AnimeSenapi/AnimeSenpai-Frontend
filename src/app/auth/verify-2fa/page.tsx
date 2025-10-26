@@ -79,7 +79,7 @@ export default function Verify2FAPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden flex items-center justify-center p-4 pt-20 sm:pt-32">
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -90,22 +90,22 @@ export default function Verify2FAPage() {
         {/* Back Button */}
         <Link
           href="/auth/signin"
-          className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6"
+          className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-4 sm:mb-6"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Sign In
         </Link>
 
         {/* Main Card */}
-        <div className="glass rounded-xl p-8 space-y-6">
+        <div className="glass rounded-xl p-6 sm:p-8 space-y-4 sm:space-y-6">
           {/* Icon */}
           <div className="text-center">
-            <div className="bg-primary-500/10 rounded-full p-4 w-20 h-20 mx-auto mb-4">
-              <Shield className="h-10 w-10 text-primary-400" />
+            <div className="bg-primary-500/10 rounded-full p-3 sm:p-4 w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4">
+              <Shield className="h-8 w-8 sm:h-10 sm:w-10 text-primary-400" />
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Two-Factor Authentication</h1>
-            <p className="text-gray-400">Enter the 6-digit code sent to</p>
-            <p className="text-white font-medium mt-1">{email}</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-white mb-2">Two-Factor Authentication</h1>
+            <p className="text-gray-400 text-sm sm:text-base">Enter the 6-digit code sent to</p>
+            <p className="text-white font-medium mt-1 text-sm sm:text-base">{email}</p>
           </div>
 
           {/* Code Input */}
@@ -148,7 +148,7 @@ export default function Verify2FAPage() {
             <Button
               onClick={handleVerify}
               disabled={loading || code.length !== 6}
-              className="w-full"
+              className="w-full min-h-[48px] text-base"
               size="lg"
             >
               {loading ? 'Verifying...' : 'Verify Code'}

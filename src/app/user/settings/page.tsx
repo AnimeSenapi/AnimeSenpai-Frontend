@@ -328,64 +328,64 @@ export default function UserSettingsPage() {
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
         </div>
 
-        <main className="container pt-28 pb-20 relative z-10">
-          {/* Header */}
-          <div className="mb-10">
-            <div className="mb-6">
+        <main className="container pt-20 sm:pt-24 lg:pt-28 pb-8 sm:pb-12 lg:pb-16 xl:pb-20 relative z-10 px-4 sm:px-6 lg:px-8">
+          {/* Header - Mobile Optimized */}
+          <div className="mb-6 sm:mb-8 lg:mb-10">
+            <div className="mb-4 sm:mb-6">
               <Button
                 variant="ghost"
                 onClick={() => router.back()}
-                className="text-gray-300 hover:text-white hover:bg-white/10"
+                className="text-gray-300 hover:text-white hover:bg-white/10 text-sm sm:text-base py-2 sm:py-2.5 px-3 sm:px-4"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
                 Back
               </Button>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-2xl flex items-center justify-center">
-                <Settings className="h-7 w-7 text-primary-400" />
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-xl sm:rounded-2xl flex items-center justify-center">
+                <Settings className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-primary-400" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold text-white">Settings</h1>
-                <p className="text-gray-400 text-lg">Manage your account and preferences</p>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">Settings</h1>
+                <p className="text-gray-400 text-sm sm:text-base lg:text-lg">Manage your account and preferences</p>
               </div>
             </div>
           </div>
 
-          {/* Success Message */}
+          {/* Success Message - Mobile Optimized */}
           {saveSuccess && (
-            <div className="mb-6 p-4 bg-success-500/10 border border-success-500/20 rounded-xl flex items-center gap-3">
-              <Check className="h-5 w-5 text-success-400" />
-              <p className="text-success-400">Settings saved successfully!</p>
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-success-500/10 border border-success-500/20 rounded-lg sm:rounded-xl flex items-center gap-2 sm:gap-3">
+              <Check className="h-4 w-4 sm:h-5 sm:w-5 text-success-400" />
+              <p className="text-success-400 text-sm sm:text-base">Settings saved successfully!</p>
             </div>
           )}
 
-          {/* Error Message */}
+          {/* Error Message - Mobile Optimized */}
           {error && (
-            <div className="mb-6 p-4 bg-error-500/10 border border-error-500/20 rounded-xl flex items-center gap-3">
-              <X className="h-5 w-5 text-error-400" />
-              <p className="text-error-400">{error}</p>
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-error-500/10 border border-error-500/20 rounded-lg sm:rounded-xl flex items-center gap-2 sm:gap-3">
+              <X className="h-4 w-4 sm:h-5 sm:w-5 text-error-400" />
+              <p className="text-error-400 text-sm sm:text-base">{error}</p>
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
-            {/* Settings Navigation */}
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4 sm:gap-6 lg:gap-8">
+            {/* Settings Navigation - Mobile Optimized */}
             <div className="lg:col-span-1">
-              <div className="glass rounded-2xl p-3 sticky top-24">
-                <nav className="space-y-2">
+              <div className="glass rounded-xl sm:rounded-2xl p-2 sm:p-3 sticky top-20 sm:top-24">
+                <nav className="space-y-1 sm:space-y-2">
                   {tabs.map((tab) => {
                     const Icon = tab.icon
                     return (
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${
+                        className={`w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3.5 rounded-lg sm:rounded-xl transition-all duration-200 text-sm sm:text-base ${
                           activeTab === tab.id
                             ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg shadow-primary-500/20'
                             : 'text-gray-400 hover:text-white hover:bg-white/5'
                         }`}
                       >
-                        <Icon className="h-5 w-5" />
+                        <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                         <span className="font-semibold">{tab.label}</span>
                       </button>
                     )
@@ -394,57 +394,57 @@ export default function UserSettingsPage() {
               </div>
             </div>
 
-            {/* Settings Content */}
+            {/* Settings Content - Mobile Optimized */}
             <div className="lg:col-span-1">
-              <div className="glass rounded-2xl p-8 min-h-[600px]">
-                {/* Profile Settings */}
+              <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]">
+                {/* Profile Settings - Mobile Optimized */}
                 {activeTab === 'profile' && (
-                  <div className="space-y-6">
+                  <div className="space-y-4 sm:space-y-6">
                     <div>
-                      <h2 className="text-2xl font-bold text-white mb-2">Profile Information</h2>
-                      <p className="text-gray-400">Update your personal details</p>
+                      <h2 className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2">Profile Information</h2>
+                      <p className="text-gray-400 text-sm sm:text-base">Update your personal details</p>
                     </div>
 
-                    {/* Profile Preview Card */}
-                    <div className="glass rounded-xl p-6 border border-primary-500/20">
-                      <div className="flex items-center gap-4">
-                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white text-3xl font-bold">
+                    {/* Profile Preview Card - Mobile Optimized */}
+                    <div className="glass rounded-lg sm:rounded-xl p-4 sm:p-6 border border-primary-500/20">
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold">
                           {username
                             ? username[0]?.toUpperCase()
                             : user?.email?.[0]?.toUpperCase() || '?'}
                         </div>
-                        <div className="flex-1">
-                          <h3 className="text-xl font-bold text-white mb-1">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg sm:text-xl font-bold text-white mb-1 truncate">
                             @{username || 'username'}
                           </h3>
-                          <p className="text-gray-400 text-sm">{user?.email}</p>
+                          <p className="text-gray-400 text-xs sm:text-sm truncate">{user?.email}</p>
                         </div>
                       </div>
                     </div>
 
-                    {/* Account Details */}
-                    <div className="glass rounded-xl p-6">
-                      <h3 className="text-lg font-semibold text-white mb-5 flex items-center gap-2">
-                        <User className="h-5 w-5 text-primary-400" />
+                    {/* Account Details - Mobile Optimized */}
+                    <div className="glass rounded-lg sm:rounded-xl p-4 sm:p-6">
+                      <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-5 flex items-center gap-2">
+                        <User className="h-4 w-4 sm:h-5 sm:w-5 text-primary-400" />
                         Account Details
                       </h3>
 
-                      <div className="space-y-5">
-                        {/* Email (read-only) */}
+                      <div className="space-y-4 sm:space-y-5">
+                        {/* Email (read-only) - Mobile Optimized */}
                         <div>
-                          <label className="block text-sm font-semibold text-gray-300 mb-2">
+                          <label className="block text-xs sm:text-sm font-semibold text-gray-300 mb-1.5 sm:mb-2">
                             Email Address
                           </label>
                           <div className="relative">
-                            <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                            <Mail className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                             <input
                               type="email"
                               value={user?.email || ''}
                               disabled
-                              className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 cursor-not-allowed"
+                              className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3.5 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-gray-400 cursor-not-allowed text-sm sm:text-base"
                             />
                           </div>
-                          <p className="mt-2 text-xs text-gray-500 flex items-center gap-1.5">
+                          <p className="mt-1.5 sm:mt-2 text-xs text-gray-500 flex items-center gap-1.5">
                             <Lock className="h-3 w-3" />
                             Email cannot be changed for security reasons
                           </p>
@@ -457,30 +457,30 @@ export default function UserSettingsPage() {
 
                         <div className="h-px bg-white/10"></div>
 
-                        {/* Username */}
+                        {/* Username - Mobile Optimized */}
                         <div>
-                          <label className="block text-sm font-semibold text-gray-300 mb-2">
+                          <label className="block text-xs sm:text-sm font-semibold text-gray-300 mb-1.5 sm:mb-2">
                             Username
                           </label>
                           <div className="relative">
-                            <User className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                            <User className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                             <input
                               type="text"
                               value={username}
                               onChange={(e) => setUsername(e.target.value)}
                               placeholder="Choose a username"
-                              className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400/50 transition-all"
+                              className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3.5 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400/50 transition-all text-sm sm:text-base"
                             />
                           </div>
-                          <div className="mt-2 flex items-center gap-2">
-                            <div className="flex-1">
+                          <div className="mt-1.5 sm:mt-2 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                            <div className="flex-1 min-w-0">
                               <p className="text-xs text-gray-400">Your profile URL:</p>
-                              <p className="text-xs text-primary-400 font-medium">
+                              <p className="text-xs text-primary-400 font-medium truncate">
                                 animesenpai.com/user/@{username || 'username'}
                               </p>
                             </div>
                             {username && username.length >= 3 && (
-                              <div className="text-success-400 text-xs flex items-center gap-1">
+                              <div className="text-success-400 text-xs flex items-center gap-1 flex-shrink-0">
                                 <Check className="h-3 w-3" />
                                 Available
                               </div>
@@ -490,33 +490,33 @@ export default function UserSettingsPage() {
                       </div>
                     </div>
 
-                    {/* About You */}
-                    <div className="glass rounded-xl p-6">
-                      <h3 className="text-lg font-semibold text-white mb-5 flex items-center gap-2">
-                        <Mail className="h-5 w-5 text-secondary-400" />
+                    {/* About You - Mobile Optimized */}
+                    <div className="glass rounded-lg sm:rounded-xl p-4 sm:p-6">
+                      <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-5 flex items-center gap-2">
+                        <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-secondary-400" />
                         About You
                       </h3>
 
-                      {/* Bio */}
+                      {/* Bio - Mobile Optimized */}
                       <div>
-                        <label className="block text-sm font-semibold text-gray-300 mb-2">
+                        <label className="block text-xs sm:text-sm font-semibold text-gray-300 mb-1.5 sm:mb-2">
                           Bio
                         </label>
                         <textarea
                           value={bio}
                           onChange={(e) => setBio(e.target.value)}
-                          rows={5}
+                          rows={4}
                           maxLength={200}
                           placeholder="Tell others about yourself... What anime do you love? What are you currently watching?"
-                          className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400/50 transition-all resize-none"
+                          className="w-full px-3 sm:px-4 py-2.5 sm:py-3.5 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400/50 transition-all resize-none text-sm sm:text-base"
                         />
-                        <div className="mt-2 flex items-center justify-between">
+                        <div className="mt-1.5 sm:mt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                           <p className="text-xs text-gray-400">
                             Share your anime journey with others
                           </p>
                           <div className="flex items-center gap-2">
                             <div
-                              className={`h-1 w-20 rounded-full ${bio.length > 150 ? 'bg-warning-500' : 'bg-gray-700'}`}
+                              className={`h-1 w-16 sm:w-20 rounded-full ${bio.length > 150 ? 'bg-warning-500' : 'bg-gray-700'}`}
                             >
                               <div
                                 className="h-full rounded-full bg-gradient-to-r from-primary-500 to-secondary-500 transition-all"
@@ -536,17 +536,19 @@ export default function UserSettingsPage() {
                     <Button
                       onClick={handleSaveProfile}
                       disabled={isSaving || !username || username.length < 3}
-                      className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold px-6 py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold px-4 sm:px-6 py-2.5 sm:py-3.5 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                     >
                       {isSaving ? (
                         <>
-                          <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                          Saving Changes...
+                          <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 animate-spin" />
+                          <span className="hidden sm:inline">Saving Changes...</span>
+                          <span className="sm:hidden">Saving...</span>
                         </>
                       ) : (
                         <>
-                          <Save className="h-5 w-5 mr-2" />
-                          Save Profile Changes
+                          <Save className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2" />
+                          <span className="hidden sm:inline">Save Profile Changes</span>
+                          <span className="sm:hidden">Save Changes</span>
                         </>
                       )}
                     </Button>

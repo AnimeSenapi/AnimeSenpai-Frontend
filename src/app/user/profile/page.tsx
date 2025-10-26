@@ -337,32 +337,32 @@ export default function ProfilePage() {
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
         </div>
 
-        <div className="relative pt-24 sm:pt-28 lg:pt-32 px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16 lg:pb-20">
+        <div className="relative pt-20 sm:pt-24 lg:pt-28 xl:pt-32 px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 lg:pb-16 xl:pb-20">
           <div className="max-w-7xl mx-auto">
-            {/* Profile Header with Cover - Responsive */}
-            <div className="glass rounded-xl sm:rounded-2xl overflow-hidden mb-6 sm:mb-8">
+            {/* Profile Header with Cover - Mobile Optimized */}
+            <div className="glass rounded-xl sm:rounded-2xl overflow-hidden mb-4 sm:mb-6 lg:mb-8">
               {/* Cover Area */}
-              <div className="h-24 sm:h-32 bg-gradient-to-r from-primary-500/20 via-secondary-500/20 to-primary-500/20 relative"></div>
+              <div className="h-20 sm:h-24 lg:h-32 bg-gradient-to-r from-primary-500/20 via-secondary-500/20 to-primary-500/20 relative"></div>
 
               {/* Profile Info */}
-              <div className="px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 -mt-10 sm:-mt-12 relative">
-                <div className="flex flex-col md:flex-row items-start md:items-end gap-4 sm:gap-6 justify-between">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 sm:gap-6 w-full md:w-auto">
+              <div className="px-3 sm:px-4 lg:px-6 xl:px-8 pb-4 sm:pb-6 lg:pb-8 -mt-8 sm:-mt-10 lg:-mt-12 relative">
+                <div className="flex flex-col md:flex-row items-start md:items-end gap-3 sm:gap-4 lg:gap-6 justify-between">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 sm:gap-4 lg:gap-6 w-full md:w-auto">
                     {/* Avatar */}
                     <div className="relative group">
                       {user?.avatar ? (
-                        <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl border-2 sm:border-4 border-gray-900 shadow-xl overflow-hidden">
+                        <div className="relative w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-lg sm:rounded-xl lg:rounded-2xl border-2 sm:border-3 lg:border-4 border-gray-900 shadow-xl overflow-hidden">
                           <Image
                             src={user.avatar}
                             alt={user.username || 'User'}
                             fill
                             className="object-cover"
-                            sizes="96px"
+                            sizes="(max-width: 640px) 64px, (max-width: 1024px) 80px, 96px"
                           />
                         </div>
                       ) : (
-                        <div className="w-24 h-24 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-2xl flex items-center justify-center border-4 border-gray-900 shadow-xl">
-                          <User className="h-12 w-12 text-white" />
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-lg sm:rounded-xl lg:rounded-2xl flex items-center justify-center border-2 sm:border-3 lg:border-4 border-gray-900 shadow-xl">
+                          <User className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-white" />
                         </div>
                       )}
 
@@ -377,22 +377,22 @@ export default function ProfilePage() {
                       />
                       <label
                         htmlFor="avatar-upload-profile"
-                        className="absolute inset-0 rounded-2xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center"
+                        className="absolute inset-0 rounded-lg sm:rounded-xl lg:rounded-2xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center"
                       >
                         {isUploadingAvatar ? (
-                          <Loader2 className="h-6 w-6 text-white animate-spin" />
+                          <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white animate-spin" />
                         ) : (
-                          <Camera className="h-6 w-6 text-white" />
+                          <Camera className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" />
                         )}
                       </label>
                     </div>
 
                     {/* User Info */}
-                    <div className="pb-2">
-                      <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">
+                    <div className="pb-1 sm:pb-2">
+                      <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1">
                         {user?.name || user?.username || 'User'}
                       </h1>
-                      <p className="text-primary-400 mb-3">@{user?.username}</p>
+                      <p className="text-primary-400 mb-2 sm:mb-3 text-sm sm:text-base">@{user?.username}</p>
 
                       {/* Avatar Error */}
                       {avatarError && (
@@ -403,7 +403,7 @@ export default function ProfilePage() {
                       )}
 
                       {/* Social Stats */}
-                      <div className="flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm">
                         <div>
                           <span className="text-white font-semibold">{socialCounts.followers}</span>
                           <span className="text-gray-400 ml-1">Followers</span>
@@ -417,20 +417,22 @@ export default function ProfilePage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-3 md:mb-2">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:mb-2 w-full sm:w-auto">
                     <Link href="/user/settings">
-                      <Button className="bg-white/10 hover:bg-white/20 text-white border border-white/20">
-                        <Settings className="h-4 w-4 mr-2" />
-                        Edit Profile
+                      <Button className="bg-white/10 hover:bg-white/20 text-white border border-white/20 w-full sm:w-auto text-sm sm:text-base py-2 sm:py-2.5">
+                        <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                        <span className="hidden sm:inline">Edit Profile</span>
+                        <span className="sm:hidden">Edit</span>
                       </Button>
                     </Link>
                     <Link href={`/user/@${user?.username}`}>
                       <Button
                         variant="outline"
-                        className="border-white/20 text-white hover:bg-white/10"
+                        className="border-white/20 text-white hover:bg-white/10 w-full sm:w-auto text-sm sm:text-base py-2 sm:py-2.5"
                       >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Public
+                        <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                        <span className="hidden sm:inline">View Public</span>
+                        <span className="sm:hidden">Public</span>
                       </Button>
                     </Link>
                   </div>
@@ -438,55 +440,55 @@ export default function ProfilePage() {
 
                 {/* Bio */}
                 {user?.bio && (
-                  <div className="mt-4 pt-4 border-t border-white/10">
-                    <p className="text-gray-300 leading-relaxed">{user.bio}</p>
+                  <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-white/10">
+                    <p className="text-gray-300 leading-relaxed text-sm sm:text-base">{user.bio}</p>
                   </div>
                 )}
 
                 {/* Join Date */}
-                <div className="mt-4 flex items-center gap-4 text-xs text-gray-400">
+                <div className="mt-3 sm:mt-4 flex items-center gap-3 sm:gap-4 text-xs text-gray-400">
                   <div className="flex items-center gap-1.5">
-                    <Calendar className="h-3.5 w-3.5" />
+                    <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     <span>Joined {joinDate}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Stats Overview */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {/* Stats Overview - Mobile Optimized */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
               {/* Watching */}
-              <div className="glass rounded-xl p-6 text-center hover:bg-white/10 transition-colors">
-                <Play className="h-8 w-8 text-primary-400 mx-auto mb-3" />
-                <div className="text-3xl font-bold text-white mb-1">{stats?.watching || 0}</div>
-                <div className="text-sm text-gray-400">Watching</div>
+              <div className="glass rounded-lg sm:rounded-xl p-4 sm:p-6 text-center hover:bg-white/10 transition-colors">
+                <Play className="h-6 w-6 sm:h-8 sm:w-8 text-primary-400 mx-auto mb-2 sm:mb-3" />
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1">{stats?.watching || 0}</div>
+                <div className="text-xs sm:text-sm text-gray-400">Watching</div>
               </div>
 
               {/* Completed */}
-              <div className="glass rounded-xl p-6 text-center hover:bg-white/10 transition-colors">
-                <CheckCircle className="h-8 w-8 text-success-400 mx-auto mb-3" />
-                <div className="text-3xl font-bold text-white mb-1">{stats?.completed || 0}</div>
-                <div className="text-sm text-gray-400">Completed</div>
+              <div className="glass rounded-lg sm:rounded-xl p-4 sm:p-6 text-center hover:bg-white/10 transition-colors">
+                <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-success-400 mx-auto mb-2 sm:mb-3" />
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1">{stats?.completed || 0}</div>
+                <div className="text-xs sm:text-sm text-gray-400">Completed</div>
               </div>
 
               {/* Favorites */}
-              <div className="glass rounded-xl p-6 text-center hover:bg-white/10 transition-colors">
-                <Heart className="h-8 w-8 text-error-400 mx-auto mb-3" />
-                <div className="text-3xl font-bold text-white mb-1">{stats?.favorites || 0}</div>
-                <div className="text-sm text-gray-400">Favorites</div>
+              <div className="glass rounded-lg sm:rounded-xl p-4 sm:p-6 text-center hover:bg-white/10 transition-colors">
+                <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-error-400 mx-auto mb-2 sm:mb-3" />
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1">{stats?.favorites || 0}</div>
+                <div className="text-xs sm:text-sm text-gray-400">Favorites</div>
               </div>
 
               {/* Total Anime */}
-              <div className="glass rounded-xl p-6 text-center hover:bg-white/10 transition-colors">
-                <Film className="h-8 w-8 text-secondary-400 mx-auto mb-3" />
-                <div className="text-3xl font-bold text-white mb-1">{stats?.totalAnime || 0}</div>
-                <div className="text-sm text-gray-400">Total Anime</div>
+              <div className="glass rounded-lg sm:rounded-xl p-4 sm:p-6 text-center hover:bg-white/10 transition-colors">
+                <Film className="h-6 w-6 sm:h-8 sm:w-8 text-secondary-400 mx-auto mb-2 sm:mb-3" />
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1">{stats?.totalAnime || 0}</div>
+                <div className="text-xs sm:text-sm text-gray-400">Total Anime</div>
               </div>
             </div>
 
-            {/* Achievements Section */}
-            <div className="glass rounded-2xl p-6 mb-8">
-              <div className="flex items-center justify-between mb-4">
+            {/* Achievements Section - Mobile Optimized */}
+            <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <AchievementsShowcase
                   achievements={achievements}
                   allAchievements={ACHIEVEMENTS}
@@ -498,26 +500,26 @@ export default function ProfilePage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full mt-4 border-white/20 text-white hover:bg-white/10"
+                  className="w-full mt-3 sm:mt-4 border-white/20 text-white hover:bg-white/10 text-sm sm:text-base py-2 sm:py-2.5"
                 >
                   View All Achievements →
                 </Button>
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Recent Activity */}
-              <div className="glass rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                    <Activity className="h-6 w-6 text-primary-400" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+              {/* Recent Activity - Mobile Optimized */}
+              <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white flex items-center gap-2 sm:gap-3">
+                    <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400" />
                     Recent Activity
                   </h2>
                   <Link href="/mylist">
                     <Button
                       variant="outline"
                       size="sm"
-                      className="border-white/20 text-white hover:bg-white/10"
+                      className="border-white/20 text-white hover:bg-white/10 text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3"
                     >
                       View All
                     </Button>
@@ -525,20 +527,20 @@ export default function ProfilePage() {
                 </div>
 
                 {recentAnime.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Clock className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400 mb-2">No recent activity</p>
-                    <p className="text-gray-500 text-sm mb-4">
+                  <div className="text-center py-8 sm:py-12">
+                    <Clock className="h-12 w-12 sm:h-16 sm:w-16 text-gray-600 mx-auto mb-3 sm:mb-4" />
+                    <p className="text-gray-400 mb-2 text-sm sm:text-base">No recent activity</p>
+                    <p className="text-gray-500 text-xs sm:text-sm mb-3 sm:mb-4">
                       Start watching anime to see your activity here
                     </p>
                     <Link href="/search">
-                      <Button className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600">
+                      <Button className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-sm sm:text-base py-2 sm:py-2.5 px-4 sm:px-6">
                         Browse Anime
                       </Button>
                     </Link>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
                     {recentAnime.map((anime) => (
                       <AnimeCard key={anime.id} anime={anime} variant="grid" />
                     ))}
@@ -546,18 +548,18 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* Favorite Anime */}
-              <div className="glass rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                    <Heart className="h-6 w-6 text-error-400 fill-current" />
+              {/* Favorite Anime - Mobile Optimized */}
+              <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white flex items-center gap-2 sm:gap-3">
+                    <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-error-400 fill-current" />
                     Favorites
                   </h2>
                   <Link href="/mylist?filter=favorites">
                     <Button
                       variant="outline"
                       size="sm"
-                      className="border-white/20 text-white hover:bg-white/10"
+                      className="border-white/20 text-white hover:bg-white/10 text-xs sm:text-sm py-1.5 sm:py-2 px-2 sm:px-3"
                     >
                       View All
                     </Button>
@@ -566,15 +568,15 @@ export default function ProfilePage() {
 
                 {favoriteAnime.length === 0 ? (
                   <EmptyState
-                    icon={<Heart className="h-10 w-10 text-gray-500" />}
+                    icon={<Heart className="h-8 w-8 sm:h-10 sm:w-10 text-gray-500" />}
                     title="No favorites yet"
                     message="Mark anime as favorite to see them here. Click the star icon on any anime card!"
                     actionLabel="Find Favorites"
                     onAction={() => router.push('/search')}
-                    className="py-8"
+                    className="py-6 sm:py-8"
                   />
                 ) : (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
                     {favoriteAnime.map((anime) => (
                       <AnimeCard key={anime.id} anime={anime} variant="grid" />
                     ))}

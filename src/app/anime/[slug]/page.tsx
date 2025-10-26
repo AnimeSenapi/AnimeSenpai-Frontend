@@ -398,15 +398,15 @@ export default function AnimePage() {
         structuredData={generateAnimeStructuredData(anime)}
       />
 
-      <main className="container px-3 sm:px-6 lg:px-8 pt-20 sm:pt-28 lg:pt-32 pb-8 sm:pb-16 lg:pb-20">
-        <div className="mb-3 sm:mb-6 lg:mb-8">
+      <main className="container px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 lg:pt-32 pb-8 sm:pb-16 lg:pb-20">
+        <div className="mb-4 sm:mb-6 lg:mb-8">
           <BackButton />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] xl:grid-cols-[320px_1fr] gap-4 sm:gap-6 lg:gap-8 xl:gap-10 max-w-7xl mx-auto">
           {/* Left: Poster & Actions */}
           <div className="lg:sticky lg:top-24 self-start">
-            <div className="glass rounded-xl sm:rounded-2xl p-1.5 sm:p-2 mb-3 sm:mb-6">
+            <div className="glass rounded-xl sm:rounded-2xl p-2 sm:p-3 mb-4 sm:mb-6">
               <div className="aspect-[2/3] rounded-lg sm:rounded-xl overflow-hidden relative">
                 {anime.coverImage || anime.imageUrl ? (
                   <Image
@@ -426,12 +426,12 @@ export default function AnimePage() {
                   </div>
 
             {/* Actions */}
-            <div className="space-y-2.5 sm:space-y-3 mb-4 sm:mb-6">
+            <div className="space-y-3 sm:space-y-3 mb-4 sm:mb-6">
               {listStatus.inList ? (
                 <>
                   <Button
                     onClick={() => setShowRatingModal(true)}
-                    className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white"
+                    className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white min-h-[44px] text-sm sm:text-base"
                     size="lg"
                   >
                     <Star className="h-4 w-4 mr-2" />
@@ -451,7 +451,7 @@ export default function AnimePage() {
                       setShowAddToListModal(true)
                     }}
                     variant="outline"
-                    className="w-full border-white/20 text-white hover:bg-white/10"
+                    className="w-full border-white/20 text-white hover:bg-white/10 min-h-[44px] text-sm sm:text-base"
                   >
                     Change List
                   </Button>
@@ -459,7 +459,7 @@ export default function AnimePage() {
                     onClick={handleRemoveFromList}
                     variant="outline"
                     disabled={isSubmitting}
-                    className="w-full border-white/20 text-white hover:bg-white/10 hover:border-red-500/50 hover:text-red-400"
+                    className="w-full border-white/20 text-white hover:bg-white/10 hover:border-red-500/50 hover:text-red-400 min-h-[44px] text-sm sm:text-base"
                   >
                     {isSubmitting ? (
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -480,7 +480,7 @@ export default function AnimePage() {
               ) : (
                 <Button
                   onClick={() => setShowAddToListModal(true)}
-                  className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white"
+                  className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white min-h-[44px] text-sm sm:text-base"
                   size="lg"
                 >
                   <Plus className="h-4 w-4 mr-2" />
@@ -506,12 +506,12 @@ export default function AnimePage() {
           {/* Right: Content */}
             <div>
             {/* Title - Prioritize English - Mobile Optimized */}
-            <div className="mb-3 sm:mb-6">
-              <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-1.5 sm:mb-3 leading-tight">
+            <div className="mb-4 sm:mb-6">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-2 sm:mb-3 leading-tight">
                 {seriesName || anime.titleEnglish || anime.title}
               </h1>
               {anime.titleEnglish && anime.title !== anime.titleEnglish && (
-                <p className="text-base sm:text-xl text-gray-400 mb-1.5">{anime.title}</p>
+                <p className="text-sm sm:text-base lg:text-lg text-gray-400 mb-1 sm:mb-1.5">{anime.title}</p>
               )}
               {anime.titleJapanese && anime.titleJapanese !== anime.title && (
                 <p className="text-xs sm:text-sm text-gray-500">{anime.titleJapanese}</p>
@@ -532,7 +532,7 @@ export default function AnimePage() {
                         setSelectedSeason(season.slug)
                         router.push(`/anime/${season.slug}`)
                       }}
-                      className={`px-3 py-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-all touch-manipulation ${
+                      className={`px-3 py-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-all touch-manipulation min-h-[44px] ${
                         season.slug === selectedSeason
                           ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
                           : 'bg-white/5 text-gray-300 hover:bg-white/10 active:bg-white/15 hover:text-white border border-white/10'
@@ -543,7 +543,7 @@ export default function AnimePage() {
                         {season.year && (
                           <span className="text-[10px] sm:text-xs opacity-70">({season.year})</span>
                         )}
-            </div>
+                      </div>
                       {season.episodes && (
                         <div className="text-xs opacity-70 mt-0.5">{season.episodes} eps</div>
                       )}
@@ -554,11 +554,11 @@ export default function AnimePage() {
             )}
 
             {/* Meta Info Bar */}
-            <div className="glass rounded-xl p-3 sm:p-5 mb-4 sm:mb-6">
-              <div className="flex flex-wrap items-center gap-6">
+            <div className="glass rounded-xl p-3 sm:p-4 lg:p-5 mb-4 sm:mb-6">
+              <div className="flex flex-wrap items-center gap-4 sm:gap-6">
                 <div className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                  <span className="text-2xl font-bold text-white">
+                  <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400 fill-yellow-400" />
+                  <span className="text-lg sm:text-xl lg:text-2xl font-bold text-white">
                     {anime.rating ? Number(anime.rating).toFixed(1) : 'N/A'}
                   </span>
                 </div>
@@ -571,8 +571,8 @@ export default function AnimePage() {
               </div>
                   </>
                 )}
-                <div className="h-6 w-px bg-white/20"></div>
-                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-400">
+                <div className="h-4 sm:h-6 w-px bg-white/20"></div>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-400">
                   {anime.year && <span className="text-white font-medium">{anime.year}</span>}
                   {anime.episodes && (
                     <>
@@ -603,9 +603,9 @@ export default function AnimePage() {
                   const genreName = genre.name || genre.slug || genre
                   return (
                     <Link key={index} href={`/search?genre=${encodeURIComponent(genreName)}`}>
-                      <Badge className="bg-white/10 text-white border-white/20 px-4 py-1.5 hover:bg-white/20 cursor-pointer transition-colors">
+                      <Badge className="bg-white/10 text-white border-white/20 px-3 py-1.5 sm:px-4 hover:bg-white/20 cursor-pointer transition-colors text-xs sm:text-sm">
                         {genreName}
-                    </Badge>
+                      </Badge>
                     </Link>
                   )
                 })}
@@ -621,8 +621,8 @@ export default function AnimePage() {
             {/* Synopsis */}
             {anime.synopsis && (
               <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">Synopsis</h2>
-                <p className="text-sm sm:text-lg text-gray-300 leading-relaxed">{anime.synopsis}</p>
+                <h2 className="text-base sm:text-lg lg:text-xl font-bold text-white mb-2 sm:mb-3">Synopsis</h2>
+                <p className="text-sm sm:text-base lg:text-lg text-gray-300 leading-relaxed">{anime.synopsis}</p>
               </div>
             )}
 
@@ -630,7 +630,7 @@ export default function AnimePage() {
             {isAuthenticated && (
               <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg sm:text-xl font-bold text-white">Personal Notes</h2>
+                  <h2 className="text-base sm:text-lg lg:text-xl font-bold text-white">Personal Notes</h2>
                   <NotesButton
                     animeId={anime.id}
                     animeTitle={anime.titleEnglish || anime.title}
@@ -655,64 +655,64 @@ export default function AnimePage() {
             {/* Background */}
             {anime.background && (
               <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">Background</h2>
-                <p className="text-sm text-gray-300 leading-relaxed">{anime.background}</p>
+                <h2 className="text-base sm:text-lg lg:text-xl font-bold text-white mb-2 sm:mb-3">Background</h2>
+                <p className="text-sm sm:text-base text-gray-300 leading-relaxed">{anime.background}</p>
               </div>
             )}
 
             {/* Additional Info */}
             <div className="glass rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
-              <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                <div className="h-0.5 w-6 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full"></div>
+              <h3 className="text-xs sm:text-sm font-bold text-white mb-3 flex items-center gap-2">
+                <div className="h-0.5 w-4 sm:w-6 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full"></div>
                 Additional Information
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-2.5">
                 {(anime as AnimeDetail).source && (
-                  <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10">
-                    <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">
+                  <div className="bg-white/5 rounded-lg px-2.5 sm:px-3 py-2 border border-white/10">
+                    <div className="text-[10px] sm:text-xs text-gray-400 mb-0.5 uppercase tracking-wide">
                       Source
                     </div>
-                    <div className="text-sm text-white font-medium">
+                    <div className="text-xs sm:text-sm text-white font-medium">
                       {(anime as AnimeDetail).source}
                     </div>
                   </div>
                 )}
                 {(anime as AnimeDetail).aired && (
-                  <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10">
-                    <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">
+                  <div className="bg-white/5 rounded-lg px-2.5 sm:px-3 py-2 border border-white/10">
+                    <div className="text-[10px] sm:text-xs text-gray-400 mb-0.5 uppercase tracking-wide">
                       Aired
                     </div>
-                    <div className="text-sm text-white font-medium">
+                    <div className="text-xs sm:text-sm text-white font-medium">
                       {(anime as AnimeDetail).aired}
-          </div>
-        </div>
+                    </div>
+                  </div>
                 )}
                 {(anime as AnimeDetail).broadcast && (
-                  <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10">
-                    <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">
+                  <div className="bg-white/5 rounded-lg px-2.5 sm:px-3 py-2 border border-white/10">
+                    <div className="text-[10px] sm:text-xs text-gray-400 mb-0.5 uppercase tracking-wide">
                       Broadcast
-        </div>
-                    <div className="text-sm text-white font-medium">
+                    </div>
+                    <div className="text-xs sm:text-sm text-white font-medium">
                       {(anime as AnimeDetail).broadcast}
-            </div>
-          </div>
+                    </div>
+                  </div>
                 )}
                 {anime.season && (
-                  <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10">
-                    <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">
+                  <div className="bg-white/5 rounded-lg px-2.5 sm:px-3 py-2 border border-white/10">
+                    <div className="text-[10px] sm:text-xs text-gray-400 mb-0.5 uppercase tracking-wide">
                       Season
                     </div>
-                    <div className="text-sm text-white font-medium capitalize">
+                    <div className="text-xs sm:text-sm text-white font-medium capitalize">
                       {anime.season} {anime.year}
-          </div>
-        </div>
+                    </div>
+                  </div>
                 )}
                 {(anime as AnimeDetail).studios && (anime as AnimeDetail).studios!.length > 0 && (
-                  <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10 md:col-span-2">
-                    <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">
+                  <div className="bg-white/5 rounded-lg px-2.5 sm:px-3 py-2 border border-white/10 md:col-span-2">
+                    <div className="text-[10px] sm:text-xs text-gray-400 mb-0.5 uppercase tracking-wide">
                       Studios
                     </div>
-                    <div className="text-sm text-white font-medium flex flex-wrap gap-2">
+                    <div className="text-xs sm:text-sm text-white font-medium flex flex-wrap gap-1 sm:gap-2">
                       {(anime as AnimeDetail).studios!.map((studio, index) => (
                         <span key={index}>
                           <Link
@@ -729,43 +729,43 @@ export default function AnimePage() {
                 )}
                 {(anime as AnimeDetail).producers &&
                   (anime as AnimeDetail).producers!.length > 0 && (
-                    <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10 md:col-span-2">
-                      <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">
+                    <div className="bg-white/5 rounded-lg px-2.5 sm:px-3 py-2 border border-white/10 md:col-span-2">
+                      <div className="text-[10px] sm:text-xs text-gray-400 mb-0.5 uppercase tracking-wide">
                         Producers
                       </div>
-                      <div className="text-sm text-white font-medium">
+                      <div className="text-xs sm:text-sm text-white font-medium">
                         {(anime as AnimeDetail).producers!.join(', ')}
                       </div>
                     </div>
                   )}
                 {(anime as AnimeDetail).licensors &&
                   (anime as AnimeDetail).licensors!.length > 0 && (
-                    <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10 md:col-span-2">
-                      <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">
+                    <div className="bg-white/5 rounded-lg px-2.5 sm:px-3 py-2 border border-white/10 md:col-span-2">
+                      <div className="text-[10px] sm:text-xs text-gray-400 mb-0.5 uppercase tracking-wide">
                         Licensors
                       </div>
-                      <div className="text-sm text-white font-medium">
+                      <div className="text-xs sm:text-sm text-white font-medium">
                         {(anime as AnimeDetail).licensors!.join(', ')}
                       </div>
                     </div>
                   )}
                 {(anime as AnimeDetail).themes && (anime as AnimeDetail).themes!.length > 0 && (
-                  <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10 md:col-span-2">
-                    <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">
+                  <div className="bg-white/5 rounded-lg px-2.5 sm:px-3 py-2 border border-white/10 md:col-span-2">
+                    <div className="text-[10px] sm:text-xs text-gray-400 mb-0.5 uppercase tracking-wide">
                       Themes
                     </div>
-                    <div className="text-sm text-white font-medium">
+                    <div className="text-xs sm:text-sm text-white font-medium">
                       {(anime as AnimeDetail).themes!.join(', ')}
                     </div>
                   </div>
                 )}
                 {(anime as AnimeDetail).demographics &&
                   (anime as AnimeDetail).demographics!.length > 0 && (
-                    <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10 md:col-span-2">
-                      <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">
+                    <div className="bg-white/5 rounded-lg px-2.5 sm:px-3 py-2 border border-white/10 md:col-span-2">
+                      <div className="text-[10px] sm:text-xs text-gray-400 mb-0.5 uppercase tracking-wide">
                         Demographic
                       </div>
-                      <div className="text-sm text-white font-medium">
+                      <div className="text-xs sm:text-sm text-white font-medium">
                         {(anime as AnimeDetail).demographics!.join(', ')}
                       </div>
                     </div>
@@ -775,11 +775,11 @@ export default function AnimePage() {
 
             {/* Recommendations */}
             {relatedSeasons.length > 1 && (
-              <div className="mt-8 sm:mt-12">
-                <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">
+              <div className="mt-6 sm:mt-8 lg:mt-12">
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-3 sm:mb-4 lg:mb-6">
                   More from this Series
                 </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
                   {relatedSeasons
                     .filter((season) => season.slug !== slug)
                     .map((season) => (
@@ -800,11 +800,11 @@ export default function AnimePage() {
             )}
 
             {similarAnime.length > 0 && (
-              <div className="mt-8 sm:mt-12">
-                <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">
+              <div className="mt-6 sm:mt-8 lg:mt-12">
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-3 sm:mb-4 lg:mb-6">
                   You Might Also Like
                 </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
                   {similarAnime.map((similar) => (
                     <AnimeCard key={similar.id} anime={similar} variant="grid" />
                   ))}
@@ -822,13 +822,13 @@ export default function AnimePage() {
           onClick={() => setShowAddToListModal(false)}
         >
           <div
-            className="glass rounded-2xl p-8 max-w-md w-full"
+            className="glass rounded-2xl p-4 sm:p-6 lg:p-8 max-w-md w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-2xl font-bold text-white mb-2">Add to Your List</h2>
-            <p className="text-gray-400 text-sm mb-6">Choose where you'd like to save this anime</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Add to Your List</h2>
+            <p className="text-gray-400 text-sm mb-4 sm:mb-6">Choose where you'd like to save this anime</p>
 
-            <div className="grid grid-cols-2 gap-3 mb-8">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-6 sm:mb-8">
               {[
                 { value: 'watching', label: 'Watching', icon: Play },
                 { value: 'completed', label: 'Completed', icon: Check },
@@ -842,17 +842,17 @@ export default function AnimePage() {
                       option.value as 'watching' | 'completed' | 'plan-to-watch' | 'favorite'
                     )
                   }
-                  className={`p-4 rounded-xl transition-all flex flex-col items-center gap-2 ${
+                  className={`p-3 sm:p-4 rounded-xl transition-all flex flex-col items-center gap-2 min-h-[80px] sm:min-h-[100px] ${
                     selectedListStatus === option.value
                       ? 'bg-gradient-to-br from-primary-500/20 to-secondary-500/20 border-2 border-primary-400/50 shadow-lg shadow-primary-500/20'
                       : 'bg-white/5 border-2 border-white/10 hover:bg-white/10 hover:border-white/20'
                   }`}
                 >
                   <option.icon
-                    className={`h-6 w-6 ${selectedListStatus === option.value ? 'text-primary-400' : 'text-gray-400'}`}
+                    className={`h-5 w-5 sm:h-6 sm:w-6 ${selectedListStatus === option.value ? 'text-primary-400' : 'text-gray-400'}`}
                   />
                   <span
-                    className={`text-sm font-medium ${selectedListStatus === option.value ? 'text-white' : 'text-gray-300'}`}
+                    className={`text-xs sm:text-sm font-medium ${selectedListStatus === option.value ? 'text-white' : 'text-gray-300'}`}
                   >
                     {option.label}
                   </span>
@@ -860,18 +860,18 @@ export default function AnimePage() {
               ))}
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               <Button
                 onClick={() => setShowAddToListModal(false)}
                 variant="outline"
-                className="flex-1 border-white/20 text-white hover:bg-white/10"
+                className="flex-1 border-white/20 text-white hover:bg-white/10 min-h-[44px] text-sm sm:text-base"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleAddToList}
                 disabled={isSubmitting || !selectedListStatus}
-                className="flex-1 bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white disabled:opacity-50"
+                className="flex-1 bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white disabled:opacity-50 min-h-[44px] text-sm sm:text-base"
               >
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add to List'}
               </Button>
@@ -887,25 +887,25 @@ export default function AnimePage() {
           onClick={() => setShowRatingModal(false)}
         >
           <div
-            className="glass rounded-2xl p-8 max-w-md w-full"
+            className="glass rounded-2xl p-4 sm:p-6 lg:p-8 max-w-md w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-2xl font-bold text-white mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">
               Rate {anime.titleEnglish || anime.title}
             </h2>
 
-            <div className="mb-6">
-              <div className="flex justify-center gap-2 mb-4">
+            <div className="mb-4 sm:mb-6">
+              <div className="flex justify-center gap-1 sm:gap-2 mb-3 sm:mb-4">
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
                   <button
                     key={rating}
                     onMouseEnter={() => setHoverRating(rating)}
                     onMouseLeave={() => setHoverRating(0)}
                     onClick={() => setUserRating(rating)}
-                    className="transition-transform hover:scale-110"
+                    className="transition-transform hover:scale-110 min-h-[44px] min-w-[44px] flex items-center justify-center"
                   >
                     <Star
-                      className={`h-8 w-8 ${
+                      className={`h-6 w-6 sm:h-8 sm:w-8 ${
                         rating <= (hoverRating || userRating)
                           ? 'text-primary-400 fill-current'
                           : 'text-gray-600'
@@ -914,12 +914,12 @@ export default function AnimePage() {
                   </button>
                 ))}
               </div>
-              <p className="text-center text-white text-lg font-semibold">
+              <p className="text-center text-white text-base sm:text-lg font-semibold">
                 {userRating > 0 ? `${userRating} / 10` : 'Select a rating'}
               </p>
-        </div>
+            </div>
 
-            <div className="mb-6">
+            <div className="mb-4 sm:mb-6">
               <label className="block text-sm font-semibold text-gray-300 mb-2">
                 Write a review (optional)
               </label>
@@ -927,27 +927,27 @@ export default function AnimePage() {
                 value={userReview}
                 onChange={(e) => setUserReview(e.target.value)}
                 placeholder="Share your thoughts about this anime..."
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-400/50 min-h-[100px]"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-400/50 min-h-[80px] sm:min-h-[100px] text-sm sm:text-base"
                 maxLength={500}
               />
               <p className="text-xs text-gray-500 mt-1">{userReview.length}/500</p>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               <Button
                 onClick={() => {
                   setShowRatingModal(false)
                   setUserReview('')
                 }}
                 variant="outline"
-                className="flex-1 border-white/20 text-white hover:bg-white/10"
+                className="flex-1 border-white/20 text-white hover:bg-white/10 min-h-[44px] text-sm sm:text-base"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleSubmitRating}
                 disabled={isSubmitting || userRating === 0}
-                className="flex-1 bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white disabled:opacity-50"
+                className="flex-1 bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white disabled:opacity-50 min-h-[44px] text-sm sm:text-base"
               >
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Submit Rating'}
               </Button>

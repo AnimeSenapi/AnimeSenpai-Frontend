@@ -394,7 +394,7 @@ export default function SearchPage() {
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
         </div>
 
-        <main className="container px-3 sm:px-6 lg:px-8 pt-20 sm:pt-28 lg:pt-32 pb-8 sm:pb-16 lg:pb-20 relative z-10">
+        <main className="container px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 lg:pt-32 pb-8 sm:pb-16 lg:pb-20 relative z-10">
           {/* Header Section - Responsive */}
           <div className="mb-4 sm:mb-8 lg:mb-10">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2 sm:mb-4">
@@ -415,20 +415,20 @@ export default function SearchPage() {
           </div>
 
           {/* Search Bar - Responsive */}
-          <div className="mb-4 sm:mb-8">
+          <div className="mb-4 sm:mb-6 lg:mb-8">
             <div className="relative max-w-3xl">
-              <Search className="absolute left-3 sm:left-5 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+              <Search className="absolute left-3 sm:left-4 md:left-5 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search by title, studio, genre..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl pl-10 sm:pl-14 pr-10 sm:pr-12 py-2.5 sm:py-4 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-primary-400/50 focus:ring-2 focus:ring-primary-400/20 transition-all duration-200"
+                className="w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl pl-10 sm:pl-12 md:pl-14 pr-10 sm:pr-12 py-3 sm:py-3.5 md:py-4 text-sm sm:text-base text-white placeholder-gray-400 focus:outline-none focus:border-primary-400/50 focus:ring-2 focus:ring-primary-400/20 transition-all duration-200"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors p-1.5 hover:bg-white/10 rounded-lg"
+                  className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors p-1.5 hover:bg-white/10 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
                 >
                   <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </button>
@@ -437,12 +437,12 @@ export default function SearchPage() {
           </div>
 
           {/* Controls Bar - Responsive */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between mb-4 sm:mb-8 gap-2 sm:gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between mb-4 sm:mb-6 lg:mb-8 gap-3 sm:gap-4">
             <div className="flex items-center gap-2 sm:gap-3">
               <Button
                 variant="outline"
                 onClick={() => setShowFilters(!showFilters)}
-                className={`border-white/20 text-white hover:bg-white/10 transition-all text-sm flex-1 sm:flex-initial ${
+                className={`border-white/20 text-white hover:bg-white/10 transition-all text-sm flex-1 sm:flex-initial min-h-[44px] ${
                   showFilters ? 'bg-white/10 border-primary-400/50' : ''
                 }`}
               >
@@ -460,7 +460,7 @@ export default function SearchPage() {
                   variant="ghost"
                   size="sm"
                   onClick={clearFilters}
-                  className="text-gray-400 hover:text-white hover:bg-white/5 text-sm"
+                  className="text-gray-400 hover:text-white hover:bg-white/5 text-sm min-h-[44px]"
                 >
                   Clear all
                 </Button>
@@ -481,7 +481,7 @@ export default function SearchPage() {
               <div className="flex items-center gap-1 bg-white/5 border border-white/20 rounded-xl p-1">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-lg transition-all ${
+                  className={`p-2 rounded-lg transition-all min-h-[44px] min-w-[44px] flex items-center justify-center ${
                     viewMode === 'grid'
                       ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg'
                       : 'text-gray-400 hover:text-white hover:bg-white/10'
@@ -491,7 +491,7 @@ export default function SearchPage() {
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-lg transition-all ${
+                  className={`p-2 rounded-lg transition-all min-h-[44px] min-w-[44px] flex items-center justify-center ${
                     viewMode === 'list'
                       ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg'
                       : 'text-gray-400 hover:text-white hover:bg-white/10'

@@ -82,6 +82,89 @@
   padding-bottom: max(1rem, var(--safe-area-inset-bottom));
 }
 
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  /* Prevent horizontal scroll */
+  body {
+    overflow-x: hidden;
+  }
+  
+  /* Improve modal positioning on mobile */
+  .modal-mobile {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+  }
+  
+  .modal-mobile > div {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    border-radius: 1rem 1rem 0 0;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  /* Improve dropdown positioning on mobile */
+  .dropdown-mobile {
+    position: fixed;
+    top: auto !important;
+    left: 16px !important;
+    right: 16px !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+  
+  /* Better touch targets for small screens */
+  .touch-target-mobile {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px;
+  }
+  
+  /* Improve form inputs on mobile */
+  input, select, textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+    min-height: 44px;
+  }
+  
+  /* Better spacing for mobile cards */
+  .mobile-card {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+  
+  /* Improve table responsiveness */
+  .table-mobile {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Better button spacing on mobile */
+  .button-group-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .button-group-mobile.horizontal {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+.safe-area-bottom {
+  padding-bottom: max(1rem, var(--safe-area-inset-bottom));
+}
+
 /* Apply safe area padding to left side (landscape) */
 .safe-area-left {
   padding-left: max(1rem, var(--safe-area-inset-left));

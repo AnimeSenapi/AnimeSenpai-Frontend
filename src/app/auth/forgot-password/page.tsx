@@ -58,30 +58,30 @@ export default function ForgotPasswordPage() {
   if (isSubmitted) {
     return (
       <RequireGuest>
-        <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4">
-          {/* Subtle Background */}
-          <div className="absolute inset-0 overflow-hidden opacity-30">
-            <div className="absolute top-0 -right-40 w-96 h-96 bg-green-500/30 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-0 -left-40 w-96 h-96 bg-primary-500/30 rounded-full blur-3xl"></div>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4 pt-20 sm:pt-32">
+        {/* Subtle Background */}
+        <div className="absolute inset-0 overflow-hidden opacity-30">
+          <div className="absolute top-0 -right-40 w-96 h-96 bg-green-500/30 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 -left-40 w-96 h-96 bg-primary-500/30 rounded-full blur-3xl"></div>
+        </div>
 
-          <div className="relative z-10 w-full max-w-md">
-            {/* Back Link */}
-            <Link
-              href="/auth/signin"
-              className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
-            >
-              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-              Back
-            </Link>
+        <div className="relative z-10 w-full max-w-md">
+          {/* Back Link */}
+          <Link
+            href="/auth/signin"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 sm:mb-8 group"
+          >
+            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+            Back
+          </Link>
 
-            {/* Success Card */}
-            <div className="glass rounded-3xl p-10 text-center shadow-2xl border border-white/10">
-              <div className="w-16 h-16 bg-green-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Send className="h-8 w-8 text-green-400" />
+          {/* Success Card */}
+          <div className="glass rounded-3xl p-6 sm:p-8 md:p-10 text-center shadow-2xl border border-white/10">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-green-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                <Send className="h-6 w-6 sm:h-8 sm:w-8 text-green-400" />
               </div>
 
-              <h1 className="text-3xl font-bold text-white mb-3">Check Your Inbox</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3">Check Your Inbox</h1>
 
               <p className="text-gray-300 mb-2">We've sent a password reset link to:</p>
 
@@ -135,7 +135,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <RequireGuest>
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4 pt-20 sm:pt-32">
         {/* Subtle Background */}
         <div className="absolute inset-0 overflow-hidden opacity-30">
           <div className="absolute top-0 -right-40 w-96 h-96 bg-primary-500/30 rounded-full blur-3xl"></div>
@@ -146,23 +146,23 @@ export default function ForgotPasswordPage() {
           {/* Back Link */}
           <Link
             href="/auth/signin"
-            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 sm:mb-8 group"
           >
             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
             Back
           </Link>
 
           {/* Forgot Password Card */}
-          <div className="glass rounded-3xl p-8 md:p-10 shadow-2xl border border-white/10">
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Mail className="h-8 w-8 text-primary-400" />
+          <div className="glass rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl border border-white/10">
+            <div className="text-center mb-6 sm:mb-8">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                <Mail className="h-6 w-6 sm:h-8 sm:w-8 text-primary-400" />
               </div>
-              <h1 className="text-3xl font-bold text-white mb-2">Forgot Password?</h1>
-              <p className="text-gray-400">No worries, we'll email you a reset link</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Forgot Password?</h1>
+              <p className="text-gray-400 text-sm sm:text-base">No worries, we'll email you a reset link</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               {error && (
                 <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
                   <p className="text-red-400 text-sm">{error}</p>
@@ -181,7 +181,7 @@ export default function ForgotPasswordPage() {
                     id="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all"
+                    className="w-full pl-12 pr-4 py-3 sm:py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all text-base"
                     placeholder="you@example.com"
                     required
                   />
@@ -193,7 +193,7 @@ export default function ForgotPasswordPage() {
               <Button
                 type="submit"
                 disabled={isLoading || !email}
-                className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold py-3.5 disabled:opacity-50 shadow-lg shadow-primary-500/25"
+                className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold py-3 sm:py-3.5 disabled:opacity-50 shadow-lg shadow-primary-500/25 min-h-[48px] text-base"
               >
                 {isLoading ? (
                   <span className="flex items-center justify-center gap-2">

@@ -365,7 +365,7 @@ export default function DashboardPage() {
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
         </div>
 
-        <main className="container px-3 sm:px-6 lg:px-8 pt-20 sm:pt-28 lg:pt-32 pb-8 sm:pb-16 lg:pb-20 relative z-10">
+        <main className="container px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 lg:pt-32 pb-8 sm:pb-16 lg:pb-20 relative z-10">
           {/* Email Verification Banner */}
           {isAuthenticated && user && !user.emailVerified && (
             <EmailVerificationBanner email={user.email} />
@@ -428,18 +428,18 @@ export default function DashboardPage() {
           </div>
 
           {/* Discovery Quick Links */}
-          <div className="mb-8 sm:mb-12">
-            <h2 className="text-lg sm:text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <Compass className="w-5 h-5 text-primary-400" />
+          <div className="mb-6 sm:mb-8 lg:mb-12">
+            <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-3 sm:mb-4 flex items-center gap-2">
+              <Compass className="w-4 h-4 sm:w-5 sm:h-5 text-primary-400" />
               Quick Discovery
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
               <Link href="/seasonal">
-                <div className="glass rounded-xl p-4 sm:p-6 hover:bg-white/10 transition-all cursor-pointer group border border-white/10 hover:border-blue-400/30 h-full">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                    <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                <div className="glass rounded-xl p-3 sm:p-4 md:p-6 hover:bg-white/10 transition-all cursor-pointer group border border-white/10 hover:border-blue-400/30 h-full">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 md:mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
                   </div>
-                  <h3 className="text-sm sm:text-base font-bold text-white mb-1 sm:mb-2 group-hover:text-primary-300 transition-colors">
+                  <h3 className="text-xs sm:text-sm md:text-base font-bold text-white mb-1 sm:mb-2 group-hover:text-primary-300 transition-colors">
                     This Season
                   </h3>
                   <p className="text-xs text-gray-400 hidden sm:block">Currently airing</p>
@@ -447,11 +447,11 @@ export default function DashboardPage() {
               </Link>
 
               <Link href="/top-rated">
-                <div className="glass rounded-xl p-4 sm:p-6 hover:bg-white/10 transition-all cursor-pointer group border border-white/10 hover:border-yellow-400/30 h-full">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                    <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                <div className="glass rounded-xl p-3 sm:p-4 md:p-6 hover:bg-white/10 transition-all cursor-pointer group border border-white/10 hover:border-yellow-400/30 h-full">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 md:mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                    <Crown className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
                   </div>
-                  <h3 className="text-sm sm:text-base font-bold text-white mb-1 sm:mb-2 group-hover:text-yellow-300 transition-colors">
+                  <h3 className="text-xs sm:text-sm md:text-base font-bold text-white mb-1 sm:mb-2 group-hover:text-yellow-300 transition-colors">
                     Top Rated
                   </h3>
                   <p className="text-xs text-gray-400 hidden sm:block">Highest rated</p>
@@ -459,11 +459,11 @@ export default function DashboardPage() {
               </Link>
 
               <Link href="/genres">
-                <div className="glass rounded-xl p-4 sm:p-6 hover:bg-white/10 transition-all cursor-pointer group border border-white/10 hover:border-purple-400/30 h-full">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                    <Tag className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                <div className="glass rounded-xl p-3 sm:p-4 md:p-6 hover:bg-white/10 transition-all cursor-pointer group border border-white/10 hover:border-purple-400/30 h-full">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 md:mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                    <Tag className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
                   </div>
-                  <h3 className="text-sm sm:text-base font-bold text-white mb-1 sm:mb-2 group-hover:text-purple-300 transition-colors">
+                  <h3 className="text-xs sm:text-sm md:text-base font-bold text-white mb-1 sm:mb-2 group-hover:text-purple-300 transition-colors">
                     Genres
                   </h3>
                   <p className="text-xs text-gray-400 hidden sm:block">Explore by genre</p>
@@ -471,11 +471,11 @@ export default function DashboardPage() {
               </Link>
 
               <Link href="/search">
-                <div className="glass rounded-xl p-4 sm:p-6 hover:bg-white/10 transition-all cursor-pointer group border border-white/10 hover:border-green-400/30 h-full">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                    <Filter className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                <div className="glass rounded-xl p-3 sm:p-4 md:p-6 hover:bg-white/10 transition-all cursor-pointer group border border-white/10 hover:border-green-400/30 h-full">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 md:mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                    <Filter className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
                   </div>
-                  <h3 className="text-sm sm:text-base font-bold text-white mb-1 sm:mb-2 group-hover:text-green-300 transition-colors">
+                  <h3 className="text-xs sm:text-sm md:text-base font-bold text-white mb-1 sm:mb-2 group-hover:text-green-300 transition-colors">
                     Advanced Search
                   </h3>
                   <p className="text-xs text-gray-400 hidden sm:block">Filter & sort</p>

@@ -78,7 +78,7 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
 
   if (isError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4 pt-20 sm:pt-32">
         <div className="absolute inset-0 overflow-hidden opacity-30">
           <div className="absolute top-0 -right-40 w-96 h-96 bg-red-500/30 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 -left-40 w-96 h-96 bg-orange-500/30 rounded-full blur-3xl"></div>
@@ -87,18 +87,18 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
         <div className="relative z-10 w-full max-w-md">
           <Link
             href="/auth/signin"
-            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 sm:mb-8 group"
           >
             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
             Back
           </Link>
 
-          <div className="glass rounded-3xl p-12 text-center shadow-2xl border border-white/10">
-            <div className="w-16 h-16 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <AlertCircle className="h-8 w-8 text-red-400" />
+          <div className="glass rounded-3xl p-6 sm:p-8 md:p-12 text-center shadow-2xl border border-white/10">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+              <AlertCircle className="h-6 w-6 sm:h-8 sm:w-8 text-red-400" />
             </div>
 
-            <h1 className="text-3xl font-bold text-white mb-3">Verification Failed</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3">Verification Failed</h1>
 
             <p className="text-gray-300 mb-2">{errorMessage}</p>
 
@@ -109,14 +109,14 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
             <div className="space-y-3">
               <Button
                 onClick={() => (window.location.href = '/auth/signin')}
-                className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold py-3.5 shadow-lg shadow-primary-500/25"
+                className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold py-3 sm:py-3.5 shadow-lg shadow-primary-500/25 min-h-[48px] text-base"
               >
                 Back to Sign In
               </Button>
               <Button
                 variant="outline"
                 onClick={() => (window.location.href = '/auth/signup')}
-                className="w-full border-white/20 text-white hover:bg-white/10 py-3.5"
+                className="w-full border-white/20 text-white hover:bg-white/10 py-3 sm:py-3.5 min-h-[48px] text-base"
               >
                 Create New Account
               </Button>
@@ -128,7 +128,7 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4 pt-20 sm:pt-32">
       <div className="absolute inset-0 overflow-hidden opacity-30">
         <div className="absolute top-0 -right-40 w-96 h-96 bg-green-500/30 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 -left-40 w-96 h-96 bg-primary-500/30 rounded-full blur-3xl"></div>
@@ -137,24 +137,24 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
       <div className="relative z-10 w-full max-w-md">
         <Link
           href="/auth/signin"
-          className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
+          className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 sm:mb-8 group"
         >
           <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
           Back
         </Link>
 
         {/* Success Card */}
-        <div className="glass rounded-3xl p-8 sm:p-12 text-center shadow-2xl border border-white/10">
+        <div className="glass rounded-3xl p-6 sm:p-8 md:p-12 text-center shadow-2xl border border-white/10">
           {/* Success Animation */}
-          <div className="relative w-20 h-20 mx-auto mb-6">
+          <div className="relative w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6">
             <div className="absolute inset-0 bg-green-500/20 rounded-2xl animate-pulse"></div>
             <div className="absolute inset-0 flex items-center justify-center">
-              <CheckCircle className="h-12 w-12 text-green-400 animate-in zoom-in duration-500" />
+              <CheckCircle className="h-8 w-8 sm:h-12 sm:w-12 text-green-400 animate-in zoom-in duration-500" />
             </div>
-            <Sparkles className="absolute -top-2 -right-2 h-6 w-6 text-yellow-400 animate-in spin-in duration-700" />
+            <Sparkles className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 h-4 w-4 sm:h-6 sm:w-6 text-yellow-400 animate-in spin-in duration-700" />
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3">Email Verified! 🎉</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3">Email Verified! 🎉</h1>
 
           <p className="text-base sm:text-lg text-gray-300 mb-2">
             Your email address has been successfully verified
@@ -180,14 +180,14 @@ export default function VerifyEmailPage({ params }: VerifyEmailPageProps) {
           <div className="space-y-3">
             <Button
               onClick={() => router.push(isAuthenticated ? '/dashboard' : '/auth/signin')}
-              className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3.5 shadow-lg shadow-green-500/25"
+              className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 sm:py-3.5 shadow-lg shadow-green-500/25 min-h-[48px] text-base"
             >
               {isAuthenticated ? 'Go to Dashboard Now' : 'Sign In Now'}
             </Button>
             <Button
               variant="outline"
               onClick={() => router.push('/')}
-              className="w-full border-white/20 text-white hover:bg-white/10 py-3.5"
+              className="w-full border-white/20 text-white hover:bg-white/10 py-3 sm:py-3.5 min-h-[48px] text-base"
             >
               Go to Home
             </Button>

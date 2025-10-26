@@ -170,39 +170,42 @@ export function DashboardTab() {
   return (
     <div className="space-y-6">
       {/* Header with Controls */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-white mb-2">Dashboard Overview</h2>
-          <p className="text-gray-400">System statistics and health monitoring</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Dashboard Overview</h2>
+          <p className="text-gray-400 text-sm sm:text-base">System statistics and health monitoring</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="text-right text-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="text-left sm:text-right text-sm">
             <p className="text-gray-400">Last updated</p>
             <p className="text-white font-medium">{lastRefresh.toLocaleTimeString()}</p>
           </div>
-          <Button
-            onClick={loadStats}
-            variant="outline"
-            size="sm"
-            className="border-white/20 text-white hover:bg-white/10"
-            disabled={loading}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <Button
-            onClick={() => setAutoRefresh(!autoRefresh)}
-            variant={autoRefresh ? 'default' : 'outline'}
-            size="sm"
-            className={
-              autoRefresh
-                ? 'bg-primary-500 hover:bg-primary-600'
-                : 'border-white/20 text-white hover:bg-white/10'
-            }
-          >
-            <Activity className="h-4 w-4 mr-2" />
-            {autoRefresh ? 'Auto: ON' : 'Auto: OFF'}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={loadStats}
+              variant="outline"
+              size="sm"
+              className="border-white/20 text-white hover:bg-white/10 touch-manipulation min-h-[44px]"
+              disabled={loading}
+            >
+              <RefreshCw className={`h-4 w-4 sm:mr-2 ${loading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </Button>
+            <Button
+              onClick={() => setAutoRefresh(!autoRefresh)}
+              variant={autoRefresh ? 'default' : 'outline'}
+              size="sm"
+              className={`touch-manipulation min-h-[44px] ${
+                autoRefresh
+                  ? 'bg-primary-500 hover:bg-primary-600'
+                  : 'border-white/20 text-white hover:bg-white/10'
+              }`}
+            >
+              <Activity className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">{autoRefresh ? 'Auto: ON' : 'Auto: OFF'}</span>
+              <span className="sm:hidden">{autoRefresh ? 'ON' : 'OFF'}</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -233,67 +236,73 @@ export function DashboardTab() {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats Grid - Mobile-optimized */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {statCards.map((card, index) => {
           const Icon = card.icon
           return (
             <div
               key={index}
-              className="bg-white/5 border border-white/10 rounded-xl p-6 hover:border-primary-500/30 transition-colors"
+              className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6 hover:border-primary-500/30 transition-colors touch-manipulation"
             >
-              <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3 mb-3">
                 <div
-                  className={`w-12 h-12 rounded-lg bg-${card.color}-500/10 flex items-center justify-center`}
+                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-${card.color}-500/10 flex items-center justify-center flex-shrink-0`}
                 >
-                  <Icon className={`h-6 w-6 text-${card.color}-400`} />
+                  <Icon className={`h-5 w-5 sm:h-6 sm:w-6 text-${card.color}-400`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1">{card.value}</p>
+                  <p className="text-sm font-medium text-gray-300 truncate">{card.title}</p>
                 </div>
               </div>
-              <div>
-                <p className="text-3xl font-bold text-white mb-1">{card.value}</p>
-                <p className="text-sm font-medium text-gray-300 mb-1">{card.title}</p>
-                <p className="text-xs text-gray-500">{card.subtitle}</p>
-              </div>
+              <p className="text-xs text-gray-500 leading-relaxed">{card.subtitle}</p>
             </div>
           )
         })}
       </div>
 
-      {/* User Breakdown */}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+      {/* User Breakdown - Mobile-optimized */}
+      <div className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6">
         <h3 className="text-lg font-bold text-white mb-4">User Roles Breakdown</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white/5 rounded-lg p-4">
-            <p className="text-gray-400 text-sm mb-1">Regular Users</p>
-            <p className="text-2xl font-bold text-white">{stats.users.regular.toLocaleString()}</p>
-            <p className="text-xs text-gray-500 mt-1">
-              {((stats.users.regular / stats.users.total) * 100).toFixed(1)}% of total
-            </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          <div className="bg-white/5 rounded-lg p-4 sm:p-4 touch-manipulation">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-gray-400 text-sm">Regular Users</p>
+              <span className="text-xs text-gray-500">
+                {((stats.users.regular / stats.users.total) * 100).toFixed(1)}%
+              </span>
+            </div>
+            <p className="text-xl sm:text-2xl font-bold text-white">{stats.users.regular.toLocaleString()}</p>
           </div>
-          <div className="bg-white/5 rounded-lg p-4">
-            <p className="text-gray-400 text-sm mb-1">Moderators</p>
-            <p className="text-2xl font-bold text-blue-400">
+          <div className="bg-white/5 rounded-lg p-4 sm:p-4 touch-manipulation">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-gray-400 text-sm">Moderators</p>
+              <span className="text-xs text-gray-500">
+                {((stats.users.testers / stats.users.total) * 100).toFixed(1)}%
+              </span>
+            </div>
+            <p className="text-xl sm:text-2xl font-bold text-blue-400">
               {stats.users.testers.toLocaleString()}
             </p>
-            <p className="text-xs text-gray-500 mt-1">
-              {((stats.users.testers / stats.users.total) * 100).toFixed(1)}% of total
-            </p>
           </div>
-          <div className="bg-white/5 rounded-lg p-4">
-            <p className="text-gray-400 text-sm mb-1">Admins</p>
-            <p className="text-2xl font-bold text-yellow-400">
+          <div className="bg-white/5 rounded-lg p-4 sm:p-4 touch-manipulation">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-gray-400 text-sm">Admins</p>
+              <span className="text-xs text-gray-500">
+                {((stats.users.admins / stats.users.total) * 100).toFixed(1)}%
+              </span>
+            </div>
+            <p className="text-xl sm:text-2xl font-bold text-yellow-400">
               {stats.users.admins.toLocaleString()}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              {((stats.users.admins / stats.users.total) * 100).toFixed(1)}% of total
             </p>
           </div>
         </div>
       </div>
 
       {/* Content Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6">
           <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
             <Database className="h-5 w-5 text-primary-400" />
             Content Metrics
@@ -320,7 +329,7 @@ export function DashboardTab() {
           </div>
         </div>
 
-        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6">
           <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-success-400" />
             Growth Metrics
@@ -350,39 +359,39 @@ export function DashboardTab() {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+      <div className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6">
         <h3 className="text-lg font-bold text-white mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <button className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary-500/30 rounded-lg transition-all group">
-            <Users className="h-6 w-6 text-primary-400 mb-2 group-hover:scale-110 transition-transform" />
-            <p className="text-sm font-medium text-white">Manage Users</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <button className="p-3 sm:p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary-500/30 rounded-lg transition-all group touch-manipulation min-h-[60px]">
+            <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400 mb-2 group-hover:scale-110 transition-transform" />
+            <p className="text-xs sm:text-sm font-medium text-white">Manage Users</p>
             <p className="text-xs text-gray-500">{stats.users.total} total</p>
           </button>
-          <button className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-secondary-500/30 rounded-lg transition-all group">
-            <Film className="h-6 w-6 text-secondary-400 mb-2 group-hover:scale-110 transition-transform" />
-            <p className="text-sm font-medium text-white">Manage Anime</p>
+          <button className="p-3 sm:p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-secondary-500/30 rounded-lg transition-all group touch-manipulation min-h-[60px]">
+            <Film className="h-5 w-5 sm:h-6 sm:w-6 text-secondary-400 mb-2 group-hover:scale-110 transition-transform" />
+            <p className="text-xs sm:text-sm font-medium text-white">Manage Anime</p>
             <p className="text-xs text-gray-500">{stats.content.anime} total</p>
           </button>
-          <button className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-warning-500/30 rounded-lg transition-all group">
-            <Shield className="h-6 w-6 text-warning-400 mb-2 group-hover:scale-110 transition-transform" />
-            <p className="text-sm font-medium text-white">Security</p>
+          <button className="p-3 sm:p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-warning-500/30 rounded-lg transition-all group touch-manipulation min-h-[60px]">
+            <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-warning-400 mb-2 group-hover:scale-110 transition-transform" />
+            <p className="text-xs sm:text-sm font-medium text-white">Security</p>
             <p className="text-xs text-gray-500">View logs</p>
           </button>
-          <button className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-success-500/30 rounded-lg transition-all group">
-            <Database className="h-6 w-6 text-success-400 mb-2 group-hover:scale-110 transition-transform" />
-            <p className="text-sm font-medium text-white">Settings</p>
+          <button className="p-3 sm:p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-success-500/30 rounded-lg transition-all group touch-manipulation min-h-[60px]">
+            <Database className="h-5 w-5 sm:h-6 sm:w-6 text-success-400 mb-2 group-hover:scale-110 transition-transform" />
+            <p className="text-xs sm:text-sm font-medium text-white">Settings</p>
             <p className="text-xs text-gray-500">Configure</p>
           </button>
         </div>
       </div>
 
       {/* System Info */}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+      <div className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6">
         <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
           <Activity className="h-5 w-5 text-primary-400" />
           System Information
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
             <div
               className={`w-10 h-10 rounded-lg bg-${autoRefresh ? 'green' : 'gray'}-500/10 flex items-center justify-center`}

@@ -88,14 +88,14 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
 
   if (isValidating) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4 pt-20 sm:pt-32">
         <div className="absolute inset-0 overflow-hidden opacity-30">
           <div className="absolute top-0 -right-40 w-96 h-96 bg-primary-500/30 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 -left-40 w-96 h-96 bg-secondary-500/30 rounded-full blur-3xl"></div>
         </div>
 
         <div className="relative z-10 w-full max-w-md">
-          <div className="glass rounded-3xl p-12 text-center shadow-2xl border border-white/10">
+          <div className="glass rounded-3xl p-6 sm:p-8 md:p-12 text-center shadow-2xl border border-white/10">
             <Loader2 className="h-10 w-10 text-primary-400 animate-spin mx-auto mb-4" />
             <p className="text-gray-400">Validating reset link...</p>
           </div>
@@ -106,7 +106,7 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
 
   if (!isValidToken) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4 pt-20 sm:pt-32">
         <div className="absolute inset-0 overflow-hidden opacity-30">
           <div className="absolute top-0 -right-40 w-96 h-96 bg-red-500/30 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 -left-40 w-96 h-96 bg-orange-500/30 rounded-full blur-3xl"></div>
@@ -115,18 +115,18 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
         <div className="relative z-10 w-full max-w-md">
           <Link
             href="/auth/signin"
-            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 sm:mb-8 group"
           >
             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
             Back
           </Link>
 
-          <div className="glass rounded-3xl p-12 text-center shadow-2xl border border-white/10">
-            <div className="w-16 h-16 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <AlertCircle className="h-8 w-8 text-red-400" />
+          <div className="glass rounded-3xl p-6 sm:p-8 md:p-12 text-center shadow-2xl border border-white/10">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+              <AlertCircle className="h-6 w-6 sm:h-8 sm:w-8 text-red-400" />
             </div>
 
-            <h1 className="text-3xl font-bold text-white mb-3">Invalid Reset Link</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3">Invalid Reset Link</h1>
 
             <p className="text-gray-300 mb-2">This password reset link is invalid or has expired</p>
 
@@ -137,14 +137,14 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
             <div className="space-y-3">
               <Button
                 onClick={() => (window.location.href = '/auth/forgot-password')}
-                className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold py-3.5 shadow-lg shadow-primary-500/25"
+                className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold py-3 sm:py-3.5 shadow-lg shadow-primary-500/25 min-h-[48px] text-base"
               >
                 Request New Reset Link
               </Button>
               <Button
                 variant="outline"
                 onClick={() => (window.location.href = '/auth/signin')}
-                className="w-full border-white/20 text-white hover:bg-white/10 py-3.5"
+                className="w-full border-white/20 text-white hover:bg-white/10 py-3 sm:py-3.5 min-h-[48px] text-base"
               >
                 Back to Sign In
               </Button>
@@ -157,7 +157,7 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4 pt-20 sm:pt-32">
         <div className="absolute inset-0 overflow-hidden opacity-30">
           <div className="absolute top-0 -right-40 w-96 h-96 bg-green-500/30 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 -left-40 w-96 h-96 bg-primary-500/30 rounded-full blur-3xl"></div>
@@ -166,18 +166,18 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
         <div className="relative z-10 w-full max-w-md">
           <Link
             href="/auth/signin"
-            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 sm:mb-8 group"
           >
             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
             Back
           </Link>
 
-          <div className="glass rounded-3xl p-12 text-center shadow-2xl border border-white/10">
-            <div className="w-16 h-16 bg-green-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="h-10 w-10 text-green-400" />
+          <div className="glass rounded-3xl p-6 sm:p-8 md:p-12 text-center shadow-2xl border border-white/10">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-green-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+              <CheckCircle className="h-8 w-8 sm:h-10 sm:w-10 text-green-400" />
             </div>
 
-            <h1 className="text-3xl font-bold text-white mb-3">Password Reset! 🎉</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3">Password Reset! 🎉</h1>
 
             <p className="text-gray-300 mb-2">Your password has been successfully updated</p>
 
@@ -185,7 +185,7 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
 
             <Button
               onClick={() => (window.location.href = '/auth/signin')}
-              className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3.5 shadow-lg shadow-green-500/25"
+              className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 sm:py-3.5 shadow-lg shadow-green-500/25 min-h-[48px] text-base"
             >
               Sign In Now
             </Button>
@@ -197,7 +197,7 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
 
   return (
     <RequireGuest>
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4 pt-20 sm:pt-32">
         <div className="absolute inset-0 overflow-hidden opacity-30">
           <div className="absolute top-0 -right-40 w-96 h-96 bg-primary-500/30 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 -left-40 w-96 h-96 bg-secondary-500/30 rounded-full blur-3xl"></div>
@@ -206,23 +206,23 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
         <div className="relative z-10 w-full max-w-md">
           <Link
             href="/auth/signin"
-            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 sm:mb-8 group"
           >
             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
             Back
           </Link>
 
           {/* Reset Password Card */}
-          <div className="glass rounded-3xl p-8 md:p-10 shadow-2xl border border-white/10">
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Lock className="h-8 w-8 text-primary-400" />
+          <div className="glass rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl border border-white/10">
+            <div className="text-center mb-6 sm:mb-8">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                <Lock className="h-6 w-6 sm:h-8 sm:w-8 text-primary-400" />
               </div>
-              <h1 className="text-3xl font-bold text-white mb-2">Reset Password</h1>
-              <p className="text-gray-400">Choose a strong new password</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Reset Password</h1>
+              <p className="text-gray-400 text-sm sm:text-base">Choose a strong new password</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
               {error && (
                 <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
                   <p className="text-red-400 text-sm">{error}</p>
@@ -241,7 +241,7 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
                     id="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={`w-full pl-12 pr-12 py-3.5 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${
+                    className={`w-full pl-12 pr-12 py-3 sm:py-3.5 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all text-base ${
                       password && !isPasswordValid
                         ? 'border-red-500/50 focus:ring-red-400/50'
                         : 'border-white/10 focus:ring-primary-500/50'
@@ -252,7 +252,7 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors p-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -298,7 +298,7 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
                     id="confirmPassword"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className={`w-full pl-12 pr-12 py-3.5 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${
+                    className={`w-full pl-12 pr-12 py-3 sm:py-3.5 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all text-base ${
                       confirmPassword && !isPasswordMatch
                         ? 'border-red-500/50 focus:ring-red-400/50'
                         : confirmPassword && isPasswordMatch
@@ -311,7 +311,7 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors p-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
                   >
                     {showConfirmPassword ? (
                       <EyeOff className="h-5 w-5" />
@@ -338,7 +338,7 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
               <Button
                 type="submit"
                 disabled={isLoading || !isPasswordValid || !isPasswordMatch}
-                className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold py-3.5 disabled:opacity-50 shadow-lg shadow-primary-500/25"
+                className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold py-3 sm:py-3.5 disabled:opacity-50 shadow-lg shadow-primary-500/25 min-h-[48px] text-base"
               >
                 {isLoading ? (
                   <span className="flex items-center justify-center gap-2">
