@@ -24,7 +24,6 @@ import {
   Play,
   CheckCircle,
   Eye,
-  Film,
   Loader2,
   Activity,
   Clock,
@@ -502,15 +501,7 @@ export default function ProfilePage() {
                   <div className="text-xs text-gray-400">Anime</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-bold text-white">{achievementStats?.unlockedCount || 0}</div>
-                  <div className="text-xs text-gray-400">Achievements</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg font-bold text-white">{stats?.ratings || 0}</div>
-                  <div className="text-xs text-gray-400">Ratings</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg font-bold text-white">{stats?.reviews || 0}</div>
+                  <div className="text-lg font-bold text-white">{(stats?.ratings || 0) + (stats?.reviews || 0)}</div>
                   <div className="text-xs text-gray-400">Reviews</div>
                 </div>
               </div>
@@ -654,13 +645,6 @@ export default function ProfilePage() {
                           </div>
                           <span className="text-white font-semibold">{stats?.planToWatch || 0}</span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Film className="h-4 w-4 text-indigo-400" />
-                            <span className="text-gray-300 text-sm">Total Anime</span>
-                          </div>
-                          <span className="text-white font-semibold">{stats?.totalAnime || 0}</span>
-                        </div>
                       </div>
                     </div>
 
@@ -689,54 +673,56 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Activity Stats */}
-                {activityStats && (
-                  <div className="glass rounded-xl p-6">
-                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-green-400" />
-                      This Month
-                    </h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-300 text-sm">Activities</span>
-                        <span className="text-white font-semibold">{activityStats.totalActivities || 0}</span>
-                      </div>
-                      {activityStats.byType && Object.entries(activityStats.byType).slice(0, 2).map(([type, count]) => (
-                        <div key={type} className="flex justify-between items-center">
-                          <span className="text-gray-300 text-xs capitalize">
-                            {type.replace(/([A-Z])/g, ' $1').trim()}
-                          </span>
-                          <span className="text-white font-semibold text-sm">{count as number}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Leaderboard Rank */}
-                {leaderboardRank && (
-                  <div className="glass rounded-xl p-6">
-                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                      <Award className="h-5 w-5 text-purple-400" />
-                      Rankings
-                    </h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-300 text-sm">Anime Watched</span>
-                        <div className="text-right">
-                          <div className="text-white font-semibold">#{leaderboardRank.rank || 'N/A'}</div>
-                          <div className="text-xs text-gray-400">{leaderboardRank.score || 0} anime</div>
-                        </div>
-                      </div>
-                      {leaderboardRank.percentage > 0 && (
+                {/* Performance Stats */}
+                <div className="glass rounded-xl p-6">
+                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-green-400" />
+                    Performance
+                  </h3>
+                  <div className="space-y-3">
+                    {/* Activity Stats */}
+                    {activityStats && (
+                      <>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-300 text-sm">Percentile</span>
-                          <span className="text-white font-semibold text-sm">{leaderboardRank.percentage}%</span>
+                          <span className="text-gray-300 text-sm">This Month</span>
+                          <span className="text-white font-semibold">{activityStats.totalActivities || 0} activities</span>
                         </div>
-                      )}
-                    </div>
+                        {activityStats.byType && Object.entries(activityStats.byType).slice(0, 2).map(([type, count]) => (
+                          <div key={type} className="flex justify-between items-center">
+                            <span className="text-gray-300 text-xs capitalize">
+                              {type.replace(/([A-Z])/g, ' $1').trim()}
+                            </span>
+                            <span className="text-white font-semibold text-sm">{count as number}</span>
+                          </div>
+                        ))}
+                        <div className="border-t border-white/10 my-2"></div>
+                      </>
+                    )}
+                    
+                    {/* Leaderboard Rank */}
+                    {leaderboardRank ? (
+                      <>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-300 text-sm">Rank</span>
+                          <div className="text-right">
+                            <div className="text-white font-semibold">#{leaderboardRank.rank || 'N/A'}</div>
+                            <div className="text-xs text-gray-400">{leaderboardRank.score || 0} anime</div>
+                          </div>
+                        </div>
+                        {leaderboardRank.percentage > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-300 text-sm">Percentile</span>
+                            <span className="text-white font-semibold text-sm">{leaderboardRank.percentage}%</span>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-center py-2">
+                        <span className="text-gray-400 text-sm">No ranking data</span>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
 
                 {/* Join Date */}
                 <div className="glass rounded-xl p-6">
