@@ -251,8 +251,9 @@ export default function ProfilePage() {
         const animeData = await animeListRes.json()
         if (animeData.result?.data?.items) {
           const items: AnimeListItem[] = animeData.result.data.items
+          // Get favorite anime - filter by isFavorite property on the anime object
           const favs = items
-            .filter((item) => item.listStatus === 'favorite')
+            .filter((item) => item.anime?.isFavorite === true)
             .slice(0, 4)
             .map((item) => ({ ...item.anime, listStatus: item.listStatus }))
           setFavoriteAnime(favs)
@@ -452,63 +453,71 @@ export default function ProfilePage() {
               {/* Left Column - Activity */}
               <div className="lg:col-span-2 space-y-6">
                 
-                {/* Recent Activity */}
-                <div className="glass rounded-xl p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                      <Activity className="h-5 w-5 text-primary-400" />
-                      Recent Activity
-                    </h2>
-                    <Link href="/mylist">
-                      <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10">
-                        View All
-                      </Button>
-                    </Link>
-                  </div>
+                    {/* Recent Activity */}
+                    <div className="glass rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-base font-bold text-white flex items-center gap-2">
+                          <Activity className="h-4 w-4 text-primary-400" />
+                          Recent Activity
+                        </h2>
+                        <Link href="/mylist">
+                          <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10 text-xs px-2 py-1">
+                            View All
+                          </Button>
+                        </Link>
+                      </div>
 
-                  {recentAnime.length === 0 ? (
-                    <EmptyState
-                      icon={<Clock className="h-8 w-8 text-gray-500" />}
-                      title="No recent activity"
-                      message="Start watching anime to see your activity here"
-                      actionLabel="Browse Anime"
-                      onAction={() => router.push('/search')}
-                      className="py-8"
-                    />
-                  ) : (
-                    <div className="grid grid-cols-2 gap-3">
-                      {recentAnime.map((anime) => (
-                        <AnimeCard key={anime.id} anime={anime} variant="grid" />
-                      ))}
+                      {recentAnime.length === 0 ? (
+                        <div className="text-center py-4">
+                          <Clock className="h-6 w-6 text-gray-500 mx-auto mb-2" />
+                          <p className="text-gray-400 text-sm">No recent activity</p>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="mt-2 border-white/20 text-white hover:bg-white/10 text-xs"
+                            onClick={() => router.push('/search')}
+                          >
+                            Browse Anime
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-3 gap-2">
+                          {recentAnime.map((anime) => (
+                            <AnimeCard key={anime.id} anime={anime} variant="grid" />
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
 
                 {/* Favorites */}
-                <div className="glass rounded-xl p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                      <Heart className="h-5 w-5 text-red-400 fill-current" />
+                <div className="glass rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-base font-bold text-white flex items-center gap-2">
+                      <Heart className="h-4 w-4 text-red-400 fill-current" />
                       Favorites
                     </h2>
                     <Link href="/mylist?filter=favorites">
-                      <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10">
+                      <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10 text-xs px-2 py-1">
                         View All
                       </Button>
                     </Link>
                   </div>
 
                   {favoriteAnime.length === 0 ? (
-                    <EmptyState
-                      icon={<Heart className="h-8 w-8 text-gray-500" />}
-                      title="No favorites yet"
-                      message="Mark anime as favorite to see them here"
-                      actionLabel="Find Favorites"
-                      onAction={() => router.push('/search')}
-                      className="py-8"
-                    />
+                    <div className="text-center py-4">
+                      <Heart className="h-6 w-6 text-gray-500 mx-auto mb-2" />
+                      <p className="text-gray-400 text-sm">No favorites yet</p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="mt-2 border-white/20 text-white hover:bg-white/10 text-xs"
+                        onClick={() => router.push('/search')}
+                      >
+                        Find Favorites
+                      </Button>
+                    </div>
                   ) : (
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-3 gap-2">
                       {favoriteAnime.map((anime) => (
                         <AnimeCard key={anime.id} anime={anime} variant="grid" />
                       ))}
