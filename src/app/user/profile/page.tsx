@@ -13,6 +13,7 @@ import { LoadingState } from '../../../components/ui/loading-state'
 import { EmptyState } from '../../../components/ui/error-state'
 import { AchievementsShowcase } from '../../../components/achievements/AchievementsShowcase'
 import { ACHIEVEMENTS, calculateAchievements } from '../../../lib/achievements'
+import { groupAnimeIntoSeries } from '../../../lib/series-grouping'
 import {
   User,
   Calendar,
@@ -251,11 +252,35 @@ export default function ProfilePage() {
         const animeData = await animeListRes.json()
         if (animeData.result?.data?.items) {
           const items: AnimeListItem[] = animeData.result.data.items
-          // Get favorite anime - filter by isFavorite property on the anime object
-          const favs = items
-            .filter((item) => item.anime?.isFavorite === true)
+          
+          // Process data the same way as mylist page
+          const myListAnimeRaw = items
+            .filter((item) => item.anime) // Only include items with anime data
+            .map((item) => ({
+              ...item.anime!,
+              listStatus: item.listStatus as 'watching' | 'completed' | 'plan-to-watch' | 'on-hold' | 'dropped',
+              isFavorite: 'isFavorite' in item ? item.isFavorite! : false, // Include favorite flag
+              progress: 'progress' in item && typeof item.progress === 'number' ? item.progress : 0,
+              rating: (item.anime && (item.anime.averageRating ?? item.anime.rating)) || 0,
+              averageRating: item.anime!.averageRating || item.anime!.rating || 0,
+            }))
+
+          // Group anime into series (same as mylist)
+          const myListAnime = groupAnimeIntoSeries(myListAnimeRaw).map((series) => ({
+            ...series,
+            listStatus: series.seasons?.[0]?.listStatus || myListAnimeRaw.find((a) => a.id === series.id)?.listStatus || 'plan-to-watch',
+            isFavorite: series.seasons?.some((s: any) => s.isFavorite) || myListAnimeRaw.find((a) => a.id === series.id)?.isFavorite || false,
+            progress: series.seasons?.reduce((sum: number, season: any) => sum + (season.progress || 0), 0) || myListAnimeRaw.find((a) => a.id === series.id)?.progress || 0,
+            title: series.titleEnglish || series.displayTitle || series.title,
+            titleEnglish: series.titleEnglish || series.displayTitle,
+            rating: Number(series.rating) || series.averageRating || 0,
+            averageRating: Number(series.rating) || series.averageRating || 0,
+          }))
+
+          // Get favorite anime using the same logic as mylist
+          const favs = myListAnime
+            .filter((anime) => anime.isFavorite === true || anime.seasons?.some((s: any) => s.isFavorite === true))
             .slice(0, 4)
-            .map((item) => ({ ...item.anime, listStatus: item.listStatus }))
           setFavoriteAnime(favs)
         }
 
