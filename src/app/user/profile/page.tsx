@@ -265,6 +265,15 @@ export default function ProfilePage() {
               averageRating: item.anime!.averageRating || item.anime!.rating || 0,
             }))
 
+          // Debug: Log the raw data structure
+          console.log('Raw API Data:', {
+            totalItems: items.length,
+            processedItems: myListAnimeRaw.length,
+            sampleItem: myListAnimeRaw[0],
+            listStatuses: myListAnimeRaw.map(item => item.listStatus),
+            favorites: myListAnimeRaw.filter(item => item.isFavorite).length
+          })
+
           // Group anime into series (same as mylist)
           const myListAnime = groupAnimeIntoSeries(myListAnimeRaw).map((series) => ({
             ...series,
@@ -283,11 +292,25 @@ export default function ProfilePage() {
             .slice(0, 4)
           setFavoriteAnime(favs)
 
-          // Calculate stats from processed data (same as mylist)
+          // Calculate stats from raw data (same as mylist) - BEFORE grouping for accurate counts
           const favorites = myListAnimeRaw.filter((anime) => anime.isFavorite === true)
           const watching = myListAnimeRaw.filter((anime) => anime.listStatus === 'watching')
           const completed = myListAnimeRaw.filter((anime) => anime.listStatus === 'completed')
           const planToWatch = myListAnimeRaw.filter((anime) => anime.listStatus === 'plan-to-watch')
+          const onHold = myListAnimeRaw.filter((anime) => anime.listStatus === 'on-hold')
+          const dropped = myListAnimeRaw.filter((anime) => anime.listStatus === 'dropped')
+          
+          // Debug: Log the calculated stats
+          console.log('Profile Stats Calculation:', {
+            watching: watching.length,
+            completed: completed.length,
+            favorites: favorites.length,
+            planToWatch: planToWatch.length,
+            onHold: onHold.length,
+            dropped: dropped.length,
+            totalAnime: myListAnimeRaw.length,
+            totalEpisodesWatched: myListAnimeRaw.reduce((sum, anime) => sum + (anime.progress || 0), 0)
+          })
           
           // Update stats with calculated values
           setStats(prevStats => ({
@@ -296,10 +319,10 @@ export default function ProfilePage() {
             completed: completed.length,
             favorites: favorites.length,
             planToWatch: planToWatch.length,
+            onHold: onHold.length,
+            dropped: dropped.length,
             totalAnime: myListAnimeRaw.length,
             totalEpisodesWatched: myListAnimeRaw.reduce((sum, anime) => sum + (anime.progress || 0), 0),
-            onHold: prevStats?.onHold || 0,
-            dropped: prevStats?.dropped || 0,
             ratings: prevStats?.ratings || 0,
             reviews: prevStats?.reviews || 0
           }))
