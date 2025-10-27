@@ -92,6 +92,7 @@ export default function ProfilePage() {
   const [leaderboardRank, setLeaderboardRank] = useState<any>(null)
   const [userPreferences, setUserPreferences] = useState<any>(null)
   const [privacySettings, setPrivacySettings] = useState<any>(null)
+  const [activeTab, setActiveTab] = useState<'recent' | 'favorites'>('recent')
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [avatarError, setAvatarError] = useState<string | null>(null)
 
@@ -518,81 +519,95 @@ export default function ProfilePage() {
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
-              {/* Left Column - Activity */}
-              <div className="lg:col-span-2 space-y-6">
-                
-                    {/* Recent Activity */}
+                  {/* Left Column - Activity & Favorites */}
+                  <div className="lg:col-span-2">
+                    
+                    {/* Combined Activity & Favorites with Tabs */}
                     <div className="glass rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-base font-bold text-white flex items-center gap-2">
-                          <Activity className="h-4 w-4 text-primary-400" />
-                          Recent Activity
-                        </h2>
-                        <Link href="/mylist">
+                      {/* Tab Headers */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex gap-1 bg-white/5 rounded-lg p-1">
+                          <button
+                            onClick={() => setActiveTab('recent')}
+                            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                              activeTab === 'recent'
+                                ? 'bg-primary-500 text-white'
+                                : 'text-gray-400 hover:text-white'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Activity className="h-4 w-4" />
+                              Recent
+                            </div>
+                          </button>
+                          <button
+                            onClick={() => setActiveTab('favorites')}
+                            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                              activeTab === 'favorites'
+                                ? 'bg-primary-500 text-white'
+                                : 'text-gray-400 hover:text-white'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Heart className="h-4 w-4" />
+                              Favorites
+                            </div>
+                          </button>
+                        </div>
+                        
+                        <Link href={activeTab === 'recent' ? '/mylist' : '/mylist?filter=favorites'}>
                           <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10 text-xs px-2 py-1">
                             View All
                           </Button>
                         </Link>
                       </div>
 
-                      {recentAnime.length === 0 ? (
-                        <div className="text-center py-4">
-                          <Clock className="h-6 w-6 text-gray-500 mx-auto mb-2" />
-                          <p className="text-gray-400 text-sm">No recent activity</p>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="mt-2 border-white/20 text-white hover:bg-white/10 text-xs"
-                            onClick={() => router.push('/search')}
-                          >
-                            Browse Anime
-                          </Button>
-                        </div>
+                      {/* Tab Content */}
+                      {activeTab === 'recent' ? (
+                        recentAnime.length === 0 ? (
+                          <div className="text-center py-8">
+                            <Clock className="h-8 w-8 text-gray-500 mx-auto mb-3" />
+                            <p className="text-gray-400 text-sm mb-3">No recent activity</p>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="border-white/20 text-white hover:bg-white/10 text-xs"
+                              onClick={() => router.push('/search')}
+                            >
+                              Browse Anime
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-3 gap-2">
+                            {recentAnime.map((anime) => (
+                              <AnimeCard key={anime.id} anime={anime} variant="grid" />
+                            ))}
+                          </div>
+                        )
                       ) : (
-                        <div className="grid grid-cols-3 gap-2">
-                          {recentAnime.map((anime) => (
-                            <AnimeCard key={anime.id} anime={anime} variant="grid" />
-                          ))}
-                        </div>
+                        favoriteAnime.length === 0 ? (
+                          <div className="text-center py-8">
+                            <Heart className="h-8 w-8 text-gray-500 mx-auto mb-3" />
+                            <p className="text-gray-400 text-sm mb-3">No favorites yet</p>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="border-white/20 text-white hover:bg-white/10 text-xs"
+                              onClick={() => router.push('/search')}
+                            >
+                              Find Favorites
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-3 gap-2">
+                            {favoriteAnime.map((anime) => (
+                              <AnimeCard key={anime.id} anime={anime} variant="grid" />
+                            ))}
+                          </div>
+                        )
                       )}
                     </div>
-
-                {/* Favorites */}
-                <div className="glass rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-base font-bold text-white flex items-center gap-2">
-                      <Heart className="h-4 w-4 text-red-400 fill-current" />
-                      Favorites
-                    </h2>
-                    <Link href="/mylist?filter=favorites">
-                      <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10 text-xs px-2 py-1">
-                        View All
-                      </Button>
-                    </Link>
                   </div>
-
-                  {favoriteAnime.length === 0 ? (
-                    <div className="text-center py-4">
-                      <Heart className="h-6 w-6 text-gray-500 mx-auto mb-2" />
-                      <p className="text-gray-400 text-sm">No favorites yet</p>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="mt-2 border-white/20 text-white hover:bg-white/10 text-xs"
-                        onClick={() => router.push('/search')}
-                      >
-                        Find Favorites
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-3 gap-2">
-                      {favoriteAnime.map((anime) => (
-                        <AnimeCard key={anime.id} anime={anime} variant="grid" />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
 
               {/* Right Column - Stats & Info */}
               <div className="space-y-6">
