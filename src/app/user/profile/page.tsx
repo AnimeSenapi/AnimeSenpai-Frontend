@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { Button } from '../../../components/ui/button'
 import { RequireAuth } from '../../lib/protected-route'
 import { useAuth } from '../../lib/auth-context'
+import { useFavorites } from '../../lib/favorites-context'
 import { useToast } from '../../../components/ui/toast'
 import { AnimeCard } from '../../../components/anime/AnimeCard'
 import { LoadingState } from '../../../components/ui/loading-state'
@@ -73,6 +74,7 @@ interface AnimeListItem {
 export default function ProfilePage() {
   const router = useRouter()
   const { user, isAuthenticated, refreshUser } = useAuth()
+  const { isFavorited } = useFavorites()
   const { addToast } = useToast()
   const [stats, setStats] = useState<UserStats | null>(null)
   const [recentAnime, setRecentAnime] = useState<any[]>([])
@@ -259,7 +261,7 @@ export default function ProfilePage() {
             .map((item) => ({
               ...item.anime!,
               listStatus: item.listStatus as 'watching' | 'completed' | 'plan-to-watch' | 'on-hold' | 'dropped',
-              isFavorite: 'isFavorite' in item ? item.isFavorite! : false, // Include favorite flag
+              isFavorite: isFavorited(item.anime!.id), // Use favorites context
               progress: 'progress' in item && typeof item.progress === 'number' ? item.progress : 0,
               rating: (item.anime && (item.anime.averageRating ?? item.anime.rating)) || 0,
               averageRating: item.anime!.averageRating || item.anime!.rating || 0,
