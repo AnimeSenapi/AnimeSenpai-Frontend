@@ -15,6 +15,7 @@ import { EmptyState } from '../../../components/ui/error-state'
 import { AchievementsShowcase } from '../../../components/achievements/AchievementsShowcase'
 import { ACHIEVEMENTS, calculateAchievements } from '../../../lib/achievements'
 import { groupAnimeIntoSeries } from '../../../lib/series-grouping'
+import { apiGetUserList } from '../../lib/api'
 import {
   User,
   Calendar,
@@ -191,13 +192,8 @@ export default function ProfilePage() {
             method: 'GET',
             headers: getAuthHeaders(),
           }),
-          fetch(
-            `${API_URL}/user.getAnimeList?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`,
-            {
-              method: 'GET',
-              headers: getAuthHeaders(),
-            }
-          ),
+          // Get anime list (use apiGetUserList to get ALL anime, not just 20)
+          apiGetUserList(),
           user?.id
             ? fetch(
                 `${API_URL}/social.getSocialCounts?input=${encodeURIComponent(JSON.stringify({ userId: user.id }))}`,
@@ -251,9 +247,10 @@ export default function ProfilePage() {
           setStats(statsData.result.data)
         }
 
-        const animeData = await animeListRes.json()
-        if (animeData.result?.data?.items) {
-          const items: AnimeListItem[] = animeData.result.data.items
+        // apiGetUserList returns data directly, not wrapped in response
+        const animeData = await animeListRes
+        if (animeData?.items) {
+          const items: AnimeListItem[] = animeData.items
           
           // Process data the same way as mylist page
           const myListAnimeRaw = items
