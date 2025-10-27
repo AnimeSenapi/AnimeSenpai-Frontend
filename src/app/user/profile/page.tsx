@@ -37,13 +37,13 @@ import {
   Award,
   BarChart3,
   Target,
+  Bookmark,
   Zap,
   Shield,
   Globe,
   Lock,
   Edit3,
   Share2,
-  Bookmark,
   History,
   Sparkles,
 } from 'lucide-react'
@@ -282,6 +282,27 @@ export default function ProfilePage() {
             .filter((anime) => anime.isFavorite === true || anime.seasons?.some((s: any) => s.isFavorite === true))
             .slice(0, 4)
           setFavoriteAnime(favs)
+
+          // Calculate stats from processed data (same as mylist)
+          const favorites = myListAnimeRaw.filter((anime) => anime.isFavorite === true)
+          const watching = myListAnimeRaw.filter((anime) => anime.listStatus === 'watching')
+          const completed = myListAnimeRaw.filter((anime) => anime.listStatus === 'completed')
+          const planToWatch = myListAnimeRaw.filter((anime) => anime.listStatus === 'plan-to-watch')
+          
+          // Update stats with calculated values
+          setStats(prevStats => ({
+            ...prevStats,
+            watching: watching.length,
+            completed: completed.length,
+            favorites: favorites.length,
+            planToWatch: planToWatch.length,
+            totalAnime: myListAnimeRaw.length,
+            totalEpisodesWatched: myListAnimeRaw.reduce((sum, anime) => sum + (anime.progress || 0), 0),
+            onHold: prevStats?.onHold || 0,
+            dropped: prevStats?.dropped || 0,
+            ratings: prevStats?.ratings || 0,
+            reviews: prevStats?.reviews || 0
+          }))
         }
 
         if (socialRes) {
@@ -554,43 +575,57 @@ export default function ProfilePage() {
               {/* Right Column - Stats & Info */}
               <div className="space-y-6">
                 
-                {/* Quick Stats */}
-                <div className="glass rounded-xl p-6">
-                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-blue-400" />
-                    Quick Stats
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Play className="h-4 w-4 text-primary-400" />
-                        <span className="text-gray-300 text-sm">Watching</span>
+                    {/* Quick Stats */}
+                    <div className="glass rounded-xl p-6">
+                      <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <BarChart3 className="h-5 w-5 text-blue-400" />
+                        Quick Stats
+                      </h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Play className="h-4 w-4 text-primary-400" />
+                            <span className="text-gray-300 text-sm">Watching</span>
+                          </div>
+                          <span className="text-white font-semibold">{stats?.watching || 0}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            <span className="text-gray-300 text-sm">Completed</span>
+                          </div>
+                          <span className="text-white font-semibold">{stats?.completed || 0}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Heart className="h-4 w-4 text-red-400" />
+                            <span className="text-gray-300 text-sm">Favorites</span>
+                          </div>
+                          <span className="text-white font-semibold">{stats?.favorites || 0}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Tv className="h-4 w-4 text-purple-400" />
+                            <span className="text-gray-300 text-sm">Episodes</span>
+                          </div>
+                          <span className="text-white font-semibold">{stats?.totalEpisodesWatched || 0}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Bookmark className="h-4 w-4 text-yellow-400" />
+                            <span className="text-gray-300 text-sm">Plan to Watch</span>
+                          </div>
+                          <span className="text-white font-semibold">{stats?.planToWatch || 0}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Film className="h-4 w-4 text-indigo-400" />
+                            <span className="text-gray-300 text-sm">Total Anime</span>
+                          </div>
+                          <span className="text-white font-semibold">{stats?.totalAnime || 0}</span>
+                        </div>
                       </div>
-                      <span className="text-white font-semibold">{stats?.watching || 0}</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-400" />
-                        <span className="text-gray-300 text-sm">Completed</span>
-                      </div>
-                      <span className="text-white font-semibold">{stats?.completed || 0}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Heart className="h-4 w-4 text-red-400" />
-                        <span className="text-gray-300 text-sm">Favorites</span>
-                      </div>
-                      <span className="text-white font-semibold">{stats?.favorites || 0}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Tv className="h-4 w-4 text-purple-400" />
-                        <span className="text-gray-300 text-sm">Episodes</span>
-                      </div>
-                      <span className="text-white font-semibold">{stats?.totalEpisodesWatched || 0}</span>
-                    </div>
-                  </div>
-                </div>
 
                 {/* Achievements */}
                 <div className="glass rounded-xl p-6">
