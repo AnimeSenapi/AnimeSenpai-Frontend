@@ -71,7 +71,7 @@ export function AuthDrawer({ isOpen, onClose }: AuthDrawerProps) {
                 <Settings className="h-5 w-5" />
                 <span>Settings</span>
               </Link>
-              {user.role === 'admin' && (
+              {(user.role === 'admin' || user.role === 'owner') && (
                 <Link
                   href="/admin"
                   onClick={onClose}

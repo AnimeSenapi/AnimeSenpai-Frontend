@@ -275,7 +275,7 @@ export default function DiscoverPage() {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 lg:pt-28 xl:pt-32 pb-8 sm:pb-12 lg:pb-16 xl:pb-20 relative z-10">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 md:pt-40 pb-8 sm:pb-12 lg:pb-16 xl:pb-20 relative z-10">
         {/* Hero Header - Mobile Optimized */}
         <div className="mb-6 sm:mb-8 lg:mb-12">
           <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">

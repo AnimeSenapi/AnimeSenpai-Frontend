@@ -23,7 +23,7 @@ export default function CalendarPage() {
   const [error] = useState<string | null>(null)
 
   const handleEpisodeClick = (episode: any) => {
-    console.log('Episode clicked:', episode)
+    // Episode clicked - handle navigation/action
     addToast({
         title: 'Episode clicked',
         description: `${episode.animeTitle} Episode ${episode.episodeNumber}`,
@@ -32,7 +32,7 @@ export default function CalendarPage() {
   }
 
   const handleAnimeClick = (animeId: string) => {
-    console.log('Anime clicked:', animeId)
+    // Anime clicked - navigate to detail page
     addToast({
         title: 'Anime clicked',
         description: 'Redirecting to anime page...',
@@ -41,7 +41,7 @@ export default function CalendarPage() {
   }
 
   const handleStatusChange = (animeId: string, status: string) => {
-    console.log('Status changed:', animeId, status)
+    // Status changed - update anime list status
     addToast({
       title: 'Status updated',
       description: `Added to ${status.replace('-', ' ')}`,
@@ -51,7 +51,7 @@ export default function CalendarPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 pt-32">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 pt-32 sm:pt-36 md:pt-40">
         <ErrorState
           variant="full"
           title="Authentication Required"
@@ -68,7 +68,7 @@ export default function CalendarPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 pt-32">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 pt-32 sm:pt-36 md:pt-40">
         <ErrorState
           variant="full"
           title="Failed to Load Calendar"
@@ -80,16 +80,23 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 pt-32">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 md:pt-40 pb-8 sm:pb-16 relative z-10">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-xl flex items-center justify-center border border-primary-500/30">
+              <Calendar className="h-6 w-6 text-primary-400" />
+            </div>
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">Anime Calendar</h1>
-              <p className="text-gray-400">
-                Track upcoming episodes and discover seasonal anime
-              </p>
+              <h1 className="text-3xl sm:text-4xl font-bold text-white">Anime Calendar</h1>
+              <p className="text-gray-400 text-sm">Track upcoming episodes and discover seasonal anime</p>
             </div>
           </div>
 
@@ -164,7 +171,7 @@ export default function CalendarPage() {
             <p className="text-sm text-gray-400">Currently watching</p>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

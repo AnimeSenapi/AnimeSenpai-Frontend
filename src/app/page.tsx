@@ -9,6 +9,7 @@ import {
   getWebApplicationSchema,
 } from '../components/StructuredData'
 import { SEOMetadata } from '../components/SEOMetadata'
+import { PageErrorBoundary } from '../components/PageErrorBoundary'
 
 export default function HomePage() {
   const router = useRouter()
@@ -23,7 +24,7 @@ export default function HomePage() {
 
   // Show loading screen while redirecting
   return (
-    <>
+    <PageErrorBoundary pageName="Home">
       {/* SEO Metadata */}
       <SEOMetadata
         title="AnimeSenpai - Your Ultimate Anime Companion"
@@ -48,6 +49,6 @@ export default function HomePage() {
           <p className="text-gray-400">Loading your anime journey...</p>
         </div>
       </div>
-    </>
+    </PageErrorBoundary>
   )
 }

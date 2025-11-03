@@ -3,22 +3,23 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import { cn } from '../../app/lib/utils'
 import { Anime } from '../../types/anime'
 import { getTagById } from '../../types/tags'
-import { Heart, Play, CheckCircle, Star, MoreVertical } from 'lucide-react'
+import { Heart, Play, CheckCircle, Star, MoreVertical, ChevronDown, Clock } from 'lucide-react'
 import { Button } from '../ui/button'
 
 interface MyListAnimeCardProps {
   anime: Anime & {
     listStatus: 'favorite' | 'watching' | 'completed' | 'plan-to-watch'
-    progress?: number
+    listId?: string // ID from the user's list entry
   }
   variant?: 'grid' | 'list'
   className?: string
   onFavorite?: (animeId: string) => void
   isFavorited?: boolean
-  onProgressUpdate?: (animeId: string, progress: number) => void
+  onStatusChange?: (animeId: string, status: 'watching' | 'completed' | 'plan-to-watch') => void
 }
 
 export function MyListAnimeCard({
@@ -27,14 +28,31 @@ export function MyListAnimeCard({
   className,
   onFavorite,
   isFavorited = false,
-  onProgressUpdate: _onProgressUpdate,
+  onStatusChange,
 }: MyListAnimeCardProps) {
   const router = useRouter()
+  const [showStatusMenu, setShowStatusMenu] = useState(false)
   // Prefer English title over romanized Japanese
   const displayTitle = anime.titleEnglish || anime.title
-  const progress = anime.progress || 0
-  const totalEpisodes = anime.totalEpisodes || anime.episodes || 0
-  const progressPercent = totalEpisodes > 0 ? (progress / totalEpisodes) * 100 : 0
+
+  // Close status menu when clicking outside
+  useEffect(() => {
+    if (showStatusMenu) {
+      const handleClickOutside = () => {
+        setShowStatusMenu(false)
+      }
+      document.addEventListener('click', handleClickOutside)
+      return () => document.removeEventListener('click', handleClickOutside)
+    }
+    return undefined
+  }, [showStatusMenu])
+
+  const handleStatusChange = (status: 'watching' | 'completed' | 'plan-to-watch', e?: React.MouseEvent) => {
+    e?.preventDefault()
+    e?.stopPropagation()
+    onStatusChange?.(anime.id, status)
+    setShowStatusMenu(false)
+  }
 
   const getStatusConfig = () => {
     switch (anime.listStatus) {
@@ -106,8 +124,74 @@ export function MyListAnimeCard({
                   </div>
                 )}
               </div>
-              {/* Status Badge - Subtle Dark Style */}
-              <div className="absolute -top-2 -right-2">
+              {/* Status Badge with Dropdown - Subtle Dark Style */}
+              <div className="absolute -top-2 -right-2 z-10">
+                {onStatusChange ? (
+                  <div className="relative">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        setShowStatusMenu(!showStatusMenu)
+                      }}
+                      className={cn(
+                        'backdrop-blur-md text-xs px-3 py-1.5 rounded-lg flex items-center gap-2 border-2 shadow-lg transition-all hover:scale-110 active:scale-95 hover:shadow-xl group/status',
+                        statusConfig.bgColor,
+                        statusConfig.borderColor,
+                        statusConfig.textColor,
+                        showStatusMenu && 'ring-2 ring-white/30'
+                      )}
+                      title="Click to change status"
+                    >
+                      <StatusIcon className={cn('h-3.5 w-3.5', statusConfig.iconColor)} />
+                      <span className="font-semibold">{statusConfig.label}</span>
+                      <ChevronDown className={cn(
+                        'h-3.5 w-3.5 text-white transition-transform duration-200',
+                        showStatusMenu ? 'rotate-180 opacity-100' : 'opacity-90 group-hover/status:translate-y-0.5 group-hover/status:opacity-100'
+                      )} />
+                    </button>
+                    {showStatusMenu && (
+                      <div className="absolute top-full right-0 mt-2 glass rounded-lg p-1.5 min-w-[160px] z-50 border border-white/20 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2">
+                        <button
+                          onClick={(e) => handleStatusChange('watching', e)}
+                          className={cn(
+                            'w-full text-left px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 text-sm',
+                            anime.listStatus === 'watching'
+                              ? 'bg-blue-500/20 text-blue-300 font-semibold border border-blue-500/30'
+                              : 'text-white hover:bg-white/10'
+                          )}
+                        >
+                          <Play className="h-4 w-4" />
+                          <span>Watching</span>
+                        </button>
+                        <button
+                          onClick={(e) => handleStatusChange('completed', e)}
+                          className={cn(
+                            'w-full text-left px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 text-sm',
+                            anime.listStatus === 'completed'
+                              ? 'bg-green-500/20 text-green-300 font-semibold border border-green-500/30'
+                              : 'text-white hover:bg-white/10'
+                          )}
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                          <span>Completed</span>
+                        </button>
+                        <button
+                          onClick={(e) => handleStatusChange('plan-to-watch', e)}
+                          className={cn(
+                            'w-full text-left px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 text-sm',
+                            anime.listStatus === 'plan-to-watch'
+                              ? 'bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30'
+                              : 'text-white hover:bg-white/10'
+                          )}
+                        >
+                          <Clock className="h-4 w-4" />
+                          <span>Plan to Watch</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
                 <div
                   className={cn(
                     'backdrop-blur-md text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5 border',
@@ -119,6 +203,7 @@ export function MyListAnimeCard({
                   <StatusIcon className={cn('h-3 w-3', statusConfig.iconColor)} />
                   <span className="font-medium">{statusConfig.label}</span>
                 </div>
+                )}
               </div>
             </div>
 
@@ -137,35 +222,8 @@ export function MyListAnimeCard({
                     <span>{anime.studio}</span>
                   </div>
 
-                  {/* Episode Progress */}
-                  {totalEpisodes > 0 && (
-                    <div className="mt-3">
-                      <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
-                        <span>Progress</span>
-                        <span>
-                          {progress} / {totalEpisodes} episodes
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
-                        <div
-                          className="bg-gradient-to-r from-primary-500 to-primary-400 h-full transition-all duration-300"
-                          style={{ width: `${Math.min(100, progressPercent)}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 text-warning-400 fill-warning-400" />
-                    <span className="text-white font-semibold">
-                      {anime.rating && !isNaN(Number(anime.rating))
-                        ? Number(anime.rating).toFixed(1)
-                        : anime.averageRating && !isNaN(Number(anime.averageRating))
-                          ? Number(anime.averageRating).toFixed(1)
-                          : 'N/A'}
-                    </span>
-                  </div>
                   {onFavorite && (
                     <button
                       onClick={(e) => {
@@ -215,23 +273,6 @@ export function MyListAnimeCard({
                 )}
               </div>
 
-              {/* Episode Progress */}
-              {totalEpisodes > 0 && (
-                <div className="w-full">
-                  <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
-                    <span>Progress</span>
-                    <span>
-                      {progress} / {totalEpisodes} eps
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-700/50 rounded-full h-1.5 overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-primary-500 to-secondary-500 h-1.5 rounded-full transition-all duration-300"
-                      style={{ width: `${Math.min(100, progressPercent)}%` }}
-                    />
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -262,36 +303,7 @@ export function MyListAnimeCard({
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-          {/* Status Badge - Subtle Dark Style */}
-          <div className="absolute top-3 right-3 z-10">
-            <div
-              className={cn(
-                'backdrop-blur-md text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border shadow-sm',
-                statusConfig.bgColor,
-                statusConfig.borderColor,
-                statusConfig.textColor
-              )}
-            >
-              <StatusIcon className={cn('h-3.5 w-3.5', statusConfig.iconColor)} />
-              <span className="font-medium">{statusConfig.label}</span>
-            </div>
-          </div>
-
-          {/* Rating */}
-          <div className="absolute top-3 left-3 z-10">
-            <div className="bg-black/50 backdrop-blur-sm text-white text-sm px-2 py-1 rounded-lg flex items-center gap-1">
-              <Star className="h-3 w-3 text-warning-400 fill-warning-400" />
-              <span className="font-semibold">
-                {anime.rating && !isNaN(Number(anime.rating))
-                  ? Number(anime.rating).toFixed(1)
-                  : anime.averageRating && !isNaN(Number(anime.averageRating))
-                    ? Number(anime.averageRating).toFixed(1)
-                    : 'N/A'}
-              </span>
-            </div>
-          </div>
-
-          {/* Favorite Star Button - Always Visible */}
+          {/* Favorite Star Button - Top Right */}
           {onFavorite && (
             <button
               onClick={(e) => {
@@ -312,6 +324,88 @@ export function MyListAnimeCard({
               />
             </button>
           )}
+
+          {/* Status Badge with Dropdown - Top Left */}
+          <div className="absolute top-3 left-3 z-10">
+            {onStatusChange ? (
+              <div className="relative">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setShowStatusMenu(!showStatusMenu)
+                  }}
+                  className={cn(
+                    'backdrop-blur-md text-xs px-3.5 py-2 rounded-lg flex items-center gap-2 border-2 shadow-lg transition-all hover:scale-110 active:scale-95 hover:shadow-xl group/status',
+                    statusConfig.bgColor,
+                    statusConfig.borderColor,
+                    statusConfig.textColor,
+                    showStatusMenu && 'ring-2 ring-white/30'
+                  )}
+                  title="Click to change status"
+                >
+                  <StatusIcon className={cn('h-4 w-4', statusConfig.iconColor)} />
+                  <span className="font-semibold">{statusConfig.label}</span>
+                  <ChevronDown className={cn(
+                    'h-4 w-4 text-white transition-transform duration-200',
+                    showStatusMenu ? 'rotate-180 opacity-100' : 'opacity-90 group-hover/status:translate-y-0.5 group-hover/status:opacity-100'
+                  )} />
+                </button>
+                {showStatusMenu && (
+                  <div className="absolute top-full left-0 mt-2 glass rounded-lg p-1.5 min-w-[160px] z-50 border border-white/20 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2">
+                    <button
+                      onClick={(e) => handleStatusChange('watching', e)}
+                      className={cn(
+                        'w-full text-left px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 text-sm',
+                        anime.listStatus === 'watching'
+                          ? 'bg-blue-500/20 text-blue-300 font-semibold border border-blue-500/30'
+                          : 'text-white hover:bg-white/10'
+                      )}
+                    >
+                      <Play className="h-4 w-4" />
+                      <span>Watching</span>
+                    </button>
+                    <button
+                      onClick={(e) => handleStatusChange('completed', e)}
+                      className={cn(
+                        'w-full text-left px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 text-sm',
+                        anime.listStatus === 'completed'
+                          ? 'bg-green-500/20 text-green-300 font-semibold border border-green-500/30'
+                          : 'text-white hover:bg-white/10'
+                      )}
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                      <span>Completed</span>
+                    </button>
+                    <button
+                      onClick={(e) => handleStatusChange('plan-to-watch', e)}
+                      className={cn(
+                        'w-full text-left px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 text-sm',
+                        anime.listStatus === 'plan-to-watch'
+                          ? 'bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30'
+                          : 'text-white hover:bg-white/10'
+                      )}
+                    >
+                      <Clock className="h-4 w-4" />
+                      <span>Plan to Watch</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                className={cn(
+                  'backdrop-blur-md text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 border shadow-sm',
+                  statusConfig.bgColor,
+                  statusConfig.borderColor,
+                  statusConfig.textColor
+                )}
+              >
+                <StatusIcon className={cn('h-3.5 w-3.5', statusConfig.iconColor)} />
+                <span className="font-medium">{statusConfig.label}</span>
+              </div>
+            )}
+          </div>
 
           {/* Action Buttons */}
           <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -344,23 +438,6 @@ export function MyListAnimeCard({
             </div>
           </div>
 
-          {/* Episode Progress Bar */}
-          {totalEpisodes > 0 && (
-            <div className="mb-2">
-              <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
-                <span>Progress</span>
-                <span className="font-medium">
-                  {progress}/{totalEpisodes}
-                </span>
-              </div>
-              <div className="w-full bg-gray-700/50 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className="bg-gradient-to-r from-primary-500 to-secondary-500 h-1.5 rounded-full transition-all duration-300"
-                  style={{ width: `${Math.min(100, progressPercent)}%` }}
-                />
-              </div>
-            </div>
-          )}
 
           {/* Tags - Clickable */}
           <div className="flex items-center gap-1">

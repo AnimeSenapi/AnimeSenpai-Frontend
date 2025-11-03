@@ -44,7 +44,6 @@ export const MemoizedMyListAnimeCard = memo(MyListAnimeCard, (prevProps, nextPro
   return (
     prevProps.anime.id === nextProps.anime.id &&
     prevProps.anime.listStatus === nextProps.anime.listStatus &&
-    prevProps.anime.progress === nextProps.anime.progress &&
     prevProps.isFavorited === nextProps.isFavorited &&
     prevProps.variant === nextProps.variant
   )

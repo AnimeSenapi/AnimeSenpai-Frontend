@@ -10,6 +10,7 @@ import { useAuth } from '../../lib/auth-context'
 import { useToast } from '../../../components/ui/toast'
 import { RequireGuest } from '../../lib/protected-route'
 import { apiCheckUsernameAvailability } from '../../lib/api'
+import PageLoading from '../../../components/ui/page-loading'
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -21,6 +22,7 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [agreeToTerms, setAgreeToTerms] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
   const [formErrors, setFormErrors] = useState<{
     username?: string
     email?: string
@@ -35,6 +37,11 @@ export default function SignUpPage() {
   const { addToast } = useToast()
   const router = useRouter()
 
+  // Handle hydration mismatch from browser extensions
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
   // Debounced username availability check
   useEffect(() => {
     if (!formData.username || formData.username.length < 2) {
@@ -42,9 +49,17 @@ export default function SignUpPage() {
       return
     }
 
-    if (!/^[a-zA-Z0-9_-]+$/.test(formData.username)) {
+    // Check for uppercase letters first
+    if (/[A-Z]/.test(formData.username)) {
       setUsernameStatus('idle')
-      setFormErrors((prev) => ({ ...prev, username: 'Only letters, numbers, _ and - allowed' }))
+      setFormErrors((prev) => ({ ...prev, username: 'Username must be lowercase only. Please use only lowercase letters, numbers, underscores, and hyphens' }))
+      return
+    }
+
+    // Check for invalid characters
+    if (!/^[a-z0-9_-]+$/.test(formData.username)) {
+      setUsernameStatus('idle')
+      setFormErrors((prev) => ({ ...prev, username: 'Username can only contain lowercase letters, numbers, underscores, and hyphens' }))
       return
     }
 
@@ -54,7 +69,9 @@ export default function SignUpPage() {
         const result = (await apiCheckUsernameAvailability(formData.username)) as any
         setUsernameStatus(result.available ? 'available' : 'taken')
         if (!result.available) {
-          setFormErrors((prev) => ({ ...prev, username: 'Username is already taken' }))
+          // Use the specific reason from the backend if available
+          const errorMessage = result.reason || 'Username is already taken'
+          setFormErrors((prev) => ({ ...prev, username: errorMessage }))
         } else {
           setFormErrors((prev) => ({ ...prev, username: undefined }))
         }
@@ -70,8 +87,11 @@ export default function SignUpPage() {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
     if (error) clearError()
-    if (formErrors[name as keyof typeof formErrors]) {
-      setFormErrors({ ...formErrors, [name]: undefined })
+    
+    // Only clear errors for non-username fields
+    // Username validation is handled by useEffect
+    if (name !== 'username' && formErrors[name as keyof typeof formErrors]) {
+      setFormErrors((prev) => ({ ...prev, [name]: undefined }))
     }
   }
 
@@ -82,8 +102,6 @@ export default function SignUpPage() {
       errors.username = 'Username is required'
     } else if (formData.username.trim().length < 2) {
       errors.username = 'Username must be at least 2 characters'
-    } else if (!/^[a-zA-Z0-9_-]+$/.test(formData.username)) {
-      errors.username = 'Username can only contain letters, numbers, underscores, and hyphens'
     } else if (usernameStatus === 'taken') {
       errors.username = 'This username is already taken'
     }
@@ -94,14 +112,17 @@ export default function SignUpPage() {
       errors.email = 'Please enter a valid email address'
     }
 
-    if (!formData.password) {
+    // Only validate password if it has a value
+    if (formData.password && formData.password.trim()) {
+      if (formData.password.length < 8) {
+        errors.password = 'Password must be at least 8 characters'
+      } else if (
+        !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]+$/.test(formData.password)
+      ) {
+        errors.password = 'Password must contain uppercase, lowercase, number, and special character'
+      }
+    } else if (!formData.password) {
       errors.password = 'Password is required'
-    } else if (formData.password.length < 8) {
-      errors.password = 'Password must be at least 8 characters'
-    } else if (
-      !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/.test(formData.password)
-    ) {
-      errors.password = 'Password must contain uppercase, lowercase, number, and special character'
     }
 
     if (!formData.confirmPassword) {
@@ -180,9 +201,18 @@ export default function SignUpPage() {
   const isPasswordMatch =
     formData.password === formData.confirmPassword && formData.confirmPassword.length > 0
 
+  // Prevent hydration mismatch by only rendering form after mount
+  if (!isMounted) {
+    return (
+      <RequireGuest>
+        <PageLoading text="Preparing sign-up form..." />
+      </RequireGuest>
+    )
+  }
+
   return (
     <RequireGuest>
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4 pt-20 sm:pt-32 pb-8">
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4 pt-32 sm:pt-36 md:pt-40 pb-8">
         {/* Subtle Background */}
         <div className="absolute inset-0 overflow-hidden opacity-30">
           <div className="absolute top-0 -right-40 w-96 h-96 bg-secondary-500/30 rounded-full blur-3xl"></div>
@@ -223,7 +253,12 @@ export default function SignUpPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-3.5">
+            <form 
+              onSubmit={handleSubmit} 
+              className="space-y-3 sm:space-y-3.5"
+              suppressHydrationWarning
+              data-testid="signup-form"
+            >
               {/* Username Field */}
               <div>
                 <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
@@ -439,7 +474,7 @@ export default function SignUpPage() {
                   id="terms"
                   checked={agreeToTerms}
                   onCheckedChange={(checked) => setAgreeToTerms(checked === true)}
-                  className="h-3 w-3"
+                  className="h-3 w-3 md:h-4 md:w-4"
                 />
                 <label htmlFor="terms" className="text-xs text-gray-300 cursor-pointer select-none">
                   I agree to the{' '}

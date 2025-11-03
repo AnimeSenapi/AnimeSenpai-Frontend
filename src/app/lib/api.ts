@@ -40,9 +40,9 @@ type TRPCErrorShape = {
 
 type TRPCResponse<T> = { result: { data: T } } | { error: TRPCErrorShape }
 
-// Backend runs on port 3003 (check .env.local file)
+// Backend runs on port 3005 (check .env.local file)
 const TRPC_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3005/api/trpc'
 
 // API URL configuration
 // TRPC_URL is set from environment variables
@@ -212,6 +212,7 @@ async function trpcQuery<TOutput>(
         console.error('Code:', code)
         console.error('Message:', message)
         console.error('Full Payload:', JSON.stringify(payload, null, 2))
+        console.error('Response Headers:', Object.fromEntries(res.headers.entries()))
       }
 
       // Try to refresh token on auth errors (only once)
@@ -290,7 +291,7 @@ async function trpcQuery<TOutput>(
 
     // Handle network errors
     if (error instanceof Error && error.message.includes('fetch')) {
-      const errorMsg = `Unable to connect to backend at ${url}. Is the backend running on port 3003?`
+      const errorMsg = `Unable to connect to backend at ${url}. Is the backend running on port 3005?`
       console.error('❌ Network Error:', errorMsg)
       throw new Error(getUserFriendlyError('NETWORK_ERROR', errorMsg))
     }
@@ -672,17 +673,38 @@ export async function apiGetAnimeBySlug(slug: string, useCache: boolean = true) 
 }
 
 export async function apiGetGenres(useCache: boolean = true) {
-  const cacheKey = 'anime:genres'
+  // v2 to invalidate older cached string[] shape
+  const cacheKey = 'anime:genres:v2'
 
   // Check cache first
   if (useCache) {
-    const cached = clientCache.get<string[]>(cacheKey)
+    const cached = clientCache.get<{
+      id: string
+      name: string
+      slug: string
+      color?: string
+    }[]>(cacheKey)
     if (cached !== null) {
       return cached
     }
   }
 
-  const result = await trpcQuery<string[]>('anime.getGenres')
+  let result = await trpcQuery<{
+    id: string
+    name: string
+    slug: string
+    color?: string
+  }[]>('anime.getGenres')
+
+  // Backward compatibility: if server returns string[] (older shape), normalize
+  if (Array.isArray(result) && result.length > 0 && typeof (result as any)[0] === 'string') {
+    const arr = result as unknown as string[]
+    result = arr.map((name) => ({
+      id: name,
+      name,
+      slug: name.toLowerCase().replace(/\s+/g, '-'),
+    })) as any
+  }
 
   // Cache for 1 hour (genres rarely change)
   clientCache.set(cacheKey, result, CacheTTL.veryLong)
@@ -730,6 +752,10 @@ export async function apiGetUserList(): Promise<UserListResponse> {
   return trpcQuery<UserListResponse>('user.getAnimeList?input={"limit":1000}')
 }
 
+export async function apiGetPublicUserAnimeList(username: string, limit: number = 20): Promise<any> {
+  return trpcQuery(`user.getUserAnimeList?input=${JSON.stringify({ username, limit })}`)
+}
+
 export async function apiAddToList(input: { 
   animeId: string
   status: ListStatus
@@ -751,12 +777,6 @@ export async function apiUpdateListStatus(input: {
   return trpcMutation<typeof input, AnimeListItem>('mylist.updateStatus', input)
 }
 
-export async function apiUpdateListProgress(input: {
-  listItemId: string
-  currentEpisode: number
-}): Promise<AnimeListItem> {
-  return trpcMutation<typeof input, AnimeListItem>('mylist.updateProgress', input)
-}
 
 export async function apiToggleFavorite(listItemId: string): Promise<AnimeListItem> {
   return trpcMutation<{ listItemId: string }, AnimeListItem>('mylist.toggleFavorite', {
@@ -1035,7 +1055,7 @@ export async function apiGetUserDetails(userId: string) {
 }
 
 // Update User Role (Admin)
-export async function apiUpdateUserRole(userId: string, role: 'user' | 'moderator' | 'admin') {
+export async function apiUpdateUserRole(userId: string, role: 'user' | 'moderator' | 'admin' | 'owner') {
   const url = `${TRPC_URL}/admin.updateUserRole`
   const response = await fetch(url, {
     method: 'POST',
@@ -1697,15 +1717,18 @@ export async function apiGetReviews(params?: {
   filter?: string
   search?: string
 }) {
-  const inputData: any = {}
-  if (params?.page) inputData.page = params.page
-  if (params?.limit) inputData.limit = params.limit
-  if (params?.filter) inputData.filter = params.filter
-  if (params?.search) inputData.search = params.search
+  if (!params) {
+    return trpcQuery('moderation.getReviews')
+  }
+  
+  const queryString = new URLSearchParams()
+  if (params.page) queryString.append('page', params.page.toString())
+  if (params.limit) queryString.append('limit', params.limit.toString())
+  if (params.filter) queryString.append('filter', params.filter)
+  if (params.search) queryString.append('search', params.search)
 
-  const input = JSON.stringify(inputData)
-  const path = `moderation.getReviews?input=${encodeURIComponent(input)}`
-  return trpcQuery(path)
+  const url = `moderation.getReviews?input=${encodeURIComponent(JSON.stringify(params))}`
+  return trpcQuery(url)
 }
 
 export async function apiGetModerationStats() {
@@ -1824,8 +1847,15 @@ export async function apiGetFollowing(userId?: string, page?: number, limit?: nu
 
 // User Profiles
 export async function apiGetUserProfile(username: string, useCache: boolean = true) {
-  // Strip @ symbol if present (defensive check)
-  const cleanUsername = username.startsWith('@') ? username.slice(1) : username
+  // Normalize username: decode, then strip any leading %40 or @ (defensive)
+  let cleanUsername = username || ''
+  try {
+    cleanUsername = decodeURIComponent(cleanUsername)
+  } catch (_) {
+    // ignore decode errors; proceed with original
+  }
+  if (cleanUsername.startsWith('%40')) cleanUsername = cleanUsername.slice(3)
+  if (cleanUsername.startsWith('@')) cleanUsername = cleanUsername.slice(1)
   const cacheKey = `social:userProfile:${cleanUsername}`
 
   // Check cache first
@@ -2092,8 +2122,73 @@ export async function apiGetMyAchievements() {
   return trpcQuery('achievements.getMyAchievements')
 }
 
+export async function apiGetAchievementStats() {
+  return trpcQuery('achievements.getStats')
+}
+
 export async function apiCheckAndUnlockAchievements() {
   return trpcMutation('achievements.checkAndUnlock', {})
+}
+
+// Admin Achievement Management
+export async function apiGetAchievements(params?: {
+  page?: number
+  limit?: number
+  category?: string
+  tier?: string
+  search?: string
+}) {
+  if (!params) {
+    return trpcQuery('admin.getAchievements')
+  }
+  
+  const url = `admin.getAchievements?input=${encodeURIComponent(JSON.stringify(params))}`
+  return trpcQuery(url)
+}
+
+export async function apiCreateAchievement(data: {
+  key: string
+  name: string
+  description: string
+  icon: string
+  category: 'watching' | 'rating' | 'social' | 'discovery' | 'special'
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond'
+  requirement: number
+  points?: number
+}) {
+  return trpcMutation('admin.createAchievement', data)
+}
+
+export async function apiUpdateAchievement(data: {
+  id: string
+  name?: string
+  description?: string
+  icon?: string
+  category?: 'watching' | 'rating' | 'social' | 'discovery' | 'special'
+  tier?: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond'
+  requirement?: number
+  points?: number
+}) {
+  return trpcMutation('admin.updateAchievement', data)
+}
+
+export async function apiDeleteAchievement(achievementId: string) {
+  return trpcMutation('admin.deleteAchievement', { id: achievementId })
+}
+
+// duplicate removed
+
+export async function apiBulkCreateAchievements(achievements: Array<{
+  key: string
+  name: string
+  description: string
+  icon: string
+  category: 'watching' | 'rating' | 'social' | 'discovery' | 'special'
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond'
+  requirement: number
+  points?: number
+}>) {
+  return trpcMutation('admin.bulkCreateAchievements', { achievements })
 }
 
 // Leaderboards

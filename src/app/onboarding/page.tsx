@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, ArrowLeft, Check, Sparkles, Target, Compass, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { apiGetGenres, api as trpcApi } from '../lib/api'
 import { useAuth } from '../lib/auth-context'
 import { RequireAuth } from '../lib/protected-route'
 
@@ -140,18 +141,7 @@ export default function OnboardingPage() {
 
   const totalQuestions = 8 // Actual questions (excluding welcome)
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/trpc'
-  const getAuthHeaders = (): Record<string, string> => {
-    // Check both localStorage (Remember Me) and sessionStorage (current session)
-    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    }
-    if (token) {
-      headers['Authorization'] = 'Bearer ' + token
-    }
-    return headers
-  }
+  // Use shared tRPC helpers; avoid duplicating API URL/auth header logic
 
   // Popular genres to show in onboarding (limited selection)
   const POPULAR_GENRE_NAMES = [
@@ -173,32 +163,68 @@ export default function OnboardingPage() {
     'Music',
   ]
 
+  const normalize = (value: string | undefined): string =>
+    (value || '').toLowerCase().replace(/-/g, ' ').replace(/\s+/g, ' ').trim()
+
+  // Support predefined genres when DB is unavailable
+  const [usingPredefined, setUsingPredefined] = useState(false)
+
   // Fetch genres on mount
   useEffect(() => {
     async function fetchGenres() {
       try {
-        const response = await fetch(`${API_URL}/anime.getGenres`, {
-          method: 'GET',
-          headers: getAuthHeaders(),
-        })
+        const allGenres = await apiGetGenres(false)
+        if (allGenres && Array.isArray(allGenres)) {
+          const popularSet = new Set(POPULAR_GENRE_NAMES.map((n) => normalize(n)))
+          let popularGenres = allGenres.filter((genre: Genre) => {
+            const byName = popularSet.has(normalize(genre.name))
+            const bySlug = popularSet.has(normalize(genre.slug))
+            return byName || bySlug
+          })
 
-        const data = await response.json()
-        if (data.result?.data) {
-          // Filter to only show popular genres
-          const allGenres = data.result.data
-          const popularGenres = allGenres.filter((genre: Genre) =>
-            POPULAR_GENRE_NAMES.includes(genre.name)
-          )
-          // Sort by the order in POPULAR_GENRE_NAMES
+          if (popularGenres.length === 0) {
+            // If DB naming doesn't match the curated list, show all DB genres sorted
+            popularGenres = [...allGenres].sort((a: Genre, b: Genre) => a.name.localeCompare(b.name))
+          } else {
+            // Keep curated order
           popularGenres.sort((a: Genre, b: Genre) => {
-            const indexA = POPULAR_GENRE_NAMES.indexOf(a.name)
-            const indexB = POPULAR_GENRE_NAMES.indexOf(b.name)
+              const indexA = POPULAR_GENRE_NAMES.map((n) => normalize(n)).indexOf(normalize(a.name))
+              const indexB = POPULAR_GENRE_NAMES.map((n) => normalize(n)).indexOf(normalize(b.name))
             return indexA - indexB
           })
+          }
+
           setGenres(popularGenres)
+          setUsingPredefined(false)
+          if (popularGenres.length === 0) {
+            // Fall back to predefined list
+            const predefined = POPULAR_GENRE_NAMES.map((name) => ({
+              id: name.toLowerCase().replace(/\s+/g, '-'),
+              name,
+              slug: name.toLowerCase().replace(/\s+/g, '-'),
+            })) as Genre[]
+            setGenres(predefined)
+            setUsingPredefined(true)
+          }
+        } else {
+          const predefined = POPULAR_GENRE_NAMES.map((name) => ({
+            id: name.toLowerCase().replace(/\s+/g, '-'),
+            name,
+            slug: name.toLowerCase().replace(/\s+/g, '-'),
+          })) as Genre[]
+          setGenres(predefined)
+          setUsingPredefined(true)
         }
       } catch (err) {
         console.error('Failed to fetch genres:', err)
+        // Use predefined list when DB is unavailable
+        const predefined = POPULAR_GENRE_NAMES.map((name) => ({
+          id: name.toLowerCase().replace(/\s+/g, '-'),
+          name,
+          slug: name.toLowerCase().replace(/\s+/g, '-'),
+        })) as Genre[]
+        setGenres(predefined)
+        setUsingPredefined(true)
       }
     }
 
@@ -206,28 +232,38 @@ export default function OnboardingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // No manual refresh; genres must come from DB
+
   async function handleComplete() {
     setIsLoading(true)
     setError(null)
 
     try {
-      const response = await fetch(`${API_URL}/onboarding.completeOnboarding`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          favoriteGenres: selectedGenres,
+      let favoriteGenreIds = selectedGenres
+
+      // If using predefined list (no DB IDs), mark onboarding as skipped server-side
+      if (usingPredefined) {
+        // Store locally so we can still personalize client-side
+        try {
+          localStorage.setItem('onboarding.favoriteGenres', JSON.stringify(selectedGenres))
+          localStorage.setItem('onboarding.discoveryMode', discoveryMode)
+          localStorage.setItem('onboarding.favoriteTags', JSON.stringify(selectedTags))
+        } catch {}
+
+        await trpcApi.trpcMutation('onboarding.skipOnboarding', {})
+
+        await refreshUser()
+        router.push('/dashboard')
+        return
+      }
+
+      // Use tRPC mutation to match backend router: onboarding.completeOnboarding
+      await trpcApi.trpcMutation('onboarding.completeOnboarding', {
+        favoriteGenres: favoriteGenreIds,
           ratings: [],
           favoriteTags: selectedTags,
           discoveryMode,
-        }),
       })
-
-      const data = await response.json()
-
-      if (data.error) {
-        setError(data.error.message || 'Failed to complete onboarding')
-        return
-      }
 
       // Success! Refresh user data to update onboarding status
       await refreshUser()
@@ -235,7 +271,8 @@ export default function OnboardingPage() {
       // Then redirect to dashboard
       router.push('/dashboard')
     } catch (err) {
-      setError('Something went wrong. Please try again.')
+      const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.'
+      setError(msg)
     } finally {
       setIsLoading(false)
     }
@@ -243,10 +280,7 @@ export default function OnboardingPage() {
 
   async function handleSkip() {
     try {
-      await fetch(`${API_URL}/onboarding.skipOnboarding`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-      })
+      await trpcApi.trpcMutation('onboarding.skipOnboarding', {})
 
       // Refresh user data to update onboarding status
       await refreshUser()
@@ -310,6 +344,15 @@ export default function OnboardingPage() {
         </div>
 
         <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 lg:pt-28 pb-12 sm:pb-16 lg:pb-20 relative z-10">
+          {/* Desktop Skip control (always visible on large screens) */}
+          <div className="hidden lg:flex justify-end mb-4">
+            <button
+              onClick={handleSkip}
+              className="text-sm text-gray-400 hover:text-white transition-colors"
+            >
+              Skip for now
+            </button>
+          </div>
           <div className="max-w-4xl mx-auto">
             {/* Progress Bar - Mobile Optimized */}
             {step > 1 && (
@@ -421,6 +464,16 @@ export default function OnboardingPage() {
                     <p className="text-error-400 text-sm">{error}</p>
                   </div>
                 )}
+                {usingPredefined && (
+                  <div className="mb-6 p-4 bg-amber-500/10 border border-amber-400/20 rounded-xl">
+                    <p className="text-amber-300 text-sm">
+                      Using predefined genres (offline mode). Your selections will complete onboarding
+                      but won’t be saved to the server.
+                    </p>
+                  </div>
+                )}
+
+                
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
                   {genres.map((genre) => (

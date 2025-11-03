@@ -161,7 +161,7 @@ export default function GenresPage() {
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
-      <main className="container mx-auto px-3 sm:px-6 lg:px-8 pt-20 sm:pt-28 lg:pt-32 pb-8 sm:pb-16 relative z-10">
+      <main className="container mx-auto px-3 sm:px-6 lg:px-8 pt-32 sm:pt-36 md:pt-40 pb-8 sm:pb-16 relative z-10">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">

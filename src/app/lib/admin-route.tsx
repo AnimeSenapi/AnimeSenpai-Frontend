@@ -29,8 +29,8 @@ export function AdminRoute({ children }: AdminRouteProps) {
       router.push('/auth/signin?redirect=/admin')
     }
 
-    // Redirect if not admin
-    if (!isLoading && isAuthenticated && user?.role !== 'admin') {
+    // Redirect if not admin or owner
+    if (!isLoading && isAuthenticated && user?.role !== 'admin' && user?.role !== 'owner') {
       router.push('/dashboard')
     }
   }, [isLoading, isAuthenticated, user, router])
@@ -60,8 +60,8 @@ export function AdminRoute({ children }: AdminRouteProps) {
     )
   }
 
-  // Not admin
-  if (user?.role !== 'admin') {
+  // Not admin or owner
+  if (user?.role !== 'admin' && user?.role !== 'owner') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 flex items-center justify-center">
         <div className="text-center glass rounded-2xl p-8 max-w-md mx-4">

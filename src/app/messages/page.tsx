@@ -92,12 +92,12 @@ export default function MessagesPage() {
 
     // Check if user is authenticated
     if (!isAuthenticated || !user) {
-      console.log('❌ Not authenticated, redirecting to sign in')
+      // User not authenticated, redirecting to sign in
       router.push('/auth/signin')
       return
     }
 
-    console.log('✅ User authenticated:', user.username)
+          // User authenticated successfully
     loadConversations()
   }, [isAuthenticated, authLoading, user])
 
@@ -107,16 +107,16 @@ export default function MessagesPage() {
 
       // Check for auth token
       const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
-      console.log('🔑 Auth token exists:', !!token)
+      // Auth token check
 
       const { apiGetConversations } = await import('../lib/api')
       const data = (await apiGetConversations()) as any
 
       if (data?.conversations) {
         setConversations(data.conversations)
-        console.log('✅ Loaded conversations:', data.conversations.length)
+        // Conversations loaded successfully
       } else {
-        console.log('⚠️ No conversations data returned')
+        // No conversations data returned
       }
     } catch (error: any) {
       console.error('❌ Failed to load conversations:', error)
@@ -254,23 +254,23 @@ export default function MessagesPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 text-white">
-      <main className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 lg:pb-20">
+      <main className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 md:pt-40 pb-12 sm:pb-16 lg:pb-20">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-xl flex items-center justify-center">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-xl flex items-center justify-center border border-primary-500/30">
               <MessageCircle className="h-6 w-6 text-primary-400" />
             </div>
             <div>
               <h1 className="text-3xl sm:text-4xl font-bold text-white">Messages</h1>
-              <p className="text-gray-400">Chat with friends and share recommendations</p>
+              <p className="text-gray-400 text-sm">Chat with friends and share recommendations</p>
             </div>
           </div>
 
           {/* New Message Button */}
           <Button
             onClick={() => setShowNewMessageModal(true)}
-            className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600"
+            className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-medium px-5 py-2.5 text-sm"
           >
             <UserPlus className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">New Message</span>
@@ -278,7 +278,7 @@ export default function MessagesPage() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-6 h-[calc(100vh-300px)] min-h-[500px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-6 h-[calc(100vh-380px)] min-h-[500px]">
           {/* Conversations List */}
           <div className="glass rounded-xl border border-white/10 overflow-hidden flex flex-col">
             {/* Search */}
@@ -290,7 +290,8 @@ export default function MessagesPage() {
                   placeholder="Search conversations..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-primary-500/50"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400/50 transition-all text-sm"
+                  style={{ borderRadius: '0.5rem' }}
                 />
               </div>
             </div>
@@ -309,8 +310,8 @@ export default function MessagesPage() {
                     key={conv.user.id}
                     onClick={() => loadMessages(conv.user.id)}
                     className={cn(
-                      'w-full p-4 border-b border-white/5 hover:bg-white/5 transition-all text-left',
-                      selectedConversation === conv.user.id && 'bg-white/10'
+                      'w-full p-4 border-b border-white/10 hover:bg-white/5 transition-all text-left',
+                      selectedConversation === conv.user.id && 'bg-gradient-to-r from-primary-500/10 to-secondary-500/10 border-l-2 border-l-primary-500'
                     )}
                   >
                     <div className="flex gap-3">
@@ -339,11 +340,11 @@ export default function MessagesPage() {
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-semibold text-white truncate">
+                          <span className="font-medium text-white truncate text-sm">
                             {conv.user.name || conv.user.username}
                           </span>
                           {conv.lastMessage && (
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
                               {formatDistanceToNow(new Date(conv.lastMessage.createdAt), {
                                 addSuffix: true,
                               })}
@@ -352,12 +353,12 @@ export default function MessagesPage() {
                         </div>
                         <p
                           className={cn(
-                            'text-sm truncate',
+                            'text-xs truncate',
                             conv.unreadCount > 0 ? 'text-white font-medium' : 'text-gray-400'
                           )}
                         >
                           {conv.lastMessage?.anime
-                            ? `📺 Recommended: ${conv.lastMessage.anime.titleEnglish || conv.lastMessage.anime.title}`
+                            ? `📺 ${conv.lastMessage.anime.titleEnglish || conv.lastMessage.anime.title}`
                             : conv.lastMessage?.content || 'No messages yet'}
                         </p>
                       </div>
@@ -375,15 +376,15 @@ export default function MessagesPage() {
               <div className="p-4 border-b border-white/10 flex items-center gap-3">
                 <button
                   onClick={() => setSelectedConversation(null)}
-                  className="lg:hidden p-2 hover:bg-white/10 rounded-lg"
+                  className="lg:hidden p-2 hover:bg-white/10 rounded-lg transition-colors"
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
                 <Link
                   href={`/user/${selectedUser.username}`}
-                  className="flex items-center gap-3 flex-1"
+                  className="flex items-center gap-3 flex-1 hover:opacity-80 transition-opacity"
                 >
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 overflow-hidden border border-white/10">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 overflow-hidden border border-white/10 flex-shrink-0">
                     {selectedUser.avatar ? (
                       <Image
                         src={selectedUser.avatar}
@@ -398,8 +399,8 @@ export default function MessagesPage() {
                       </div>
                     )}
                   </div>
-                  <div>
-                    <div className="font-semibold text-white">
+                  <div className="min-w-0">
+                    <div className="font-medium text-white text-sm truncate">
                       {selectedUser.name || selectedUser.username}
                     </div>
                     <div className="text-xs text-gray-400">@{selectedUser.username}</div>
@@ -408,7 +409,7 @@ export default function MessagesPage() {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
                 {loadingMessages ? (
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -428,7 +429,7 @@ export default function MessagesPage() {
                     return (
                       <div
                         key={message.id}
-                        className={cn('flex gap-3', isOwn ? 'flex-row-reverse' : 'flex-row')}
+                        className={cn('flex gap-3', isOwn ? 'flex-row-reverse' : 'flex-row', 'items-end')}
                       >
                         {!isOwn && (
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 overflow-hidden border border-white/10 flex-shrink-0">
@@ -451,10 +452,10 @@ export default function MessagesPage() {
                         <div className={cn('max-w-[70%]', isOwn ? 'items-end' : 'items-start')}>
                           <div
                             className={cn(
-                              'rounded-2xl px-4 py-2',
+                              'rounded-xl px-4 py-2.5',
                               isOwn
                                 ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white'
-                                : 'bg-white/10 text-white'
+                                : 'bg-white/10 text-white border border-white/10'
                             )}
                           >
                             {message.anime && (
@@ -483,7 +484,7 @@ export default function MessagesPage() {
                                 </div>
                               </Link>
                             )}
-                            <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                            <p className="whitespace-pre-wrap break-words text-sm">{message.content}</p>
                           </div>
                           <p className="text-xs text-gray-500 mt-1 px-2">
                             {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}
@@ -504,13 +505,14 @@ export default function MessagesPage() {
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-                    className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-primary-500/50"
+                    className="flex-1 px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400/50 transition-all text-sm"
+                    style={{ borderRadius: '0.5rem' }}
                     maxLength={500}
                   />
                   <Button
                     onClick={sendMessage}
                     disabled={sending || !newMessage.trim()}
-                    className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600"
+                    className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-medium px-4 py-2.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {sending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -526,8 +528,8 @@ export default function MessagesPage() {
             <div className="glass rounded-xl border border-white/10 flex items-center justify-center">
               <div className="text-center p-12">
                 <MessageCircle className="h-16 w-16 text-gray-500 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">Select a Conversation</h3>
-                <p className="text-gray-400">Choose a friend to start messaging</p>
+                <h3 className="text-lg font-semibold text-white mb-2">Select a Conversation</h3>
+                <p className="text-gray-400 text-sm">Choose a friend to start messaging</p>
               </div>
             </div>
           )}
@@ -538,26 +540,26 @@ export default function MessagesPage() {
       {showNewMessageModal &&
         createPortal(
           <div
-            className="fixed inset-0 flex items-center justify-center p-3 sm:p-4 lg:p-6 bg-black/80 backdrop-blur-sm"
-            style={{
-              zIndex: 1000000,
-              position: 'fixed',
-              isolation: 'isolate',
+            className="fixed inset-0 flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl z-50"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowNewMessageModal(false)
+              }
             }}
           >
-            <div className="glass rounded-xl sm:rounded-2xl max-w-md w-full p-4 sm:p-6 relative border border-white/10 animate-in zoom-in-95 duration-200 max-h-[80vh] flex flex-col">
+            <div className="glass rounded-xl max-w-md w-full p-5 relative border border-white/10 animate-in zoom-in-95 duration-200 max-h-[80vh] flex flex-col">
               {/* Close Button */}
               <button
                 onClick={() => setShowNewMessageModal(false)}
-                className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-white transition-colors w-8 h-8 flex items-center justify-center"
+                className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10"
                 aria-label="Close new message modal"
               >
                 <X className="h-5 w-5" />
               </button>
 
               {/* Header */}
-              <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2 pr-8">
-                <UserPlus className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400" />
+              <h3 className="text-xl font-semibold text-white mb-5 flex items-center gap-2 pr-10">
+                <UserPlus className="h-5 w-5 text-primary-400" />
                 New Message
               </h3>
 
@@ -579,7 +581,7 @@ export default function MessagesPage() {
                       <button
                         key={friend.id}
                         onClick={() => startNewConversation(friend.id)}
-                        className="w-full flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors group"
+                        className="w-full flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all group"
                       >
                         {friend.avatar ? (
                           <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">

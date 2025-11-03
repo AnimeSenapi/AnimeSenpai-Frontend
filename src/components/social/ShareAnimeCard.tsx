@@ -24,9 +24,10 @@ interface ShareAnimeCardProps {
   }
   userRating?: number
   userStatus?: string
+  isFavorite?: boolean
 }
 
-export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCardProps) {
+export function ShareAnimeCard({ anime, userRating, userStatus, isFavorite }: ShareAnimeCardProps) {
   const { addToast } = useToast()
   const { user } = useAuth()
   const [showModal, setShowModal] = useState(false)
@@ -39,14 +40,15 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
 
   // Generate share text based on user's interaction
   const getShareText = () => {
+    const title = anime.titleEnglish || anime.title
     if (userRating && userStatus === 'completed') {
-      return `I just finished ${anime.title} and rated it ${userRating}/10! 🎌`
+      return `I just finished ${title} and rated it ${userRating}/10! 🎌`
     } else if (userStatus === 'watching') {
-      return `Currently watching ${anime.title} on AnimeSenpai! 📺`
-    } else if (userStatus === 'favorite') {
-      return `${anime.title} is one of my all-time favorite anime! ⭐`
+      return `Currently watching ${title} on AnimeSenpai! 📺`
+    } else if (isFavorite) {
+      return `${title} is one of my all-time favorite anime! ⭐`
     } else {
-      return `Check out ${anime.title} on AnimeSenpai!`
+      return `Check out ${title} on AnimeSenpai!`
     }
   }
 
@@ -126,45 +128,45 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="sm"
+      <button
         onClick={() => setShowModal(true)}
-        className="border-white/20 text-white hover:bg-white/10"
+        className="py-3 px-4 rounded-lg bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2"
       >
-        <Share2 className="h-4 w-4 mr-2" />
-        Share
-      </Button>
+        <Share2 className="h-4 w-4" />
+        <span className="text-sm font-medium">Share</span>
+      </button>
 
       {/* Share Modal - Using Portal to render at document.body - Mobile Optimized */}
       {showModal &&
         createPortal(
           <div
-            className="fixed inset-0 flex items-center justify-center p-3 sm:p-4 lg:p-6 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md"
             style={{
               zIndex: 999999,
               position: 'fixed',
               isolation: 'isolate',
             }}
+            onClick={() => setShowModal(false)}
           >
-            <div className="glass rounded-xl sm:rounded-2xl max-w-md w-full p-4 sm:p-6 relative border border-white/10 animate-in zoom-in-95 duration-200">
+            <div className="glass rounded-2xl max-w-md w-full p-6 relative border border-white/10 shadow-2xl animate-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}>
               {/* Close Button - Touch-friendly */}
               <button
                 onClick={() => setShowModal(false)}
-                className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-white transition-colors w-8 h-8 sm:w-auto sm:h-auto flex items-center justify-center touch-manipulation"
+                className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
                 aria-label="Close share modal"
               >
                 <X className="h-5 w-5" />
               </button>
 
               {/* Header - Responsive */}
-              <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2 pr-8">
-                <Share2 className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400" />
-                Share Anime
+              <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2 pr-8">
+                <Share2 className="h-6 w-6 text-primary-400" />
+                Share
               </h3>
 
               {/* Anime Preview Card - Responsive */}
-              <div className="bg-white/5 rounded-lg sm:rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 border border-white/10">
+              <div className="bg-white/5 rounded-xl p-4 mb-6 border border-white/10">
                 <div className="flex gap-4">
                   {anime.coverImage && (
                     <div className="relative w-20 h-28 rounded-lg overflow-hidden">
@@ -178,10 +180,10 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-white font-semibold mb-1 line-clamp-2">{anime.title}</h4>
+                    <h4 className="text-white font-semibold mb-1 line-clamp-2">{anime.titleEnglish || anime.title}</h4>
                     {anime.titleEnglish && anime.titleEnglish !== anime.title && (
                       <p className="text-gray-400 text-sm mb-2 line-clamp-1">
-                        {anime.titleEnglish}
+                        {anime.title}
                       </p>
                     )}
                     <div className="flex flex-wrap gap-2 items-center">
@@ -191,9 +193,9 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
                           {anime.type.toUpperCase()}
                         </Badge>
                       )}
-                      {anime.averageRating && (
+                      {(anime.averageRating || (anime as any).rating) && (
                         <div className="flex items-center gap-1 text-xs text-yellow-400">
-                          ⭐ {anime.averageRating.toFixed(1)}
+                          ⭐ {Number(anime.averageRating || (anime as any).rating).toFixed(1)}
                         </div>
                       )}
                     </div>
@@ -225,57 +227,34 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
               </div>
 
               {/* Share Options */}
-              <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
                 {/* Share with Friend - NEW FEATURE */}
                 {user && (
                   <button
                     onClick={() => setShowFriendSelector(true)}
-                    className="w-full flex items-center gap-3 px-4 py-3.5 sm:py-3 rounded-xl bg-primary-500/10 hover:bg-primary-500/20 active:bg-primary-500/30 border border-primary-500/20 transition-colors group touch-manipulation"
+                    className="flex flex-col items-center justify-center gap-2 px-3 py-3 rounded-lg bg-white/5 hover:bg-primary-500/10 border border-white/10 hover:border-primary-500/30 transition-all group"
                   >
-                    <div className="w-10 h-10 bg-primary-500/20 rounded-lg flex items-center justify-center group-hover:bg-primary-500/30 transition-colors">
                       <Users className="h-5 w-5 text-primary-400" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className="text-white font-medium text-sm sm:text-base">
-                        Share with Friend
-                      </p>
-                      <p className="text-gray-400 text-xs">Send via direct message</p>
-                    </div>
-                    <Send className="h-4 w-4 text-primary-400" />
+                    <span className="text-xs font-medium text-white">Friends</span>
                   </button>
                 )}
 
                 {/* Twitter - Mobile Optimized */}
                 <button
                   onClick={shareToTwitter}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 sm:py-3 rounded-xl bg-[#1DA1F2]/10 hover:bg-[#1DA1F2]/20 active:bg-[#1DA1F2]/30 border border-[#1DA1F2]/20 transition-colors group touch-manipulation"
+                  className="flex flex-col items-center justify-center gap-2 px-3 py-3 rounded-lg bg-white/5 hover:bg-[#1DA1F2]/10 border border-white/10 hover:border-[#1DA1F2]/30 transition-all group"
                 >
-                  <div className="w-10 h-10 sm:w-10 sm:h-10 bg-[#1DA1F2]/20 rounded-lg flex items-center justify-center group-hover:bg-[#1DA1F2]/30 transition-colors">
                     <Twitter className="h-5 w-5 text-[#1DA1F2]" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="text-white font-medium text-sm sm:text-base">Share on Twitter</p>
-                    <p className="text-gray-400 text-xs">Post to your timeline</p>
-                  </div>
+                  <span className="text-xs font-medium text-white">Twitter</span>
                 </button>
 
                 {/* Generate Share Image (Coming Soon) - Mobile Optimized */}
                 <button
                   onClick={generateShareImage}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 sm:py-3 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/10 transition-colors group touch-manipulation"
+                  className="flex flex-col items-center justify-center gap-2 px-3 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all group opacity-60"
                 >
-                  <div className="w-10 h-10 bg-primary-500/20 rounded-lg flex items-center justify-center group-hover:bg-primary-500/30 transition-colors">
-                    <Download className="h-5 w-5 text-primary-400" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <div className="flex items-center gap-2">
-                      <p className="text-white font-medium">Download Share Card</p>
-                      <Badge className="bg-warning-500/20 text-warning-400 text-xs px-2 py-0">
-                        Soon
-                      </Badge>
-                    </div>
-                    <p className="text-gray-400 text-xs">Generate beautiful share image</p>
-                  </div>
+                  <Download className="h-5 w-5 text-gray-400" />
+                  <span className="text-xs font-medium text-white">Image</span>
                 </button>
 
                 {/* Copy Link */}
@@ -288,15 +267,10 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
         variant: 'success',
       })
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors group"
+                  className="flex flex-col items-center justify-center gap-2 px-3 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all group"
                 >
-                  <div className="w-10 h-10 bg-secondary-500/20 rounded-lg flex items-center justify-center group-hover:bg-secondary-500/30 transition-colors">
-                    <Share2 className="h-5 w-5 text-secondary-400" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="text-white font-medium">Copy Link</p>
-                    <p className="text-gray-400 text-xs truncate">{animeUrl}</p>
-                  </div>
+                  <Share2 className="h-5 w-5 text-gray-400" />
+                  <span className="text-xs font-medium text-white">Copy</span>
                 </button>
               </div>
             </div>
@@ -308,26 +282,28 @@ export function ShareAnimeCard({ anime, userRating, userStatus }: ShareAnimeCard
       {showFriendSelector &&
         createPortal(
           <div
-            className="fixed inset-0 flex items-center justify-center p-3 sm:p-4 lg:p-6 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md"
             style={{
               zIndex: 1000000,
               position: 'fixed',
               isolation: 'isolate',
             }}
+            onClick={() => setShowFriendSelector(false)}
           >
-            <div className="glass rounded-xl sm:rounded-2xl max-w-md w-full p-4 sm:p-6 relative border border-white/10 animate-in zoom-in-95 duration-200 max-h-[80vh] flex flex-col">
+            <div className="glass rounded-2xl max-w-md w-full p-6 relative border border-white/10 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[80vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}>
               {/* Close Button */}
               <button
                 onClick={() => setShowFriendSelector(false)}
-                className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-white transition-colors w-8 h-8 flex items-center justify-center"
+                className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
                 aria-label="Close friend selector"
               >
                 <X className="h-5 w-5" />
               </button>
 
               {/* Header */}
-              <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2 pr-8">
-                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400" />
+              <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2 pr-8">
+                <Users className="h-6 w-6 text-primary-400" />
                 Share with Friend
               </h3>
 

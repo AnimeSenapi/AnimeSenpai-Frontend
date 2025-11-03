@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
@@ -9,6 +9,8 @@ import { Checkbox } from '../../../components/ui/checkbox'
 import { useAuth } from '../../lib/auth-context'
 import { useToast } from '../../../components/ui/toast'
 import { RequireGuest } from '../../lib/protected-route'
+import { PageErrorBoundary } from '../../../components/PageErrorBoundary'
+import PageLoading from '../../../components/ui/page-loading'
 
 export default function SignInPage() {
   const [email, setEmail] = useState('')
@@ -16,9 +18,15 @@ export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [formErrors, setFormErrors] = useState<{ email?: string; password?: string }>({})
+  const [isMounted, setIsMounted] = useState(false)
   const { signin, isLoading, error, clearError } = useAuth()
   const { addToast } = useToast()
   const router = useRouter()
+
+  // Handle hydration mismatch from browser extensions
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const validateForm = () => {
     const errors: { email?: string; password?: string } = {}
@@ -70,9 +78,19 @@ export default function SignInPage() {
     }
   }
 
+  // Prevent hydration mismatch by only rendering form after mount
+  if (!isMounted) {
+    return (
+      <RequireGuest>
+        <PageLoading text="Preparing sign-in form..." />
+      </RequireGuest>
+    )
+  }
+
   return (
+    <PageErrorBoundary pageName="Sign In">
     <RequireGuest>
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4 pt-20 sm:pt-32">
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4 pt-32 sm:pt-36 md:pt-40">
         {/* Subtle Background */}
         <div className="absolute inset-0 overflow-hidden opacity-30">
           <div className="absolute top-0 -right-40 w-96 h-96 bg-primary-500/30 rounded-full blur-3xl"></div>
@@ -107,7 +125,12 @@ export default function SignInPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+            <form 
+              onSubmit={handleSubmit} 
+              className="space-y-4 sm:space-y-5"
+              suppressHydrationWarning
+              data-testid="signin-form"
+            >
               {/* Email Field */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
@@ -130,6 +153,8 @@ export default function SignInPage() {
                     }`}
                     placeholder="you@example.com"
                     suppressHydrationWarning
+                    autoComplete="email"
+                    data-testid="email-input"
                   />
                 </div>
                 {formErrors.email && (
@@ -159,6 +184,8 @@ export default function SignInPage() {
                     }`}
                     placeholder="••••••••"
                     suppressHydrationWarning
+                    autoComplete="current-password"
+                    data-testid="password-input"
                   />
                   <button
                     type="button"
@@ -180,7 +207,7 @@ export default function SignInPage() {
                     id="remember-me"
                     checked={rememberMe}
                     onCheckedChange={(checked) => setRememberMe(checked === true)}
-                    className="h-3 w-3"
+                    className="h-3 w-3 md:h-4 md:w-4"
                   />
                   <label
                     htmlFor="remember-me"
@@ -235,5 +262,6 @@ export default function SignInPage() {
         </div>
       </div>
     </RequireGuest>
+    </PageErrorBoundary>
   )
 }

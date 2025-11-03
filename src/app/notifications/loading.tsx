@@ -1,5 +1,5 @@
-import { LoadingState } from '@/components/ui/loading-state'
+import PageLoading from '@/components/ui/page-loading'
 
 export default function Loading() {
-  return <LoadingState text="Loading notifications..." />
+  return <PageLoading text="Loading notifications..." />
 }

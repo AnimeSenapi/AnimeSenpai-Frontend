@@ -17,23 +17,36 @@
 /* Touch-friendly button sizing for mobile */
 @media (max-width: 768px) {
   /* Ensure all buttons meet 44px minimum height on mobile */
+  button:not([class*="ignore-touch"]),
   button[data-slot="button"],
-  .touch-target {
-    min-height: 44px;
-    min-width: 44px;
+  .touch-target,
+  a[role="button"],
+  [role="button"] {
+    min-height: 44px !important;
+    min-width: 44px !important;
   }
 
   /* Icon-only buttons need padding to reach 44px */
-  button[data-slot="button"][class*="size-"] {
-    min-height: 44px;
-    min-width: 44px;
-    padding: 10px;
+  button[data-slot="button"][class*="size-"],
+  button[class*="h-8"],
+  button[class*="h-9"],
+  button[class*="h-10"] {
+    min-height: 44px !important;
+    min-width: 44px !important;
   }
 
   /* Small buttons on mobile should be at least 44px */
-  button[data-slot="button"][class*="h-8"],
-  button[data-slot="button"][class*="h-9"] {
-    min-height: 44px;
+  button[class*="py-1"],
+  button[class*="py-2"] {
+    min-height: 44px !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+  }
+
+  /* Ensure buttons with text-xs or text-sm are still readable */
+  button[class*="text-xs"],
+  button[class*="text-sm"] {
+    font-size: 14px !important;
   }
 }
 
@@ -130,11 +143,47 @@
   }
   
   /* Improve form inputs on mobile */
-  input, select, textarea {
-    font-size: 16px; /* Prevents zoom on iOS */
-    min-height: 44px;
+  input:not([class*="ignore-mobile-font"]),
+  select:not([class*="ignore-mobile-font"]),
+  textarea:not([class*="ignore-mobile-font"]) {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    min-height: 44px !important;
+  }
+
+  /* Ensure search inputs are touch-friendly */
+  input[type="search"],
+  input[type="text"][placeholder*="search" i],
+  input[type="text"][placeholder*="Search" i] {
+    font-size: 16px !important;
+    min-height: 44px !important;
+  }
+
+  /* Ensure text is readable on mobile */
+  .text-xs {
+    font-size: 12px;
   }
   
+  .text-sm {
+    font-size: 14px;
+  }
+
+  /* Ensure proper spacing between touch targets */
+  button + button,
+  .touch-target + .touch-target {
+    margin-left: 8px;
+  }
+
+  /* Better padding for buttons with small padding classes */
+  button[class*="px-2"] {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  button[class*="px-3"] {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
   /* Better spacing for mobile cards */
   .mobile-card {
     margin: 0.5rem;
@@ -161,6 +210,7 @@
     flex-wrap: wrap;
   }
 }
+
 .safe-area-bottom {
   padding-bottom: max(1rem, var(--safe-area-inset-bottom));
 }

@@ -21,8 +21,10 @@ import {
   Filter,
   Tag,
   Crown,
+  RefreshCw,
+  ArrowRight,
 } from 'lucide-react'
-import { apiGetAllAnime, apiGetAllSeries, apiGetTrending } from '../lib/api'
+import { apiGetAllAnime, apiGetAllSeries, apiGetTrending, apiGetGenres, api } from '../lib/api'
 import { useAuth } from '../lib/auth-context'
 import { groupAnimeIntoSeries } from '../../lib/series-grouping'
 import type { Anime } from '../../types/anime'
@@ -67,9 +69,155 @@ export default function DashboardPage() {
   const [newReleases, setNewReleases] = useState<any[]>([])
   const [topRatedSeries, setTopRatedSeries] = useState<any[]>([]) // Grouped series
   const [recentlyAddedSeries, setRecentlyAddedSeries] = useState<any[]>([]) // Grouped series
+  const [seasonalSeries, setSeasonalSeries] = useState<any[]>([]) // Seasonal anime
+  const [genres, setGenres] = useState<any[]>([]) // Genres for filtering
+  const [selectedGenre, setSelectedGenre] = useState<string | null>(null)
+  const [genreAnime, setGenreAnime] = useState<any[]>([]) // Anime filtered by genre
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [sectionLoadingStates, setSectionLoadingStates] = useState({
+    secondary: false,
+    personalized: false,
+    seasonal: false,
+  })
+
+  // Helper to map series objects into recommendation card shape
+  const mapSeriesToRecs = (list: any[]) =>
+    (Array.isArray(list) ? list : [])
+      .filter((s) => s && s.slug)
+      .map((series) => ({
+        anime: {
+          id: series.id,
+          slug: series.slug,
+          title: series.title,
+          titleEnglish: series.titleEnglish || series.displayTitle,
+          titleJapanese: series.titleJapanese,
+          titleSynonyms: series.titleSynonyms,
+          coverImage: series.coverImage ?? null,
+          year: series.year ?? null,
+          averageRating: series.rating || series.averageRating || null,
+          genres: series.genres || [],
+          seasonCount: series.seasonCount,
+          totalEpisodes: series.totalEpisodes,
+        },
+      }))
+
+  // Helper to map any series/list to recommendation format (reusable)
+  const mapToRecommendations = (seriesList: any[]) => {
+    return mapSeriesToRecs(seriesList) as any
+  }
+
+  // Load seasonal anime
+  async function loadSeasonalAnime() {
+    try {
+      const currentYear = new Date().getFullYear()
+      const currentMonth = new Date().getMonth()
+      const season =
+        currentMonth < 3
+          ? 'winter'
+          : currentMonth < 6
+            ? 'spring'
+            : currentMonth < 9
+              ? 'summer'
+              : 'fall'
+
+      const data = (await api.trpcQuery('anime.getAll', {
+        page: 1,
+        limit: 20,
+        seasons: [season],
+        years: [currentYear],
+        sortBy: 'averageRating',
+        sortOrder: 'desc',
+      })) as any
+
+      const animeList = data?.anime || []
+      if (animeList.length > 0) {
+        const grouped = groupAnimeIntoSeries(animeList)
+        setSeasonalSeries(grouped)
+      }
+    } catch (err) {
+      console.error('Failed to load seasonal anime:', err)
+    }
+  }
+
+  // Load genres
+  async function loadGenres() {
+    try {
+      const genreList = await apiGetGenres()
+      setGenres(genreList || [])
+    } catch (err) {
+      console.error('Failed to load genres:', err)
+    }
+  }
+
+  // Load anime by selected genre
+  async function loadGenreAnime(genreSlug: string) {
+    try {
+      const data = (await api.trpcQuery('anime.getAll', {
+        page: 1,
+        limit: 20,
+        genres: [genreSlug],
+        sortBy: 'averageRating',
+        sortOrder: 'desc',
+      })) as any
+
+      const animeList = data?.anime || []
+      if (animeList.length > 0) {
+        const grouped = groupAnimeIntoSeries(animeList)
+        setGenreAnime(grouped)
+      } else {
+        setGenreAnime([])
+      }
+    } catch (err) {
+      console.error('Failed to load genre anime:', err)
+      setGenreAnime([])
+    }
+  }
+
+  // Handle genre selection
+  useEffect(() => {
+    if (selectedGenre) {
+      loadGenreAnime(selectedGenre)
+    } else {
+      setGenreAnime([])
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedGenre])
+
+
+  // Refresh all recommendations
+  async function refreshRecommendations() {
+    setIsRefreshing(true)
+    try {
+      // Clear existing data
+      setForYouRecs([])
+      setFansLikeYouRecs([])
+      setHiddenGemsRecs([])
+      setDiscoveryRecs([])
+      setContinueWatching([])
+      setNewReleases([])
+      setTrendingAnime([])
+      setTopRatedSeries([])
+      setRecentlyAddedSeries([])
+      setAllSeries([])
+      setSeasonalSeries([])
+      setGenreAnime([])
+
+      // Reload data
+      await Promise.all([
+        loadAllRecommendations(),
+        isAuthenticated ? loadPersonalizedRecommendations() : Promise.resolve(),
+        loadSeasonalAnime(),
+        loadGenres(),
+      ])
+    } catch (err) {
+      console.error('Failed to refresh recommendations:', err)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/trpc'
   const getAuthHeaders = (): Record<string, string> => {
@@ -116,33 +264,36 @@ export default function DashboardPage() {
       setIsLoading(true)
       setError(null)
       try {
-        // Load ONLY essential data first for fast initial render
-        // Other sections load lazily as user scrolls
-        const trending = (await apiGetTrending()) as any
-
-        // Group trending anime into series
-        const trendingList = Array.isArray(trending) ? trending : []
-        const groupedTrending = groupAnimeIntoSeries(trendingList)
-        setTrendingAnime(groupedTrending)
-
+        // Load all recommendation-based data
         setIsLoading(false)
 
-        // Load secondary data in background (non-blocking)
-        setTimeout(() => {
-          loadSecondaryData()
+        // Load all recommendation sections in background (non-blocking)
+        setTimeout(async () => {
+          setSectionLoadingStates((prev) => ({ ...prev, secondary: true }))
+          await loadAllRecommendations()
+          setSectionLoadingStates((prev) => ({ ...prev, secondary: false }))
         }, 100)
 
         // Load personalized recommendations if authenticated (also background)
         if (isAuthenticated) {
-          setTimeout(() => {
-            loadPersonalizedRecommendations()
+          setTimeout(async () => {
+            setSectionLoadingStates((prev) => ({ ...prev, personalized: true }))
+            await loadPersonalizedRecommendations()
+            setSectionLoadingStates((prev) => ({ ...prev, personalized: false }))
           }, 200)
         }
+
+        // Load seasonal and genres in background
+        setTimeout(async () => {
+          setSectionLoadingStates((prev) => ({ ...prev, seasonal: true }))
+          await loadSeasonalAnime()
+          await loadGenres()
+          setSectionLoadingStates((prev) => ({ ...prev, seasonal: false }))
+        }, 300)
       } catch (err: unknown) {
         console.error('❌ Failed to load anime:', err)
         const errorMessage = err instanceof Error ? err.message : 'Failed to load anime data'
         setError(errorMessage)
-        setTrendingAnime([])
         setIsLoading(false)
       }
     }
@@ -151,115 +302,158 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated])
 
-  // Load secondary data (top rated, recently added) in background
-  async function loadSecondaryData() {
+  // Load all recommendation-based sections
+  async function loadAllRecommendations() {
     try {
-      const [all, series] = await Promise.all([apiGetAllAnime(), apiGetAllSeries()])
+      // Use Promise.allSettled to handle errors gracefully
+      const [trendingResult, popularResult, topRatedResult] = await Promise.allSettled([
+        api.trpcQuery('recommendations.getTrending', { limit: 20 }),
+        api.trpcQuery('anime.getAll', { 
+          limit: 20, 
+          sortBy: 'popularity', 
+          sortOrder: 'desc' 
+        }),
+        api.trpcQuery('anime.getAll', { 
+          limit: 20, 
+          sortBy: 'averageRating', 
+          sortOrder: 'desc',
+          minRating: 7.0
+        }),
+      ])
 
-      // Store series data
-      if (series && typeof series === 'object' && 'series' in series) {
-        const seriesList = Array.isArray(series.series) ? series.series : []
-        setAllSeries(seriesList)
-
-        // Top Rated Series
-        const topRated = [...seriesList]
-          .filter((s) => s.rating && s.rating > 0)
-          .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-          .slice(0, 20)
-        setTopRatedSeries(topRated)
+      // Helper to extract data from Promise result
+      const getData = (result: PromiseSettledResult<any>) => {
+        if (result.status === 'fulfilled') {
+          return result.value
+        } else {
+          console.error('API call failed:', result.reason)
+          return null
+        }
       }
 
-      if (all && typeof all === 'object' && 'anime' in all) {
-        const animeList = Array.isArray(all.anime) ? all.anime : []
-        setAllAnime(animeList)
+      // Process Trending - from recommendations system
+      const trendingData = getData(trendingResult)
+      if (trendingData?.recommendations) {
+        const trendingRecs = (trendingData.recommendations || []).map((r: any) => ({
+          id: r.anime.id,
+          slug: r.anime.slug,
+          title: r.anime.title,
+          titleEnglish: r.anime.titleEnglish,
+          coverImage: r.anime.coverImage,
+          year: r.anime.year,
+          rating: r.anime.averageRating,
+          genres: r.anime.genres || [],
+        }))
+        setTrendingAnime(trendingRecs)
+      }
 
-        // Group all anime and generate sections
-        if (animeList.length > 0) {
-          const allGrouped = groupAnimeIntoSeries(animeList)
+      // Process Popular - from anime.getAll with popularity sort
+      const popularData = getData(popularResult)
+      if (popularData?.anime) {
+        const popularList = Array.isArray(popularData.anime) ? popularData.anime : []
+        const groupedPopular = groupAnimeIntoSeries(popularList)
+        setAllSeries(groupedPopular)
+      }
+
+      // Process Top Rated - from anime.getAll with rating sort
+      const topRatedData = getData(topRatedResult)
+      if (topRatedData?.anime) {
+        const topRatedList = Array.isArray(topRatedData.anime) ? topRatedData.anime : []
+        const groupedTopRated = groupAnimeIntoSeries(topRatedList)
+        setTopRatedSeries(groupedTopRated)
+        
+        // Also store all anime for recently added
+        setAllAnime(topRatedList)
 
           // Recently Added: Sort by most recent year
-          const recentlyAdded = [...allGrouped]
-            .sort((a, b) => {
-              // Sort by most recent year
-              return (b.year || 0) - (a.year || 0)
-            })
+        const recentlyAdded = [...groupedTopRated]
+          .sort((a, b) => (b.year || 0) - (a.year || 0))
             .slice(0, 20)
           setRecentlyAddedSeries(recentlyAdded)
         }
-      }
+
+      console.log('[Dashboard] recommendation sections loaded', {
+        trending: trendingData?.recommendations?.length || 0,
+        popular: popularData?.anime?.length || 0,
+        topRated: topRatedData?.anime?.length || 0,
+      })
     } catch (err) {
-      console.error('Failed to load secondary data:', err)
+      console.error('Failed to load recommendation sections:', err)
     }
   }
 
   async function loadPersonalizedRecommendations() {
     try {
-      const headers = getAuthHeaders()
-      const [forYou, fansLikeYou, friendRecs, hiddenGems, discovery, continueWatch, newAnime] =
-        await Promise.all([
-          fetch(
-            `${API_URL}/recommendations.getForYou?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`,
-            {
-              method: 'GET',
-              headers,
-            }
-          ).then((r) => r.json()),
-          fetch(
-            `${API_URL}/recommendations.getFansLikeYou?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`,
-            {
-              method: 'GET',
-              headers,
-            }
-          ).then((r) => r.json()),
-          fetch(
-            `${API_URL}/social.getFriendRecommendations?input=${encodeURIComponent(JSON.stringify({ limit: 12 }))}`,
-            {
-              method: 'GET',
-              headers,
-            }
-          ).then((r) => r.json()),
-          fetch(
-            `${API_URL}/recommendations.getHiddenGems?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`,
-            {
-              method: 'GET',
-              headers,
-            }
-          ).then((r) => r.json()),
-          fetch(
-            `${API_URL}/recommendations.getDiscovery?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`,
-            {
-              method: 'GET',
-              headers,
-            }
-          ).then((r) => r.json()),
-          fetch(
-            `${API_URL}/recommendations.getContinueWatching?input=${encodeURIComponent(JSON.stringify({ limit: 10 }))}`,
-            {
-              method: 'GET',
-              headers,
-            }
-          ).then((r) => r.json()),
-          fetch(
-            `${API_URL}/recommendations.getNewReleases?input=${encodeURIComponent(JSON.stringify({ limit: 20 }))}`,
-            {
-              method: 'GET',
-              headers,
-            }
-          ).then((r) => r.json()),
+      // Use the proper API helper instead of raw fetch
+      const [forYouResult, fansLikeYouResult, friendRecsResult, hiddenGemsResult, discoveryResult, continueWatchResult, newAnimeResult] =
+        await Promise.allSettled([
+          api.trpcQuery('recommendations.getForYou', { limit: 20 }),
+          api.trpcQuery('recommendations.getFansLikeYou', { limit: 20 }),
+          api.trpcQuery('social.getFriendRecommendations', { limit: 12 }),
+          api.trpcQuery('recommendations.getHiddenGems', { limit: 20 }),
+          api.trpcQuery('recommendations.getDiscovery', { limit: 20 }),
+          api.trpcQuery('recommendations.getContinueWatching', { limit: 10 }),
+          api.trpcQuery('recommendations.getNewReleases', { limit: 20 }),
         ])
+
+      // Helper to extract data from Promise result
+      const getData = (result: PromiseSettledResult<any>) => {
+        if (result.status === 'fulfilled') {
+          return result.value
+        } else {
+          console.error('API call failed:', result.reason)
+          return null
+        }
+      }
 
       // Filter out any undefined/null items and ensure anime object exists
       const filterValidRecs = (recs: any[]) => {
         return (recs || []).filter((r) => r && r.anime && r.anime.slug)
       }
 
-      setForYouRecs(filterValidRecs(forYou.result?.data?.recommendations))
-      setFansLikeYouRecs(filterValidRecs(fansLikeYou.result?.data?.recommendations))
-      setFriendRecs(filterValidRecs(friendRecs.result?.data?.recommendations))
-      setHiddenGemsRecs(filterValidRecs(hiddenGems.result?.data?.recommendations))
-      setDiscoveryRecs(filterValidRecs(discovery.result?.data?.recommendations))
-      setContinueWatching(filterValidRecs(continueWatch.result?.data?.recommendations))
-      setNewReleases(filterValidRecs(newAnime.result?.data?.recommendations))
+      const forYouData = getData(forYouResult)
+      const fansLikeYouData = getData(fansLikeYouResult)
+      const friendRecsData = getData(friendRecsResult)
+      const hiddenGemsData = getData(hiddenGemsResult)
+      const discoveryData = getData(discoveryResult)
+      const continueWatchData = getData(continueWatchResult)
+      const newAnimeData = getData(newAnimeResult)
+
+      const forYouRecsList = filterValidRecs(forYouData?.recommendations || [])
+      const fansLikeYouRecsList = filterValidRecs(fansLikeYouData?.recommendations || [])
+      const friendRecsList = filterValidRecs(friendRecsData?.recommendations || [])
+      const hiddenGemsRecsList = filterValidRecs(hiddenGemsData?.recommendations || [])
+      const discoveryRecsList = filterValidRecs(discoveryData?.recommendations || [])
+      const continueWatchList = filterValidRecs(continueWatchData?.recommendations || [])
+      const newReleasesList = filterValidRecs(newAnimeData?.recommendations || [])
+
+      // Set state directly from API results - no fallbacks
+      setForYouRecs(forYouRecsList)
+      setFansLikeYouRecs(fansLikeYouRecsList)
+      setFriendRecs(friendRecsList)
+      setHiddenGemsRecs(hiddenGemsRecsList)
+      setDiscoveryRecs(discoveryRecsList)
+      setContinueWatching(continueWatchList)
+      setNewReleases(newReleasesList)
+
+      console.log('[Dashboard] personalized recs loaded', {
+        forYou: forYouRecsList.length,
+        fansLikeYou: fansLikeYouRecsList.length,
+        friendRecs: friendRecsList.length,
+        hiddenGems: hiddenGemsRecsList.length,
+        discovery: discoveryRecsList.length,
+        continueWatching: continueWatchList.length,
+        newReleases: newReleasesList.length,
+        errors: {
+          forYou: forYouResult.status === 'rejected',
+          fansLikeYou: fansLikeYouResult.status === 'rejected',
+          friendRecs: friendRecsResult.status === 'rejected',
+          hiddenGems: hiddenGemsResult.status === 'rejected',
+          discovery: discoveryResult.status === 'rejected',
+          continueWatch: continueWatchResult.status === 'rejected',
+          newAnime: newAnimeResult.status === 'rejected',
+        },
+      })
     } catch (err) {
       // Log error to help debug recommendation loading issues
       logger.error('Failed to load personalized recommendations', {
@@ -365,7 +559,7 @@ export default function DashboardPage() {
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
         </div>
 
-        <main className="container px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 lg:pt-32 pb-8 sm:pb-16 lg:pb-20 relative z-10">
+        <main className="container px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 md:pt-40 pb-8 sm:pb-16 lg:pb-20 relative z-10">
           {/* Email Verification Banner */}
           {isAuthenticated && user && !user.emailVerified && (
             <EmailVerificationBanner email={user.email} />
@@ -408,87 +602,109 @@ export default function DashboardPage() {
           )}
 
           {/* Hero Section - Responsive */}
-          <div className="mb-6 sm:mb-10 lg:mb-12 text-center">
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-3 sm:mb-6">
-              <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary-400" />
-              <span className="text-xs sm:text-sm text-gray-300">
-                {isAuthenticated ? 'Your Personalized Dashboard' : 'Discover Your Next Obsession'}
-              </span>
-            </div>
-            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold mb-2 sm:mb-4 bg-gradient-to-r from-white via-primary-400 to-secondary-400 bg-clip-text text-transparent px-4">
+          <div className="mb-6 sm:mb-10 lg:mb-12">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4 sm:mb-6">
+              <div className="text-center sm:text-left">
+                <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold mb-2 sm:mb-3 bg-gradient-to-r from-white via-primary-400 to-secondary-400 bg-clip-text text-transparent">
               {isAuthenticated
-                ? `Welcome Back${user?.name ? `, ${user.name}` : ''}!`
+                    ? `Welcome Back${user?.username ? `, ${user.username}` : ''}!`
                 : 'Discover Amazing Anime'}
             </h1>
-            <p className="text-sm sm:text-lg lg:text-xl text-gray-300 max-w-2xl mx-auto px-4">
+                <p className="text-sm sm:text-lg lg:text-xl text-gray-300 max-w-2xl">
               {isAuthenticated
                 ? 'Here are anime recommendations just for you'
                 : 'Personalized recommendations powered by your taste'}
             </p>
           </div>
-
-          {/* Discovery Quick Links */}
-          <div className="mb-6 sm:mb-8 lg:mb-12">
-            <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-3 sm:mb-4 flex items-center gap-2">
-              <Compass className="w-4 h-4 sm:w-5 sm:h-5 text-primary-400" />
-              Quick Discovery
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
-              <Link href="/seasonal">
-                <div className="glass rounded-xl p-3 sm:p-4 md:p-6 hover:bg-white/10 transition-all cursor-pointer group border border-white/10 hover:border-blue-400/30 h-full">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 md:mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
+              {isAuthenticated && (
+                <Button
+                  onClick={refreshRecommendations}
+                  disabled={isRefreshing}
+                  variant="outline"
+                  className="border-white/20 text-white hover:bg-white/10 flex items-center gap-2"
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                  />
+                  <span className="hidden sm:inline">Refresh</span>
+                </Button>
+              )}
                   </div>
-                  <h3 className="text-xs sm:text-sm md:text-base font-bold text-white mb-1 sm:mb-2 group-hover:text-primary-300 transition-colors">
-                    This Season
-                  </h3>
-                  <p className="text-xs text-gray-400 hidden sm:block">Currently airing</p>
                 </div>
-              </Link>
 
-              <Link href="/top-rated">
-                <div className="glass rounded-xl p-3 sm:p-4 md:p-6 hover:bg-white/10 transition-all cursor-pointer group border border-white/10 hover:border-yellow-400/30 h-full">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 md:mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                    <Crown className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
+          {/* This Season - Integrated Quick Discovery */}
+          {(seasonalSeries.length > 0 || sectionLoadingStates.seasonal) && (
+            <>
+              {seasonalSeries.length > 0 ? (
+                <RecommendationCarousel
+                  title="This Season"
+                  icon={<Calendar className="h-5 w-5 text-blue-400" />}
+                  recommendations={mapToRecommendations(seasonalSeries)}
+                  showReasons={false}
+                />
+              ) : (
+                <div className="mb-8 sm:mb-10 lg:mb-12">
+                  <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                    <Calendar className="h-5 w-5 text-blue-400" />
+                    <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">This Season</h2>
                   </div>
-                  <h3 className="text-xs sm:text-sm md:text-base font-bold text-white mb-1 sm:mb-2 group-hover:text-yellow-300 transition-colors">
-                    Top Rated
-                  </h3>
-                  <p className="text-xs text-gray-400 hidden sm:block">Highest rated</p>
+                  <CarouselSkeleton itemCount={5} />
                 </div>
-              </Link>
+              )}
+            </>
+          )}
 
-              <Link href="/genres">
-                <div className="glass rounded-xl p-3 sm:p-4 md:p-6 hover:bg-white/10 transition-all cursor-pointer group border border-white/10 hover:border-purple-400/30 h-full">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 md:mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                    <Tag className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
-                  </div>
-                  <h3 className="text-xs sm:text-sm md:text-base font-bold text-white mb-1 sm:mb-2 group-hover:text-purple-300 transition-colors">
-                    Genres
-                  </h3>
-                  <p className="text-xs text-gray-400 hidden sm:block">Explore by genre</p>
-                </div>
+          {/* Browse by Genre - Integrated Quick Discovery */}
+          {genres.length > 0 && (
+            <div className="mb-6 sm:mb-8 lg:mb-12">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base sm:text-lg md:text-xl font-bold text-white flex items-center gap-2">
+                  <Tag className="w-4 h-4 sm:w-5 sm:h-5 text-primary-400" />
+                  Browse by Genre
+                </h2>
+                <Link
+                  href="/genres"
+                  className="text-sm text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1"
+                >
+                  View All
+                  <ArrowRight className="w-4 h-4" />
               </Link>
-
-              <Link href="/search">
-                <div className="glass rounded-xl p-3 sm:p-4 md:p-6 hover:bg-white/10 transition-all cursor-pointer group border border-white/10 hover:border-green-400/30 h-full">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 md:mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                    <Filter className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
                   </div>
-                  <h3 className="text-xs sm:text-sm md:text-base font-bold text-white mb-1 sm:mb-2 group-hover:text-green-300 transition-colors">
-                    Advanced Search
-                  </h3>
-                  <p className="text-xs text-gray-400 hidden sm:block">Filter & sort</p>
+              <div className="flex flex-wrap gap-2 sm:gap-3">
+                {genres.slice(0, 12).map((genre) => (
+                  <button
+                    key={genre.id || genre.slug}
+                    onClick={() => setSelectedGenre(selectedGenre === genre.slug ? null : genre.slug)}
+                    className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
+                      selectedGenre === genre.slug
+                        ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
+                        : 'glass border border-white/10 text-gray-300 hover:bg-white/10 hover:border-primary-400/30'
+                    }`}
+                  >
+                    {genre.name}
+                  </button>
+                ))}
                 </div>
-              </Link>
+              {selectedGenre && genreAnime.length > 0 && (
+                <div className="mt-6">
+                  <RecommendationCarousel
+                    title={`${genres.find((g) => g.slug === selectedGenre)?.name || selectedGenre}`}
+                    icon={<Tag className="h-5 w-5 text-purple-400" />}
+                    recommendations={mapToRecommendations(genreAnime)}
+                    showReasons={false}
+                  />
             </div>
+              )}
           </div>
+          )}
 
           {/* Personalized Recommendations (Authenticated Users Only) */}
           {isAuthenticated && (
             <>
               {/* Continue Watching */}
-              {continueWatching.length > 0 && (
+              {(continueWatching.length > 0 || sectionLoadingStates.personalized) && (
+                <>
+                  {continueWatching.length > 0 ? (
                 <RecommendationCarousel
                   title="Continue Watching"
                   icon={<Clock className="h-5 w-5 text-primary-400" />}
@@ -496,10 +712,22 @@ export default function DashboardPage() {
                   onDismiss={handleDismissRecommendation}
                   showReasons={false}
                 />
+                  ) : sectionLoadingStates.personalized ? (
+                    <div className="mb-8 sm:mb-10 lg:mb-12">
+                      <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                        <Clock className="h-5 w-5 text-primary-400" />
+                        <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Continue Watching</h2>
+                      </div>
+                      <CarouselSkeleton itemCount={5} />
+                    </div>
+                  ) : null}
+                </>
               )}
 
               {/* For You - Main Personalized Feed (Hybrid: Content + Collaborative) */}
-              {forYouRecs.length > 0 && (
+              {(forYouRecs.length > 0 || sectionLoadingStates.personalized) && (
+                <>
+                  {forYouRecs.length > 0 ? (
                 <RecommendationCarousel
                   title="For You"
                   icon={<Heart className="h-5 w-5 text-primary-400" />}
@@ -507,33 +735,35 @@ export default function DashboardPage() {
                   onDismiss={handleDismissRecommendation}
                   showReasons={true}
                 />
+                  ) : sectionLoadingStates.personalized ? (
+                    <div className="mb-8 sm:mb-10 lg:mb-12">
+                      <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                        <Heart className="h-5 w-5 text-primary-400" />
+                        <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">For You</h2>
+                      </div>
+                      <CarouselSkeleton itemCount={5} />
+                    </div>
+                  ) : null}
+                </>
               )}
 
-              {/* Trending Now - For logged-in users too - Grouped by series */}
+              {/* Trending Now - For logged-in users too - From recommendations system */}
               {trendingAnime.length > 0 && (
                 <RecommendationCarousel
                   title="Trending Now"
                   icon={<TrendingUp className="h-5 w-5 text-secondary-400" />}
-                  recommendations={
-                    trendingAnime
-                      .filter((series) => series && series.slug)
-                      .map((series) => ({
+                  recommendations={trendingAnime.map((item) => ({
                         anime: {
-                          id: series.id,
-                          slug: series.slug,
-                          title: series.title,
-                          titleEnglish: series.titleEnglish || series.displayTitle,
-                          titleJapanese: series.titleJapanese,
-                          titleSynonyms: series.titleSynonyms,
-                          coverImage: series.coverImage ?? null,
-                          year: series.year ?? null,
-                          averageRating: series.rating || series.averageRating || null,
-                          genres: series.genres || [],
-                          seasonCount: series.seasonCount,
-                          totalEpisodes: series.totalEpisodes,
+                      id: item.id,
+                      slug: item.slug,
+                      title: item.title,
+                      titleEnglish: item.titleEnglish || null,
+                      coverImage: item.coverImage || null,
+                      year: item.year,
+                      averageRating: item.rating,
+                      genres: item.genres || [],
                         },
-                      })) as any
-                  }
+                  }))}
                   showReasons={false}
                 />
               )}
@@ -542,32 +772,25 @@ export default function DashboardPage() {
               <FriendsWatching />
 
               {/* Popular Series - Grouped by series like Crunchyroll */}
-              {allSeries.length > 0 && (
+              {(allSeries.length > 0 || sectionLoadingStates.secondary) && (
+                <>
+                  {allSeries.length > 0 ? (
                 <RecommendationCarousel
                   title="Popular Anime"
                   icon={<Sparkles className="h-5 w-5 text-primary-400" />}
-                  recommendations={allSeries
-                    .slice(0, 20)
-                    .filter((series) => series && series.slug)
-                    .map((series) => ({
-                      anime: {
-                        id: series.id,
-                        slug: series.slug,
-                        title: series.title,
-                        titleEnglish: series.titleEnglish || series.displayTitle,
-                        titleJapanese: series.titleJapanese,
-                        titleSynonyms: series.titleSynonyms,
-                        coverImage: series.coverImage ?? null,
-                        year: series.year ?? null,
-                        averageRating: series.rating ?? null,
-                        genres: series.genres || [],
-                        // Add season metadata for badge display
-                        seasonCount: series.seasonCount,
-                        totalEpisodes: series.totalEpisodes,
-                      },
-                    }))}
+                      recommendations={mapToRecommendations(allSeries.slice(0, 20))}
                   showReasons={false}
                 />
+                  ) : (
+                    <div className="mb-8 sm:mb-10 lg:mb-12">
+                      <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                        <Sparkles className="h-5 w-5 text-primary-400" />
+                        <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Popular Anime</h2>
+                      </div>
+                      <CarouselSkeleton itemCount={5} />
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Fans Like You Also Watched - Pure Collaborative Filtering */}
@@ -582,7 +805,9 @@ export default function DashboardPage() {
               )}
 
               {/* Hidden Gems */}
-              {hiddenGemsRecs.length > 0 && (
+              {(hiddenGemsRecs.length > 0 || sectionLoadingStates.personalized) && (
+                <>
+                  {hiddenGemsRecs.length > 0 ? (
                 <RecommendationCarousel
                   title="Hidden Gems You'll Love"
                   icon={<Gem className="h-5 w-5 text-primary-400" />}
@@ -590,37 +815,44 @@ export default function DashboardPage() {
                   onDismiss={handleDismissRecommendation}
                   showReasons={true}
                 />
+                  ) : sectionLoadingStates.personalized ? (
+                    <div className="mb-8 sm:mb-10 lg:mb-12">
+                      <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                        <Gem className="h-5 w-5 text-primary-400" />
+                        <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Hidden Gems You'll Love</h2>
+                      </div>
+                      <CarouselSkeleton itemCount={5} />
+                    </div>
+                  ) : null}
+                </>
               )}
 
               {/* Top Rated Series - Grouped */}
-              {topRatedSeries.length > 0 && (
+              {(topRatedSeries.length > 0 || sectionLoadingStates.secondary) && (
+                <>
+                  {topRatedSeries.length > 0 ? (
                 <RecommendationCarousel
                   title="Top Rated Anime"
                   icon={<Star className="h-5 w-5 text-warning-400" />}
-                  recommendations={topRatedSeries
-                    .filter((series) => series && series.slug)
-                    .map((series) => ({
-                      anime: {
-                        id: series.id,
-                        slug: series.slug,
-                        title: series.title,
-                        titleEnglish: series.titleEnglish || series.displayTitle,
-                        titleJapanese: series.titleJapanese,
-                        titleSynonyms: series.titleSynonyms,
-                        coverImage: series.coverImage ?? null,
-                        year: series.year ?? null,
-                        averageRating: series.rating ?? null,
-                        genres: series.genres || [],
-                        seasonCount: series.seasonCount,
-                        totalEpisodes: series.totalEpisodes,
-                      },
-                    }))}
+                      recommendations={mapToRecommendations(topRatedSeries)}
                   showReasons={false}
                 />
+                  ) : (
+                    <div className="mb-8 sm:mb-10 lg:mb-12">
+                      <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                        <Star className="h-5 w-5 text-warning-400" />
+                        <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Top Rated Anime</h2>
+                      </div>
+                      <CarouselSkeleton itemCount={5} />
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Expand Your Horizons */}
-              {discoveryRecs.length > 0 && (
+              {(discoveryRecs.length > 0 || sectionLoadingStates.personalized) && (
+                <>
+                  {discoveryRecs.length > 0 ? (
                 <RecommendationCarousel
                   title="Expand Your Horizons"
                   icon={<Compass className="h-5 w-5 text-primary-400" />}
@@ -628,33 +860,38 @@ export default function DashboardPage() {
                   onDismiss={handleDismissRecommendation}
                   showReasons={true}
                 />
+                  ) : sectionLoadingStates.personalized ? (
+                    <div className="mb-8 sm:mb-10 lg:mb-12">
+                      <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                        <Compass className="h-5 w-5 text-primary-400" />
+                        <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Expand Your Horizons</h2>
+                      </div>
+                      <CarouselSkeleton itemCount={5} />
+                    </div>
+                  ) : null}
+                </>
               )}
 
               {/* Recently Added - Grouped Series */}
-              {recentlyAddedSeries.length > 0 && (
+              {(recentlyAddedSeries.length > 0 || sectionLoadingStates.secondary) && (
+                <>
+                  {recentlyAddedSeries.length > 0 ? (
                 <RecommendationCarousel
                   title="Recently Added"
                   icon={<Calendar className="h-5 w-5 text-success-400" />}
-                  recommendations={recentlyAddedSeries
-                    .filter((series) => series && series.slug)
-                    .map((series) => ({
-                      anime: {
-                        id: series.id,
-                        slug: series.slug,
-                        title: series.title,
-                        titleEnglish: series.titleEnglish || series.displayTitle,
-                        titleJapanese: series.titleJapanese,
-                        titleSynonyms: series.titleSynonyms,
-                        coverImage: series.coverImage ?? null,
-                        year: series.year ?? null,
-                        averageRating: series.rating ?? null,
-                        seasonCount: series.seasonCount,
-                        totalEpisodes: series.totalEpisodes,
-                        genres: series.genres || [],
-                      },
-                    }))}
+                      recommendations={mapToRecommendations(recentlyAddedSeries)}
                   showReasons={false}
                 />
+                  ) : (
+                    <div className="mb-8 sm:mb-10 lg:mb-12">
+                      <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                        <Calendar className="h-5 w-5 text-success-400" />
+                        <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Recently Added</h2>
+                      </div>
+                      <CarouselSkeleton itemCount={5} />
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
@@ -670,60 +907,58 @@ export default function DashboardPage() {
           )}
 
           {/* Trending Series - Use carousel for consistency - Guest users */}
-          {!isAuthenticated && trendingAnime.length > 0 && (
+          {!isAuthenticated && (
+            <>
+              {trendingAnime.length > 0 ? (
             <RecommendationCarousel
               title="Trending Now"
               icon={<TrendingUp className="h-5 w-5 text-primary-400" />}
-              recommendations={
-                trendingAnime
-                  .filter((series) => series && series.slug)
-                  .map((series) => ({
+                  recommendations={trendingAnime.map((item) => ({
                     anime: {
-                      id: series.id,
-                      slug: series.slug,
-                      title: series.title,
-                      titleEnglish: series.titleEnglish || series.displayTitle,
-                      titleJapanese: series.titleJapanese,
-                      titleSynonyms: series.titleSynonyms,
-                      coverImage: series.coverImage ?? null,
-                      year: series.year ?? null,
-                      averageRating: series.rating || series.averageRating || null,
-                      genres: series.genres || [],
-                      seasonCount: series.seasonCount,
-                      totalEpisodes: series.totalEpisodes,
+                      id: item.id,
+                      slug: item.slug,
+                      title: item.title,
+                      titleEnglish: item.titleEnglish || null,
+                      coverImage: item.coverImage || null,
+                      year: item.year,
+                      averageRating: item.rating,
+                      genres: item.genres || [],
                     },
-                  })) as any
-              }
+                  }))}
               showReasons={false}
             />
+              ) : (
+                <div className="mb-8 sm:mb-10 lg:mb-12">
+                  <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                    <TrendingUp className="h-5 w-5 text-primary-400" />
+                    <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Trending Now</h2>
+                  </div>
+                  <CarouselSkeleton itemCount={5} />
+                </div>
+              )}
+            </>
           )}
 
           {/* Popular Series - Use carousel for consistency - Guest users */}
-          {!isAuthenticated && allSeries.length > 0 && (
+          {!isAuthenticated && (
+            <>
+              {allSeries.length > 0 ? (
             <RecommendationCarousel
               title="Popular Anime"
               icon={<Sparkles className="h-5 w-5 text-primary-400" />}
-              recommendations={allSeries
-                .slice(0, 20)
-                .filter((series) => series && series.slug)
-                .map((series) => ({
-                  anime: {
-                    id: series.id,
-                    slug: series.slug,
-                    title: series.title,
-                    titleEnglish: series.titleEnglish || series.displayTitle,
-                    titleJapanese: series.titleJapanese,
-                    titleSynonyms: series.titleSynonyms,
-                    coverImage: series.coverImage ?? null,
-                    year: series.year ?? null,
-                    averageRating: series.rating ?? null,
-                    genres: series.genres || [],
-                    seasonCount: series.seasonCount,
-                    totalEpisodes: series.totalEpisodes,
-                  },
-                }))}
+                  recommendations={mapToRecommendations(allSeries.slice(0, 20))}
               showReasons={false}
             />
+              ) : sectionLoadingStates.secondary ? (
+                <div className="mb-8 sm:mb-10 lg:mb-12">
+                  <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                    <Sparkles className="h-5 w-5 text-primary-400" />
+                    <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Popular Anime</h2>
+                  </div>
+                  <CarouselSkeleton itemCount={5} />
+                </div>
+              ) : null}
+            </>
           )}
 
           {/* Empty State for Guests */}

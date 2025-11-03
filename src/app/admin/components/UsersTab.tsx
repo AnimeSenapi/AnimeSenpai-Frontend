@@ -17,9 +17,6 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
-  Shield,
-  ShieldCheck,
-  Crown,
   Trash2,
   Eye,
   X,
@@ -36,6 +33,7 @@ import {
   Activity,
   MailOpen,
 } from 'lucide-react'
+import { getRoleConfig, getRoleIcon, getRoleBadgeClasses } from '../../../lib/role-config'
 import { Button } from '../../../components/ui/button'
 import { LoadingState } from '../../../components/ui/loading-state'
 import { EmptyState } from '../../../components/ui/error-state'
@@ -375,16 +373,6 @@ export function UsersTab() {
     }
   }
 
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return <Crown className="h-4 w-4 text-yellow-400" />
-      case 'moderator':
-        return <ShieldCheck className="h-4 w-4 text-blue-400" />
-      default:
-        return <Shield className="h-4 w-4 text-gray-400" />
-    }
-  }
 
   const toggleUserSelection = (userId: string) => {
     const newSelected = new Set(selectedUsers)
@@ -492,16 +480,6 @@ export function UsersTab() {
     return filtered
   }
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
-      case 'moderator':
-        return 'bg-blue-500/20 text-blue-300 border-blue-500/30'
-      default:
-        return 'bg-gray-500/20 text-gray-300 border-gray-500/30'
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -739,10 +717,11 @@ export function UsersTab() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium ${getRoleColor(user.role)}`}
-                        >
-                          {getRoleIcon(user.role)}
+                        <div className={getRoleBadgeClasses(user.role)}>
+                          {(() => {
+                            const { IconComponent, className } = getRoleIcon(user.role)
+                            return <IconComponent className={className} />
+                          })()}
                           <span className="capitalize">{user.role}</span>
                         </div>
                       </td>
@@ -886,10 +865,11 @@ export function UsersTab() {
                         <p className="text-xs text-gray-400 break-all">{user.email}</p>
                       )}
                       <div className="flex items-center gap-2 mt-2">
-                        <div
-                          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-xs font-medium ${getRoleColor(user.role)}`}
-                        >
-                          {getRoleIcon(user.role)}
+                        <div className={getRoleBadgeClasses(user.role)}>
+                          {(() => {
+                            const { IconComponent, className } = getRoleIcon(user.role)
+                            return <IconComponent className={className} />
+                          })()}
                           <span className="capitalize">{user.role}</span>
                         </div>
                       </div>
@@ -1065,10 +1045,11 @@ export function UsersTab() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-400 mb-1">Role</p>
-                    <div
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium ${getRoleColor(selectedUser.role)}`}
-                    >
-                      {getRoleIcon(selectedUser.role)}
+                    <div className={getRoleBadgeClasses(selectedUser.role)}>
+                      {(() => {
+                        const { IconComponent, className } = getRoleIcon(selectedUser.role)
+                        return <IconComponent className={className} />
+                      })()}
                       <span className="capitalize">{selectedUser.role}</span>
                     </div>
                   </div>

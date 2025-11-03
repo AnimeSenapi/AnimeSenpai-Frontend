@@ -8,7 +8,7 @@ import { Button } from '../../components/ui/button'
 import { UserListResponse } from '../../types/anime'
 import { useAuth } from '../lib/auth-context'
 import { useFavorites } from '../lib/favorites-context'
-import { apiGetUserList } from '../lib/api'
+import { apiGetUserList, apiAddToList } from '../lib/api'
 import { groupAnimeIntoSeries } from '../../lib/series-grouping'
 import {
   StatsCardSkeleton,
@@ -30,19 +30,17 @@ import {
   Lock,
   Search,
   X,
-  RefreshCw,
   TrendingUp,
 } from 'lucide-react'
 import { SEOMetadata } from '../../components/SEOMetadata'
 
 // Sort options
-type SortOption = 'title' | 'rating' | 'year' | 'recent' | 'episodes'
+type SortOption = 'title' | 'rating' | 'year' | 'recent'
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'recent', label: 'Recently Added' },
   { value: 'title', label: 'Title (A-Z)' },
   { value: 'rating', label: 'Highest Rating' },
   { value: 'year', label: 'Release Year' },
-  { value: 'episodes', label: 'Most Episodes' },
 ]
 
 export default function MyListPage() {
@@ -61,7 +59,6 @@ export default function MyListPage() {
   const [showSortMenu, setShowSortMenu] = useState(false)
 
   // Fetch user's anime list from backend
-  useEffect(() => {
     const fetchUserList = async () => {
       if (!isAuthenticated) return
 
@@ -95,8 +92,23 @@ export default function MyListPage() {
       }
     }
 
+  useEffect(() => {
     fetchUserList()
   }, [isAuthenticated])
+
+  // Handle status change
+  const handleStatusChange = async (animeId: string, status: 'watching' | 'completed' | 'plan-to-watch') => {
+    try {
+      await apiAddToList({
+        animeId,
+        status,
+      })
+      // Refetch the list to update the UI
+      await fetchUserList()
+    } catch (err) {
+      console.error('Failed to update status:', err)
+    }
+  }
 
   // Close sort menu when clicking outside
   useEffect(() => {
@@ -113,33 +125,6 @@ export default function MyListPage() {
     return undefined
   }, [showSortMenu])
 
-  const refreshList = async () => {
-    if (!isAuthenticated) return
-
-    setIsLoading(true)
-    setError(null)
-    try {
-      const data = await apiGetUserList()
-      setUserList({
-        items: data.items || [],
-        total: data.pagination?.total || 0,
-        stats: {
-          watching: 0,
-          completed: 0,
-          planToWatch: 0,
-          onHold: 0,
-          dropped: 0,
-          favorites: 0,
-        },
-      })
-    } catch (err) {
-      console.error('Failed to refresh list:', err)
-      setError(null) // Don't show error, just use current list
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   // Convert backend format to display format
   const myListAnimeRaw =
     userList?.items
@@ -153,8 +138,6 @@ export default function MyListPage() {
           | 'on-hold'
           | 'dropped',
         isFavorite: 'isFavorite' in item ? item.isFavorite! : false, // Include favorite flag, safe check for missing field
-        // Include progress for episode tracking
-        progress: 'progress' in item && typeof item.progress === 'number' ? item.progress : 0,
         // Ensure rating field exists for grouping
         rating: (item.anime && (item.anime.averageRating ?? item.anime.rating)) || 0,
         averageRating: item.anime!.averageRating || item.anime!.rating || 0,
@@ -173,11 +156,6 @@ export default function MyListPage() {
       series.seasons?.some((s: any) => s.isFavorite) ||
       myListAnimeRaw.find((a) => a.id === series.id)?.isFavorite ||
       false,
-    // Sum progress across all seasons for series
-    progress:
-      series.seasons?.reduce((sum: number, season: any) => sum + (season.progress || 0), 0) ||
-      myListAnimeRaw.find((a) => a.id === series.id)?.progress ||
-      0,
     // Use English title if available
     title: series.titleEnglish || series.displayTitle || series.title,
     titleEnglish: series.titleEnglish || series.displayTitle,
@@ -252,8 +230,6 @@ export default function MyListPage() {
         return sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0))
       case 'year':
         return sorted.sort((a, b) => (b.year || 0) - (a.year || 0))
-      case 'episodes':
-        return sorted.sort((a, b) => (b.episodes || 0) - (a.episodes || 0))
       case 'recent':
       default:
         return sorted // Already in recent order from API
@@ -275,21 +251,6 @@ export default function MyListPage() {
   // Show loading state
   if (authLoading || isLoading) {
     return <LoadingState variant="full" text="Loading your anime list..." size="lg" />
-  }
-
-  // Show error state if needed
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden pt-32">
-        <ErrorState
-          variant="full"
-          error={error}
-          title="Failed to load your list"
-          onRetry={() => window.location.reload()}
-          showHome={true}
-        />
-      </div>
-    )
   }
 
   // Original loading skeleton code (fallback)
@@ -351,26 +312,6 @@ export default function MyListPage() {
     )
   }
 
-  // Show error state
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 flex items-center justify-center">
-        <div className="text-center max-w-md px-6">
-          <div className="w-16 h-16 bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-red-400 text-2xl">⚠️</span>
-          </div>
-          <h2 className="text-xl font-semibold text-white mb-2">Unable to Load Your List</h2>
-          <p className="text-gray-400 mb-6">{error}</p>
-          <Button
-            onClick={() => window.location.reload()}
-            className="bg-primary-500 hover:bg-primary-600"
-          >
-            Try Again
-          </Button>
-        </div>
-      </div>
-    )
-  }
 
   // Show sign-in prompt for guests
   if (!isAuthenticated) {
@@ -456,178 +397,151 @@ export default function MyListPage() {
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
           </div>
 
-          <main className="container px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-8 sm:pb-12 md:pb-16 lg:pb-20 relative z-10">
-            {/* Header Section - Mobile Optimized */}
-            <div className="mb-4 sm:mb-6 lg:mb-8">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 bg-gradient-to-r from-white via-primary-400 to-secondary-400 bg-clip-text text-transparent">
-                    My List
-                  </h1>
-                  <p className="text-sm sm:text-base md:text-lg text-gray-300 flex items-center gap-2">
-                    {myListAnime.length} anime in your collection
-                    {myListAnime.length > 0 && searchQuery && (
-                      <span className="text-xs sm:text-sm text-gray-500">({filteredAnime.length} shown)</span>
-                    )}
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={refreshList}
-                  disabled={isLoading}
-                  className="border-white/20 text-white hover:bg-white/10 min-h-[44px] min-w-[44px] flex items-center justify-center"
-                >
-                  <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                </Button>
-              </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-                <div className="glass rounded-xl p-3 sm:p-4 hover:bg-white/10 transition-colors">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-error-500/20 rounded-lg flex items-center justify-center">
-                      <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-error-400" />
-                    </div>
-                    <div>
-                      <div className="text-lg sm:text-xl font-bold text-white">{stats.favorites}</div>
-                      <div className="text-xs text-gray-400">Favorites</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="glass rounded-xl p-3 sm:p-4 hover:bg-white/10 transition-colors">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary-500/20 rounded-lg flex items-center justify-center">
-                      <Play className="h-4 w-4 sm:h-5 sm:w-5 text-primary-400" />
-                    </div>
-                    <div>
-                      <div className="text-lg sm:text-xl font-bold text-white">{stats.watching}</div>
-                      <div className="text-xs text-gray-400">Watching</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="glass rounded-xl p-3 sm:p-4 hover:bg-white/10 transition-colors">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-success-500/20 rounded-lg flex items-center justify-center">
-                      <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-success-400" />
-                    </div>
-                    <div>
-                      <div className="text-lg sm:text-xl font-bold text-white">{stats.completed}</div>
-                      <div className="text-xs text-gray-400">Completed</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="glass rounded-xl p-3 sm:p-4 hover:bg-white/10 transition-colors">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-warning-500/20 rounded-lg flex items-center justify-center">
-                      <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-warning-400" />
-                    </div>
-                    <div>
-                      <div className="text-lg sm:text-xl font-bold text-white">{stats.planToWatch}</div>
-                      <div className="text-xs text-gray-400">Plan to Watch</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Category Filter */}
-            <div className="glass rounded-2xl p-3 sm:p-4 mb-6 sm:mb-8">
-              <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2">
-                <Button
-                  variant={selectedCategory === 'all' ? 'default' : 'outline'}
-                  size="sm"
+          <main className="container px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 md:pt-40 pb-8 sm:pb-12 md:pb-16 lg:pb-20 relative z-10">
+            {/* Stats and Controls Card */}
+            <div className="glass rounded-xl p-3 sm:p-4 border border-white/10 mb-6 shadow-xl backdrop-blur-xl">
+              {/* Stats Row - Clickable Filters */}
+              <div className="grid grid-cols-5 gap-2 sm:gap-2.5 mb-3 sm:mb-4">
+                <button
                   onClick={() => setSelectedCategory('all')}
-                  className={`whitespace-nowrap transition-all duration-200 ${
+                  className={`group flex flex-col items-center justify-center gap-1 p-2.5 rounded-xl transition-all duration-200 ease-out ${
                     selectedCategory === 'all'
-                      ? 'bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 shadow-lg shadow-brand-primary-500/25'
-                      : 'border-white/20 text-white hover:bg-white/10 hover:border-white/30'
+                      ? 'bg-gradient-to-br from-primary-500/20 via-secondary-500/20 to-primary-500/20 border border-primary-500/40 shadow-lg shadow-primary-500/10 scale-105'
+                      : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-105 active:scale-95'
                   }`}
                 >
-                  <Bookmark className="h-4 w-4 mr-2" />
-                  All ({myListAnime.length})
-                </Button>
-                <Button
-                  variant={selectedCategory === 'favorites' ? 'default' : 'outline'}
-                  size="sm"
+                  <div className={`p-1.5 rounded-lg transition-all duration-200 ${
+                    selectedCategory === 'all'
+                      ? 'bg-gradient-to-br from-primary-500/30 to-secondary-500/30 shadow-sm'
+                      : 'bg-white/5 group-hover:bg-white/10'
+                  }`}>
+                    <Bookmark className={`h-4 w-4 ${selectedCategory === 'all' ? 'text-primary-300' : 'text-gray-400'}`} fill={selectedCategory === 'all' ? 'currentColor' : 'none'} />
+                  </div>
+                  <span className={`text-base font-bold leading-tight ${selectedCategory === 'all' ? 'text-white' : 'text-gray-300'}`}>
+                    {myListAnime.length}
+                  </span>
+                  <span className={`text-[10px] font-medium leading-tight ${selectedCategory === 'all' ? 'text-primary-300' : 'text-gray-500'}`}>
+                    All
+                  </span>
+                </button>
+
+                <button
                   onClick={() => setSelectedCategory('favorites')}
-                  className={`whitespace-nowrap transition-all duration-200 ${
+                  className={`group flex flex-col items-center justify-center gap-1 p-2.5 rounded-xl transition-all duration-200 ease-out ${
                     selectedCategory === 'favorites'
-                      ? 'bg-secondary-500 hover:bg-secondary-600 shadow-lg shadow-brand-secondary-500/25'
-                      : 'border-white/20 text-white hover:bg-white/10 hover:border-white/30'
+                      ? 'bg-rose-500/20 border border-rose-500/40 shadow-lg shadow-rose-500/10 scale-105'
+                      : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-105 active:scale-95'
                   }`}
                 >
-                  <Heart className="h-4 w-4 mr-2" />
-                  Favorites ({favorites.length})
-                </Button>
-                <Button
-                  variant={selectedCategory === 'watching' ? 'default' : 'outline'}
-                  size="sm"
+                  <div className={`p-1.5 rounded-lg transition-all duration-200 ${
+                    selectedCategory === 'favorites'
+                      ? 'bg-rose-500/30 shadow-sm'
+                      : 'bg-white/5 group-hover:bg-white/10'
+                  }`}>
+                    <Heart className={`h-4 w-4 ${selectedCategory === 'favorites' ? 'text-rose-300' : 'text-gray-400'}`} fill={selectedCategory === 'favorites' ? 'currentColor' : 'none'} />
+                  </div>
+                  <span className={`text-base font-bold leading-tight ${selectedCategory === 'favorites' ? 'text-white' : 'text-gray-300'}`}>
+                    {stats.favorites}
+                  </span>
+                  <span className={`text-[10px] font-medium leading-tight ${selectedCategory === 'favorites' ? 'text-rose-300' : 'text-gray-500'}`}>
+                    Fav
+                  </span>
+                </button>
+
+                <button
                   onClick={() => setSelectedCategory('watching')}
-                  className={`whitespace-nowrap transition-all duration-200 ${
+                  className={`group flex flex-col items-center justify-center gap-1 p-2.5 rounded-xl transition-all duration-200 ease-out ${
                     selectedCategory === 'watching'
-                      ? 'bg-primary-500 hover:bg-primary-600 shadow-lg shadow-brand-primary-500/25'
-                      : 'border-white/20 text-white hover:bg-white/10 hover:border-white/30'
+                      ? 'bg-blue-500/20 border border-blue-500/40 shadow-lg shadow-blue-500/10 scale-105'
+                      : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-105 active:scale-95'
                   }`}
                 >
-                  <Play className="h-4 w-4 mr-2" />
-                  Watching ({watching.length})
-                </Button>
-                <Button
-                  variant={selectedCategory === 'completed' ? 'default' : 'outline'}
-                  size="sm"
+                  <div className={`p-1.5 rounded-lg transition-all duration-200 ${
+                    selectedCategory === 'watching'
+                      ? 'bg-blue-500/30 shadow-sm'
+                      : 'bg-white/5 group-hover:bg-white/10'
+                  }`}>
+                    <Play className={`h-4 w-4 ${selectedCategory === 'watching' ? 'text-blue-300' : 'text-gray-400'}`} fill={selectedCategory === 'watching' ? 'currentColor' : 'none'} />
+                  </div>
+                  <span className={`text-base font-bold leading-tight ${selectedCategory === 'watching' ? 'text-white' : 'text-gray-300'}`}>
+                    {stats.watching}
+                  </span>
+                  <span className={`text-[10px] font-medium leading-tight ${selectedCategory === 'watching' ? 'text-blue-300' : 'text-gray-500'}`}>
+                    Watch
+                  </span>
+                </button>
+
+                <button
                   onClick={() => setSelectedCategory('completed')}
-                  className={`whitespace-nowrap transition-all duration-200 ${
+                  className={`group flex flex-col items-center justify-center gap-1 p-2.5 rounded-xl transition-all duration-200 ease-out ${
                     selectedCategory === 'completed'
-                      ? 'bg-success-500 hover:bg-success-600 shadow-lg shadow-success-500/25'
-                      : 'border-white/20 text-white hover:bg-white/10 hover:border-white/30'
+                      ? 'bg-green-500/20 border border-green-500/40 shadow-lg shadow-green-500/10 scale-105'
+                      : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-105 active:scale-95'
                   }`}
                 >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Completed ({completed.length})
-                </Button>
-                <Button
-                  variant={selectedCategory === 'plan-to-watch' ? 'default' : 'outline'}
-                  size="sm"
+                  <div className={`p-1.5 rounded-lg transition-all duration-200 ${
+                    selectedCategory === 'completed'
+                      ? 'bg-green-500/30 shadow-sm'
+                      : 'bg-white/5 group-hover:bg-white/10'
+                  }`}>
+                    <CheckCircle className={`h-4 w-4 ${selectedCategory === 'completed' ? 'text-green-300' : 'text-gray-400'}`} fill={selectedCategory === 'completed' ? 'currentColor' : 'none'} />
+                  </div>
+                  <span className={`text-base font-bold leading-tight ${selectedCategory === 'completed' ? 'text-white' : 'text-gray-300'}`}>
+                    {stats.completed}
+                  </span>
+                  <span className={`text-[10px] font-medium leading-tight ${selectedCategory === 'completed' ? 'text-green-300' : 'text-gray-500'}`}>
+                    Done
+                  </span>
+                </button>
+
+                <button
                   onClick={() => setSelectedCategory('plan-to-watch')}
-                  className={`whitespace-nowrap transition-all duration-200 ${
+                  className={`group flex flex-col items-center justify-center gap-1 p-2.5 rounded-xl transition-all duration-200 ease-out ${
                     selectedCategory === 'plan-to-watch'
-                      ? 'bg-planning-500 hover:bg-planning-600 shadow-lg shadow-planning-500/25'
-                      : 'border-white/20 text-white hover:bg-white/10 hover:border-white/30'
+                      ? 'bg-amber-500/20 border border-amber-500/40 shadow-lg shadow-amber-500/10 scale-105'
+                      : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-105 active:scale-95'
                   }`}
                 >
-                  <Star className="h-4 w-4 mr-2" />
-                  Plan to Watch ({planToWatch.length})
-                </Button>
+                  <div className={`p-1.5 rounded-lg transition-all duration-200 ${
+                    selectedCategory === 'plan-to-watch'
+                      ? 'bg-amber-500/30 shadow-sm'
+                      : 'bg-white/5 group-hover:bg-white/10'
+                  }`}>
+                    <Clock className={`h-4 w-4 ${selectedCategory === 'plan-to-watch' ? 'text-amber-300' : 'text-gray-400'}`} fill={selectedCategory === 'plan-to-watch' ? 'currentColor' : 'none'} />
               </div>
+                  <span className={`text-base font-bold leading-tight ${selectedCategory === 'plan-to-watch' ? 'text-white' : 'text-gray-300'}`}>
+                    {stats.planToWatch}
+                  </span>
+                  <span className={`text-[10px] font-medium leading-tight ${selectedCategory === 'plan-to-watch' ? 'text-amber-300' : 'text-gray-500'}`}>
+                    Plan
+                  </span>
+                </button>
             </div>
 
             {/* Search and Controls */}
-            <div className="mb-6 sm:mb-8 space-y-3 sm:space-y-4">
-              {/* Search Bar */}
-              <div className="glass rounded-xl p-1">
-                <div className="relative">
-                  <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+              <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 pt-2 border-t border-white/10">
+                <div className="relative flex-1 overflow-hidden rounded-lg">
+                  <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none transition-colors z-10" />
                   <input
                     type="text"
-                    placeholder="Search anime by title or studio..."
+                    placeholder="Search your anime..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 sm:pl-12 pr-10 py-3 sm:py-3.5 bg-transparent text-white placeholder-gray-500 focus:outline-none text-sm sm:text-base"
+                    className="w-full pl-10 pr-9 h-10 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/30 text-sm transition-all duration-200 hover:border-white/20"
+                    style={{ borderRadius: '0.5rem' }}
                   />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200 p-1.5 active:scale-95"
+                      aria-label="Clear search"
                     >
-                      <X className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <X className="h-3.5 w-3.5" />
                     </button>
                   )}
-                </div>
               </div>
 
-              {/* Controls Row */}
-              <div className="flex items-center justify-between gap-3 sm:gap-4">
+                <div className="flex items-center gap-2">
                 {/* Sort Dropdown */}
                 <div className="relative">
                   <Button
@@ -637,15 +551,15 @@ export default function MyListPage() {
                       e.stopPropagation()
                       setShowSortMenu(!showSortMenu)
                     }}
-                    className="border-white/20 text-white hover:bg-white/10 min-h-[44px]"
+                      className="border-white/20 text-white hover:bg-white/10 hover:border-white/30 h-10 px-3.5 transition-all duration-200 rounded-xl"
                   >
                     <TrendingUp className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">{SORT_OPTIONS.find((opt) => opt.value === sortBy)?.label}</span>
-                    <span className="sm:hidden">Sort</span>
+                      <span className="text-xs hidden sm:inline font-medium">{SORT_OPTIONS.find((opt) => opt.value === sortBy)?.label}</span>
+                      <span className="text-xs sm:hidden font-medium">Sort</span>
                   </Button>
 
                   {showSortMenu && (
-                    <div className="absolute top-full left-0 mt-2 glass rounded-xl p-2 min-w-[200px] z-10 border border-white/10">
+                      <div className="absolute top-full right-0 mt-2 glass rounded-xl p-2 min-w-[220px] z-50 border border-white/20 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2">
                       {SORT_OPTIONS.map((option) => (
                         <button
                           key={option.value}
@@ -653,13 +567,16 @@ export default function MyListPage() {
                             setSortBy(option.value)
                             setShowSortMenu(false)
                           }}
-                          className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                            className={`w-full text-left px-3.5 py-2.5 rounded-lg transition-all duration-200 flex items-center justify-between text-sm ${
                             sortBy === option.value
-                              ? 'bg-primary-500/20 text-primary-400'
+                                ? 'bg-gradient-to-r from-primary-500/20 to-primary-600/20 text-primary-400 font-semibold border border-primary-500/30'
                               : 'text-white hover:bg-white/10'
                           }`}
                         >
-                          {option.label}
+                            <span>{option.label}</span>
+                            {sortBy === option.value && (
+                              <div className="w-1.5 h-1.5 rounded-full bg-primary-400"></div>
+                            )}
                         </button>
                       ))}
                     </div>
@@ -667,14 +584,14 @@ export default function MyListPage() {
                 </div>
 
                 {/* View Mode Toggle */}
-                <div className="flex items-center gap-1 glass rounded-xl p-1">
+                  <div className="flex items-center gap-0.5 glass rounded-xl p-0.5 border border-white/10">
                   <Button
                     variant={viewMode === 'grid' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('grid')}
-                    className={`transition-all min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                      className={`transition-all duration-200 h-9 w-9 flex items-center justify-center p-0 rounded-lg ${
                       viewMode === 'grid'
-                        ? 'bg-gradient-to-r from-primary-500 to-secondary-500'
+                          ? 'bg-gradient-to-r from-primary-500 to-secondary-500 shadow-lg shadow-primary-500/20'
                         : 'text-white hover:bg-white/10'
                     }`}
                   >
@@ -684,19 +601,21 @@ export default function MyListPage() {
                     variant={viewMode === 'list' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('list')}
-                    className={`transition-all min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                      className={`transition-all duration-200 h-9 w-9 flex items-center justify-center p-0 rounded-lg ${
                       viewMode === 'list'
-                        ? 'bg-gradient-to-r from-primary-500 to-secondary-500'
+                          ? 'bg-gradient-to-r from-primary-500 to-secondary-500 shadow-lg shadow-primary-500/20'
                         : 'text-white hover:bg-white/10'
                     }`}
                   >
                     <ListIcon className="h-4 w-4" />
                   </Button>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Anime Display */}
+            <div className="mt-2">
             {viewMode === 'grid' ? (
               // Use virtual scrolling for grid view (optimal for 100+ items)
               filteredAnime.length > 50 ? (
@@ -715,11 +634,12 @@ export default function MyListPage() {
                       variant="grid"
                       onFavorite={toggleFavorite}
                       isFavorited={isFavorited(anime.id)}
+                      onStatusChange={handleStatusChange}
                     />
                   )}
                 />
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
                   {filteredAnime.map((anime) => (
                     <MyListAnimeCard
                       key={anime.id}
@@ -727,6 +647,7 @@ export default function MyListPage() {
                       variant="grid"
                       onFavorite={toggleFavorite}
                       isFavorited={isFavorited(anime.id)}
+                      onStatusChange={handleStatusChange}
                     />
                   ))}
                 </div>
@@ -746,11 +667,12 @@ export default function MyListPage() {
                     variant="list"
                     onFavorite={toggleFavorite}
                     isFavorited={isFavorited(anime.id)}
+                    onStatusChange={handleStatusChange}
                   />
                 )}
               />
             ) : (
-              <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                 {filteredAnime.map((anime) => (
                   <MyListAnimeCard
                     key={anime.id}
@@ -758,10 +680,12 @@ export default function MyListPage() {
                     variant="list"
                     onFavorite={toggleFavorite}
                     isFavorited={isFavorited(anime.id)}
+                    onStatusChange={handleStatusChange}
                   />
                 ))}
               </div>
             )}
+            </div>
 
             {/* Empty State - Enhanced with helpful suggestions */}
             {filteredAnime.length === 0 && (

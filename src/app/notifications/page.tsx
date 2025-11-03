@@ -167,19 +167,30 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 text-white pt-24 pb-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 text-white relative overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
+      <main className="container max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 md:pt-40 pb-12 sm:pb-16 relative z-10">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2">Notifications</h1>
-            <p className="text-gray-400">
-              {unreadCount > 0 ? (
-                <span className="text-primary-400 font-semibold">{unreadCount} unread</span>
-              ) : (
-                "You're all caught up!"
-              )}
-            </p>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-xl flex items-center justify-center border border-primary-500/30">
+              <Bell className="h-6 w-6 text-primary-400" />
+            </div>
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-white">Notifications</h1>
+              <p className="text-gray-400 text-sm">
+                {unreadCount > 0 ? (
+                  <span className="text-primary-400 font-semibold">{unreadCount} unread</span>
+                ) : (
+                  "You're all caught up!"
+                )}
+              </p>
+            </div>
           </div>
 
           {unreadCount > 0 && (
@@ -363,7 +374,7 @@ export default function NotificationsPage() {
             ))}
           </div>
         )}
-      </div>
+      </main>
     </div>
   )
 }

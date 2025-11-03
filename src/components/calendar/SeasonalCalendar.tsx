@@ -400,21 +400,6 @@ export function SeasonalCalendar({
                     </div>
                   )}
                   
-                  {/* Progress for airing anime */}
-                  {item.status === 'Airing' && item.episodesAired && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-2">
-                      <div className="flex items-center justify-between text-xs text-white mb-1">
-                        <span>Progress</span>
-                        <span>{item.episodesAired}/{item.episodes}</span>
-                      </div>
-                      <div className="w-full bg-gray-600 rounded-full h-1">
-                        <div 
-                          className="bg-violet-600 h-1 rounded-full transition-all duration-300"
-                          style={{ width: `${(item.episodesAired / item.episodes) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
                 </div>
                 
                 <div className="p-4">

@@ -12,13 +12,10 @@ import { useToast } from '../../../components/ui/toast'
 import { AnimeCard } from '../../../components/anime/AnimeCard'
 import { LoadingState } from '../../../components/ui/loading-state'
 import { EmptyState } from '../../../components/ui/error-state'
-import { AchievementsShowcase } from '../../../components/achievements/AchievementsShowcase'
-import { ACHIEVEMENTS, calculateAchievements } from '../../../lib/achievements'
 import { groupAnimeIntoSeries } from '../../../lib/series-grouping'
-import { apiGetUserList } from '../../lib/api'
+import { apiGetUserList, apiGetAchievementStats } from '../../lib/api'
 import {
   User,
-  Calendar,
   Settings,
   Heart,
   Play,
@@ -31,7 +28,6 @@ import {
   AlertCircle,
   Star,
   MessageSquare,
-  Tv,
   Trophy,
   TrendingUp,
   Users,
@@ -47,6 +43,7 @@ import {
   Share2,
   History,
   Sparkles,
+  Calendar,
 } from 'lucide-react'
 
 interface UserStats {
@@ -57,16 +54,12 @@ interface UserStats {
   planToWatch: number
   onHold: number
   dropped: number
-  ratings: number
-  reviews: number
-  totalEpisodesWatched: number
 }
 
 interface AnimeListItem {
   listId: string
   anime: any
   listStatus: string
-  progress: number
   score?: number | null
   updatedAt: string
 }
@@ -79,7 +72,6 @@ export default function ProfilePage() {
   const [stats, setStats] = useState<UserStats | null>(null)
   const [recentAnime, setRecentAnime] = useState<any[]>([])
   const [favoriteAnime, setFavoriteAnime] = useState<any[]>([])
-  const [achievements, setAchievements] = useState<any[]>([])
   const [achievementStats, setAchievementStats] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [socialCounts, setSocialCounts] = useState({
@@ -203,10 +195,7 @@ export default function ProfilePage() {
                 }
               )
             : null,
-          fetch(`${API_URL}/achievements.getMyAchievements`, {
-            method: 'GET',
-            headers: getAuthHeaders(),
-          }),
+          apiGetAchievementStats(),
           fetch(`${API_URL}/activity.getActivityStats?input=${encodeURIComponent(JSON.stringify({ timeRange: 'month' }))}`, {
             method: 'GET',
             headers: getAuthHeaders(),
@@ -235,7 +224,6 @@ export default function ProfilePage() {
             const recent = profile.recentActivity.slice(0, 4).map((item: any) => ({
               ...item.anime,
               listStatus: item.status,
-              progress: item.progress,
               updatedAt: item.updatedAt
             }))
             setRecentAnime(recent)
@@ -259,26 +247,26 @@ export default function ProfilePage() {
               ...item.anime!,
               listStatus: item.listStatus as 'watching' | 'completed' | 'plan-to-watch' | 'on-hold' | 'dropped',
               isFavorite: isFavorited(item.anime!.id), // Use favorites context
-              progress: 'progress' in item && typeof item.progress === 'number' ? item.progress : 0,
               rating: (item.anime && (item.anime.averageRating ?? item.anime.rating)) || 0,
               averageRating: item.anime!.averageRating || item.anime!.rating || 0,
             }))
 
-          // Debug: Log the raw data structure
-          console.log('Raw API Data:', {
-            totalItems: items.length,
-            processedItems: myListAnimeRaw.length,
-            sampleItem: myListAnimeRaw[0],
-            listStatuses: myListAnimeRaw.map(item => item.listStatus),
-            favorites: myListAnimeRaw.filter(item => item.isFavorite).length
-          })
+          // Debug: Log the raw data structure (development only)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Raw API Data:', {
+              totalItems: items.length,
+              processedItems: myListAnimeRaw.length,
+              sampleItem: myListAnimeRaw[0],
+              listStatuses: myListAnimeRaw.map(item => item.listStatus),
+              favorites: myListAnimeRaw.filter(item => item.isFavorite).length
+            })
+          }
 
           // Group anime into series (same as mylist)
           const myListAnime = groupAnimeIntoSeries(myListAnimeRaw).map((series) => ({
             ...series,
             listStatus: series.seasons?.[0]?.listStatus || myListAnimeRaw.find((a) => a.id === series.id)?.listStatus || 'plan-to-watch',
             isFavorite: series.seasons?.some((s: any) => s.isFavorite) || myListAnimeRaw.find((a) => a.id === series.id)?.isFavorite || false,
-            progress: series.seasons?.reduce((sum: number, season: any) => sum + (season.progress || 0), 0) || myListAnimeRaw.find((a) => a.id === series.id)?.progress || 0,
             title: series.titleEnglish || series.displayTitle || series.title,
             titleEnglish: series.titleEnglish || series.displayTitle,
             rating: Number(series.rating) || series.averageRating || 0,
@@ -308,7 +296,6 @@ export default function ProfilePage() {
             onHold: onHold.length,
             dropped: dropped.length,
             totalAnime: myListAnimeRaw.length,
-            totalEpisodesWatched: myListAnimeRaw.reduce((sum, anime) => sum + (anime.progress || 0), 0)
           })
           
           // Update stats with calculated values
@@ -320,10 +307,7 @@ export default function ProfilePage() {
             planToWatch: planToWatch.length,
             onHold: onHold.length,
             dropped: dropped.length,
-            totalAnime: myListAnimeRaw.length,
-            totalEpisodesWatched: myListAnimeRaw.reduce((sum, anime) => sum + (anime.progress || 0), 0),
-            ratings: prevStats?.ratings || 0,
-            reviews: prevStats?.reviews || 0
+            totalAnime: myListAnimeRaw.length
           }))
         }
 
@@ -334,15 +318,23 @@ export default function ProfilePage() {
           }
         }
 
-        const achievementsData = await achievementsRes.json()
-        if (achievementsData.result?.data) {
-          const achievements = achievementsData.result.data
-          setAchievements(achievements.achievements.filter((a: any) => a.unlocked))
-          setAchievementStats({
-            unlockedCount: achievements.unlockedCount,
-            totalCount: achievements.totalCount,
-            totalPoints: achievements.totalPoints
-          })
+        const achievementsData = await achievementsRes
+        if (achievementsData && typeof achievementsData === 'object') {
+          const data = achievementsData as any
+          if (data.result?.data) {
+            const resultData = data.result.data
+            setAchievementStats({
+              unlockedCount: resultData.unlockedTiers || 0,
+              totalCount: resultData.totalTiers || 0,
+              totalPoints: resultData.totalPoints || 0
+            })
+          } else {
+            setAchievementStats({
+              unlockedCount: data.unlockedTiers || 0,
+              totalCount: data.totalTiers || 0,
+              totalPoints: data.totalPoints || 0
+            })
+          }
         }
 
         const activityStatsData = await activityStatsRes.json()
@@ -405,104 +397,107 @@ export default function ProfilePage() {
           <div className="absolute -bottom-40 -left-40 w-64 h-64 bg-secondary-500/5 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="relative pt-20 sm:pt-24 px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12">
+        <div className="relative pt-32 sm:pt-36 md:pt-40 px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12">
           <div className="max-w-6xl mx-auto">
             
             {/* Compact Header */}
             <div className="glass rounded-2xl p-6 mb-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  {/* Avatar */}
-                  <div className="relative group">
-                    {user?.avatar ? (
+                    {/* Avatar */}
+                    <div className="relative group">
+                      {user?.avatar ? (
                       <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 border-white/20 shadow-lg overflow-hidden">
-                        <Image
-                          src={user.avatar}
-                          alt={user.username || 'User'}
-                          fill
-                          className="object-cover"
+                          <Image
+                            src={user.avatar}
+                            alt={user.username || 'User'}
+                            fill
+                            className="object-cover"
                           sizes="(max-width: 640px) 64px, 80px"
-                        />
-                      </div>
-                    ) : (
+                          />
+                        </div>
+                      ) : (
                       <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-xl flex items-center justify-center border-2 border-white/20 shadow-lg">
                         <User className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
-                      </div>
-                    )}
+                        </div>
+                      )}
 
                     {/* Avatar Upload */}
-                    <input
-                      type="file"
+                      <input
+                        type="file"
                       id="avatar-upload"
-                      accept="image/jpeg,image/png,image/gif,image/webp"
-                      onChange={handleAvatarUpload}
-                      className="hidden"
-                      disabled={isUploadingAvatar}
-                    />
-                    <label
+                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        onChange={handleAvatarUpload}
+                        className="hidden"
+                        disabled={isUploadingAvatar}
+                      />
+                      <label
                       htmlFor="avatar-upload"
                       className="absolute inset-0 rounded-xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center"
-                    >
-                      {isUploadingAvatar ? (
+                      >
+                        {isUploadingAvatar ? (
                         <Loader2 className="h-4 w-4 text-white animate-spin" />
-                      ) : (
+                        ) : (
                         <Camera className="h-4 w-4 text-white" />
-                      )}
-                    </label>
-                  </div>
+                        )}
+                      </label>
+                    </div>
 
-                  {/* User Info */}
+                    {/* User Info */}
                   <div>
                     <h1 className="text-xl sm:text-2xl font-bold text-white">
-                      {user?.name || user?.username || 'User'}
-                    </h1>
+                        {user?.name || user?.username || 'User'}
+                      </h1>
                     <p className="text-primary-300 text-sm">@{user?.username}</p>
                     {user?.bio && (
                       <p className="text-gray-300 text-sm mt-1 max-w-md">{user.bio}</p>
                     )}
-                    {avatarError && (
+                      {avatarError && (
                       <div className="flex items-center gap-2 text-xs text-red-400 mt-1">
-                        <AlertCircle className="h-3 w-3" />
-                        <span>{avatarError}</span>
-                      </div>
-                    )}
+                          <AlertCircle className="h-3 w-3" />
+                          <span>{avatarError}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
 
                 {/* Action Buttons */}
                 <div className="flex gap-2">
-                  <Link href="/user/settings">
+                    <Link href="/user/settings">
                     <Button size="sm" className="bg-white/10 hover:bg-white/20 text-white border border-white/20">
-                      <Settings className="h-4 w-4 mr-2" />
+                        <Settings className="h-4 w-4 mr-2" />
                       Edit
-                    </Button>
-                  </Link>
-                  <Link href={`/user/@${user?.username}`}>
+                      </Button>
+                    </Link>
+                    <Link href={`/user/@${user?.username}`}>
                     <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10">
-                      <Eye className="h-4 w-4 mr-2" />
+                        <Eye className="h-4 w-4 mr-2" />
                       Public
-                    </Button>
-                  </Link>
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
-              </div>
 
               {/* Social Stats */}
-              <div className="mt-4 pt-4 border-t border-white/10 flex items-center gap-6">
-                <div className="text-center">
-                  <div className="text-lg font-bold text-white">{socialCounts.followers}</div>
-                  <div className="text-xs text-gray-400">Followers</div>
+              <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-6">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-white">{socialCounts.followers}</div>
+                    <div className="text-xs text-gray-400">Followers</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-white">{socialCounts.following}</div>
+                    <div className="text-xs text-gray-400">Following</div>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <div className="text-lg font-bold text-white">{socialCounts.following}</div>
-                  <div className="text-xs text-gray-400">Following</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg font-bold text-white">{stats?.totalAnime || 0}</div>
-                  <div className="text-xs text-gray-400">Anime</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg font-bold text-white">{(stats?.ratings || 0) + (stats?.reviews || 0)}</div>
-                  <div className="text-xs text-gray-400">Reviews</div>
+                
+                {/* Member Since - Right side with better styling */}
+                <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-lg border border-white/10">
+                  <Calendar className="h-4 w-4 text-gray-400" />
+                  <div className="text-right">
+                    <div className="text-sm font-medium text-white">{joinDate}</div>
+                    <div className="text-xs text-gray-400">Member Since</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -529,7 +524,7 @@ export default function ProfilePage() {
                             <div className="flex items-center gap-2">
                               <Activity className="h-4 w-4" />
                               Recent
-                            </div>
+              </div>
                           </button>
                           <button
                             onClick={() => setActiveTab('favorites')}
@@ -542,16 +537,16 @@ export default function ProfilePage() {
                             <div className="flex items-center gap-2">
                               <Heart className="h-4 w-4" />
                               Favorites
-                            </div>
+              </div>
                           </button>
-                        </div>
-                        
+            </div>
+
                         <Link href={activeTab === 'recent' ? '/mylist' : '/mylist?filter=favorites'}>
                           <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10 text-xs px-2 py-1">
                             View All
-                          </Button>
-                        </Link>
-                      </div>
+                </Button>
+              </Link>
+            </div>
 
                       {/* Tab Content */}
                       {activeTab === 'recent' ? (
@@ -559,30 +554,30 @@ export default function ProfilePage() {
                           <div className="text-center py-8">
                             <Clock className="h-8 w-8 text-gray-500 mx-auto mb-3" />
                             <p className="text-gray-400 text-sm mb-3">No recent activity</p>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                               className="border-white/20 text-white hover:bg-white/10 text-xs"
                               onClick={() => router.push('/search')}
                             >
-                              Browse Anime
-                            </Button>
-                          </div>
-                        ) : (
+                        Browse Anime
+                      </Button>
+                  </div>
+                ) : (
                           <div className="grid grid-cols-3 gap-2">
-                            {recentAnime.map((anime) => (
-                              <AnimeCard key={anime.id} anime={anime} variant="grid" />
-                            ))}
-                          </div>
+                    {recentAnime.map((anime) => (
+                      <AnimeCard key={anime.id} anime={anime} variant="grid" />
+                    ))}
+                  </div>
                         )
                       ) : (
                         favoriteAnime.length === 0 ? (
                           <div className="text-center py-8">
                             <Heart className="h-8 w-8 text-gray-500 mx-auto mb-3" />
                             <p className="text-gray-400 text-sm mb-3">No favorites yet</p>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                               className="border-white/20 text-white hover:bg-white/10 text-xs"
                               onClick={() => router.push('/search')}
                             >
@@ -598,7 +593,8 @@ export default function ProfilePage() {
                         )
                       )}
                     </div>
-                  </div>
+
+                </div>
 
               {/* Right Column - Stats & Info */}
               <div className="space-y-6">
@@ -633,13 +629,6 @@ export default function ProfilePage() {
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <Tv className="h-4 w-4 text-purple-400" />
-                            <span className="text-gray-300 text-sm">Episodes</span>
-                          </div>
-                          <span className="text-white font-semibold">{stats?.totalEpisodesWatched || 0}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
                             <Bookmark className="h-4 w-4 text-yellow-400" />
                             <span className="text-gray-300 text-sm">Plan to Watch</span>
                           </div>
@@ -648,30 +637,6 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                {/* Achievements */}
-                <div className="glass rounded-xl p-6">
-                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    <Trophy className="h-5 w-5 text-orange-400" />
-                    Achievements
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-300 text-sm">Unlocked</span>
-                      <span className="text-white font-semibold">
-                        {achievementStats?.unlockedCount || 0} / {achievementStats?.totalCount || 0}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-300 text-sm">Points</span>
-                      <span className="text-white font-semibold">{achievementStats?.totalPoints || 0}</span>
-                    </div>
-                    <Link href="/achievements">
-                      <Button variant="outline" size="sm" className="w-full border-white/20 text-white hover:bg-white/10">
-                        View All
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
 
                 {/* Performance Stats */}
                 <div className="glass rounded-xl p-6">
@@ -690,7 +655,7 @@ export default function ProfilePage() {
                         {activityStats.byType && Object.entries(activityStats.byType).slice(0, 2).map(([type, count]) => (
                           <div key={type} className="flex justify-between items-center">
                             <span className="text-gray-300 text-xs capitalize">
-                              {type.replace(/([A-Z])/g, ' $1').trim()}
+                              {type}
                             </span>
                             <span className="text-white font-semibold text-sm">{count as number}</span>
                           </div>
@@ -724,13 +689,61 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Join Date */}
-                <div className="glass rounded-xl p-6">
-                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-blue-400" />
-                    Member Since
-                  </h3>
-                  <div className="text-gray-300 text-sm">{joinDate}</div>
+                {/* Achievements - Moved under Performance */}
+                <div className="glass rounded-xl p-6 bg-gradient-to-br from-orange-500/10 to-yellow-500/10 border border-orange-500/20">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      <div className="p-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-lg">
+                        <Trophy className="h-5 w-5 text-white" />
+                      </div>
+                      Achievements
+                    </h3>
+                    <Link href="/achievements">
+                      <Button variant="outline" size="sm" className="border-orange-400/30 text-orange-300 hover:bg-orange-400/10 text-xs px-3 py-1">
+                      View All
+                    </Button>
+                  </Link>
+                </div>
+
+                  <div className="space-y-4">
+                    {/* Progress Bar */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-300">Progress</span>
+                        <span className="text-white font-semibold">
+                          {achievementStats?.unlockedCount || 0} / {achievementStats?.totalCount || 0}
+                        </span>
+                      </div>
+                      <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
+                        <div 
+                          className="bg-gradient-to-r from-orange-400 to-yellow-400 h-3 rounded-full transition-all duration-500 ease-out"
+                          style={{ 
+                            width: `${achievementStats?.totalCount ? 
+                              ((achievementStats.unlockedCount / achievementStats.totalCount) * 100) : 0}%` 
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                    
+                    {/* Points with Icon */}
+                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Star className="h-4 w-4 text-yellow-400" />
+                        <span className="text-gray-300 text-sm">Points Earned</span>
+                      </div>
+                      <span className="text-white font-bold text-lg">{achievementStats?.totalPoints || 0}</span>
+                    </div>
+                    
+                    {/* Achievement Preview */}
+                    <div className="text-center">
+                      <p className="text-gray-400 text-xs">
+                        {achievementStats?.unlockedCount === 0 
+                          ? "Start watching anime to unlock tiers!"
+                          : `${achievementStats?.unlockedCount} tier${achievementStats?.unlockedCount === 1 ? '' : 's'} unlocked`
+                        }
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

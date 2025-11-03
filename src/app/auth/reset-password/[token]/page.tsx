@@ -17,6 +17,7 @@ import {
   Check,
   X,
 } from 'lucide-react'
+import PageLoading from '../../../../components/ui/page-loading'
 
 interface ResetPasswordPageProps {
   params: Promise<{
@@ -87,21 +88,7 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
   const hasNumber = /[0-9]/.test(password)
 
   if (isValidating) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 relative overflow-hidden flex items-center justify-center p-4 pt-20 sm:pt-32">
-        <div className="absolute inset-0 overflow-hidden opacity-30">
-          <div className="absolute top-0 -right-40 w-96 h-96 bg-primary-500/30 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 -left-40 w-96 h-96 bg-secondary-500/30 rounded-full blur-3xl"></div>
-        </div>
-
-        <div className="relative z-10 w-full max-w-md">
-          <div className="glass rounded-3xl p-6 sm:p-8 md:p-12 text-center shadow-2xl border border-white/10">
-            <Loader2 className="h-10 w-10 text-primary-400 animate-spin mx-auto mb-4" />
-            <p className="text-gray-400">Validating reset link...</p>
-          </div>
-        </div>
-      </div>
-    )
+    return <PageLoading text="Validating reset link..." />
   }
 
   if (!isValidToken) {

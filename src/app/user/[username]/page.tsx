@@ -1,41 +1,85 @@
 'use client'
 
-import { use, useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import {
-  ArrowLeft,
-  User,
-  UserPlus,
-  UserMinus,
-  UserCheck,
-  Users,
-  Heart,
-  BookMarked,
-  Settings as SettingsIcon,
-  Lock,
-  Loader2,
-  Calendar,
-  Star,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { LoadingState } from '@/components/ui/loading-state'
-import { EmptyState } from '@/components/ui/error-state'
-import { useAuth } from '@/app/lib/auth-context'
-import {
-  apiGetUserProfile,
+import { Button } from '../../../components/ui/button'
+import { useAuth } from '../../lib/auth-context'
+import { useToast } from '../../../components/ui/toast'
+import { AnimeCard } from '../../../components/anime/AnimeCard'
+import { LoadingState } from '../../../components/ui/loading-state'
+import { EmptyState } from '../../../components/ui/error-state'
+import { groupAnimeIntoSeries } from '../../../lib/series-grouping'
+import { 
+  apiGetUserProfile, 
+  apiGetPublicUserAnimeList, 
+  apiGetActivityStats, 
+  apiGetMyRank, 
+  apiGetMyAchievements,
   apiGetRelationshipStatus,
   apiFollowUser,
   apiUnfollowUser,
   apiSendFriendRequest,
-  apiUnfriend,
-} from '@/app/lib/api'
-import { cn } from '@/app/lib/utils'
-import { formatDistanceToNow } from 'date-fns'
-import { UserProfileSEOMetadata } from '@/components/SEOMetadata'
+  apiUnfriend
+} from '../../lib/api'
+import {
+  User,
+  Settings,
+  Heart,
+  Play,
+  CheckCircle,
+  Eye,
+  Loader2,
+  Activity,
+  Clock,
+  Camera,
+  AlertCircle,
+  Star,
+  MessageSquare,
+  Trophy,
+  TrendingUp,
+  Users,
+  Award,
+  BarChart3,
+  Target,
+  Bookmark,
+  Zap,
+  Shield,
+  Globe,
+  Lock,
+  Edit3,
+  Share2,
+  History,
+  Sparkles,
+  Calendar,
+  ArrowLeft,
+  UserPlus,
+  UserMinus,
+  UserCheck,
+  Settings as SettingsIcon,
+  List,
+} from 'lucide-react'
+import { cn } from '../../../lib/utils'
+import { Badge } from '../../../components/ui/badge'
+
+interface UserStats {
+  totalAnime: number
+  favorites: number
+  watching: number
+  completed: number
+  planToWatch: number
+  onHold: number
+  dropped: number
+}
+
+interface AnimeListItem {
+  listId: string
+  anime: any
+  listStatus: string
+  score?: number | null
+  updatedAt: string
+}
 
 interface UserProfile {
   user: {
@@ -45,7 +89,6 @@ interface UserProfile {
     avatar?: string | null
     bio?: string | null
     createdAt: string
-    role: string
   }
   stats: {
     followers: number
@@ -67,53 +110,155 @@ interface RelationshipStatus {
   isFollowing: boolean
   isFollowedBy: boolean
   isFriend: boolean
-  pendingFriendRequest: {
+  pendingFriendRequest?: {
     id: string
     sentByMe: boolean
-    sender: { id: string; username: string }
-    receiver: { id: string; username: string }
   } | null
 }
 
-export default function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
-  const { username: rawUsername } = use(params)
+export default function UserProfilePage() {
+  const params = useParams<{ username: string }>()
+  const rawUsername = (params?.username as string) || ''
   const router = useRouter()
   const { user: currentUser } = useAuth()
+  const { addToast } = useToast()
 
-  // Strip @ symbol if present in the URL (UPDATED - Cache Bust v2)
-  const username = rawUsername.startsWith('@') ? rawUsername.slice(1) : rawUsername
-
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [relationship, setRelationship] = useState<RelationshipStatus | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [actionLoading, setActionLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  // Strip @ symbol if present in the URL
+  let username = rawUsername;
+  try {
+    username = decodeURIComponent(username);
+  } catch (e) {
+    console.error("Failed to decode username:", e);
+  }
+  if (username.startsWith('%40')) {
+    username = username.slice(3);
+  }
+  if (username.startsWith('@')) {
+    username = username.slice(1);
+  }
 
   const isOwnProfile = currentUser?.username === username
 
-  useEffect(() => {
-    loadProfile()
-  }, [username])
+  const [activeTab, setActiveTab] = useState<'recent' | 'favorites'>('recent')
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [stats, setStats] = useState<UserStats | null>(null)
+  const [recentAnime, setRecentAnime] = useState<any[]>([])
+  const [favoriteAnime, setFavoriteAnime] = useState<any[]>([])
+  const [activityStats, setActivityStats] = useState<any>(null)
+  const [leaderboardRank, setLeaderboardRank] = useState<any>(null)
+  const [achievementStats, setAchievementStats] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [relationship, setRelationship] = useState<RelationshipStatus | null>(null)
+  const [actionLoading, setActionLoading] = useState(false)
 
   const loadProfile = async () => {
     try {
       setLoading(true)
       setError(null)
 
+      console.log('Loading profile for username:', username)
       const profileData = (await apiGetUserProfile(username)) as any
-      setProfile(profileData as UserProfile)
+      console.log('Profile data received:', profileData)
+      
+      const actualProfile = profileData.result?.data || profileData
+      console.log('Actual profile:', actualProfile)
+      
+      setProfile(actualProfile as UserProfile)
+      setStats(actualProfile.stats) // Initial stats from profileData
 
-      // Get relationship status if logged in and not own profile
       if (currentUser && !isOwnProfile) {
         try {
-          const relationshipData = await apiGetRelationshipStatus(profileData.user.id)
+          const relationshipData = await apiGetRelationshipStatus(actualProfile.user.id)
           setRelationship(relationshipData as RelationshipStatus)
         } catch (relErr) {
-          // Silently fail - relationship status is not critical
           console.debug('Could not load relationship status:', relErr)
           setRelationship(null)
         }
       }
+
+      try {
+        console.log('Loading anime list for username:', username)
+        const animeListData = await apiGetPublicUserAnimeList(username, 100)
+        console.log('Anime list data received:', animeListData)
+        
+        const actualAnimeData = animeListData.result?.data || animeListData
+        console.log('Actual anime data:', actualAnimeData)
+        
+        const items = actualAnimeData?.items || []
+        console.log('Items array:', items)
+        
+        const myListAnimeRaw = items
+          .filter((item: any) => item && item.id)
+          .map((item: any) => ({
+            ...item,
+            listStatus: item.listStatus as 'watching' | 'completed' | 'plan-to-watch' | 'on-hold' | 'dropped',
+            isFavorite: item.isFavorite || false,
+            rating: item.userScore || item.averageRating || 0,
+            averageRating: item.averageRating || 0,
+          }))
+        
+        console.log('My list anime raw:', myListAnimeRaw)
+
+        const myListAnime = groupAnimeIntoSeries(myListAnimeRaw).map((series) => ({
+          ...series,
+          listStatus: series.seasons?.[0]?.listStatus || myListAnimeRaw.find((a: any) => a.id === series.id)?.listStatus || 'plan-to-watch',
+          isFavorite: series.seasons?.some((s: any) => s.isFavorite) || myListAnimeRaw.find((a: any) => a.id === series.id)?.isFavorite || false,
+          title: series.titleEnglish || series.displayTitle || series.title,
+          titleEnglish: series.titleEnglish || series.displayTitle,
+          rating: Number(series.rating) || series.averageRating || 0,
+          averageRating: Number(series.rating) || series.averageRating || 0,
+        }))
+
+        // For public profiles, we don't have recent activity data
+        // So we'll show recent anime from their list instead
+        const recent = myListAnimeRaw
+          .sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+          .slice(0, 4)
+        setRecentAnime(recent)
+
+        const favorites = myListAnime.filter(anime => anime.isFavorite).slice(0, 6)
+        setFavoriteAnime(favorites)
+
+        // Calculate stats from the anime list
+        const watching = myListAnimeRaw.filter((anime: any) => anime.listStatus === 'watching')
+        const completed = myListAnimeRaw.filter((anime: any) => anime.listStatus === 'completed')
+        const planToWatch = myListAnimeRaw.filter((anime: any) => anime.listStatus === 'plan-to-watch')
+        const onHold = myListAnimeRaw.filter((anime: any) => anime.listStatus === 'on-hold')
+        const dropped = myListAnimeRaw.filter((anime: any) => anime.listStatus === 'dropped')
+        const favoritesCount = myListAnimeRaw.filter((anime: any) => anime.isFavorite)
+
+        setStats({
+          watching: watching.length,
+          completed: completed.length,
+          planToWatch: planToWatch.length,
+          onHold: onHold.length,
+          dropped: dropped.length,
+          favorites: favoritesCount.length,
+          totalAnime: myListAnimeRaw.length
+        })
+
+        // Load additional stats only if user is authenticated and viewing their own profile
+        if (currentUser && isOwnProfile) {
+          try {
+            const [activityData, leaderboardData, achievementsData] = await Promise.all([
+              apiGetActivityStats(),
+              apiGetMyRank('watched'),
+              apiGetMyAchievements()
+            ])
+            
+            setActivityStats(activityData)
+            setLeaderboardRank(leaderboardData)
+            setAchievementStats(achievementsData)
+          } catch (statsErr) {
+            console.debug('Could not load additional stats:', statsErr)
+          }
+        }
+
+      } catch (dataErr) {
+        console.debug('Could not load additional data:', dataErr)
+      }
+
     } catch (err: any) {
       setError(err.message || 'Failed to load profile')
     } finally {
@@ -121,25 +266,40 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
     }
   }
 
+  useEffect(() => {
+    if (username) {
+      loadProfile()
+    }
+  }, [username, currentUser])
+
   const handleFollow = async () => {
     if (!profile || !currentUser) return
 
+    setActionLoading(true)
     try {
-      setActionLoading(true)
-
       if (relationship?.isFollowing) {
         await apiUnfollowUser(profile.user.id)
-        setRelationship(relationship ? { ...relationship, isFollowing: false } : null)
+        setRelationship(prev => prev ? { ...prev, isFollowing: false } : null)
+        addToast({
+          title: 'Success',
+          description: `Unfollowed ${profile.user.username}`,
+          variant: 'success',
+        })
       } else {
         await apiFollowUser(profile.user.id)
-        setRelationship(relationship ? { ...relationship, isFollowing: true } : null)
+        setRelationship(prev => prev ? { ...prev, isFollowing: true } : null)
+        addToast({
+          title: 'Success',
+          description: `Following ${profile.user.username}`,
+          variant: 'success',
+        })
       }
-
-      // Reload profile to get fresh relationship status
-      await loadProfile()
     } catch (err: any) {
-      console.error('Follow action failed:', err)
-      alert('Failed to follow user. Please try again.')
+      addToast({
+        title: 'Error',
+        description: err.message || 'Failed to update follow status',
+        variant: 'destructive',
+      })
     } finally {
       setActionLoading(false)
     }
@@ -148,31 +308,34 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const handleFriendRequest = async () => {
     if (!profile || !currentUser) return
 
+    setActionLoading(true)
     try {
-      setActionLoading(true)
-
       if (relationship?.isFriend) {
-        // Unfriend
-        if (confirm('Are you sure you want to unfriend this user?')) {
           await apiUnfriend(profile.user.id)
-          setRelationship(relationship ? { ...relationship, isFriend: false } : null)
-          await loadProfile()
-        } else {
-          setActionLoading(false)
-          return
-        }
-      } else if (relationship?.pendingFriendRequest) {
-        // Can't do anything if request pending
-        setActionLoading(false)
-        return
+        setRelationship(prev => prev ? { ...prev, isFriend: false } : null)
+        addToast({
+          title: 'Success',
+          description: `Removed ${profile.user.username} from friends`,
+          variant: 'success',
+        })
       } else {
-        // Send request
         await apiSendFriendRequest(profile.user.id)
-        await loadProfile()
+        setRelationship(prev => prev ? { 
+          ...prev, 
+          pendingFriendRequest: { id: 'temp', sentByMe: true } 
+        } : null)
+        addToast({
+          title: 'Success',
+          description: `Friend request sent to ${profile.user.username}`,
+          variant: 'success',
+        })
       }
     } catch (err: any) {
-      console.error('Friend action failed:', err)
-      alert('Failed to send friend request. Please try again.')
+      addToast({
+        title: 'Error',
+        description: err.message || 'Failed to update friend status',
+        variant: 'destructive',
+      })
     } finally {
       setActionLoading(false)
     }
@@ -196,92 +359,69 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
     )
   }
 
-  const { user, stats, privacy } = profile
+  const { user, stats: profileStats, privacy } = profile
 
   return (
-    <>
-      {/* SEO Metadata */}
-      {profile && (
-        <UserProfileSEOMetadata
-          user={{
-            username: profile.user.username,
-            name: profile.user.name || undefined,
-            bio: profile.user.bio || undefined,
-            avatar: profile.user.avatar || undefined,
-          }}
-          url={`https://animesenpai.app/user/${profile.user.username}`}
-        />
-      )}
-
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 text-white">
-        {/* Header Background */}
-        <div className="relative h-48 sm:h-64 bg-gradient-to-r from-primary-900/30 via-secondary-900/30 to-primary-900/30">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-950" />
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
+      {/* Subtle Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-64 h-64 bg-primary-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-64 h-64 bg-secondary-500/5 rounded-full blur-3xl"></div>
         </div>
 
-        {/* Profile Content */}
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20">
           {/* Back Button */}
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 group"
+          className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6"
           >
-            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-            <span>Back to Dashboard</span>
+          <ArrowLeft className="h-4 w-4" />
+          Back to Dashboard
           </Link>
+      </div>
 
-          <div className="glass rounded-2xl border border-white/10 p-6 sm:p-8">
-            {/* Profile Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-8">
+      <div className="relative pt-8 px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12">
+        <div className="max-w-6xl mx-auto">
+          
+          {/* Compact Header */}
+          <div className="glass rounded-2xl p-6 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
               {/* Avatar */}
-              <div className="relative">
+                <div className="relative group">
                 {user.avatar ? (
+                    <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 border-white/20 shadow-lg overflow-hidden">
                   <Image
                     src={user.avatar}
-                    alt={user.username}
-                    width={120}
-                    height={120}
-                    className="rounded-full border-4 border-white/10"
-                  />
-                ) : (
-                  <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 border-4 border-white/10 flex items-center justify-center">
-                    <User className="h-12 w-12 sm:h-16 sm:w-16 text-primary-400" />
-                  </div>
-                )}
-
-                {/* Role Badge */}
-                {user.role !== 'user' && (
-                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
-                    <Badge
-                      className={cn(
-                        'text-xs font-semibold px-3 py-1',
-                        user.role === 'admin'
-                          ? 'bg-error-500/20 text-error-400 border-error-500/30'
-                          : user.role === 'tester'
-                            ? 'bg-warning-500/20 text-warning-400 border-warning-500/30'
-                            : 'bg-primary-500/20 text-primary-400 border-primary-500/30'
-                      )}
-                    >
-                      {user.role.toUpperCase()}
-                    </Badge>
+                        alt={user.username || 'User'}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 64px, 80px"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-xl flex items-center justify-center border-2 border-white/20 shadow-lg">
+                      <User className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
                   </div>
                 )}
               </div>
 
-              {/* Info & Actions */}
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-3">
+                {/* User Info */}
                   <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
-                      {user.name || user.username}
+                  <h1 className="text-xl sm:text-2xl font-bold text-white">
+                    {user.name || user.username || 'User'}
                     </h1>
-                    <p className="text-gray-400">@{user.username}</p>
+                  <p className="text-primary-300 text-sm">@{user.username}</p>
+                  {user.bio && (
+                    <p className="text-gray-300 text-sm mt-1 max-w-md">{user.bio}</p>
+                  )}
+                </div>
                   </div>
 
                   {/* Action Buttons */}
+              <div className="flex gap-2">
+                {/* Follow/Unfollow Button */}
                   {!isOwnProfile && currentUser && (
-                    <div className="flex gap-2">
-                      {/* Follow Button */}
                       <Button
                         onClick={handleFollow}
                         disabled={actionLoading}
@@ -289,7 +429,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                         className={cn(
                           relationship?.isFollowing
                             ? 'border-white/20 text-white hover:bg-white/10'
-                            : 'bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600'
+                        : 'bg-gradient-to-r from-secondary-500 to-primary-500 hover:from-secondary-600 hover:to-primary-600'
                         )}
                       >
                         {actionLoading ? (
@@ -301,8 +441,10 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                         )}
                         {relationship?.isFollowing ? 'Unfollow' : 'Follow'}
                       </Button>
+                )}
 
-                      {/* Friend Button */}
+                {/* Friend Request Button */}
+                {!isOwnProfile && currentUser && relationship && (
                       <Button
                         onClick={handleFriendRequest}
                         disabled={actionLoading || !!relationship?.pendingFriendRequest}
@@ -330,139 +472,292 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                               ? 'Request Pending'
                               : 'Add Friend'}
                       </Button>
-                    </div>
-                  )}
-
-                  {/* Settings Button (Own Profile) */}
-                  {isOwnProfile && (
-                    <Link href="/user/settings">
-                      <Button
-                        variant="outline"
-                        className="border-white/20 text-white hover:bg-white/10"
-                      >
-                        <SettingsIcon className="h-4 w-4 mr-2" />
-                        Edit Profile
-                      </Button>
-                    </Link>
-                  )}
-                </div>
-
-                {/* Bio */}
-                {user.bio && <p className="text-gray-300 mb-4 max-w-2xl">{user.bio}</p>}
-
-                {/* Member Since */}
-                <div className="flex items-center gap-2 text-sm text-gray-400">
-                  <Calendar className="h-4 w-4" />
-                  <span>
-                    Member since{' '}
-                    {formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })}
-                  </span>
-                </div>
+                )}
               </div>
             </div>
 
-            <Separator className="my-6 bg-white/10" />
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8">
-              <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10">
-                <div className="text-2xl sm:text-3xl font-bold text-primary-400 mb-1">
-                  {stats.animeCount}
+            {/* Social Stats */}
+            <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <div className="text-center">
+                  <div className="text-lg font-bold text-white">{profileStats.followers}</div>
+                  <div className="text-xs text-gray-400">Followers</div>
                 </div>
-                <div className="text-xs sm:text-sm text-gray-400">Anime</div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-white">{profileStats.following}</div>
+                  <div className="text-xs text-gray-400">Following</div>
+                </div>
               </div>
 
-              <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10">
-                <div className="text-2xl sm:text-3xl font-bold text-secondary-400 mb-1">
-                  {stats.reviewsCount}
+              {/* Member Since - Right side with better styling */}
+              <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-lg border border-white/10">
+                <Calendar className="h-4 w-4 text-gray-400" />
+                <div className="text-right">
+                  <div className="text-sm font-medium text-white">
+                    {new Date(user.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
                 </div>
-                <div className="text-xs sm:text-sm text-gray-400">Reviews</div>
+                  <div className="text-xs text-gray-400">Member Since</div>
+                </div>
               </div>
-
-              <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10">
-                <div className="text-2xl sm:text-3xl font-bold text-success-400 mb-1">
-                  {stats.friends}
-                </div>
-                <div className="text-xs sm:text-sm text-gray-400">Friends</div>
-              </div>
-
-              <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10">
-                <div className="text-2xl sm:text-3xl font-bold text-warning-400 mb-1">
-                  {stats.followers}
-                </div>
-                <div className="text-xs sm:text-sm text-gray-400">Followers</div>
-              </div>
-
-              <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10">
-                <div className="text-2xl sm:text-3xl font-bold text-planning-400 mb-1">
-                  {stats.following}
-                </div>
-                <div className="text-xs sm:text-sm text-gray-400">Following</div>
               </div>
             </div>
 
             {/* Privacy Notice */}
             {privacy.profileVisibility === 'private' && !isOwnProfile && (
-              <div className="bg-warning-500/10 border border-warning-500/30 rounded-xl p-4 mb-6 flex items-start gap-3">
-                <Lock className="h-5 w-5 text-warning-400 flex-shrink-0 mt-0.5" />
+            <div className="glass rounded-xl p-6 mb-6 border border-yellow-500/20 bg-yellow-500/5">
+              <div className="flex items-center gap-3">
+                <Lock className="h-5 w-5 text-yellow-400" />
                 <div>
-                  <h3 className="text-warning-400 font-semibold mb-1">Private Profile</h3>
+                  <h3 className="text-yellow-300 font-semibold">Private Profile</h3>
                   <p className="text-sm text-gray-300">
                     This user's profile is private. Some information may be hidden.
                   </p>
                 </div>
+                </div>
               </div>
             )}
 
-            {/* Content Tabs */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Anime List */}
-              {(privacy.listVisibility === 'public' || isOwnProfile) && (
-                <Link href={`/user/${username}/list`}>
-                  <div className="glass rounded-xl p-6 border border-white/10 hover:border-primary-500/50 transition-all cursor-pointer group">
-                    <div className="flex items-center justify-between mb-3">
-                      <BookMarked className="h-8 w-8 text-primary-400" />
-                      <span className="text-2xl font-bold text-white">{stats.animeCount}</span>
-                    </div>
-                    <h3 className="text-white font-semibold mb-1 group-hover:text-primary-400 transition-colors">
-                      Anime List
-                    </h3>
-                    <p className="text-sm text-gray-400">View their collection</p>
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Left Column - Activity & Favorites */}
+            <div className="lg:col-span-2">
+              
+              {/* Combined Activity & Favorites with Tabs */}
+              <div className="glass rounded-xl p-4">
+                {/* Tab Headers */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex gap-1 bg-white/5 rounded-lg p-1">
+                    <button
+                      onClick={() => setActiveTab('recent')}
+                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                        activeTab === 'recent'
+                          ? 'bg-primary-500 text-white'
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Activity className="h-4 w-4" />
+                        Recent
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('favorites')}
+                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                        activeTab === 'favorites'
+                          ? 'bg-primary-500 text-white'
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Heart className="h-4 w-4" />
+                        Favorites
+                      </div>
+                    </button>
                   </div>
-                </Link>
-              )}
 
-              {/* Reviews */}
-              {(privacy.reviewsVisibility === 'public' || isOwnProfile) && (
-                <Link href={`/user/${username}/reviews`}>
-                  <div className="glass rounded-xl p-6 border border-white/10 hover:border-secondary-500/50 transition-all cursor-pointer group">
-                    <div className="flex items-center justify-between mb-3">
-                      <Star className="h-8 w-8 text-secondary-400" />
-                      <span className="text-2xl font-bold text-white">{stats.reviewsCount}</span>
-                    </div>
-                    <h3 className="text-white font-semibold mb-1 group-hover:text-secondary-400 transition-colors">
-                      Reviews
-                    </h3>
-                    <p className="text-sm text-gray-400">Read their thoughts</p>
-                  </div>
-                </Link>
-              )}
+                  <Link href={activeTab === 'recent' ? '/mylist' : '/mylist?filter=favorites'}>
+                    <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10 text-xs px-2 py-1">
+                      View All
+                    </Button>
+                  </Link>
+                </div>
 
-              {/* Friends */}
-              {(privacy.friendsVisibility === 'public' || isOwnProfile) && (
-                <Link href={`/user/${username}/friends`}>
-                  <div className="glass rounded-xl p-6 border border-white/10 hover:border-success-500/50 transition-all cursor-pointer group">
-                    <div className="flex items-center justify-between mb-3">
-                      <Users className="h-8 w-8 text-success-400" />
-                      <span className="text-2xl font-bold text-white">{stats.friends}</span>
+                {/* Tab Content */}
+                {activeTab === 'recent' ? (
+                  recentAnime.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Clock className="h-8 w-8 text-gray-500 mx-auto mb-3" />
+                      <p className="text-gray-400 text-sm mb-3">No recent anime</p>
+                      <p className="text-gray-500 text-xs">This user hasn't added any anime to their list yet</p>
                     </div>
-                    <h3 className="text-white font-semibold mb-1 group-hover:text-success-400 transition-colors">
-                      Friends
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2">
+                      {recentAnime.map((anime) => (
+                        <AnimeCard key={anime.id} anime={anime} variant="grid" />
+                      ))}
+                    </div>
+                  )
+                ) : (
+                  favoriteAnime.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Heart className="h-8 w-8 text-gray-500 mx-auto mb-3" />
+                      <p className="text-gray-400 text-sm mb-3">No favorites yet</p>
+                      <p className="text-gray-500 text-xs">This user hasn't marked any anime as favorites</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2">
+                      {favoriteAnime.map((anime) => (
+                        <AnimeCard key={anime.id} anime={anime} variant="grid" />
+                      ))}
+                    </div>
+                  )
+                )}
+              </div>
+
+            </div>
+
+            {/* Right Column - Stats & Info */}
+            <div className="space-y-6">
+              
+              {/* Quick Stats */}
+              <div className="glass rounded-xl p-6">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-blue-400" />
+                  Quick Stats
                     </h3>
-                    <p className="text-sm text-gray-400">See their connections</p>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Play className="h-4 w-4 text-primary-400" />
+                      <span className="text-gray-300 text-sm">Watching</span>
+                    </div>
+                    <span className="text-white font-semibold">{stats?.watching || 0}</span>
                   </div>
-                </Link>
-              )}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-400" />
+                      <span className="text-gray-300 text-sm">Completed</span>
+                    </div>
+                    <span className="text-white font-semibold">{stats?.completed || 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Heart className="h-4 w-4 text-red-400" />
+                      <span className="text-gray-300 text-sm">Favorites</span>
+                    </div>
+                    <span className="text-white font-semibold">{stats?.favorites || 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Bookmark className="h-4 w-4 text-yellow-400" />
+                      <span className="text-gray-300 text-sm">Plan to Watch</span>
+                    </div>
+                    <span className="text-white font-semibold">{stats?.planToWatch || 0}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Performance Stats */}
+              <div className="glass rounded-xl p-6">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-green-400" />
+                  Performance
+                </h3>
+                <div className="space-y-3">
+                  {/* Activity Stats */}
+                  {activityStats ? (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 text-sm">This Month</span>
+                        <span className="text-white font-semibold">{activityStats.totalActivities || 0} activities</span>
+                      </div>
+                      {activityStats.byType && Object.entries(activityStats.byType).slice(0, 2).map(([type, count]) => (
+                        <div key={type} className="flex justify-between items-center">
+                          <span className="text-gray-300 text-xs capitalize">
+                            {type}
+                          </span>
+                          <span className="text-white font-semibold text-sm">{count as number}</span>
+                        </div>
+                      ))}
+                      <div className="border-t border-white/10 my-2"></div>
+                    </>
+                  ) : (
+                    <div className="text-center py-2">
+                      <span className="text-gray-400 text-sm">
+                        {isOwnProfile ? 'Sign in to view activity stats' : 'Activity stats not available'}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Leaderboard Rank */}
+                  {leaderboardRank ? (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 text-sm">Rank</span>
+                        <div className="text-right">
+                          <div className="text-white font-semibold">#{leaderboardRank.rank || 'N/A'}</div>
+                          <div className="text-xs text-gray-400">{leaderboardRank.score || 0} anime</div>
+                        </div>
+                      </div>
+                      {leaderboardRank.percentage > 0 && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-300 text-sm">Percentile</span>
+                          <span className="text-white font-semibold text-sm">{leaderboardRank.percentage}%</span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-2">
+                      <span className="text-gray-400 text-sm">No ranking data</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Achievements */}
+              <div className="glass rounded-xl p-6 bg-gradient-to-br from-orange-500/10 to-yellow-500/10 border border-orange-500/20">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <div className="p-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-lg">
+                      <Trophy className="h-5 w-5 text-white" />
+                    </div>
+                    Achievements
+                    </h3>
+                  <Link href={`/user/@${user.username}/achievements`}>
+                    <Button variant="outline" size="sm" className="border-orange-400/30 text-orange-300 hover:bg-orange-400/10 text-xs px-3 py-1">
+                      View All
+                    </Button>
+                  </Link>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Progress Bar */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-300">Progress</span>
+                      <span className="text-white font-semibold">
+                        {achievementStats?.unlockedCount || 0} / {achievementStats?.totalCount || 0}
+                      </span>
+                    </div>
+                    <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
+                      <div 
+                        className="bg-gradient-to-r from-orange-400 to-yellow-400 h-3 rounded-full transition-all duration-500 ease-out"
+                        style={{ 
+                          width: `${achievementStats?.totalCount ? 
+                            ((achievementStats.unlockedCount / achievementStats.totalCount) * 100) : 0}%` 
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  {/* Points with Icon */}
+                  <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-4 w-4 text-yellow-400" />
+                      <span className="text-gray-300 text-sm">Points Earned</span>
+                    </div>
+                    <span className="text-white font-bold text-lg">{achievementStats?.totalPoints || 0}</span>
+                  </div>
+                  
+                  {/* Achievement Preview */}
+                  <div className="text-center">
+                    <p className="text-gray-400 text-xs">
+                      {!achievementStats 
+                        ? (isOwnProfile ? 'Sign in to view achievements' : 'Achievements not available')
+                        : achievementStats.unlockedCount === 0 
+                          ? "Start watching anime to unlock achievements!"
+                          : `${achievementStats.unlockedCount} achievement${achievementStats.unlockedCount === 1 ? '' : 's'} unlocked`
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
             </div>
 
             {/* Relationship Status */}
@@ -484,6 +779,5 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
           </div>
         </div>
       </div>
-    </>
   )
 }

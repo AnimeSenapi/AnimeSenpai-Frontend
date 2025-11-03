@@ -76,7 +76,7 @@ export function AdvancedFilters({
   onClearAll,
 }: AdvancedFiltersProps) {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    genres: true,
+    genres: false,
     studios: false,
     seasons: false,
     years: false,
@@ -168,39 +168,39 @@ export function AdvancedFilters({
     onToggle: (value: string) => void
     maxHeight?: string
   }) => (
-    <div className="glass rounded-xl p-4 border border-white/10">
+    <div className="glass rounded-lg p-2.5 border border-white/10">
       <button
         onClick={() => toggleSection(sectionKey)}
-        className="w-full flex items-center justify-between text-white hover:text-primary-300 transition-colors mb-3"
+        className="w-full flex items-center justify-between text-white hover:text-primary-300 transition-colors mb-2"
       >
         <div className="flex items-center gap-2">
-          <Icon className="w-4 h-4" />
-          <span className="font-medium">{title}</span>
+          <Icon className="w-3.5 h-3.5" />
+          <span className="font-medium text-sm">{title}</span>
           {selected.length > 0 && (
-            <Badge className="bg-primary-500 text-white text-xs px-2 py-0.5">
+            <Badge className="bg-primary-500 text-white text-[10px] px-1.5 py-0.5">
               {selected.length}
             </Badge>
           )}
         </div>
         {expandedSections[sectionKey] ? (
-          <ChevronUp className="w-4 h-4" />
+          <ChevronUp className="w-3.5 h-3.5" />
         ) : (
-          <ChevronDown className="w-4 h-4" />
+          <ChevronDown className="w-3.5 h-3.5" />
         )}
       </button>
 
       {expandedSections[sectionKey] && (
         <div className={cn('overflow-y-auto custom-scrollbar', maxHeight)}>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {items.length === 0 ? (
-              <p className="text-sm text-gray-400 italic">No {title.toLowerCase()} available</p>
+              <p className="text-xs text-gray-400 italic">No {title.toLowerCase()} available</p>
             ) : (
               items.map((item) => (
                 <button
                   key={item}
                   onClick={() => onToggle(item)}
                   className={cn(
-                    'w-full text-left px-3 py-2 rounded-lg text-sm transition-all touch-manipulation active:scale-98',
+                    'w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all touch-manipulation active:scale-98',
                     selected.includes(item)
                       ? 'bg-primary-500/20 text-primary-300 border border-primary-500/30'
                       : 'text-gray-300 hover:bg-white/5 border border-transparent hover:border-white/10'
@@ -217,29 +217,10 @@ export function AdvancedFilters({
   )
 
   return (
-    <div className="space-y-4">
-      {/* Filter Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-primary-400" />
-          <h3 className="text-lg font-bold text-white">Advanced Filters</h3>
-        </div>
-        {activeFiltersCount > 0 && (
-          <Button
-            onClick={onClearAll}
-            variant="ghost"
-            size="sm"
-            className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-          >
-            <X className="w-4 h-4 mr-1" />
-            Clear All ({activeFiltersCount})
-          </Button>
-        )}
-      </div>
-
+    <div className="space-y-2">
       {/* Active Filters Pills */}
       {activeFiltersCount > 0 && (
-        <div className="flex flex-wrap gap-2 p-4 glass rounded-xl border border-white/10">
+        <div className="flex flex-wrap gap-2 p-2.5 glass rounded-lg border border-white/10">
           {selectedGenres.map((genre) => (
             <Badge
               key={genre}
@@ -362,27 +343,27 @@ export function AdvancedFilters({
 
         {/* Rating Range */}
         {onRatingChange && (
-          <div className="glass rounded-xl p-4 border border-white/10">
+          <div className="glass rounded-lg p-2.5 border border-white/10">
             <button
               onClick={() => toggleSection('rating')}
-              className="w-full flex items-center justify-between text-white hover:text-primary-300 transition-colors mb-3"
+              className="w-full flex items-center justify-between text-white hover:text-primary-300 transition-colors mb-2"
             >
               <div className="flex items-center gap-2">
-                <Star className="w-4 h-4" />
-                <span className="font-medium">Rating</span>
+                <Star className="w-3.5 h-3.5" />
+                <span className="font-medium text-sm">Rating</span>
               </div>
               {expandedSections.rating ? (
-                <ChevronUp className="w-4 h-4" />
+                <ChevronUp className="w-3.5 h-3.5" />
               ) : (
-                <ChevronDown className="w-4 h-4" />
+                <ChevronDown className="w-3.5 h-3.5" />
               )}
             </button>
 
             {expandedSections.rating && (
-              <div className="space-y-3">
-                <div className="flex items-center gap-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
                   <div className="flex-1">
-                    <label className="text-xs text-gray-400 mb-1 block">Min</label>
+                    <label className="text-[10px] text-gray-400 mb-1 block">Min</label>
                     <input
                       type="number"
                       min="0"
@@ -390,12 +371,12 @@ export function AdvancedFilters({
                       step="0.5"
                       value={minRating}
                       onChange={(e) => onRatingChange(Number(e.target.value), maxRating)}
-                      className="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary-400/50"
+                      className="w-full bg-white/5 border border-white/20 rounded-md px-2 py-1.5 text-white text-xs focus:outline-none focus:border-primary-400/50"
                     />
                   </div>
-                  <div className="text-gray-400 pt-5">-</div>
+                  <div className="text-gray-400 pt-4">-</div>
                   <div className="flex-1">
-                    <label className="text-xs text-gray-400 mb-1 block">Max</label>
+                    <label className="text-[10px] text-gray-400 mb-1 block">Max</label>
                     <input
                       type="number"
                       min="0"
@@ -403,58 +384,17 @@ export function AdvancedFilters({
                       step="0.5"
                       value={maxRating}
                       onChange={(e) => onRatingChange(minRating, Number(e.target.value))}
-                      className="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary-400/50"
+                      className="w-full bg-white/5 border border-white/20 rounded-md px-2 py-1.5 text-white text-xs focus:outline-none focus:border-primary-400/50"
                     />
                   </div>
                 </div>
-                <div className="text-xs text-gray-400 text-center">
+                <div className="text-[10px] text-gray-400 text-center">
                   {minRating} - {maxRating} / 10
                 </div>
               </div>
             )}
           </div>
         )}
-      </div>
-
-      {/* Quick Filters */}
-      <div className="glass rounded-xl p-4 border border-white/10">
-        <h4 className="text-sm font-medium text-gray-300 mb-3">Quick Filters</h4>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              if (onRatingChange) onRatingChange(8, 10)
-            }}
-            className="border-white/20 text-white hover:bg-white/10 text-xs"
-          >
-            <Star className="w-3 h-3 mr-1" />
-            Highly Rated (8+)
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              const currentYear = new Date().getFullYear()
-              onYearsChange([String(currentYear)])
-            }}
-            className="border-white/20 text-white hover:bg-white/10 text-xs"
-          >
-            <Calendar className="w-3 h-3 mr-1" />
-            This Year
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              if (onStatusesChange) onStatusesChange(['Currently Airing'])
-            }}
-            className="border-white/20 text-white hover:bg-white/10 text-xs"
-          >
-            <Clock className="w-3 h-3 mr-1" />
-            Airing Now
-          </Button>
-        </div>
       </div>
     </div>
   )

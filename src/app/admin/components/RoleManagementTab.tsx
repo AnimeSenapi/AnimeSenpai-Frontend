@@ -15,9 +15,6 @@ import {
   apiGetAllUsers,
 } from '../../lib/api'
 import {
-  Shield,
-  ShieldCheck,
-  Crown,
   Plus,
   Edit,
   Trash2,
@@ -29,7 +26,9 @@ import {
   AlertCircle,
   RefreshCw,
   Download,
+  Shield,
 } from 'lucide-react'
+import { getRoleConfig, getRoleIcon, getRoleBadgeClasses, getRoleCardClasses } from '../../../lib/role-config'
 import { Button } from '../../../components/ui/button'
 import { LoadingState } from '../../../components/ui/loading-state'
 import { EmptyState } from '../../../components/ui/error-state'
@@ -389,30 +388,8 @@ export function RoleManagementTab() {
     }))
   }
 
-  const getRoleIcon = (roleName: string) => {
-    switch (roleName) {
-      case 'admin':
-        return <Crown className="h-4 w-4 text-yellow-400" />
-      case 'moderator':
-        return <ShieldCheck className="h-4 w-4 text-blue-400" />
-      case 'tester':
-        return <Shield className="h-4 w-4 text-purple-400" />
-      default:
-        return <Shield className="h-4 w-4 text-gray-400" />
-    }
-  }
-
   const getRoleColor = (roleName: string) => {
-    switch (roleName) {
-      case 'admin':
-        return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
-      case 'moderator':
-        return 'bg-blue-500/20 text-blue-300 border-blue-500/30'
-      case 'tester':
-        return 'bg-purple-500/20 text-purple-300 border-purple-500/30'
-      default:
-        return 'bg-gray-500/20 text-gray-300 border-gray-500/30'
-    }
+    return getRoleBadgeClasses(roleName)
   }
 
   const exportToCSV = () => {
@@ -621,22 +598,22 @@ export function RoleManagementTab() {
                     <div key={role.id} className="glass rounded-xl p-6 border border-white/10">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3">
-                          <div
-                            className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                              role.isSystem ? 'bg-yellow-500/10' : 'bg-blue-500/10'
-                            }`}
-                          >
-                            {getRoleIcon(role.name)}
+                          <div className={getRoleCardClasses(role.name)}>
+                            {(() => {
+                              const { IconComponent, className } = getRoleIcon(role.name, 'h-6 w-6')
+                              return <IconComponent className={className} />
+                            })()}
                           </div>
                           <div>
                             <h3 className="text-lg font-semibold text-white">{role.displayName}</h3>
                             <p className="text-sm text-gray-400">@{role.name}</p>
                           </div>
                         </div>
-                        <div
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium ${getRoleColor(role.name)}`}
-                        >
-                          {getRoleIcon(role.name)}
+                        <div className={getRoleBadgeClasses(role.name)}>
+                          {(() => {
+                            const { IconComponent, className } = getRoleIcon(role.name)
+                            return <IconComponent className={className} />
+                          })()}
                           <span className="capitalize">{role.name}</span>
                         </div>
                       </div>
@@ -859,10 +836,11 @@ export function RoleManagementTab() {
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <div
-                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium ${getRoleColor(user.role)}`}
-                            >
-                              {getRoleIcon(user.role)}
+                            <div className={getRoleBadgeClasses(user.role)}>
+                              {(() => {
+                                const { IconComponent, className } = getRoleIcon(user.role)
+                                return <IconComponent className={className} />
+                              })()}
                               <span className="capitalize">{user.role}</span>
                             </div>
                           </td>

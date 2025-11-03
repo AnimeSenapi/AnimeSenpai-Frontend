@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { SearchAnimeCard } from '../../components/anime/SearchAnimeCard'
 import { Button } from '../../components/ui/button'
@@ -8,7 +8,7 @@ import { Badge } from '../../components/ui/badge'
 import { AnimeCardSkeleton, SearchResultSkeleton } from '../../components/ui/skeleton'
 import { EmptyState } from '../../components/ui/error-state'
 import { Anime } from '../../types/anime'
-import { apiGetAllSeries } from '../lib/api'
+import { apiGetAllSeries, api } from '../lib/api'
 import { useFavorites } from '../lib/favorites-context'
 import { VirtualGrid, VirtualList } from '../../components/VirtualList'
 import { SearchSEOMetadata } from '../../components/SEOMetadata'
@@ -20,7 +20,41 @@ import {
   Grid,
   List as ListIcon,
   X,
+  TrendingUp,
+  Sparkles,
+  Star,
 } from 'lucide-react'
+
+// Map UI sort options to API sort params
+const mapSortToAPI = (sortBy: SortOption): { sortBy: string; sortOrder: string } => {
+  switch (sortBy) {
+    case 'rating_desc':
+      return { sortBy: 'averageRating', sortOrder: 'desc' }
+    case 'rating_asc':
+      return { sortBy: 'averageRating', sortOrder: 'asc' }
+    case 'year_desc':
+      return { sortBy: 'year', sortOrder: 'desc' }
+    case 'year_asc':
+      return { sortBy: 'year', sortOrder: 'asc' }
+    case 'title_asc':
+      return { sortBy: 'title', sortOrder: 'asc' }
+    case 'title_desc':
+      return { sortBy: 'title', sortOrder: 'desc' }
+    case 'popularity_desc':
+      return { sortBy: 'popularity', sortOrder: 'desc' }
+    case 'popularity_asc':
+      return { sortBy: 'popularity', sortOrder: 'asc' }
+    case 'episodes_desc':
+      return { sortBy: 'episodes', sortOrder: 'desc' }
+    case 'episodes_asc':
+      return { sortBy: 'episodes', sortOrder: 'asc' }
+    case 'recently_added':
+      return { sortBy: 'createdAt', sortOrder: 'desc' }
+    case 'relevance':
+    default:
+      return { sortBy: 'averageRating', sortOrder: 'desc' }
+  }
+}
 
 export default function SearchPage() {
   const searchParams = useSearchParams()
@@ -39,9 +73,21 @@ export default function SearchPage() {
   const [minRating, setMinRating] = useState(0)
   const [maxRating, setMaxRating] = useState(10)
   const [showFilters, setShowFilters] = useState(false)
+  
+  // State for search functionality
   const [allAnime, setAllAnime] = useState<Anime[]>([])
   const [filteredAnime, setFilteredAnime] = useState<Anime[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [searchSuggestions, setSearchSuggestions] = useState<string[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [hasSearched, setHasSearched] = useState(false)
+  
+  // Refs
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const suggestionsRef = useRef<HTMLDivElement>(null)
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Compute unique values for filters from all anime
   const genres = Array.from(
@@ -386,7 +432,7 @@ export default function SearchPage() {
       {/* SEO Metadata */}
       <SearchSEOMetadata query={searchQuery || undefined} />
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -394,122 +440,24 @@ export default function SearchPage() {
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
         </div>
 
-        <main className="container px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 lg:pt-32 pb-8 sm:pb-16 lg:pb-20 relative z-10">
-          {/* Header Section - Responsive */}
-          <div className="mb-4 sm:mb-8 lg:mb-10">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2 sm:mb-4">
-              <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white">
-                {category
-                  ? `${category.charAt(0).toUpperCase() + category.slice(1)}`
-                  : 'Discover Anime'}
-              </h1>
-              {category && (
-                <Badge className="bg-primary-500/20 text-primary-300 border-primary-500/30 px-3 py-1 self-start">
-                  {category}
-                </Badge>
-              )}
+        <main className="container px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 md:pt-40 pb-8 sm:pb-16 lg:pb-20 relative z-10">
+          {/* Two-column layout: Sidebar + Main Content */}
+          <div className="lg:grid lg:grid-cols-[280px_1fr] lg:gap-6">
+            {/* Left Sidebar - Desktop (Always Visible, Sticky) */}
+            <aside className="hidden lg:block">
+              <div className="sticky top-40 max-h-[calc(100vh-11rem)] overflow-y-auto custom-scrollbar">
+                <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl p-4 shadow-2xl">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-secondary-500 shadow-lg">
+                      <Filter className="h-3.5 w-3.5 text-white" />
             </div>
-            <p className="text-xs sm:text-base lg:text-lg text-gray-400">
-              {isLoading ? 'Loading...' : `${filteredAnime.length} anime found`}
-            </p>
-          </div>
-
-          {/* Search Bar - Responsive */}
-          <div className="mb-4 sm:mb-6 lg:mb-8">
-            <div className="relative max-w-3xl">
-              <Search className="absolute left-3 sm:left-4 md:left-5 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search by title, studio, genre..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl pl-10 sm:pl-12 md:pl-14 pr-10 sm:pr-12 py-3 sm:py-3.5 md:py-4 text-sm sm:text-base text-white placeholder-gray-400 focus:outline-none focus:border-primary-400/50 focus:ring-2 focus:ring-primary-400/20 transition-all duration-200"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors p-1.5 hover:bg-white/10 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
-                >
-                  <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Controls Bar - Responsive */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between mb-4 sm:mb-6 lg:mb-8 gap-3 sm:gap-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowFilters(!showFilters)}
-                className={`border-white/20 text-white hover:bg-white/10 transition-all text-sm flex-1 sm:flex-initial min-h-[44px] ${
-                  showFilters ? 'bg-white/10 border-primary-400/50' : ''
-                }`}
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
+                    <h2 className="text-base font-bold text-white">Filters</h2>
                 {activeFiltersCount > 0 && (
-                  <span className="ml-2 px-1.5 py-0.5 bg-primary-500 text-white text-xs rounded-full">
+                      <span className="ml-auto px-2 py-0.5 bg-gradient-to-r from-primary-500 to-secondary-500 text-white text-xs font-bold rounded-full shadow-lg">
                     {activeFiltersCount}
                   </span>
                 )}
-              </Button>
-
-              {activeFiltersCount > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearFilters}
-                  className="text-gray-400 hover:text-white hover:bg-white/5 text-sm min-h-[44px]"
-                >
-                  Clear all
-                </Button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 sm:gap-3">
-              {/* Sort Options */}
-              <SortOptions
-                value={sortBy}
-                onChange={(sort) => {
-                  setSortBy(sort)
-                  updateURL({ sort })
-                }}
-              />
-
-              {/* View Mode Toggle */}
-              <div className="flex items-center gap-1 bg-white/5 border border-white/20 rounded-xl p-1">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-lg transition-all min-h-[44px] min-w-[44px] flex items-center justify-center ${
-                    viewMode === 'grid'
-                      ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg'
-                      : 'text-gray-400 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  <Grid className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-lg transition-all min-h-[44px] min-w-[44px] flex items-center justify-center ${
-                    viewMode === 'list'
-                      ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg'
-                      : 'text-gray-400 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  <ListIcon className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
           </div>
-
-          {/* Advanced Filters Panel */}
-          {showFilters && (
-            <div className="mb-6 sm:mb-8">
-              <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-6">
-                {/* Sidebar Filters - Desktop */}
-                <div className="hidden lg:block">
-                  <div className="sticky top-24">
                     <AdvancedFilters
                       genres={genres}
                       studios={studios}
@@ -554,11 +502,164 @@ export default function SearchPage() {
                       }}
                       onClearAll={clearFilters}
                     />
+                  {activeFiltersCount > 0 && (
+                    <div className="mt-5 pt-5 border-t border-white/10">
+                      <Button
+                        variant="ghost"
+                        onClick={clearFilters}
+                        className="w-full text-gray-400 hover:text-white hover:bg-white/10 transition-all text-sm py-2"
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        Clear all
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </aside>
+
+            {/* Main Content Area */}
+            <div className="min-w-0">
+              {/* Header Section - Enhanced with gradient and icon */}
+              <div className="mb-6 sm:mb-8">
+                <div className="flex items-start gap-4 mb-3">
+                  <div className="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-secondary-500 shadow-lg shadow-primary-500/25">
+                    <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2">
+                      <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent">
+                        {category
+                          ? `${category.charAt(0).toUpperCase() + category.slice(1)}`
+                          : 'Discover Anime'}
+                      </h1>
+                      {category && (
+                        <Badge className="bg-gradient-to-r from-primary-500/20 to-secondary-500/20 text-primary-200 border-primary-500/30 px-4 py-1.5 self-start shadow-lg">
+                          {category}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <p className="text-sm sm:text-base lg:text-lg text-gray-400">
+                        {isLoading ? (
+                          <span className="inline-flex items-center gap-2">
+                            <span className="animate-spin">⏳</span> Loading...
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-2">
+                            <span className="text-primary-400 font-semibold">{filteredAnime.length}</span>
+                            anime found
+                          </span>
+                        )}
+                      </p>
+                    </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Mobile Filters */}
-                <div className="lg:hidden bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4 mb-4">
+              {/* Sticky Search Bar */}
+              <div className="sticky top-0 z-40 mb-6 pb-4">
+                <div className="relative group">
+                  {/* Animated glow effect */}
+                  <div className="absolute -inset-1 bg-gradient-to-r from-primary-500/30 via-secondary-500/30 to-primary-500/30 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  
+                  <div className="relative bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden">
+                    <div className="relative flex items-center">
+                      <div className="absolute left-4 flex items-center justify-center z-10">
+                        <Search className="h-5 w-5 text-primary-300 group-hover:text-primary-200 transition-colors" />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Search by title, studio, genre..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-transparent border-none outline-none pl-11 pr-11 py-3.5 text-base text-white placeholder-gray-400 focus:placeholder-gray-500 transition-all font-medium"
+                      />
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery('')}
+                          className="absolute right-3 flex items-center justify-center w-9 h-9 rounded-xl hover:bg-white/20 transition-all group/clear z-10"
+                        >
+                          <X className="h-4 w-4 text-gray-400 group-hover/clear:text-white transition-colors" />
+                        </button>
+                      )}
+                      
+                      {/* Decorative accent */}
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary-500/50 to-transparent"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Controls Bar - Sort and View Toggle Only */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between mb-6 gap-3 sm:gap-4">
+                {/* Mobile: Show Filter Toggle */}
+                <div className="lg:hidden">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`relative overflow-hidden border-2 transition-all text-sm font-medium w-full sm:w-auto min-h-[48px] backdrop-blur-xl ${
+                      showFilters
+                        ? 'bg-gradient-to-r from-primary-500/20 to-secondary-500/20 border-primary-400/50 text-primary-200 shadow-lg shadow-primary-500/25'
+                        : 'bg-white/5 border-white/20 text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <Filter className="h-4 w-4 mr-2" />
+                    {showFilters ? 'Hide Filters' : 'Show Filters'}
+                    {activeFiltersCount > 0 && (
+                      <span className="ml-2 px-2 py-0.5 bg-gradient-to-r from-primary-500 to-secondary-500 text-white text-xs font-bold rounded-full shadow-lg">
+                        {activeFiltersCount}
+                      </span>
+                    )}
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+                  {/* Sort Options */}
+                  <SortOptions
+                    value={sortBy}
+                    onChange={(sort) => {
+                      setSortBy(sort)
+                      updateURL({ sort })
+                    }}
+                  />
+
+                  {/* View Mode Toggle - Enhanced */}
+                  <div className="flex items-center gap-1 bg-white/5 backdrop-blur-xl border border-white/20 rounded-xl p-1 shadow-lg">
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`relative p-2.5 rounded-lg transition-all min-h-[48px] min-w-[48px] flex items-center justify-center group ${
+                        viewMode === 'grid'
+                          ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg shadow-primary-500/50'
+                          : 'text-gray-400 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      <Grid className="h-4 w-4 transition-transform group-hover:scale-110" />
+                      {viewMode === 'grid' && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-primary-500/20 to-secondary-500/20 animate-pulse rounded-lg"></div>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`relative p-2.5 rounded-lg transition-all min-h-[48px] min-w-[48px] flex items-center justify-center group ${
+                        viewMode === 'list'
+                          ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg shadow-primary-500/50'
+                          : 'text-gray-400 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      <ListIcon className="h-4 w-4 transition-transform group-hover:scale-110" />
+                      {viewMode === 'list' && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-primary-500/20 to-secondary-500/20 animate-pulse rounded-lg"></div>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mobile Filters - Toggleable */}
+              {showFilters && (
+                <div className="lg:hidden mb-6">
+                  <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl">
                   <AdvancedFilters
                     genres={genres}
                     studios={studios}
@@ -603,14 +704,6 @@ export default function SearchPage() {
                     }}
                     onClearAll={clearFilters}
                   />
-                </div>
-
-                {/* Results Column */}
-                <div className="hidden lg:block">
-                  <div className="text-sm text-gray-400 mb-4">
-                    Showing {filteredAnime.length} results
-                  </div>
-                </div>
               </div>
             </div>
           )}
@@ -731,6 +824,8 @@ export default function SearchPage() {
               ))}
             </div>
           )}
+            </div>
+          </div>
         </main>
       </div>
     </>

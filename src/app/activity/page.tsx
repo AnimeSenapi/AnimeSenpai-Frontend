@@ -131,17 +131,23 @@ export default function ActivityFeedPage() {
         const rating = activity.metadata?.score || activity.metadata?.rating
         return (
           <>
-            <span className="font-semibold text-white">{username}</span> rated{' '}
+            <Link
+              href={`/user/${activity.user.username}`}
+              className="font-medium text-white hover:text-primary-400 transition-colors"
+            >
+              {username}
+            </Link>{' '}
+            rated{' '}
             <Link
               href={`/anime/${activity.anime?.slug}`}
-              className="font-semibold text-primary-400 hover:text-primary-300"
+              className="font-medium text-primary-400 hover:text-primary-300 transition-colors"
             >
               {animeTitle}
             </Link>
             {rating && (
               <span className="ml-2 inline-flex items-center gap-1">
                 <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                <span className="font-bold text-white">{rating}/10</span>
+                <span className="font-semibold text-white">{rating}/10</span>
               </span>
             )}
           </>
@@ -150,10 +156,16 @@ export default function ActivityFeedPage() {
       case 'completed_anime':
         return (
           <>
-            <span className="font-semibold text-white">{username}</span> completed{' '}
+            <Link
+              href={`/user/${activity.user.username}`}
+              className="font-medium text-white hover:text-primary-400 transition-colors"
+            >
+              {username}
+            </Link>{' '}
+            completed{' '}
             <Link
               href={`/anime/${activity.anime?.slug}`}
-              className="font-semibold text-success-400 hover:text-success-300"
+              className="font-medium text-success-400 hover:text-success-300 transition-colors"
             >
               {animeTitle}
             </Link>
@@ -163,10 +175,16 @@ export default function ActivityFeedPage() {
       case 'started_watching':
         return (
           <>
-            <span className="font-semibold text-white">{username}</span> started watching{' '}
+            <Link
+              href={`/user/${activity.user.username}`}
+              className="font-medium text-white hover:text-primary-400 transition-colors"
+            >
+              {username}
+            </Link>{' '}
+            started watching{' '}
             <Link
               href={`/anime/${activity.anime?.slug}`}
-              className="font-semibold text-primary-400 hover:text-primary-300"
+              className="font-medium text-primary-400 hover:text-primary-300 transition-colors"
             >
               {animeTitle}
             </Link>
@@ -177,10 +195,16 @@ export default function ActivityFeedPage() {
         const status = activity.metadata?.status
         return (
           <>
-            <span className="font-semibold text-white">{username}</span> added{' '}
+            <Link
+              href={`/user/${activity.user.username}`}
+              className="font-medium text-white hover:text-primary-400 transition-colors"
+            >
+              {username}
+            </Link>{' '}
+            added{' '}
             <Link
               href={`/anime/${activity.anime?.slug}`}
-              className="font-semibold text-primary-400 hover:text-primary-300"
+              className="font-medium text-primary-400 hover:text-primary-300 transition-colors"
             >
               {animeTitle}
             </Link>
@@ -191,10 +215,16 @@ export default function ActivityFeedPage() {
       case 'followed_user':
         return (
           <>
-            <span className="font-semibold text-white">{username}</span> started following{' '}
+            <Link
+              href={`/user/${activity.user.username}`}
+              className="font-medium text-white hover:text-primary-400 transition-colors"
+            >
+              {username}
+            </Link>{' '}
+            started following{' '}
             <Link
               href={`/user/${activity.targetUser?.username}`}
-              className="font-semibold text-secondary-400 hover:text-secondary-300"
+              className="font-medium text-secondary-400 hover:text-secondary-300 transition-colors"
             >
               {targetUsername}
             </Link>
@@ -204,10 +234,16 @@ export default function ActivityFeedPage() {
       case 'reviewed_anime':
         return (
           <>
-            <span className="font-semibold text-white">{username}</span> reviewed{' '}
+            <Link
+              href={`/user/${activity.user.username}`}
+              className="font-medium text-white hover:text-primary-400 transition-colors"
+            >
+              {username}
+            </Link>{' '}
+            reviewed{' '}
             <Link
               href={`/anime/${activity.anime?.slug}`}
-              className="font-semibold text-primary-400 hover:text-primary-300"
+              className="font-medium text-primary-400 hover:text-primary-300 transition-colors"
             >
               {animeTitle}
             </Link>
@@ -228,90 +264,88 @@ export default function ActivityFeedPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 text-white">
-      <main className="container max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 lg:pb-20">
+      <main className="container max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 md:pt-40 pb-12 sm:pb-16 lg:pb-20">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-xl flex items-center justify-center">
+        <div className="mb-6">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-xl flex items-center justify-center border border-primary-500/30">
               <ActivityIcon className="h-6 w-6 text-primary-400" />
             </div>
             <div>
               <h1 className="text-3xl sm:text-4xl font-bold text-white">Activity Feed</h1>
-              <p className="text-gray-400">See what your friends are watching</p>
+              <p className="text-gray-400 text-sm">See what your friends are watching</p>
             </div>
           </div>
 
           {/* Filters */}
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="glass rounded-xl p-3 border border-white/10">
+            <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
             <Button
-              variant={filterType === 'all' ? 'default' : 'outline'}
-              size="sm"
               onClick={() => setFilterType('all')}
               className={cn(
+                  'flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm whitespace-nowrap flex-shrink-0',
                 filterType === 'all'
-                  ? 'bg-gradient-to-r from-primary-500 to-secondary-500'
-                  : 'border-white/20 text-white hover:bg-white/10'
+                    ? 'bg-gradient-to-r from-primary-500/20 to-secondary-500/20 border border-primary-500/40 text-white shadow-md shadow-primary-500/10'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent glass'
               )}
             >
               All Activity
             </Button>
             <Button
-              variant={filterType === 'started_watching' ? 'default' : 'outline'}
-              size="sm"
               onClick={() => setFilterType('started_watching')}
               className={cn(
+                  'flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm whitespace-nowrap flex-shrink-0',
                 filterType === 'started_watching'
-                  ? 'bg-gradient-to-r from-primary-500 to-secondary-500'
-                  : 'border-white/20 text-white hover:bg-white/10'
+                    ? 'bg-gradient-to-r from-primary-500/20 to-secondary-500/20 border border-primary-500/40 text-white shadow-md shadow-primary-500/10'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent glass'
               )}
             >
-              <Play className="h-3 w-3 mr-1" />
+                <Play className="h-4 w-4" />
               Watching
             </Button>
             <Button
-              variant={filterType === 'completed_anime' ? 'default' : 'outline'}
-              size="sm"
               onClick={() => setFilterType('completed_anime')}
               className={cn(
+                  'flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm whitespace-nowrap flex-shrink-0',
                 filterType === 'completed_anime'
-                  ? 'bg-gradient-to-r from-primary-500 to-secondary-500'
-                  : 'border-white/20 text-white hover:bg-white/10'
+                    ? 'bg-gradient-to-r from-primary-500/20 to-secondary-500/20 border border-primary-500/40 text-white shadow-md shadow-primary-500/10'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent glass'
               )}
             >
-              <Check className="h-3 w-3 mr-1" />
+                <Check className="h-4 w-4" />
               Completed
             </Button>
             <Button
-              variant={filterType === 'rated_anime' ? 'default' : 'outline'}
-              size="sm"
               onClick={() => setFilterType('rated_anime')}
               className={cn(
+                  'flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm whitespace-nowrap flex-shrink-0',
                 filterType === 'rated_anime'
-                  ? 'bg-gradient-to-r from-primary-500 to-secondary-500'
-                  : 'border-white/20 text-white hover:bg-white/10'
+                    ? 'bg-gradient-to-r from-primary-500/20 to-secondary-500/20 border border-primary-500/40 text-white shadow-md shadow-primary-500/10'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent glass'
               )}
             >
-              <Star className="h-3 w-3 mr-1" />
+                <Star className="h-4 w-4" />
               Rated
             </Button>
             <Button
-              variant={filterType === 'reviewed_anime' ? 'default' : 'outline'}
-              size="sm"
               onClick={() => setFilterType('reviewed_anime')}
               className={cn(
+                  'flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm whitespace-nowrap flex-shrink-0',
                 filterType === 'reviewed_anime'
-                  ? 'bg-gradient-to-r from-primary-500 to-secondary-500'
-                  : 'border-white/20 text-white hover:bg-white/10'
+                    ? 'bg-gradient-to-r from-primary-500/20 to-secondary-500/20 border border-primary-500/40 text-white shadow-md shadow-primary-500/10'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent glass'
               )}
             >
-              <MessageCircle className="h-3 w-3 mr-1" />
+                <MessageCircle className="h-4 w-4" />
               Reviews
             </Button>
+            </div>
           </div>
         </div>
 
         {/* Activity Timeline */}
         {filteredActivities.length === 0 ? (
+          <div className="glass rounded-xl p-12 border border-white/10">
           <EmptyState
             icon={<ActivityIcon className="h-12 w-12 text-gray-500" />}
             title="No Activity Yet"
@@ -319,17 +353,18 @@ export default function ActivityFeedPage() {
             actionLabel="Find Users to Follow"
             onAction={() => router.push('/search/users')}
           />
+          </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filteredActivities.map((activity) => (
               <div
                 key={activity.id}
-                className="glass rounded-xl p-4 border border-white/10 hover:border-white/20 transition-all"
+                className="glass rounded-xl p-4 border border-white/10 hover:bg-white/5 transition-all"
               >
                 <div className="flex gap-4">
                   {/* User Avatar */}
-                  <Link href={`/user/${activity.user.username}`}>
-                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 overflow-hidden border border-white/10">
+                  <Link href={`/user/${activity.user.username}`} className="flex-shrink-0 hover:opacity-80 transition-opacity">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 overflow-hidden border border-white/10">
                       {activity.user.avatar ? (
                         <Image
                           src={activity.user.avatar}
@@ -350,21 +385,20 @@ export default function ActivityFeedPage() {
                   <div className="flex-1 min-w-0">
                     {/* Activity Text */}
                     <div className="flex items-start gap-2 mb-2">
-                      <div className="mt-0.5">{getActivityIcon(activity.activityType)}</div>
-                      <p className="text-sm text-gray-300 flex-1">{getActivityText(activity)}</p>
+                      <div className="mt-0.5 flex-shrink-0">{getActivityIcon(activity.activityType)}</div>
+                      <p className="text-sm text-gray-300 flex-1 leading-relaxed">{getActivityText(activity)}</p>
                     </div>
 
                     {/* Anime Cover (if applicable) */}
                     {activity.anime && (
-                      <Link href={`/anime/${activity.anime.slug}`}>
-                        <div className="inline-block mt-2">
-                          <div className="w-16 h-24 rounded-lg overflow-hidden border border-white/10 hover:border-primary-500/50 transition-all relative">
+                      <Link href={`/anime/${activity.anime.slug}`} className="inline-block mt-2">
+                        <div className="w-16 h-24 rounded-lg overflow-hidden border border-white/10 hover:border-primary-500/50 transition-all relative group">
                             {activity.anime.coverImage ? (
                               <Image
                                 src={activity.anime.coverImage}
                                 alt={activity.anime.title}
                                 fill
-                                className="object-cover"
+                              className="object-cover group-hover:scale-105 transition-transform"
                                 sizes="64px"
                               />
                             ) : (
@@ -372,7 +406,6 @@ export default function ActivityFeedPage() {
                                 <span className="text-2xl">🎬</span>
                               </div>
                             )}
-                          </div>
                         </div>
                       </Link>
                     )}
@@ -402,8 +435,7 @@ export default function ActivityFeedPage() {
                 <Button
                   onClick={() => loadActivities(true)}
                   disabled={loadingMore}
-                  variant="outline"
-                  className="border-white/20 text-white hover:bg-white/10"
+                  className="bg-white/5 border border-white/10 text-white hover:bg-white/10 font-medium px-5 py-2.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loadingMore ? (
                     <>

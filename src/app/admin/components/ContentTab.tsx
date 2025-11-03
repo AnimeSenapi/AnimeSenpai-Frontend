@@ -64,11 +64,40 @@ export function ContentTab() {
         apiGetModerationStats(),
       ])) as any[]
 
+      // Handle different response formats
+      if (reviewsData && typeof reviewsData === 'object') {
+        if ('result' in reviewsData && reviewsData.result?.data) {
+          // tRPC response format
+          const data = reviewsData.result.data
+          setReviews(data.reviews || [])
+          setTotalPages(data.pagination?.totalPages || 1)
+        } else if ('reviews' in reviewsData) {
+          // Direct data format
       setReviews(reviewsData.reviews || [])
       setTotalPages(reviewsData.pagination?.totalPages || 1)
+        } else {
+          // Fallback
+          setReviews([])
+          setTotalPages(1)
+        }
+      } else {
+        setReviews([])
+        setTotalPages(1)
+      }
+
+      if (statsData && typeof statsData === 'object') {
+        if ('result' in statsData && statsData.result?.data) {
+          setStats(statsData.result.data)
+        } else {
       setStats(statsData)
+        }
+      }
     } catch (error) {
       console.error('Failed to load moderation data:', error)
+      // Set empty data on error
+      setReviews([])
+      setTotalPages(1)
+      setStats(null)
     } finally {
       setLoading(false)
     }
@@ -101,6 +130,23 @@ export function ContentTab() {
   const handleSearch = () => {
     setPage(1)
     loadData()
+  }
+
+  if (loading && reviews.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-2">Content Moderation</h2>
+          <p className="text-gray-400">Review and moderate user-generated content</p>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading moderation data...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

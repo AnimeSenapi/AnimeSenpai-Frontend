@@ -36,6 +36,7 @@ interface RecommendationCarouselProps {
   recommendations: Recommendation[]
   onDismiss?: (animeId: string) => void
   showReasons?: boolean
+  vertical?: boolean
 }
 
 export function RecommendationCarousel({
@@ -44,6 +45,7 @@ export function RecommendationCarousel({
   recommendations,
   onDismiss,
   showReasons = false,
+  vertical = false,
 }: RecommendationCarouselProps) {
   const [scrollPosition, setScrollPosition] = useState(0)
   const { isAuthenticated } = useAuth()
@@ -95,6 +97,76 @@ export function RecommendationCarousel({
     }
   }
 
+  if (vertical) {
+    // Vertical layout for sidebar
+    return (
+      <div className="mt-4">
+        {/* Header */}
+        <div className="flex items-center gap-2 mb-3">
+          {icon && (
+            <div className="p-1 rounded-lg bg-gradient-to-br from-primary-500/20 to-secondary-500/20">
+              {icon}
+            </div>
+          )}
+          <h3 className="text-sm font-semibold text-white">{title}</h3>
+        </div>
+
+        {/* Vertical list of cards */}
+        <div className="space-y-3 max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+          {recommendations
+            .slice(0, 10)
+            .filter((rec) => rec && rec.anime && rec.anime.slug)
+            .map(({ anime, reason }) => (
+              <div key={anime.id} className="relative group/card">
+                {/* Dismiss Button */}
+                {onDismiss && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault()
+                      onDismiss(anime.id)
+                    }}
+                    className="absolute top-2 right-2 z-20 w-6 h-6 bg-gray-900/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-error-500/90 transition-all opacity-0 group-hover/card:opacity-100"
+                  >
+                    <X className="h-3 w-3 text-white" />
+                  </button>
+                )}
+
+                {/* Compact AnimeCard */}
+                <AnimeCard
+                  anime={{
+                    id: anime.id,
+                    slug: anime.slug,
+                    title: anime.title,
+                    titleEnglish: anime.titleEnglish || undefined,
+                    titleJapanese: anime.titleJapanese || undefined,
+                    titleSynonyms: anime.titleSynonyms || undefined,
+                    coverImage: anime.coverImage || undefined,
+                    year: anime.year || 0,
+                    rating: anime.averageRating || 0,
+                    popularity: 0,
+                    status: 'trending' as const,
+                    tags: [],
+                    genres: (anime.genres || []).map((g) => ({ ...g, slug: g.id })),
+                  }}
+                  variant="compact"
+                  onFavorite={() => handleFavorite(anime.id, anime.titleEnglish || anime.title)}
+                  isFavorited={isFavorited(anime.id)}
+                />
+
+                {/* Reason text below card */}
+                {reason && showReasons && (
+                  <div className="mt-1 px-1">
+                    <p className="text-xs text-gray-400 italic line-clamp-1">{reason}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+        </div>
+      </div>
+    )
+  }
+
+  // Horizontal carousel layout (original)
   return (
     <div className="mb-8 sm:mb-10 lg:mb-12">
       {/* Header - Responsive */}
@@ -170,7 +242,7 @@ export function RecommendationCarousel({
                   popularity: 0,
                   status: 'trending' as const,
                   tags: [],
-                  genres: anime.genres.map((g) => ({ ...g, slug: g.id })),
+                  genres: (anime.genres || []).map((g) => ({ ...g, slug: g.id })),
                 }}
                 variant="featured"
                 onFavorite={() => handleFavorite(anime.id, anime.titleEnglish || anime.title)}

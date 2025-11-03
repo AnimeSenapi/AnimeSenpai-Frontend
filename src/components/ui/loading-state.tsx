@@ -5,7 +5,7 @@ import { Loader2, Sparkles } from 'lucide-react'
 interface LoadingStateProps {
   text?: string
   size?: 'sm' | 'md' | 'lg'
-  variant?: 'full' | 'inline' | 'overlay' | 'skeleton' | 'dots' | 'pulse'
+  variant?: 'full' | 'page' | 'inline' | 'overlay' | 'skeleton' | 'dots' | 'pulse'
   className?: string
   showProgress?: boolean
   progress?: number
@@ -90,25 +90,68 @@ export function LoadingState({
   // Full page loading
   if (variant === 'full') {
     return (
-      <div
-        className={`min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 flex items-center justify-center p-4 ${className}`}
-      >
-        <div className="text-center">
-          <div className="relative inline-block">
-            <Loader2
-              className={`${sizeClasses[size]} text-primary-400 animate-spin mx-auto mb-4`}
-            />
-            <div className="absolute inset-0 bg-primary-400/20 rounded-full blur-xl"></div>
-          </div>
-          <p className={`text-gray-400 ${textSizeClasses[size]} mb-2`}>{text}</p>
-          {showProgress && (
-            <div className="w-48 h-1 bg-gray-800 rounded-full overflow-hidden mx-auto">
-              <div
-                className="h-full bg-gradient-to-r from-primary-500 to-secondary-500 transition-all duration-300"
-                style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
-              ></div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+        
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 md:pt-40 pb-12 sm:pb-16 lg:pb-20 relative z-10">
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <div className="relative inline-block mb-6">
+                <Loader2
+                  className={`${sizeClasses[size]} text-primary-400 animate-spin mx-auto`}
+                />
+                <div className="absolute inset-0 bg-primary-400/20 rounded-full blur-xl"></div>
+              </div>
+              <p className={`text-gray-400 ${textSizeClasses[size]} mb-4`}>{text}</p>
+              {showProgress && (
+                <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden mx-auto">
+                  <div
+                    className="h-full bg-gradient-to-r from-primary-500 to-secondary-500 transition-all duration-300"
+                    style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+                  ></div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+  
+  // Page variant (for route-level loading with proper layout)
+  if (variant === 'page') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+        
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 md:pt-40 pb-12 sm:pb-16 lg:pb-20 relative z-10">
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="glass rounded-xl p-12 border border-white/10 text-center max-w-md">
+              <div className="relative inline-block mb-6">
+                <Loader2
+                  className={`${sizeClasses[size]} text-primary-400 animate-spin mx-auto`}
+                />
+                <div className="absolute inset-0 bg-primary-400/20 rounded-full blur-xl"></div>
+              </div>
+              <p className={`text-gray-300 ${textSizeClasses[size]} mb-4`}>{text}</p>
+              {showProgress && (
+                <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-primary-500 to-secondary-500 transition-all duration-300"
+                    style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+                  ></div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     )
