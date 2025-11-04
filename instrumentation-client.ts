@@ -68,7 +68,9 @@ Sentry.init({
 
     // Filter out performance warnings (these are messages, not exceptions)
     if (event.message) {
-      const message = event.message.formatted || event.message.message || "";
+      const message = typeof event.message === 'string' 
+        ? event.message 
+        : (event.message as any).formatted || (event.message as any).message || "";
       if (
         message.includes("Poor API_RESPONSE performance") ||
         message.includes("Poor performance") ||
