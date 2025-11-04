@@ -66,13 +66,70 @@ Sentry.init({
       return null;
     }
 
+    // Filter out performance warnings (these are messages, not exceptions)
+    if (event.message) {
+      const message = event.message.formatted || event.message.message || "";
+      if (
+        message.includes("Poor API_RESPONSE performance") ||
+        message.includes("Poor performance") ||
+        message.includes("API response time")
+      ) {
+        // Log locally for debugging but don't send to Sentry
+        console.debug("Performance warning (filtered from Sentry):", message);
+        return null;
+      }
+    }
+
     // Filter out known issues or sensitive data
     if (event.exception) {
       const error = hint.originalException;
       if (error instanceof Error) {
-        // Skip certain errors
-        if (error.message.includes("Network request failed")) {
+        const errorMessage = error.message || "";
+        const errorStack = error.stack || "";
+        
+        // Skip chunk loading errors (transient network issues)
+        if (
+          errorMessage.includes("Load failed") ||
+          errorMessage.includes("Loading chunk") ||
+          errorMessage.includes("Failed to fetch dynamically imported module") ||
+          errorMessage.includes("ChunkLoadError") ||
+          errorMessage.includes("Loading CSS chunk") ||
+          errorStack.includes("chunk") ||
+          errorStack.includes("_next/static/chunks")
+        ) {
+          // Log locally for debugging but don't send to Sentry
+          console.warn("Chunk loading error (filtered from Sentry):", errorMessage);
           return null;
+        }
+        
+        // Skip network-related errors that are often transient
+        if (
+          errorMessage.includes("Network request failed") ||
+          errorMessage.includes("Failed to fetch") ||
+          errorMessage.includes("network") ||
+          errorMessage.includes("timeout") ||
+          errorMessage.includes("ECONNRESET") ||
+          errorMessage.includes("ENOTFOUND")
+        ) {
+          return null;
+        }
+      }
+      
+      // Also check the event message/values for chunk loading errors
+      if (event.exception.values) {
+        for (const exceptionValue of event.exception.values) {
+          const value = exceptionValue.value || "";
+          const type = exceptionValue.type || "";
+          
+          if (
+            value.includes("Load failed") ||
+            value.includes("Loading chunk") ||
+            value.includes("ChunkLoadError") ||
+            type === "ChunkLoadError"
+          ) {
+            console.warn("Chunk loading error detected in exception values (filtered from Sentry):", value);
+            return null;
+          }
         }
       }
     }

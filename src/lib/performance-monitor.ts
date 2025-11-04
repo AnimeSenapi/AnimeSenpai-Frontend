@@ -63,7 +63,7 @@ export const PERFORMANCE_THRESHOLDS = {
   TTFB: { good: 800, needsImprovement: 1800 }, // ms
 
   // Custom thresholds
-  API_RESPONSE: { good: 200, needsImprovement: 500 }, // ms
+  API_RESPONSE: { good: 200, needsImprovement: 1000 }, // ms (increased from 500ms to reduce noise)
   PAGE_LOAD: { good: 2000, needsImprovement: 4000 }, // ms
   CACHE_HIT_RATE: { good: 80, needsImprovement: 60 }, // %
 } as const

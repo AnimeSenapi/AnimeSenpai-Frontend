@@ -340,18 +340,47 @@ async function trpcMutation<TInput, TOutput>(
       const message = payload && 'error' in payload ? payload.error.message : 'Request failed'
       const code = (payload && 'error' in payload && payload.error.data?.code) || 'UNKNOWN_ERROR'
       
-      // Log mutation errors for debugging
-      logger.error('tRPC mutation error', {
-        path,
-        status: res.status,
-        code,
-        message,
-        payload: JSON.stringify(payload),
-      })
-      captureException(new Error(`tRPC mutation failed: ${code}`), {
-        context: { path, code, message, status: res.status },
-        tags: { operation: 'trpc_mutation' },
-      })
+      // Skip logging for expected errors on optional/non-critical mutations
+      // Auth-related codes that are expected when not logged in or during initialization
+      const isExpectedAuthError =
+        code === 'UNAUTHORIZED' ||
+        code === 'TOKEN_INVALID' ||
+        code === 'TOKEN_EXPIRED' ||
+        message.includes('session') ||
+        message.includes('token') ||
+        message.includes('expired')
+
+      // Optional mutations that may fail during page load without affecting functionality
+      const isOptionalMutation =
+        path.includes('achievements.checkAndUnlock') ||
+        path.includes('onboarding.getStatus') ||
+        path.includes('notifications.subscribeToPush') ||
+        path.includes('notifications.unsubscribeFromPush')
+
+      // Only log to Sentry if it's an unexpected error or a critical mutation
+      const shouldSkipSentryLogging = isOptionalMutation && isExpectedAuthError
+
+      // Always log locally for debugging
+      if (!shouldSkipSentryLogging) {
+        logger.error('tRPC mutation error', {
+          path,
+          status: res.status,
+          code,
+          message,
+          payload: JSON.stringify(payload),
+        })
+        captureException(new Error(`tRPC mutation failed: ${code}`), {
+          context: { path, code, message, status: res.status },
+          tags: { operation: 'trpc_mutation' },
+        })
+      } else {
+        // Log at debug level for optional mutations with expected errors
+        logger.debug('tRPC mutation expected error (skipped Sentry)', {
+          path,
+          code,
+          message,
+        })
+      }
 
       // Try to refresh token on auth errors (only once)
       if (
@@ -382,17 +411,43 @@ async function trpcMutation<TInput, TOutput>(
       const err = json.error
       const code = err.data?.code || 'UNKNOWN_ERROR'
       
-      // Log mutation errors for debugging
-      logger.error('tRPC mutation error in response', {
-        path,
-        code,
-        message: err.message,
-        data: err.data,
-      })
-      captureException(new Error(`tRPC mutation failed: ${code}`), {
-        context: { path, code, message: err.message },
-        tags: { operation: 'trpc_mutation' },
-      })
+      // Skip logging for expected errors on optional/non-critical mutations
+      const isExpectedAuthError =
+        code === 'UNAUTHORIZED' ||
+        code === 'TOKEN_INVALID' ||
+        code === 'TOKEN_EXPIRED' ||
+        err.message.includes('session') ||
+        err.message.includes('token') ||
+        err.message.includes('expired')
+
+      const isOptionalMutation =
+        path.includes('achievements.checkAndUnlock') ||
+        path.includes('onboarding.getStatus') ||
+        path.includes('notifications.subscribeToPush') ||
+        path.includes('notifications.unsubscribeFromPush')
+
+      const shouldSkipSentryLogging = isOptionalMutation && isExpectedAuthError
+
+      // Always log locally for debugging
+      if (!shouldSkipSentryLogging) {
+        logger.error('tRPC mutation error in response', {
+          path,
+          code,
+          message: err.message,
+          data: err.data,
+        })
+        captureException(new Error(`tRPC mutation failed: ${code}`), {
+          context: { path, code, message: err.message },
+          tags: { operation: 'trpc_mutation' },
+        })
+      } else {
+        // Log at debug level for optional mutations with expected errors
+        logger.debug('tRPC mutation expected error in response (skipped Sentry)', {
+          path,
+          code,
+          message: err.message,
+        })
+      }
 
       // Try to refresh token on auth errors (only once)
       if (
@@ -426,18 +481,37 @@ async function trpcMutation<TInput, TOutput>(
 
     return data
   } catch (error: unknown) {
-    logger.error('tRPC mutation failed', {
-      path,
-      trpcUrl: TRPC_URL,
-      error: error instanceof Error ? error.message : String(error),
-    })
-    captureException(error, {
-      context: { path, input },
-      tags: { operation: 'trpc_mutation' },
-    })
+    // Skip Sentry logging for network errors on optional mutations
+    // These are often transient and don't indicate a real problem
+    const isOptionalMutation =
+      path.includes('achievements.checkAndUnlock') ||
+      path.includes('onboarding.getStatus') ||
+      path.includes('notifications.subscribeToPush') ||
+      path.includes('notifications.unsubscribeFromPush')
+
+    const isNetworkError = error instanceof Error && error.message.includes('fetch')
+
+    // Only log to Sentry if it's not a network error on an optional mutation
+    if (!(isOptionalMutation && isNetworkError)) {
+      logger.error('tRPC mutation failed', {
+        path,
+        trpcUrl: TRPC_URL,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      captureException(error, {
+        context: { path, input },
+        tags: { operation: 'trpc_mutation' },
+      })
+    } else {
+      // Log network errors on optional mutations at debug level
+      logger.debug('tRPC mutation network error on optional endpoint (skipped Sentry)', {
+        path,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
 
     // Handle network errors
-    if (error instanceof Error && error.message.includes('fetch')) {
+    if (isNetworkError) {
       throw new Error(getUserFriendlyError('NETWORK_ERROR', 'Unable to connect to the server'))
     }
     throw error

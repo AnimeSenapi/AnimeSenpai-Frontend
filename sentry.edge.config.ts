@@ -42,6 +42,20 @@ Sentry.init({
       return null;
     }
 
+    // Filter out performance warnings (these are messages, not exceptions)
+    if (event.message) {
+      const message = event.message.formatted || event.message.message || "";
+      if (
+        message.includes("Poor API_RESPONSE performance") ||
+        message.includes("Poor performance") ||
+        message.includes("API response time")
+      ) {
+        // Log locally for debugging but don't send to Sentry
+        console.debug("Performance warning (filtered from Sentry):", message);
+        return null;
+      }
+    }
+
     return event;
   },
 
