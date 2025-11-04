@@ -18,7 +18,7 @@ export function MobileNavigationDrawer({ isOpen, onClose }: MobileNavigationDraw
 
   const navItems = [
     { name: 'Home', href: '/dashboard', icon: Home },
-    { name: 'Bookmarks', href: '/bookmarks', icon: Bookmark, authOnly: true },
+    { name: 'My List', href: '/mylist', icon: Bookmark, authOnly: true },
     { name: 'Search', href: '/search', icon: Search },
   ]
 
