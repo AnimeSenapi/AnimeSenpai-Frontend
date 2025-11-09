@@ -9,7 +9,6 @@ import {
   Film,
   Activity,
   BarChart3,
-  Settings,
   Shield,
   Lock,
   Trophy,
@@ -24,7 +23,6 @@ import {
   DynamicDashboardTab,
   DynamicUsersTab,
   DynamicAnimeTab,
-  DynamicSettingsTab,
 } from '../../components/DynamicComponents'
 import { ContentTab } from './components/ContentTab'
 import { PerformanceTab } from './components/PerformanceTab'
@@ -291,41 +289,5 @@ function AnalyticsPerformanceTab() {
 }
 
 function SystemTab() {
-  const [subTab, setSubTab] = useState<'system' | 'settings'>('system')
-
-  return (
-    <div className="space-y-4">
-      {/* Compact Sub-tab Navigation */}
-      <div className="flex gap-1 border-b border-white/10 pb-2">
-        <button
-          onClick={() => setSubTab('system')}
-          className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-            subTab === 'system'
-              ? 'bg-primary-500/20 text-primary-300'
-              : 'text-gray-400 hover:text-white hover:bg-white/5'
-          }`}
-        >
-          <Cog className="h-4 w-4" />
-          System
-        </button>
-        <button
-          onClick={() => setSubTab('settings')}
-          className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-            subTab === 'settings'
-              ? 'bg-primary-500/20 text-primary-300'
-              : 'text-gray-400 hover:text-white hover:bg-white/5'
-          }`}
-        >
-          <Settings className="h-4 w-4" />
-          User Settings
-        </button>
-      </div>
-
-      {/* Sub-tab Content */}
-      <div>
-        {subTab === 'system' && <SystemSettingsTab />}
-        {subTab === 'settings' && <DynamicSettingsTab />}
-      </div>
-    </div>
-  )
+  return <SystemSettingsTab />
 }

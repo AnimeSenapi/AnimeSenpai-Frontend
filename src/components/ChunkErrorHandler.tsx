@@ -16,6 +16,12 @@ export function ChunkErrorHandler() {
       const error = event.error || event.message || ''
       const errorString = String(error)
 
+      // Suppress database configuration errors from console logging
+      if (error && typeof error === 'object' && 'name' in error && error.name === 'DatabaseConfigError') {
+        event.preventDefault()
+        return true
+      }
+
       // Check if it's a chunk loading error
       const isChunkError =
         errorString.includes('Load failed') ||
@@ -51,6 +57,12 @@ export function ChunkErrorHandler() {
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       const error = event.reason || ''
       const errorString = String(error)
+
+      // Suppress database configuration errors from console logging
+      if (error && typeof error === 'object' && 'name' in error && error.name === 'DatabaseConfigError') {
+        event.preventDefault()
+        return true
+      }
 
       const isChunkError =
         errorString.includes('Load failed') ||

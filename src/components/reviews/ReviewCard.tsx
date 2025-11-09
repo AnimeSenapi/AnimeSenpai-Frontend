@@ -248,7 +248,7 @@ export function ReviewCard({
               href={`/user/${review.user.username}`}
               className="font-semibold text-white hover:text-primary-400"
             >
-              {review.user.name || review.user.username}
+              {review.user.username || 'Unknown user'}
             </Link>
             <div className="flex items-center gap-2 text-xs text-gray-400">
               <span>{formatDistanceToNow(new Date(review.createdAt), { addSuffix: true })}</span>
@@ -401,7 +401,7 @@ export function ReviewCard({
                         href={`/user/${comment.user.username}`}
                         className="font-semibold text-white text-sm hover:text-primary-400"
                       >
-                        {comment.user.name || comment.user.username}
+                        {comment.user.username || 'Unknown user'}
                       </Link>
                       <span className="text-xs text-gray-500">
                         {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}

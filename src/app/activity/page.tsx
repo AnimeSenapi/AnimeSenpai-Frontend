@@ -122,9 +122,9 @@ export default function ActivityFeedPage() {
   }
 
   const getActivityText = (activity: Activity) => {
-    const username = activity.user.name || activity.user.username
+    const username = activity.user.username || 'User'
     const animeTitle = activity.anime?.titleEnglish || activity.anime?.title
-    const targetUsername = activity.targetUser?.name || activity.targetUser?.username
+    const targetUsername = activity.targetUser?.username
 
     switch (activity.activityType) {
       case 'rated_anime':

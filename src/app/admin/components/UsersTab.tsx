@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import {
   apiGetAllUsers,
   apiAdminSearchUsers,
-  apiUpdateUserRole,
   apiDeleteUser,
   apiGetUserDetails,
   apiSendPasswordResetEmail,
@@ -32,11 +31,14 @@ import {
   Send,
   Activity,
   MailOpen,
+  Filter,
+  LayoutDashboard,
+  RotateCcw,
 } from 'lucide-react'
 import { getRoleConfig, getRoleIcon, getRoleBadgeClasses } from '../../../lib/role-config'
 import { Button } from '../../../components/ui/button'
 import { LoadingState } from '../../../components/ui/loading-state'
-import { EmptyState } from '../../../components/ui/error-state'
+import { EmptyState, ErrorState } from '../../../components/ui/error-state'
 import { Badge } from '../../../components/ui/badge'
 import { Checkbox } from '../../../components/ui/checkbox'
 import {
@@ -92,7 +94,10 @@ export function UsersTab() {
   const { addToast } = useToast()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isSearchMode, setIsSearchMode] = useState(false)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [roleFilter, setRoleFilter] = useState<string>('all')
@@ -100,7 +105,7 @@ export function UsersTab() {
   const [showUserModal, setShowUserModal] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
-  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set())
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(() => new Set())
   const [sortBy, setSortBy] = useState<'createdAt' | 'lastLoginAt' | 'email'>('createdAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [verifiedFilter, setVerifiedFilter] = useState<'all' | 'verified' | 'unverified'>('all')
@@ -108,7 +113,7 @@ export function UsersTab() {
   // New modals
   const [showEditModal, setShowEditModal] = useState(false)
   const [userToEdit, setUserToEdit] = useState<User | null>(null)
-  const [editForm, setEditForm] = useState({ name: '', username: '', email: '' })
+  const [editForm, setEditForm] = useState({ username: '', email: '' })
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [emailForm, setEmailForm] = useState({ subject: '', message: '' })
   const [userToEmail, setUserToEmail] = useState<User | null>(null)
@@ -116,65 +121,95 @@ export function UsersTab() {
   const [loadingActivity, setLoadingActivity] = useState(false)
 
   useEffect(() => {
+    if (isSearchMode) {
+      // Pagination of search results is handled locally (single page)
+      return
+    }
     loadUsers()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, roleFilter])
 
-  const loadUsers = async () => {
+  const loadUsers = async (override?: { page?: number; role?: string }) => {
+    setLoading(true)
+    setLoadError(null)
+
+    const activePage = override?.page ?? page
+    const activeRole = override?.role ?? roleFilter
+
     try {
-      setLoading(true)
       const data = (await apiGetAllUsers({
-        page,
+        page: activePage,
         limit: 20,
-        role: roleFilter === 'all' ? undefined : roleFilter,
+        role: activeRole === 'all' ? undefined : activeRole,
       })) as any
-      setUsers(data.users)
-      setTotalPages(data.pagination.pages)
+
+      const normalizedUsers = data?.users || []
+      const pages =
+        data?.pagination?.pages || data?.pagination?.totalPages || data?.pagination?.total || 1
+
+      setUsers(normalizedUsers)
+      setTotalPages(Math.max(pages, 1))
+      setIsSearchMode(false)
+      setSelectedUsers(new Set())
     } catch (error: any) {
       console.error('Failed to load users:', error)
-      if (error.message?.includes('FORBIDDEN') || error.message?.includes('admin')) {
+
+      if (error?.message?.includes('FORBIDDEN') || error?.message?.includes('admin')) {
         alert('Access denied. Admin privileges required.')
         window.location.href = '/dashboard'
-      } else {
-        alert('Failed to load users. Please try again.')
+        return
       }
+
+      setLoadError(
+        error instanceof Error
+          ? error.message || 'Failed to load users. Please try again.'
+          : 'Failed to load users. Please try again.'
+      )
+      setUsers([])
+      setTotalPages(1)
     } finally {
       setLoading(false)
     }
   }
 
   const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      loadUsers()
+    const term = searchQuery.trim()
+
+    if (!term) {
+      setSearchTerm('')
+      setIsSearchMode(false)
+      setPage(1)
+      loadUsers({ page: 1 })
       return
     }
 
     try {
       setLoading(true)
-      const results = (await apiAdminSearchUsers(searchQuery, 20)) as any
-      setUsers(results)
-    } catch (error) {
+      setLoadError(null)
+      const results = (await apiAdminSearchUsers(term, 50)) as any
+      const normalizedResults = Array.isArray(results)
+        ? results
+        : Array.isArray(results?.users)
+          ? results.users
+          : []
+
+      setUsers(normalizedResults)
+      setSearchTerm(term)
+      setIsSearchMode(true)
+      setPage(1)
+      setTotalPages(1)
+      setSelectedUsers(new Set())
+    } catch (error: any) {
       console.error('Search failed:', error)
+      setLoadError(
+        error instanceof Error
+          ? error.message || 'Search failed. Please try again.'
+          : 'Search failed. Please try again.'
+      )
+      setUsers([])
+      setTotalPages(1)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleRoleChange = async (userId: string, newRole: 'user' | 'moderator' | 'admin') => {
-    try {
-      await apiUpdateUserRole(userId, newRole)
-      loadUsers()
-      addToast({
-        title: 'Success',
-        description: `User role updated to ${newRole}`,
-        variant: 'success',
-      })
-    } catch (error: any) {
-      addToast({
-        title: 'Error',
-        description: error.message || 'Failed to update user role',
-        variant: 'destructive',
-      })
     }
   }
 
@@ -194,10 +229,8 @@ export function UsersTab() {
       setShowDeleteConfirm(false)
       setUserToDelete(null)
       addToast({
-        title: 'Deleted'
-      ,
-        description: 
-        `User ${userToDelete.name || userToDelete.email} deleted successfully`,
+        title: 'Deleted',
+        description: `User ${userToDelete.username || userToDelete.email} deleted successfully`,
         variant: 'success',
       })
     } catch (error: any) {
@@ -271,7 +304,6 @@ export function UsersTab() {
   const handleEditUser = (user: User) => {
     setUserToEdit(user)
     setEditForm({
-      name: user.name || '',
       username: user.username || '',
       email: user.email,
     })
@@ -302,7 +334,6 @@ export function UsersTab() {
 
     // Check if anything changed
     if (
-      editForm.name === (userToEdit.name || '') &&
       editForm.username === (userToEdit.username || '') &&
       editForm.email === userToEdit.email
     ) {
@@ -316,7 +347,6 @@ export function UsersTab() {
 
     try {
       const updates: any = {}
-      if (editForm.name !== (userToEdit.name || '')) updates.name = editForm.name || undefined
       if (editForm.username !== (userToEdit.username || ''))
         updates.username = editForm.username || undefined
       if (editForm.email !== userToEdit.email) updates.email = editForm.email
@@ -373,23 +403,49 @@ export function UsersTab() {
     }
   }
 
+  const handleResetFilters = () => {
+    const wasRoleChanged = roleFilter !== 'all'
+    const wasVerifiedChanged = verifiedFilter !== 'all'
+    const wasSearchChanged = searchTerm.length > 0 || searchQuery.length > 0
+    const wasPageChanged = page !== 1
 
-  const toggleUserSelection = (userId: string) => {
-    const newSelected = new Set(selectedUsers)
-    if (newSelected.has(userId)) {
-      newSelected.delete(userId)
-    } else {
-      newSelected.add(userId)
-    }
-    setSelectedUsers(newSelected)
+    setRoleFilter('all')
+    setVerifiedFilter('all')
+    setSearchQuery('')
+    setSearchTerm('')
+    setIsSearchMode(false)
+    setPage(1)
+    setSelectedUsers(new Set())
+
+    loadUsers({ page: 1, role: 'all' })
   }
 
-  const toggleSelectAll = () => {
-    if (selectedUsers.size === users.length) {
-      setSelectedUsers(new Set())
-    } else {
-      setSelectedUsers(new Set(users.map((u) => u.id)))
-    }
+
+  const toggleUserSelection = (userId: string) => {
+    setSelectedUsers((prev) => {
+      const next = new Set(prev)
+      if (next.has(userId)) {
+        next.delete(userId)
+      } else {
+        next.add(userId)
+      }
+      return next
+    })
+  }
+
+  const toggleSelectAll = (visibleUsers: User[]) => {
+    setSelectedUsers((prev) => {
+      const next = new Set(prev)
+      const allVisibleSelected = visibleUsers.every((user) => next.has(user.id))
+
+      if (allVisibleSelected) {
+        visibleUsers.forEach((user) => next.delete(user.id))
+      } else {
+        visibleUsers.forEach((user) => next.add(user.id))
+      }
+
+      return next
+    })
   }
 
   const handleBulkDelete = async () => {
@@ -419,16 +475,14 @@ export function UsersTab() {
     const headers = [
       'Email',
       'Username',
-      'Name',
       'Role',
       'Email Verified',
       'Created At',
       'Last Login',
     ]
-    const rows = users.map((u) => [
+    const rows = filteredUsers.map((u) => [
       u.email,
       u.username || '',
-      u.name || '',
       u.role,
       u.emailVerified ? 'Yes' : 'No',
       new Date(u.createdAt).toLocaleString(),
@@ -452,6 +506,10 @@ export function UsersTab() {
 
   const getFilteredAndSortedUsers = () => {
     let filtered = [...users]
+
+    if (roleFilter !== 'all') {
+      filtered = filtered.filter((u) => u.role === roleFilter)
+    }
 
     // Filter by verification status
     if (verifiedFilter !== 'all') {
@@ -480,72 +538,143 @@ export function UsersTab() {
     return filtered
   }
 
+  const filteredUsers = getFilteredAndSortedUsers()
+  const hasActiveFilters =
+    roleFilter !== 'all' || verifiedFilter !== 'all' || searchTerm.length > 0 || isSearchMode
+  const showInitialLoading = loading && users.length === 0 && !loadError
+  const showError = !loading && Boolean(loadError)
+  const showEmpty = !loading && !loadError && filteredUsers.length === 0
+  const resolvedErrorMessage =
+    loadError || 'Failed to load users. Please try again.'
+  const allVisibleSelected =
+    filteredUsers.length > 0 && filteredUsers.every((user) => selectedUsers.has(user.id))
+  const verifiedCount = filteredUsers.filter((u) => u.emailVerified).length
+  const adminCount = filteredUsers.filter((u) => u.role === 'admin').length
 
   return (
-    <div className="space-y-6">
-      {/* Header with Refresh */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-2">User Management</h2>
-          <p className="text-gray-400">Manage user accounts and permissions</p>
+    <div className="space-y-8">
+      <header className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 via-white/0 to-primary-500/10 p-6 sm:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-3 rounded-xl bg-white/5 px-3 py-1.5 border border-white/10 text-sm text-primary-200">
+              <Users className="h-4 w-4" />
+              User Management
+            </div>
+            <div>
+              <h2 className="text-3xl font-semibold text-white">Manage Members</h2>
+              <p className="text-sm text-gray-400">Search users, adjust roles, and monitor account activity.</p>
+            </div>
+          </div>
+          <div className="flex items-start sm:items-center gap-3">
+            <Button
+              onClick={() => handleResetFilters()}
+              variant="outline"
+              size="sm"
+              className="border-white/20 text-white hover:bg-white/10"
+            >
+              <RotateCcw className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Reset Filters</span>
+            </Button>
+            <Button
+              onClick={() => loadUsers({ page: 1 })}
+              variant="outline"
+              size="sm"
+              className="border-white/20 text-white hover:bg-white/10"
+            >
+              <RefreshCw className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Refresh</span>
+            </Button>
+          </div>
         </div>
-        <Button
-          onClick={loadUsers}
-          variant="outline"
-          size="sm"
-          className="border-white/20 text-white hover:bg-white/10"
-        >
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
-      </div>
 
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1 flex gap-2">
-          <input
-            type="text"
-            placeholder="Search users..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
-          />
-          <Button
-            onClick={handleSearch}
-            className="px-4 py-2 bg-primary-500/20 border border-primary-500/30 text-primary-300 hover:bg-primary-500/30 rounded-lg"
-          >
-            <Search className="h-4 w-4" />
-          </Button>
+        <div className="mt-6 flex flex-col gap-4">
+          <div className="flex flex-col lg:flex-row gap-3">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search users by email or username"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                className="w-full rounded-lg border border-white/10 bg-white/5 px-10 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/40"
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <select
+                value={roleFilter}
+                onChange={(e) => {
+                  setRoleFilter(e.target.value)
+                  setPage(1)
+                }}
+                className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:outline-none focus:border-primary-500/40"
+              >
+                <option value="all">All Roles</option>
+                <option value="user">Users</option>
+                <option value="moderator">Moderators</option>
+                <option value="admin">Admins</option>
+              </select>
+              <select
+                value={verifiedFilter}
+                onChange={(e) => setVerifiedFilter(e.target.value as 'all' | 'verified' | 'unverified')}
+                className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:outline-none focus;border-primary-500/40"
+              >
+                <option value="all">All Status</option>
+                <option value="verified">Verified</option>
+                <option value="unverified">Unverified</option>
+              </select>
+              <Button
+                onClick={handleSearch}
+                size="sm"
+                className="min-w-[110px] bg-primary-500/20 border border-primary-500/40 text-primary-100 hover:bg-primary-500/30"
+              >
+                <Search className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Search</span>
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs sm:text-sm text-gray-400">
+            <div className="flex flex-wrap gap-4">
+              <span>
+                Showing <span className="font-semibold text-white">{filteredUsers.length}</span> users
+              </span>
+              <span>
+                Verified <span className="font-semibold text-green-300">{verifiedCount}</span>
+              </span>
+              <span>
+                Admins <span className="font-semibold text-yellow-300">{adminCount}</span>
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {hasActiveFilters && (
+                <Button
+                  onClick={handleResetFilters}
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-300 hover:text-white"
+                >
+                  <Filter className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Clear Filters</span>
+                </Button>
+              )}
+              <Button
+                onClick={exportToCSV}
+                variant="outline"
+                size="sm"
+                className="border-white/20 text-white hover:bg-white/10"
+              >
+                <Download className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Export CSV</span>
+              </Button>
+            </div>
+          </div>
         </div>
-        <select
-          value={roleFilter}
-          onChange={(e) => {
-            setRoleFilter(e.target.value)
-            setPage(1)
-          }}
-          className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
-        >
-          <option value="all">All Roles</option>
-          <option value="user">Users</option>
-          <option value="moderator">Moderators</option>
-          <option value="admin">Admins</option>
-        </select>
-        <select
-          value={verifiedFilter}
-          onChange={(e) => setVerifiedFilter(e.target.value as 'all' | 'verified' | 'unverified')}
-          className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
-        >
-          <option value="all">All Status</option>
-          <option value="verified">Verified</option>
-          <option value="unverified">Unverified</option>
-        </select>
-      </div>
+      </header>
 
-      {/* Bulk Actions & Export */}
       {selectedUsers.size > 0 && (
-        <div className="glass rounded-lg p-4 border border-primary-500/30 flex items-center justify-between">
-          <p className="text-white font-medium">
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-primary-500/30 bg-primary-500/10 px-4 py-3">
+          <p className="text-sm text-primary-100">
             {selectedUsers.size} user{selectedUsers.size > 1 ? 's' : ''} selected
           </p>
           <div className="flex gap-2">
@@ -553,77 +682,58 @@ export function UsersTab() {
               onClick={() => setSelectedUsers(new Set())}
               variant="ghost"
               size="sm"
-              className="text-gray-400 hover:text-white"
+              className="text-primary-100 hover:text-white"
             >
-              Clear Selection
+              Clear
             </Button>
             <Button
               onClick={handleBulkDelete}
               variant="outline"
               size="sm"
-              className="border-error-500/30 text-error-300 hover:bg-error-500/20"
+              className="border-error-500/40 text-error-200 hover:bg-error-500/20"
             >
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Trash2 className="h-4 w-4 sm:mr-2" />
               Delete Selected
             </Button>
           </div>
         </div>
       )}
 
-      {/* Stats & Export */}
-      <div className="flex items-center justify-between">
-        <div className="flex gap-4 text-sm">
-          <span className="text-gray-400">
-            Total: <span className="text-white font-medium">{users.length}</span>
-          </span>
-          <span className="text-gray-400">
-            Verified:{' '}
-            <span className="text-green-400 font-medium">
-              {users.filter((u) => u.emailVerified).length}
-            </span>
-          </span>
-          <span className="text-gray-400">
-            Admins:{' '}
-            <span className="text-yellow-400 font-medium">
-              {users.filter((u) => u.role === 'admin').length}
-            </span>
-          </span>
-        </div>
-        <Button
-          onClick={exportToCSV}
-          variant="outline"
-          size="sm"
-          className="border-white/20 text-white hover:bg-white/10"
-        >
-          <Download className="h-4 w-4 mr-2" />
-          Export CSV
-        </Button>
-      </div>
-
-      {/* Users Table */}
-      {loading ? (
+      {showInitialLoading ? (
         <LoadingState variant="inline" text="Loading users..." size="md" />
-      ) : users.length === 0 ? (
+      ) : showError ? (
+        <ErrorState
+          variant="inline"
+          title="Unable to load users"
+          message={resolvedErrorMessage}
+          showRetry
+          showHome={false}
+          onRetry={() => loadUsers({ page: 1 })}
+        />
+      ) : showEmpty ? (
         <EmptyState
-          icon={<Users className="h-10 w-10 text-gray-500" />}
-          title="No users found"
+          icon={<Users className="h-10 w-10 text-primary-300" />}
+          title="No users to display"
           message={
-            searchQuery
-              ? `No users match "${searchQuery}". Try a different search term.`
-              : roleFilter !== 'all'
-                ? `No users with role "${roleFilter}". Try changing the filter.`
-                : 'No users registered yet.'
+            hasActiveFilters
+              ? 'No users match the current filters or search term.'
+              : 'No users have registered yet.'
           }
-          actionLabel={searchQuery || roleFilter !== 'all' ? 'Clear Filters' : undefined}
-          onAction={
-            searchQuery || roleFilter !== 'all'
-              ? () => {
-                  setSearchQuery('')
-                  setRoleFilter('all')
-                  loadUsers()
-                }
-              : undefined
+          suggestions={
+            hasActiveFilters
+              ? [
+                  'Try resetting the filters to view all users',
+                  'Search for a different name or email address',
+                ]
+              : [
+                  'Invite users to join AnimeSenpai',
+                  'Seed initial accounts for testing and moderation',
+                ]
           }
+          actionLabel="Reset filters"
+          onAction={handleResetFilters}
+          secondaryActionLabel="Reload"
+          onSecondaryAction={() => loadUsers({ page: 1 })}
         />
       ) : (
         <>
@@ -635,8 +745,8 @@ export function UsersTab() {
                   <tr>
                     <th className="px-4 py-3 text-left">
                       <Checkbox
-                        checked={selectedUsers.size === users.length && users.length > 0}
-                        onCheckedChange={toggleSelectAll}
+                        checked={allVisibleSelected}
+                        onCheckedChange={() => toggleSelectAll(filteredUsers)}
                       />
                     </th>
                     <th
@@ -693,7 +803,7 @@ export function UsersTab() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/10">
-                  {getFilteredAndSortedUsers().map((user) => (
+                  {filteredUsers.map((user) => (
                     <tr key={user.id} className="hover:bg-white/5 transition-colors">
                       <td className="px-4 py-4">
                         <Checkbox
@@ -705,7 +815,7 @@ export function UsersTab() {
                         <div>
                           <div className="flex items-center gap-2">
                             <p className="text-sm font-medium text-white">
-                              {user.username || user.name || user.email}
+                              {user.username || user.email}
                             </p>
                             {user.emailVerified ? (
                               <CheckCircle className="h-3.5 w-3.5 text-green-400" />
@@ -802,22 +912,6 @@ export function UsersTab() {
                               <TooltipContent>Send Custom Email</TooltipContent>
                             </Tooltip>
 
-                            <select
-                              value={user.role}
-                              onChange={(e) =>
-                                handleRoleChange(
-                                  user.id,
-                                  e.target.value as 'user' | 'moderator' | 'admin'
-                                )
-                              }
-                              className="px-2 py-1 text-xs bg-white/5 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500/50 transition-colors"
-                              title="Change Role"
-                            >
-                              <option value="user">User</option>
-                              <option value="moderator">Moderator</option>
-                              <option value="admin">Admin</option>
-                            </select>
-
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <button
@@ -841,7 +935,7 @@ export function UsersTab() {
 
           {/* Mobile/Tablet Card View */}
           <div className="lg:hidden space-y-4">
-            {getFilteredAndSortedUsers().map((user) => (
+            {filteredUsers.map((user) => (
               <div key={user.id} className="glass rounded-xl p-4 border border-white/10">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-start gap-3 flex-1">
@@ -853,7 +947,7 @@ export function UsersTab() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <p className="text-sm font-semibold text-white">
-                          {user.username || user.name || user.email}
+                          {user.username || user.email}
                         </p>
                         {user.emailVerified ? (
                           <CheckCircle className="h-4 w-4 text-green-400 flex-shrink-0" />
@@ -941,17 +1035,6 @@ export function UsersTab() {
                     <MailOpen className="h-4 w-4" />
                     <span className="text-[10px]">Email</span>
                   </button>
-                  <select
-                    value={user.role}
-                    onChange={(e) =>
-                      handleRoleChange(user.id, e.target.value as 'user' | 'moderator' | 'admin')
-                    }
-                    className="px-2 py-1.5 text-xs bg-white/5 border border-white/10 rounded text-white focus:outline-none focus:border-primary-500/50 transition-colors"
-                  >
-                    <option value="user">User</option>
-                    <option value="moderator">Moderator</option>
-                    <option value="admin">Admin</option>
-                  </select>
                   <button
                     onClick={() => handleDeleteUser(user.id)}
                     className="flex flex-col items-center gap-1 p-2 hover:bg-error-500/20 rounded text-error-400 hover:text-error-300 transition-colors"
@@ -968,7 +1051,9 @@ export function UsersTab() {
           {/* Pagination */}
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-400">
-              Page {page} of {totalPages}
+              {isSearchMode
+                ? `${filteredUsers.length} matching users`
+                : `Page ${page} of ${totalPages}`}
             </p>
             <div className="flex gap-2">
               <Button
@@ -1017,14 +1102,12 @@ export function UsersTab() {
                 {/* Basic Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-400 mb-1">Name</p>
-                    <p className="text-white">
-                      {selectedUser.name || selectedUser.username || selectedUser.email}
-                    </p>
-                  </div>
-                  <div>
                     <p className="text-sm text-gray-400 mb-1">Username</p>
                     <p className="text-white">{selectedUser.username || 'Not set'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400 mb-1">User ID</p>
+                    <p className="text-white break-all">{selectedUser.id}</p>
                   </div>
                   <div className="md:col-span-2">
                     <p className="text-sm text-gray-400 mb-1">Email</p>
@@ -1160,7 +1243,7 @@ export function UsersTab() {
                 <p className="text-gray-300 text-sm mb-3">
                   Are you sure you want to delete{' '}
                   <strong>
-                    {userToDelete.name || userToDelete.username || userToDelete.email}
+                    {userToDelete.username || userToDelete.email}
                   </strong>
                   ?
                 </p>
@@ -1218,17 +1301,6 @@ export function UsersTab() {
             </div>
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Name</label>
-                <input
-                  type="text"
-                  value={editForm.name}
-                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
-                  placeholder="User's display name"
-                />
-              </div>
-
               <div>
                 <label className="block text-sm text-gray-400 mb-2">Username</label>
                 <input
@@ -1301,7 +1373,7 @@ export function UsersTab() {
             <div className="mb-4 bg-white/5 rounded-lg p-3 border border-white/10">
               <p className="text-sm text-gray-400">Sending to:</p>
               <p className="text-white font-medium">
-                {userToEmail.name || userToEmail.username || 'Unknown'}
+                {userToEmail.username || userToEmail.email || 'Unknown'}
               </p>
               <p className="text-sm text-gray-400">{userToEmail.email}</p>
             </div>

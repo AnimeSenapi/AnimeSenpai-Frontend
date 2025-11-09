@@ -409,9 +409,9 @@ export default function UserProfilePage() {
                 {/* User Info */}
                   <div>
                   <h1 className="text-xl sm:text-2xl font-bold text-white">
-                    {user.name || user.username || 'User'}
-                    </h1>
-                  <p className="text-primary-300 text-sm">@{user.username}</p>
+                    {user.username || 'User'}
+                  </h1>
+                  <p className="text-primary-300 text-sm">@{user.username || 'unknown'}</p>
                   {user.bio && (
                     <p className="text-gray-300 text-sm mt-1 max-w-md">{user.bio}</p>
                   )}

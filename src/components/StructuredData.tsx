@@ -143,7 +143,8 @@ export function getUserProfileSchema(user: {
     '@type': 'ProfilePage',
     mainEntity: {
       '@type': 'Person',
-      name: user.name || user.username,
+      name: user.username,
+      ...(user.name && { alternateName: user.name }),
       description: user.bio || `AnimeSenpai profile for ${user.username}`,
       ...(user.avatar && { image: user.avatar }),
       url: `https://animesenpai.app/user/${user.username}`,

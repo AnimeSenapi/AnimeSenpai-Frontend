@@ -25,11 +25,6 @@ export const DynamicUsersTab = dynamic(
   { loading: LoadingFallback, ssr: false }
 )
 
-export const DynamicSettingsTab = dynamic(
-  () => import('../app/admin/components/SettingsTab').then((mod) => ({ default: mod.SettingsTab })),
-  { loading: LoadingFallback, ssr: false }
-)
-
 export const DynamicDashboardTab = dynamic(
   () =>
     import('../app/admin/components/DashboardTab').then((mod) => ({ default: mod.DashboardTab })),

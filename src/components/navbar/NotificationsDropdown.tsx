@@ -275,7 +275,7 @@ export function NotificationsDropdown() {
                           )}
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-white truncate">
-                              {request.sender.name || request.sender.username}
+                              {request.sender.username}
                             </p>
                             <p className="text-xs text-gray-400 truncate">
                               @{request.sender.username}

@@ -26,7 +26,7 @@ import { useIsMobile } from '../../lib/use-mobile'
 interface StandaloneDropdownProps {
   user: {
     id: string
-    name: string
+    username?: string
     email: string
     avatar?: string
     role?: string
@@ -43,7 +43,7 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
   const { signout } = useAuth()
   const router = useRouter()
   const isMobile = useIsMobile()
-  const displayName = user.name || user.email || 'User'
+  const displayName = user.username || user.email || 'User'
   const displayInitial = (displayName || 'U').trim().charAt(0).toUpperCase()
 
   // Get role badge configuration

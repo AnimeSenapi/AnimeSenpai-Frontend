@@ -95,7 +95,7 @@ export function Navbar() {
                     <StandaloneDropdown
                       user={{
                         id: user.id,
-                        name: user.username || user.name || 'User',
+                        username: user.username || undefined,
                         email: user.email,
                         avatar: user.avatar,
                         role: user.role,
@@ -119,13 +119,13 @@ export function Navbar() {
                     {user.avatar ? (
                       <img
                         src={user.avatar}
-                        alt={user.username || user.name || 'User'}
+                        alt={user.username || user.email || 'User'}
                         className="w-8 h-8 rounded-full object-cover"
                       />
                     ) : (
                       <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full flex items-center justify-center">
                         <span className="text-white font-bold text-sm">
-                          {(user.username || user.name || 'U').charAt(0).toUpperCase()}
+                          {(user.username || user.email || 'U').charAt(0).toUpperCase()}
                         </span>
                       </div>
                     )}

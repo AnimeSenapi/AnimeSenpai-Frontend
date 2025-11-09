@@ -100,11 +100,9 @@ export function FriendTagger({ onTagsChange, initialTags: _initialTags = [] }: F
     onTagsChange(newTagged.map((f) => f.id))
   }
 
-  const filteredFriends = friends.filter(
-    (friend) =>
-      !taggedFriends.some((f) => f.id === friend.id) &&
-      (friend.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        friend.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredFriends = friends.filter((friend) =>
+    !taggedFriends.some((f) => f.id === friend.id) &&
+    friend.username.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (
@@ -118,7 +116,7 @@ export function FriendTagger({ onTagsChange, initialTags: _initialTags = [] }: F
               className="bg-primary-500/20 text-primary-300 border-primary-500/30 pl-2 pr-1 py-1 flex items-center gap-1"
             >
               <AtSign className="h-3 w-3" />
-              <span>{friend.name || friend.username}</span>
+              <span>{friend.username}</span>
               <button
                 onClick={() => removeFriend(friend.id)}
                 className="ml-1 hover:bg-white/10 rounded-full p-0.5"
@@ -184,7 +182,7 @@ export function FriendTagger({ onTagsChange, initialTags: _initialTags = [] }: F
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-white truncate">
-                    {friend.name || friend.username}
+                    {friend.username}
                   </div>
                   <div className="text-xs text-gray-400 truncate">@{friend.username}</div>
                 </div>

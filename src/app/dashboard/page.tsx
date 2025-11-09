@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { EmailVerificationBanner } from '../../components/EmailVerificationBanner'
 import { Button } from '../../components/ui/button'
 import { LoadingState } from '../../components/ui/loading-state'
@@ -19,12 +18,10 @@ import {
   Calendar,
   Star,
   Filter,
-  Tag,
   Crown,
   RefreshCw,
-  ArrowRight,
 } from 'lucide-react'
-import { apiGetAllAnime, apiGetAllSeries, apiGetTrending, apiGetGenres, api } from '../lib/api'
+import { apiGetAllAnime, apiGetAllSeries, apiGetTrending, api } from '../lib/api'
 import { useAuth } from '../lib/auth-context'
 import { groupAnimeIntoSeries } from '../../lib/series-grouping'
 import type { Anime } from '../../types/anime'
@@ -70,9 +67,6 @@ export default function DashboardPage() {
   const [topRatedSeries, setTopRatedSeries] = useState<any[]>([]) // Grouped series
   const [recentlyAddedSeries, setRecentlyAddedSeries] = useState<any[]>([]) // Grouped series
   const [seasonalSeries, setSeasonalSeries] = useState<any[]>([]) // Seasonal anime
-  const [genres, setGenres] = useState<any[]>([]) // Genres for filtering
-  const [selectedGenre, setSelectedGenre] = useState<string | null>(null)
-  const [genreAnime, setGenreAnime] = useState<any[]>([]) // Anime filtered by genre
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showOnboarding, setShowOnboarding] = useState(false)
@@ -142,50 +136,6 @@ export default function DashboardPage() {
     }
   }
 
-  // Load genres
-  async function loadGenres() {
-    try {
-      const genreList = await apiGetGenres()
-      setGenres(genreList || [])
-    } catch (err) {
-      console.error('Failed to load genres:', err)
-    }
-  }
-
-  // Load anime by selected genre
-  async function loadGenreAnime(genreSlug: string) {
-    try {
-      const data = (await api.trpcQuery('anime.getAll', {
-        page: 1,
-        limit: 20,
-        genres: [genreSlug],
-        sortBy: 'averageRating',
-        sortOrder: 'desc',
-      })) as any
-
-      const animeList = data?.anime || []
-      if (animeList.length > 0) {
-        const grouped = groupAnimeIntoSeries(animeList)
-        setGenreAnime(grouped)
-      } else {
-        setGenreAnime([])
-      }
-    } catch (err) {
-      console.error('Failed to load genre anime:', err)
-      setGenreAnime([])
-    }
-  }
-
-  // Handle genre selection
-  useEffect(() => {
-    if (selectedGenre) {
-      loadGenreAnime(selectedGenre)
-    } else {
-      setGenreAnime([])
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedGenre])
-
 
   // Refresh all recommendations
   async function refreshRecommendations() {
@@ -203,14 +153,12 @@ export default function DashboardPage() {
       setRecentlyAddedSeries([])
       setAllSeries([])
       setSeasonalSeries([])
-      setGenreAnime([])
 
       // Reload data
       await Promise.all([
         loadAllRecommendations(),
         isAuthenticated ? loadPersonalizedRecommendations() : Promise.resolve(),
         loadSeasonalAnime(),
-        loadGenres(),
       ])
     } catch (err) {
       console.error('Failed to refresh recommendations:', err)
@@ -283,11 +231,10 @@ export default function DashboardPage() {
           }, 200)
         }
 
-        // Load seasonal and genres in background
+        // Load seasonal content in background
         setTimeout(async () => {
           setSectionLoadingStates((prev) => ({ ...prev, seasonal: true }))
           await loadSeasonalAnime()
-          await loadGenres()
           setSectionLoadingStates((prev) => ({ ...prev, seasonal: false }))
         }, 300)
       } catch (err: unknown) {
@@ -401,7 +348,16 @@ export default function DashboardPage() {
         if (result.status === 'fulfilled') {
           return result.value
         } else {
-          console.error('API call failed:', result.reason)
+          // Only log non-auth errors (auth errors are expected for optional endpoints)
+          const errorMessage = result.reason?.message || String(result.reason)
+          const isAuthError = errorMessage.toLowerCase().includes('session') ||
+            errorMessage.toLowerCase().includes('invalid') ||
+            errorMessage.toLowerCase().includes('expired') ||
+            errorMessage.toLowerCase().includes('unauthorized')
+          
+          if (!isAuthError) {
+            console.error('API call failed:', result.reason)
+          }
           return null
         }
       }
@@ -652,50 +608,6 @@ export default function DashboardPage() {
                 </div>
               )}
             </>
-          )}
-
-          {/* Browse by Genre - Integrated Quick Discovery */}
-          {genres.length > 0 && (
-            <div className="mb-6 sm:mb-8 lg:mb-12">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base sm:text-lg md:text-xl font-bold text-white flex items-center gap-2">
-                  <Tag className="w-4 h-4 sm:w-5 sm:h-5 text-primary-400" />
-                  Browse by Genre
-                </h2>
-                <Link
-                  href="/genres"
-                  className="text-sm text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1"
-                >
-                  View All
-                  <ArrowRight className="w-4 h-4" />
-              </Link>
-                  </div>
-              <div className="flex flex-wrap gap-2 sm:gap-3">
-                {genres.slice(0, 12).map((genre) => (
-                  <button
-                    key={genre.id || genre.slug}
-                    onClick={() => setSelectedGenre(selectedGenre === genre.slug ? null : genre.slug)}
-                    className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
-                      selectedGenre === genre.slug
-                        ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
-                        : 'glass border border-white/10 text-gray-300 hover:bg-white/10 hover:border-primary-400/30'
-                    }`}
-                  >
-                    {genre.name}
-                  </button>
-                ))}
-                </div>
-              {selectedGenre && genreAnime.length > 0 && (
-                <div className="mt-6">
-                  <RecommendationCarousel
-                    title={`${genres.find((g) => g.slug === selectedGenre)?.name || selectedGenre}`}
-                    icon={<Tag className="h-5 w-5 text-purple-400" />}
-                    recommendations={mapToRecommendations(genreAnime)}
-                    showReasons={false}
-                  />
-            </div>
-              )}
-          </div>
           )}
 
           {/* Personalized Recommendations (Authenticated Users Only) */}

@@ -185,7 +185,7 @@ export function ReviewList({ animeId: _animeId, reviews, onReviewUpdate }: Revie
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-semibold text-white">
-                      {review.user.username || review.user.name || 'Anonymous'}
+                      {review.user.username || 'Anonymous'}
                     </span>
                     {isOwnReview && (
                       <Badge className="bg-primary-500/20 text-primary-300 border-primary-500/30 text-xs">

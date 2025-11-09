@@ -384,7 +384,7 @@ export default function OnboardingPage() {
                   <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-white" />
                 </div>
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3 sm:mb-4">
-                  Welcome to AnimeSenpai{user?.name ? `, ${user.name}` : ''}!
+                  Welcome to AnimeSenpai{user?.username ? `, ${user.username}` : ''}!
                 </h1>
                 <p className="text-base sm:text-lg lg:text-xl text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto">
                   Let's find anime you'll love! Answer a few quick questions and Senpai will curate

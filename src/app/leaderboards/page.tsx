@@ -205,7 +205,7 @@ export default function LeaderboardsPage() {
 
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-white truncate">
-                      {entry.user.name || entry.user.username}
+                      {entry.user.username}
                     </div>
                     <div className="text-sm text-gray-400 truncate">@{entry.user.username}</div>
                   </div>
