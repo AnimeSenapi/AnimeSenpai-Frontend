@@ -27,7 +27,7 @@ interface Conversation {
   user: {
     id: string
     username: string
-    name: string | null
+    name?: string | null
     avatar: string | null
   }
   lastMessage: {
@@ -55,7 +55,7 @@ interface Message {
   sender: {
     id: string
     username: string
-    name: string | null
+    name?: string | null
     avatar: string | null
   }
   anime?: {
@@ -240,10 +240,8 @@ export default function MessagesPage() {
     }
   }, [showNewMessageModal])
 
-  const filteredConversations = conversations.filter(
-    (conv) =>
-      conv.user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      conv.user.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredConversations = conversations.filter((conv) =>
+    conv.user.username?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   const selectedUser = conversations.find((c) => c.user.id === selectedConversation)?.user
@@ -341,7 +339,7 @@ export default function MessagesPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-medium text-white truncate text-sm">
-                            {conv.user.name || conv.user.username}
+                            {conv.user.username}
                           </span>
                           {conv.lastMessage && (
                             <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
@@ -401,7 +399,7 @@ export default function MessagesPage() {
                   </div>
                   <div className="min-w-0">
                     <div className="font-medium text-white text-sm truncate">
-                      {selectedUser.name || selectedUser.username}
+                      {selectedUser.username || 'User'}
                     </div>
                     <div className="text-xs text-gray-400">@{selectedUser.username}</div>
                   </div>
@@ -600,7 +598,7 @@ export default function MessagesPage() {
                         )}
                         <div className="flex-1 text-left min-w-0">
                           <p className="text-white font-medium text-sm truncate">
-                            {friend.name || friend.username}
+                            {friend.username}
                           </p>
                           <p className="text-gray-400 text-xs truncate">@{friend.username}</p>
                         </div>

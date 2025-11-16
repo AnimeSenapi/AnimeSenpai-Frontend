@@ -24,7 +24,11 @@ export function AuthDrawer({ isOpen, onClose }: AuthDrawerProps) {
   if (!mounted) return null
 
   // Auth drawer content - handles user menu and auth buttons
-  const AuthContent = () => (
+  const AuthContent = () => {
+    const displayIdentifier = user?.username || user?.email || 'User'
+    const displayInitial = displayIdentifier.trim().charAt(0).toUpperCase()
+
+    return (
     <div className="p-4">
       {/* Mobile User Menu */}
       {isAuthenticated && user && (
@@ -37,19 +41,19 @@ export function AuthDrawer({ isOpen, onClose }: AuthDrawerProps) {
               {user.avatar ? (
                 <img
                   src={user.avatar}
-                  alt={user.username || user.name || 'User'}
+                    alt={displayIdentifier}
                   className="w-12 h-12 rounded-full object-cover border-2 border-white/20"
                 />
               ) : (
                 <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full flex items-center justify-center">
                   <span className="text-white font-bold text-lg">
-                    {(user.username || user.name || 'U').charAt(0).toUpperCase()}
+                      {displayInitial}
                   </span>
                 </div>
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-base font-medium text-white truncate">
-                  {user.username || user.name || 'User'}
+                    {displayIdentifier}
                 </p>
                 <p className="text-sm text-gray-400 truncate">{user.email}</p>
               </div>
@@ -97,6 +101,7 @@ export function AuthDrawer({ isOpen, onClose }: AuthDrawerProps) {
       )}
     </div>
   )
+  }
 
   return (
     <>

@@ -51,6 +51,51 @@ const TRPC_URL =
 let isRefreshing = false
 let refreshPromise: Promise<boolean> | null = null
 
+const OPTIONAL_ENDPOINT_PATTERNS = [
+  'notifications.getUnreadCount',
+  'social.getFriendRecommendations',
+  'social.getRelationshipStatus',
+  'recommendations.getForYou',
+  'recommendations.getFansLikeYou',
+  'recommendations.getHiddenGems',
+  'recommendations.getDiscovery',
+  'recommendations.getContinueWatching',
+  'anime.getTrending',
+  'anime.getAll',
+  'anime.',
+]
+
+const OPTIONAL_CACHE_KEY_PREFIX = 'trpc-optional-cache:'
+const OPTIONAL_CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+
+type OptionalCacheEntry = {
+  timestamp: number
+  data: unknown
+}
+
+type FetchRetryConfig = {
+  retries: number
+  initialDelayMs: number
+  backoffFactor: number
+  timeoutMs: number
+}
+
+const DEFAULT_RETRY_CONFIG: FetchRetryConfig = {
+  retries: 2,
+  initialDelayMs: 250,
+  backoffFactor: 2,
+  timeoutMs: 10_000,
+}
+
+const OPTIONAL_RETRY_CONFIG: FetchRetryConfig = {
+  retries: 1,
+  initialDelayMs: 150,
+  backoffFactor: 2,
+  timeoutMs: 8_000,
+}
+
+const RETRYABLE_STATUS_CODES = new Set([408, 425, 429, 500, 502, 503, 504, 522, 524])
+
 function getAuthHeaders(): Record<string, string> {
   if (typeof window === 'undefined') return {}
 
@@ -133,6 +178,160 @@ async function refreshAccessToken(): Promise<boolean> {
 
 // Convert technical error codes to user-friendly messages
 // Re-export for backwards compatibility
+// Custom error class for database configuration errors that shouldn't spam the console
+class DatabaseConfigError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'DatabaseConfigError'
+    // Mark as suppressible to prevent console error logging
+    ;(this as any).__suppressConsoleError = true
+  }
+}
+
+function isOptionalQuery(path: string): boolean {
+  return OPTIONAL_ENDPOINT_PATTERNS.some((pattern) => path.includes(pattern))
+}
+
+function getOptionalCacheKey(path: string): string {
+  return `${OPTIONAL_CACHE_KEY_PREFIX}${path}`
+}
+
+function readOptionalCache<T>(path: string): T | null {
+  if (typeof window === 'undefined') return null
+
+  try {
+    const raw = sessionStorage.getItem(getOptionalCacheKey(path))
+    if (!raw) {
+      return null
+    }
+
+    const parsed = JSON.parse(raw) as OptionalCacheEntry
+    if (!parsed || typeof parsed.timestamp !== 'number') {
+      sessionStorage.removeItem(getOptionalCacheKey(path))
+      return null
+    }
+
+    if (Date.now() - parsed.timestamp > OPTIONAL_CACHE_TTL_MS) {
+      sessionStorage.removeItem(getOptionalCacheKey(path))
+      return null
+    }
+
+    return parsed.data as T
+  } catch (error) {
+    logger.debug('Failed to read cached optional endpoint result', {
+      path,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return null
+  }
+}
+
+function writeOptionalCache<T>(path: string, data: T): void {
+  if (typeof window === 'undefined') return
+
+  try {
+    const entry: OptionalCacheEntry = {
+      timestamp: Date.now(),
+      data,
+    }
+    sessionStorage.setItem(getOptionalCacheKey(path), JSON.stringify(entry))
+  } catch (error) {
+    logger.debug('Failed to cache optional endpoint result', {
+      path,
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function shouldRetryResponse(response: Response): boolean {
+  return (
+    RETRYABLE_STATUS_CODES.has(response.status) ||
+    (response.status >= 500 && response.status < 600)
+  )
+}
+
+function isRetryableError(error: unknown): boolean {
+  if (typeof window === 'undefined' && typeof process !== 'undefined') {
+    // Node fetch errors
+    return error instanceof Error && (error.name === 'AbortError' || error.message.includes('network'))
+  }
+
+  if (error instanceof DOMException && error.name === 'AbortError') {
+    return true
+  }
+
+  if (error instanceof TypeError) {
+    return error.message.includes('NetworkError') || error.message.includes('Failed to fetch')
+  }
+
+  if (error instanceof Error) {
+    return (
+      error.message.includes('network') ||
+      error.message.includes('NetworkError') ||
+      error.message.includes('fetch')
+    )
+  }
+
+  return false
+}
+
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  config: FetchRetryConfig
+): Promise<Response> {
+  let attempt = 0
+  let delayMs = config.initialDelayMs
+
+  while (true) {
+    const controller =
+      typeof AbortController !== 'undefined' && !init.signal ? new AbortController() : null
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
+
+    if (controller && config.timeoutMs > 0) {
+      timeoutId = setTimeout(() => controller.abort(), config.timeoutMs)
+    }
+
+    try {
+      const response = await fetch(url, {
+        ...init,
+        signal: controller ? controller.signal : init.signal,
+      })
+
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+
+      if (attempt < config.retries && shouldRetryResponse(response)) {
+        response.body?.cancel?.()
+        attempt += 1
+        await delay(delayMs)
+        delayMs *= config.backoffFactor
+        continue
+      }
+
+      return response
+    } catch (error) {
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+
+      if (attempt < config.retries && isRetryableError(error)) {
+        attempt += 1
+        await delay(delayMs)
+        delayMs *= config.backoffFactor
+        continue
+      }
+
+      throw error
+    }
+  }
+}
+
 function getUserFriendlyError(code: string, message: string): string {
   return handleApiError({ error: { data: { code }, message } })
 }
@@ -147,17 +346,20 @@ async function trpcQuery<TOutput>(
   // Debug: Check if we have auth token
   const authHeaders = getAuthHeaders()
   const hasToken = 'Authorization' in authHeaders
+  const optionalEndpoint = isOptionalQuery(path)
+  const retryConfig = optionalEndpoint ? OPTIONAL_RETRY_CONFIG : DEFAULT_RETRY_CONFIG
   if (!hasToken && typeof window !== 'undefined') {
     const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
     console.warn('⚠️ No auth token found for request:', path, 'Token exists:', !!token)
   }
 
   // Start performance tracking
-  const startTime = performance.now()
-  let cached = false
+  const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
   
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithRetry(
+      url,
+      {
       method: 'GET',
       headers: {
         ...authHeaders,
@@ -165,13 +367,23 @@ async function trpcQuery<TOutput>(
       },
       credentials: 'include',
       ...init,
-    })
+      },
+      retryConfig
+    )
 
     // Calculate duration
-    const duration = performance.now() - startTime
+    const duration =
+      (typeof performance !== 'undefined' ? performance.now() : Date.now()) - startTime
 
     // Track API performance
-    trackAPI(path, 'GET', duration, res.status, cached, !res.ok ? `HTTP ${res.status}` : undefined)
+    trackAPI(
+      path,
+      init?.method || 'GET',
+      duration,
+      res.status,
+      false,
+      !res.ok ? `HTTP ${res.status}` : undefined
+    )
 
     if (!res.ok) {
       // Try to parse tRPC error
@@ -179,6 +391,15 @@ async function trpcQuery<TOutput>(
       try {
         payload = await res.json()
       } catch {
+        if (optionalEndpoint) {
+          const cachedResult = readOptionalCache<TOutput>(path)
+          if (cachedResult !== null) {
+            logger.warn('Using cached result for optional endpoint after parse failure', { path })
+            return cachedResult
+          }
+          logger.info('Optional endpoint returned invalid payload; falling back to null', { path })
+          return null as TOutput
+        }
         throw new Error(getUserFriendlyError('NETWORK_ERROR', 'Unable to connect to the server'))
       }
       const message = payload && 'error' in payload ? payload.error.message : 'Request failed'
@@ -193,19 +414,45 @@ async function trpcQuery<TOutput>(
         message.includes('session') ||
         message.includes('token')
 
+      // Database configuration errors should always be logged
+      const isDatabaseConfigError = 
+        code === 'DATABASE_CONFIGURATION_ERROR' ||
+        code === 'P6002' ||
+        code === 'P5000' ||
+        message.includes('API key is invalid') ||
+        message.includes('Accelerate API key') ||
+        message.includes('P6002') ||
+        message.includes('P5000')
+
       // auth.me - skip all expected auth errors
       const isAuthCheck = path.includes('auth.me')
 
-      // Other optional endpoints - skip only auth errors
-      const isOtherOptionalEndpoint =
-        path.includes('notifications.getUnreadCount') ||
-        path.includes('social.getFriendRecommendations') ||
-        path.includes('social.getRelationshipStatus')
-
       const shouldSkipLogging =
-        (isAuthCheck && isExpectedAuthError) || (isOtherOptionalEndpoint && isExpectedAuthError)
+        (isAuthCheck && isExpectedAuthError) || (optionalEndpoint && isExpectedAuthError)
 
-      if (!shouldSkipLogging) {
+      // Handle database configuration errors with session-based logging
+      if (isDatabaseConfigError) {
+        // Only log once per session to avoid console spam
+        if (typeof window !== 'undefined' && !(window as any).__dbConfigErrorLogged) {
+          console.warn('⚠️ Database Configuration Error: Backend has invalid Prisma Accelerate API key.')
+          console.warn('   This is a backend configuration issue. Please check the backend .env file.')
+          console.warn('   Update DATABASE_URL to use a direct PostgreSQL connection or provide a valid Accelerate API key.')
+          ;(window as any).__dbConfigErrorLogged = true
+        }
+        
+        // For optional endpoints, return null instead of throwing to prevent UI crashes
+        if (optionalEndpoint || path.includes('anime.') || path.includes('recommendations.')) {
+          const cachedResult = readOptionalCache<TOutput>(path)
+          if (cachedResult !== null) {
+            logger.warn('Using cached result for optional endpoint during database config error', {
+              path,
+            })
+            return cachedResult
+          }
+          return null as TOutput
+        }
+      } else if (!shouldSkipLogging) {
+        // Log other errors normally
         console.error('❌ API Error Details:')
         console.error('Path:', path)
         console.error('Status:', res.status)
@@ -213,6 +460,16 @@ async function trpcQuery<TOutput>(
         console.error('Message:', message)
         console.error('Full Payload:', JSON.stringify(payload, null, 2))
         console.error('Response Headers:', Object.fromEntries(res.headers.entries()))
+
+        if (optionalEndpoint) {
+          const cachedResult = readOptionalCache<TOutput>(path)
+          if (cachedResult !== null) {
+            logger.warn('Optional endpoint failed; using cached data', { path, code })
+            return cachedResult
+          }
+          logger.info('Optional endpoint failed; returning null result', { path, code })
+          return null as TOutput
+        }
       }
 
       // Try to refresh token on auth errors (only once)
@@ -268,21 +525,55 @@ async function trpcQuery<TOutput>(
         }
       }
       
+      if (optionalEndpoint) {
+        const cachedResult = readOptionalCache<TOutput>(path)
+        if (cachedResult !== null) {
+          logger.warn('Optional endpoint returned tRPC error; using cached data', { path, code })
+          return cachedResult
+        }
+        logger.info('Optional endpoint returned tRPC error; returning null result', { path, code })
+        return null as TOutput
+      }
+      
       throw new Error(getUserFriendlyError(code, err.message))
     }
 
     // Filter out any undefined/null items from array responses
-    const data = json.result.data
+    let data = json.result.data as unknown
     if (Array.isArray(data)) {
-      return data.filter((item) => item != null) as TOutput
+      data = data.filter((item) => item != null)
     }
 
-    return data
+    if (optionalEndpoint) {
+      writeOptionalCache(path, data as TOutput)
+    }
+
+    return data as TOutput
   } catch (error: unknown) {
+    const duration =
+      (typeof performance !== 'undefined' ? performance.now() : Date.now()) - startTime
+    const errorMessage = error instanceof Error ? error.message : String(error)
+
+    if (optionalEndpoint) {
+      const cachedResult = readOptionalCache<TOutput>(path)
+      if (cachedResult !== null) {
+        trackAPI(path, init?.method || 'GET', duration, 0, true, 'cached_optional_fallback')
+        logger.warn('Optional endpoint fetch failed; using cached data', { path, error: errorMessage })
+        return cachedResult
+      }
+
+      trackAPI(path, init?.method || 'GET', duration, 0, false, 'optional_null_fallback')
+      logger.info('Optional endpoint fetch failed; returning null result', {
+        path,
+        error: errorMessage,
+      })
+      return null as TOutput
+    }
+
     logger.error('tRPC GET request failed', {
       url,
       trpcUrl: TRPC_URL,
-      error: error instanceof Error ? error.message : String(error),
+      error: errorMessage,
     })
     captureException(error, {
       context: { url, endpoint: path },
@@ -340,6 +631,16 @@ async function trpcMutation<TInput, TOutput>(
       const message = payload && 'error' in payload ? payload.error.message : 'Request failed'
       const code = (payload && 'error' in payload && payload.error.data?.code) || 'UNKNOWN_ERROR'
       
+      // Database configuration errors (Prisma Accelerate API key issues)
+      const isDatabaseConfigError = 
+        code === 'DATABASE_CONFIGURATION_ERROR' ||
+        code === 'P6002' ||
+        code === 'P5000' ||
+        message.includes('API key is invalid') ||
+        message.includes('Accelerate API key') ||
+        message.includes('P6002') ||
+        message.includes('P5000')
+      
       // Skip logging for expected errors on optional/non-critical mutations
       // Auth-related codes that are expected when not logged in or during initialization
       const isExpectedAuthError =
@@ -360,19 +661,31 @@ async function trpcMutation<TInput, TOutput>(
       // Only log to Sentry if it's an unexpected error or a critical mutation
       const shouldSkipSentryLogging = isOptionalMutation && isExpectedAuthError
 
+      // Handle database configuration errors with session-based logging
+      if (isDatabaseConfigError) {
+        // Only log once per session to avoid console spam
+        if (typeof window !== 'undefined' && !(window as any).__dbConfigErrorLogged) {
+          console.warn('⚠️ Database Configuration Error: Backend has invalid Prisma Accelerate API key.')
+          console.warn('   This is a backend configuration issue. Please check the backend .env file.')
+          console.warn('   Update DATABASE_URL to use a direct PostgreSQL connection or provide a valid Accelerate API key.')
+          ;(window as any).__dbConfigErrorLogged = true
+        }
+        
+        // Don't log database config errors to Sentry - these are configuration issues
+        // that will persist until the backend is fixed, so logging them would spam error tracking
+      } else if (!shouldSkipSentryLogging) {
       // Always log locally for debugging
-      if (!shouldSkipSentryLogging) {
-        logger.error('tRPC mutation error', {
-          path,
-          status: res.status,
-          code,
-          message,
-          payload: JSON.stringify(payload),
-        })
-        captureException(new Error(`tRPC mutation failed: ${code}`), {
-          context: { path, code, message, status: res.status },
-          tags: { operation: 'trpc_mutation' },
-        })
+      logger.error('tRPC mutation error', {
+        path,
+        status: res.status,
+        code,
+        message,
+        payload: JSON.stringify(payload),
+      })
+      captureException(new Error(`tRPC mutation failed: ${code}`), {
+        context: { path, code, message, status: res.status },
+        tags: { operation: 'trpc_mutation' },
+      })
       } else {
         // Log at debug level for optional mutations with expected errors
         logger.debug('tRPC mutation expected error (skipped Sentry)', {
@@ -403,6 +716,11 @@ async function trpcMutation<TInput, TOutput>(
         }
       }
       
+      // For database configuration errors, provide a more user-friendly error message
+      if (isDatabaseConfigError) {
+        throw new DatabaseConfigError('Unable to connect to the server. Please try again later or contact support if the problem persists.')
+      }
+      
       throw new Error(getUserFriendlyError(code, message))
     }
 
@@ -410,6 +728,16 @@ async function trpcMutation<TInput, TOutput>(
     if ('error' in json) {
       const err = json.error
       const code = err.data?.code || 'UNKNOWN_ERROR'
+      
+      // Database configuration errors (Prisma Accelerate API key issues)
+      const isDatabaseConfigError = 
+        code === 'DATABASE_CONFIGURATION_ERROR' ||
+        code === 'P6002' ||
+        code === 'P5000' ||
+        err.message.includes('API key is invalid') ||
+        err.message.includes('Accelerate API key') ||
+        err.message.includes('P6002') ||
+        err.message.includes('P5000')
       
       // Skip logging for expected errors on optional/non-critical mutations
       const isExpectedAuthError =
@@ -428,18 +756,30 @@ async function trpcMutation<TInput, TOutput>(
 
       const shouldSkipSentryLogging = isOptionalMutation && isExpectedAuthError
 
+      // Handle database configuration errors with session-based logging
+      if (isDatabaseConfigError) {
+        // Only log once per session to avoid console spam
+        if (typeof window !== 'undefined' && !(window as any).__dbConfigErrorLogged) {
+          console.warn('⚠️ Database Configuration Error: Backend has invalid Prisma Accelerate API key.')
+          console.warn('   This is a backend configuration issue. Please check the backend .env file.')
+          console.warn('   Update DATABASE_URL to use a direct PostgreSQL connection or provide a valid Accelerate API key.')
+          ;(window as any).__dbConfigErrorLogged = true
+        }
+        
+        // Don't log database config errors to Sentry - these are configuration issues
+        // that will persist until the backend is fixed, so logging them would spam error tracking
+      } else if (!shouldSkipSentryLogging) {
       // Always log locally for debugging
-      if (!shouldSkipSentryLogging) {
-        logger.error('tRPC mutation error in response', {
-          path,
-          code,
-          message: err.message,
-          data: err.data,
-        })
-        captureException(new Error(`tRPC mutation failed: ${code}`), {
-          context: { path, code, message: err.message },
-          tags: { operation: 'trpc_mutation' },
-        })
+      logger.error('tRPC mutation error in response', {
+        path,
+        code,
+        message: err.message,
+        data: err.data,
+      })
+      captureException(new Error(`tRPC mutation failed: ${code}`), {
+        context: { path, code, message: err.message },
+        tags: { operation: 'trpc_mutation' },
+      })
       } else {
         // Log at debug level for optional mutations with expected errors
         logger.debug('tRPC mutation expected error in response (skipped Sentry)', {
@@ -470,6 +810,11 @@ async function trpcMutation<TInput, TOutput>(
         }
       }
       
+      // For database configuration errors, provide a more user-friendly error message
+      if (isDatabaseConfigError) {
+        throw new DatabaseConfigError('Unable to connect to the server. Please try again later or contact support if the problem persists.')
+      }
+      
       throw new Error(getUserFriendlyError(code, err.message))
     }
 
@@ -493,15 +838,15 @@ async function trpcMutation<TInput, TOutput>(
 
     // Only log to Sentry if it's not a network error on an optional mutation
     if (!(isOptionalMutation && isNetworkError)) {
-      logger.error('tRPC mutation failed', {
-        path,
-        trpcUrl: TRPC_URL,
-        error: error instanceof Error ? error.message : String(error),
-      })
-      captureException(error, {
-        context: { path, input },
-        tags: { operation: 'trpc_mutation' },
-      })
+    logger.error('tRPC mutation failed', {
+      path,
+      trpcUrl: TRPC_URL,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    captureException(error, {
+      context: { path, input },
+      tags: { operation: 'trpc_mutation' },
+    })
     } else {
       // Log network errors on optional mutations at debug level
       logger.debug('tRPC mutation network error on optional endpoint (skipped Sentry)', {
@@ -1261,7 +1606,7 @@ export async function apiToggleEmailVerification(userId: string, verified: boole
 // Update User Details (Admin)
 export async function apiUpdateUserDetails(
   userId: string,
-  updates: { name?: string; username?: string; email?: string }
+  updates: { username?: string; email?: string }
 ) {
   const url = `${TRPC_URL}/admin.updateUserDetails`
   const response = await fetch(url, {
@@ -2140,6 +2485,90 @@ export async function apiApplyPrivacyPreset(preset: 'public' | 'friends_only' | 
   return trpcMutation('privacy.applyPreset', { preset })
 }
 
+// -------------------------------
+// App Status Badge (Frontend UI)
+// -------------------------------
+// Fetches status badge configuration from the backend via tRPC proxy.
+// Expected tRPC procedure on backend (example): appStatus.getBadge
+// Return shape example:
+// {
+//   status: 'beta',
+//   tooltip?: 'Public beta',
+//   variant?: 'glass' | 'solid' | 'outline',
+//   pulse?: boolean,
+//   link?: string,
+//   enabled?: boolean
+// }
+export interface AppStatusBadgeConfig {
+  status: string
+  tooltip?: string
+  variant?: 'glass' | 'solid' | 'outline'
+  pulse?: boolean
+  link?: string
+  enabled?: boolean
+}
+
+export async function apiGetAppStatus(): Promise<AppStatusBadgeConfig | null> {
+  try {
+    // Silent optional fetch (no console errors on 404/missing procedures)
+    async function trpcQueryOptional(path: string): Promise<any | null> {
+      try {
+        const url = `${TRPC_URL}/${path}`
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          credentials: 'include',
+        })
+        if (!res.ok) return null
+        const json: TRPCResponse<any> = await res.json().catch(() => ({}) as any)
+        if (!json || typeof json !== 'object' || 'error' in json) return null
+        return (json as any).result?.data ?? null
+      } catch {
+        return null
+      }
+    }
+
+    // Prefer admin endpoint; fallback to public appStatus.getBadge; then to local storage
+    const result =
+      (await trpcQueryOptional('admin.getAppStatus')) ??
+      (await trpcQueryOptional('appStatus.getBadge'))
+    if (!result || typeof result !== 'object') {
+      // Fallback: use client-side persisted value if API not available
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem('ui:appStatusBadge')
+          if (raw) {
+            const parsed = JSON.parse(raw)
+            if (parsed && typeof parsed === 'object') {
+              return parsed as AppStatusBadgeConfig
+            }
+          }
+        } catch {
+          // ignore parse errors
+        }
+      }
+      return null
+    }
+    return result as AppStatusBadgeConfig
+  } catch {
+    // As a last resort, check local fallback
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('ui:appStatusBadge')
+        if (raw) {
+          const parsed = JSON.parse(raw)
+          if (parsed && typeof parsed === 'object') {
+            return parsed as AppStatusBadgeConfig
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return null
+  }
+}
+
 export async function apiCanViewContent(
   targetUserId: string,
   contentType: 'profile' | 'animeList' | 'reviews' | 'activity' | 'friends'
@@ -2369,7 +2798,53 @@ export const api = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData?.error?.message || `Failed to ${procedure}`)
+      const code = errorData?.error?.data?.code || ''
+      const message = errorData?.error?.message || `Failed to ${procedure}`
+      
+      // Check for database configuration errors (Prisma Accelerate API key issues)
+      const isDatabaseConfigError = 
+        code === 'DATABASE_CONFIGURATION_ERROR' ||
+        message.includes('Accelerate API key') ||
+        message.includes('DATABASE_URL') ||
+        message.includes('P6002') ||
+        (errorData?.error?.body?.code === 'P6002' && errorData?.error?.body?.message?.includes('API key'))
+      
+      if (isDatabaseConfigError) {
+        // Only log once per session to avoid console spam
+        if (typeof window !== 'undefined' && !(window as any).__dbConfigErrorLogged) {
+          console.warn('⚠️ Database Configuration Error: Backend has invalid Prisma Accelerate API key.')
+          console.warn('   This is a backend configuration issue. Please check the backend .env file.')
+          console.warn('   Update DATABASE_URL to use a direct PostgreSQL connection or provide a valid Accelerate API key.')
+          ;(window as any).__dbConfigErrorLogged = true
+        }
+        // Return null for database errors on recommendation endpoints to prevent UI crashes
+        if (procedure.includes('recommendations.') || procedure.includes('anime.')) {
+          return null
+        }
+        throw new Error('Database connection error. Please contact the administrator.')
+      }
+      
+      // Check if this is an auth error on an optional endpoint
+      const isOptionalRecommendationEndpoint =
+        procedure.includes('recommendations.getForYou') ||
+        procedure.includes('recommendations.getFansLikeYou') ||
+        procedure.includes('recommendations.getHiddenGems') ||
+        procedure.includes('recommendations.getDiscovery') ||
+        procedure.includes('recommendations.getContinueWatching') ||
+        procedure.includes('social.getFriendRecommendations')
+      
+      const isAuthError = code === 'UNAUTHORIZED' || 
+        response.status === 401 ||
+        message.toLowerCase().includes('session') ||
+        message.toLowerCase().includes('invalid') ||
+        message.toLowerCase().includes('expired')
+      
+      // For optional recommendation endpoints with auth errors, return null instead of throwing
+      if (isOptionalRecommendationEndpoint && isAuthError) {
+        return null
+      }
+      
+      throw new Error(message)
     }
 
     const data = await response.json()
@@ -2390,7 +2865,29 @@ export const api = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData?.error?.message || `Failed to ${procedure}`)
+      const code = errorData?.error?.data?.code || ''
+      const message = errorData?.error?.message || `Failed to ${procedure}`
+      
+      // Check for database configuration errors (Prisma Accelerate API key issues)
+      const isDatabaseConfigError = 
+        code === 'DATABASE_CONFIGURATION_ERROR' ||
+        message.includes('Accelerate API key') ||
+        message.includes('DATABASE_URL') ||
+        message.includes('P6002') ||
+        (errorData?.error?.body?.code === 'P6002' && errorData?.error?.body?.message?.includes('API key'))
+      
+      if (isDatabaseConfigError) {
+        // Only log once per session to avoid console spam
+        if (typeof window !== 'undefined' && !(window as any).__dbConfigErrorLogged) {
+          console.warn('⚠️ Database Configuration Error: Backend has invalid Prisma Accelerate API key.')
+          console.warn('   This is a backend configuration issue. Please check the backend .env file.')
+          console.warn('   Update DATABASE_URL to use a direct PostgreSQL connection or provide a valid Accelerate API key.')
+          ;(window as any).__dbConfigErrorLogged = true
+        }
+        throw new Error('Database connection error. Please contact the administrator.')
+      }
+      
+      throw new Error(message)
     }
 
     const data = await response.json()

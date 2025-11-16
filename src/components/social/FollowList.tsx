@@ -160,7 +160,6 @@ export function FollowList({ userId, type, limit = 20 }: FollowListProps) {
                 @{user.username}
               </h3>
             </Link>
-            {user.name && <p className="text-gray-400 text-sm truncate">{user.name}</p>}
             {user.bio && <p className="text-gray-500 text-sm mt-1 line-clamp-2">{user.bio}</p>}
             {user.animeCount !== undefined && (
               <p className="text-gray-500 text-xs mt-1">{user.animeCount} anime in list</p>

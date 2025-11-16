@@ -388,9 +388,6 @@ export function SearchBar({
                       <div className="font-medium text-white text-sm truncate">
                         @{user.username}
                       </div>
-                      {user.name && (
-                        <div className="text-xs text-gray-400 truncate">{user.name}</div>
-                      )}
                     </div>
                     <ArrowRight className="h-4 w-4 text-gray-600 group-hover:text-primary-400 flex-shrink-0" />
                   </div>

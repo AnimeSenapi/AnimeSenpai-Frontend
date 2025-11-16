@@ -267,7 +267,7 @@ export default function NotificationsPage() {
                           href={`/user/${request.sender.username}`}
                           className="font-semibold text-white hover:text-primary-400 transition-colors block truncate"
                         >
-                          {request.sender.name || request.sender.username}
+                          {request.sender.username}
                         </Link>
                         <p className="text-sm text-gray-400 truncate">
                           @{request.sender.username} •{' '}

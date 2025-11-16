@@ -132,12 +132,14 @@ function getErrorMessage(code: string, defaultMessage: string): string {
     SERVICE_UNAVAILABLE:
       "Service is temporarily unavailable. We're working on it. Please try again in a few minutes.",
     TIMEOUT: 'Request timed out. Please check your connection and try again.',
-    DATABASE_CONNECTION_ERROR: 'Unable to connect to database. Please try again in a moment.',
 
     // Database errors
     DATABASE_ERROR: 'A database error occurred. Please try again.',
+    DATABASE_CONFIGURATION_ERROR: 'Database connection configuration error. Please contact support if this issue persists.',
+    DATABASE_CONNECTION_ERROR: 'Unable to connect to database. Please try again in a moment.',
     UNIQUE_CONSTRAINT: 'This item already exists',
     FOREIGN_KEY_CONSTRAINT: 'Cannot perform this action because it would violate data integrity.',
+    P6002: 'Database connection configuration error. Please contact support if this issue persists.',
 
     // Network errors
     NETWORK_ERROR: 'Network error. Please check your internet connection and try again.',

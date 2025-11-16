@@ -27,11 +27,13 @@ import {
   RefreshCw,
   Download,
   Shield,
+  Filter,
+  Search,
 } from 'lucide-react'
 import { getRoleConfig, getRoleIcon, getRoleBadgeClasses, getRoleCardClasses } from '../../../lib/role-config'
 import { Button } from '../../../components/ui/button'
 import { LoadingState } from '../../../components/ui/loading-state'
-import { EmptyState } from '../../../components/ui/error-state'
+import { EmptyState, ErrorState } from '../../../components/ui/error-state'
 import { Badge } from '../../../components/ui/badge'
 import { Checkbox } from '../../../components/ui/checkbox'
 import { useToast } from '../../../components/ui/toast'
@@ -73,6 +75,7 @@ export function RoleManagementTab() {
   // Roles state
   const [roles, setRoles] = useState<Role[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   // Permissions state
   const [permissions, setPermissions] = useState<Record<string, Permission[]>>({})
@@ -110,33 +113,75 @@ export function RoleManagementTab() {
   })
 
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [permissionCategoryFilter, setPermissionCategoryFilter] = useState<string>('all')
+
+  const handleSearch = () => {
+    setSearchTerm(searchQuery.trim())
+  }
 
   useEffect(() => {
     loadData()
+    setSearchQuery('')
+    setSearchTerm('')
+    if (activeTab === 'permissions') {
+      setPermissionCategoryFilter('all')
+    }
   }, [activeTab])
 
   const loadData = async () => {
-    try {
       setLoading(true)
+    setLoadError(null)
+
+    try {
       if (activeTab === 'roles') {
-        const rolesData = await apiGetAllRoles()
-        setRoles(rolesData)
+        const rolesData = (await apiGetAllRoles()) as Role[]
+        setRoles(Array.isArray(rolesData) ? rolesData : [])
       } else if (activeTab === 'permissions') {
-        const permsData = await apiGetAllPermissions()
-        setPermissions(permsData)
+        const permsData = (await apiGetAllPermissions()) as Record<string, Permission[]>
+        setPermissions(permsData || {})
       } else if (activeTab === 'assignments') {
         const [rolesData, usersData] = await Promise.all([
           apiGetAllRoles(),
           apiGetAllUsers({ limit: 100 }),
         ])
-        setRoles(rolesData)
-        setUsers(usersData.users)
+        setRoles(Array.isArray(rolesData) ? rolesData : [])
+        const normalizedUsers = Array.isArray((usersData as any)?.users)
+          ? (usersData as any).users
+          : Array.isArray(usersData)
+            ? (usersData as any)
+            : []
+        setUsers(normalizedUsers)
       }
     } catch (error: any) {
       console.error('Failed to load data:', error)
+
+      if (error?.message?.includes('FORBIDDEN') || error?.message?.includes('admin')) {
+        alert('Access denied. Admin privileges required.')
+        window.location.href = '/dashboard'
+        return
+      }
+
+      setLoadError(
+        error instanceof Error
+          ? error.message || 'Failed to load role management data. Please try again.'
+          : 'Failed to load role management data. Please try again.'
+      )
+      if (activeTab === 'roles' || activeTab === 'assignments') {
+        setRoles([])
+      }
+      if (activeTab === 'permissions') {
+        setPermissions({})
+      }
+      if (activeTab === 'assignments') {
+        setUsers([])
+      }
       addToast({
         title: 'Error',
-        description: error.message || 'Failed to load data',
+        description:
+          error instanceof Error
+            ? error.message || 'Failed to load data'
+            : 'Failed to load data',
         variant: 'destructive',
       })
     } finally {
@@ -231,7 +276,12 @@ export function RoleManagementTab() {
   }
 
   const handleCreatePermission = async () => {
-    if (!permissionForm.key || !permissionForm.name) {
+    const key = permissionForm.key.trim().toLowerCase()
+    const name = permissionForm.name.trim()
+    const description = permissionForm.description.trim()
+    const category = (permissionForm.category || 'general').trim().toLowerCase()
+
+    if (!key || !name) {
       addToast({
         title: 'Validation Error',
         description: 'Please fill in all required fields',
@@ -240,8 +290,22 @@ export function RoleManagementTab() {
       return
     }
 
+    if (!/^[a-z0-9]+([._-][a-z0-9]+)*$/.test(key)) {
+      addToast({
+        title: 'Invalid Key',
+        description: 'Key must use lowercase letters, numbers, dots, underscores, or hyphens.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     try {
-      await apiCreatePermission(permissionForm)
+      await apiCreatePermission({
+        key,
+        name,
+        description,
+        category,
+      })
       addToast({
         title: 'Success',
         description: 'Permission created successfully',
@@ -262,12 +326,25 @@ export function RoleManagementTab() {
   const handleUpdatePermission = async () => {
     if (!selectedPermission) return
 
+    const name = permissionForm.name.trim()
+    const description = permissionForm.description.trim()
+    const category = (permissionForm.category || 'general').trim().toLowerCase()
+
+    if (!name) {
+      addToast({
+        title: 'Validation Error',
+        description: 'Name is required',
+        variant: 'destructive',
+      })
+      return
+    }
+
     try {
       await apiUpdatePermission({
         permissionId: selectedPermission.id,
-        name: permissionForm.name,
-        description: permissionForm.description,
-        category: permissionForm.category,
+        name,
+        description,
+        category,
       })
       addToast({
         title: 'Success',
@@ -276,6 +353,7 @@ export function RoleManagementTab() {
       })
       setShowEditPermission(false)
       setSelectedPermission(null)
+      setPermissionForm({ key: '', name: '', description: '', category: 'general' })
       loadData()
     } catch (error: any) {
       addToast({
@@ -374,7 +452,7 @@ export function RoleManagementTab() {
       key: permission.key,
       name: permission.name,
       description: permission.description || '',
-      category: permission.category,
+      category: (permission.category || 'general').toLowerCase(),
     })
     setShowEditPermission(true)
   }
@@ -388,10 +466,6 @@ export function RoleManagementTab() {
     }))
   }
 
-  const getRoleColor = (roleName: string) => {
-    return getRoleBadgeClasses(roleName)
-  }
-
   const exportToCSV = () => {
     const headers = [
       'Role Name',
@@ -401,7 +475,7 @@ export function RoleManagementTab() {
       'User Count',
       'Permissions',
     ]
-    const rows = roles.map((role) => [
+    const rows = filteredRoles.map((role) => [
       role.name,
       role.displayName,
       role.description || '',
@@ -425,107 +499,221 @@ export function RoleManagementTab() {
       })
   }
 
-  const getFilteredRoles = () => {
-    if (!searchQuery) return roles
-    return roles.filter(
-      (role) =>
-        role.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        role.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        role.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  const normalizedSearch = searchTerm.toLowerCase()
+  const defaultPermissionCategories = ['general', 'admin', 'content', 'user', 'moderation', 'feature', 'analytics', 'security']
+  const availablePermissionCategories = Array.from(
+    new Set(
+      Object.values(permissions)
+        .flat()
+        .map((perm) => (perm.category || 'general').toLowerCase())
     )
-  }
+  )
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b))
+  const categoryOptions = Array.from(
+    new Set([...defaultPermissionCategories, ...availablePermissionCategories])
+  ).sort((a, b) => a.localeCompare(b))
+
+  const filteredRoles = !normalizedSearch
+    ? roles
+    : roles.filter((role) => {
+        const haystack = [role.name, role.displayName, role.description || '']
+        return haystack.some((value) => value.toLowerCase().includes(normalizedSearch))
+      })
+
+  const allPermissions = Object.values(permissions).flat()
+  const filteredPermissionsArray = !normalizedSearch
+    ? allPermissions
+    : allPermissions.filter((perm) => {
+        const haystack = [perm.name, perm.key, perm.description || '', perm.category]
+        return haystack.some((value) => value.toLowerCase().includes(normalizedSearch))
+      })
+  const filteredPermissionsByCategory = filteredPermissionsArray.reduce<Record<string, Permission[]>>(
+    (acc, perm) => {
+      const category = (perm.category || 'general').toLowerCase()
+      if (permissionCategoryFilter !== 'all' && category !== permissionCategoryFilter) {
+        return acc
+      }
+
+      if (!acc[category]) acc[category] = []
+      acc[category].push(perm)
+      return acc
+    },
+    {}
+  )
+
+  const flattenedFilteredPermissions = Object.values(filteredPermissionsByCategory).flat()
+
+  const totalPermissionCategories = Object.keys(permissions).length
+  const showingPermissionCategories = Object.keys(filteredPermissionsByCategory).length
+  const showingPermissions = flattenedFilteredPermissions.length
+  const filteredUsers = !normalizedSearch
+    ? users
+    : users.filter((user) => {
+        const haystack = [user.username || '', user.email, user.role]
+        return haystack.some((value) => value.toLowerCase().includes(normalizedSearch))
+      })
+
+  const hasActiveSearch = normalizedSearch.length > 0
+  const hasPermissionFilters = hasActiveSearch || permissionCategoryFilter !== 'all'
+
+  const showInitialLoading = loading && !loadError &&
+    ((activeTab === 'roles' && roles.length === 0) ||
+      (activeTab === 'permissions' && allPermissions.length === 0) ||
+      (activeTab === 'assignments' && users.length === 0))
+
+  const showError = !loading && Boolean(loadError)
+  const resolvedErrorMessage =
+    loadError || 'Failed to load role management data. Please try again.'
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-8">
+      <header className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 via-white/0 to-primary-500/10 p-6 sm:p-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-3 rounded-xl bg-white/5 px-3 py-1.5 border border-white/10 text-sm text-primary-200">
+              <Shield className="h-4 w-4" />
+              Roles & Permissions
+            </div>
         <div>
-          <h2 className="text-2xl font-bold text-white mb-2">Role & Permission Management</h2>
-          <p className="text-gray-400">Manage roles, permissions, and user assignments</p>
+              <h2 className="text-3xl font-semibold text-white">Access Control</h2>
+              <p className="text-sm text-gray-400">Define roles, assign permissions, and manage user access consistently.</p>
         </div>
+          </div>
+          <div className="flex items-start sm:items-center gap-3">
         <Button
-          onClick={loadData}
+              onClick={() => setActiveTab('roles')}
           variant="outline"
           size="sm"
           className="border-white/20 text-white hover:bg-white/10"
         >
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
+              <Shield className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Roles</span>
+            </Button>
+            <Button
+              onClick={() => setActiveTab('permissions')}
+              variant="outline"
+              size="sm"
+              className="border-white/20 text-white hover:bg-white/10"
+            >
+              <Key className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Permissions</span>
+            </Button>
+            <Button
+              onClick={() => setActiveTab('assignments')}
+              variant="outline"
+              size="sm"
+              className="border-white/20 text-white hover:bg-white/10"
+            >
+              <Users className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Assignments</span>
         </Button>
+          </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="flex gap-2 border-b border-white/10">
+        <nav className="mt-6 flex gap-2 rounded-xl border border-white/10 bg-white/5 p-1 text-sm text-gray-400">
+          {[
+            { id: 'roles', label: 'Roles', icon: Shield },
+            { id: 'permissions', label: 'Permissions', icon: Key },
+            { id: 'assignments', label: 'Assignments', icon: Users },
+          ].map((tab) => {
+            const Icon = tab.icon
+            return (
         <button
-          onClick={() => setActiveTab('roles')}
-          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
-            activeTab === 'roles'
-              ? 'text-primary-400 border-primary-400'
-              : 'text-gray-400 border-transparent hover:text-white'
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                className={`flex-1 rounded-lg px-4 py-2.5 transition ${
+                  activeTab === tab.id
+                    ? 'bg-primary-500/20 text-primary-100 border border-primary-500/40'
+                    : 'border border-transparent hover:border-white/10 hover:text-white'
           }`}
         >
-          <Shield className="h-4 w-4 inline mr-2" />
-          Roles
+                <span className="flex items-center justify-center gap-2">
+                  <Icon className="h-4 w-4" />
+                  {tab.label}
+                </span>
         </button>
-        <button
-          onClick={() => setActiveTab('permissions')}
-          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
-            activeTab === 'permissions'
-              ? 'text-primary-400 border-primary-400'
-              : 'text-gray-400 border-transparent hover:text-white'
-          }`}
-        >
-          <Key className="h-4 w-4 inline mr-2" />
-          Permissions
-        </button>
-        <button
-          onClick={() => setActiveTab('assignments')}
-          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
-            activeTab === 'assignments'
-              ? 'text-primary-400 border-primary-400'
-              : 'text-gray-400 border-transparent hover:text-white'
-          }`}
-        >
-          <Users className="h-4 w-4 inline mr-2" />
-          Assignments
-        </button>
-      </div>
+            )
+          })}
+        </nav>
 
-      {/* Search */}
-      <div className="flex gap-3">
-        <div className="flex-1 flex gap-2">
+        <div className="mt-6 flex flex-col gap-3">
+          <div className="flex flex-col lg:flex-row gap-3">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             placeholder={`Search ${activeTab}...`}
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
-          />
+                onChange={(e) => {
+                  const value = e.target.value
+                  setSearchQuery(value)
+                  setSearchTerm(value.trim())
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch()
+                  }
+                }}
+                className="w-full rounded-lg border border-white/10 bg-white/5 px-10 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/40"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {activeTab === 'permissions' && (
+                <select
+                  value={permissionCategoryFilter}
+                  onChange={(e) => setPermissionCategoryFilter(e.target.value)}
+                  className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:outline-none focus:border-primary-500/40"
+                >
+                  <option value="all">All Categories</option>
+                  {categoryOptions.map((category) => (
+                    <option key={category} value={category}>
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {activeTab === 'roles' && (
           <Button
-            onClick={() => setSearchQuery('')}
+                  onClick={exportToCSV}
             variant="outline"
             size="sm"
             className="border-white/20 text-white hover:bg-white/10"
           >
-            Clear
+                  <Download className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Export CSV</span>
           </Button>
-        </div>
-        {activeTab === 'roles' && (
+              )}
           <Button
-            onClick={exportToCSV}
+                onClick={() => {
+                  setSearchQuery('')
+                  setSearchTerm('')
+                  setPermissionCategoryFilter('all')
+                }}
             variant="outline"
             size="sm"
             className="border-white/20 text-white hover:bg-white/10"
           >
-            <Download className="h-4 w-4 mr-2" />
-            Export CSV
+                <Filter className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Clear</span>
           </Button>
-        )}
       </div>
+          </div>
+        </div>
+      </header>
 
       {/* Content */}
-      {loading ? (
+      {showInitialLoading ? (
         <LoadingState variant="inline" text={`Loading ${activeTab}...`} size="md" />
+      ) : showError ? (
+        <ErrorState
+          variant="inline"
+          title="Unable to load role management data"
+          message={resolvedErrorMessage}
+          showRetry
+          showHome={false}
+          onRetry={loadData}
+        />
       ) : (
         <>
           {/* Roles Tab */}
@@ -567,19 +755,22 @@ export function RoleManagementTab() {
                 </Button>
               </div>
 
-              {getFilteredRoles().length === 0 ? (
+              {filteredRoles.length === 0 ? (
                 <EmptyState
                   icon={<Shield className="h-10 w-10 text-gray-500" />}
                   title="No roles found"
                   message={
-                    searchQuery
+                    hasActiveSearch
                       ? `No roles match "${searchQuery}". Try a different search term.`
                       : 'No roles created yet. Create your first role to get started.'
                   }
-                  actionLabel={searchQuery ? 'Clear Search' : 'Create Role'}
+                  actionLabel={hasActiveSearch ? 'Clear Search' : 'Create Role'}
                   onAction={
-                    searchQuery
-                      ? () => setSearchQuery('')
+                    hasActiveSearch
+                      ? () => {
+                          setSearchQuery('')
+                          setSearchTerm('')
+                        }
                       : () => {
                           setRoleForm({
                             name: '',
@@ -594,7 +785,7 @@ export function RoleManagementTab() {
                 />
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {getFilteredRoles().map((role) => (
+                  {filteredRoles.map((role) => (
                     <div key={role.id} className="glass rounded-xl p-6 border border-white/10">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3">
@@ -696,22 +887,33 @@ export function RoleManagementTab() {
 
           {/* Permissions Tab */}
           {activeTab === 'permissions' && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <div className="flex gap-4 text-sm">
-                  <span className="text-gray-400">
-                    Total:{' '}
-                    <span className="text-white font-medium">
-                      {Object.values(permissions).flat().length}
-                    </span>
-                  </span>
-                  <span className="text-gray-400">
-                    Categories:{' '}
-                    <span className="text-blue-400 font-medium">
-                      {Object.keys(permissions).length}
-                    </span>
-                  </span>
+            <div className="space-y-6">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1">
+                  <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                    <p className="text-xs text-gray-400">Permissions</p>
+                    <p className="text-lg font-semibold text-white">
+                      {hasPermissionFilters
+                        ? `${showingPermissions}/${allPermissions.length}`
+                        : allPermissions.length}
+                    </p>
                 </div>
+                  <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                    <p className="text-xs text-gray-400">Categories</p>
+                    <p className="text-lg font-semibold text-white">
+                      {hasPermissionFilters
+                        ? `${showingPermissionCategories}/${totalPermissionCategories}`
+                        : totalPermissionCategories}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                    <p className="text-xs text-gray-400">Active Filters</p>
+                    <p className="text-lg font-semibold text-white">
+                      {hasPermissionFilters ? 'On' : 'Off'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
                 <Button
                   onClick={() => {
                     setPermissionForm({ key: '', name: '', description: '', category: 'general' })
@@ -722,60 +924,94 @@ export function RoleManagementTab() {
                   <Plus className="h-4 w-4 mr-2" />
                   Create Permission
                 </Button>
+                </div>
               </div>
 
-              {Object.keys(permissions).length === 0 ? (
+              {Object.keys(filteredPermissionsByCategory).length === 0 ? (
                 <EmptyState
                   icon={<Key className="h-10 w-10 text-gray-500" />}
-                  title="No permissions found"
-                  message="No permissions created yet. Create your first permission to get started."
-                  actionLabel="Create Permission"
-                  onAction={() => {
-                    setPermissionForm({ key: '', name: '', description: '', category: 'general' })
+                  title={hasPermissionFilters ? 'No permissions match' : 'No permissions found'}
+                  message={
+                    hasPermissionFilters
+                      ? 'No permissions match the current filters. Try clearing your search or selecting a different category.'
+                      : 'No permissions created yet. Create your first permission to get started.'
+                  }
+                  actionLabel={hasPermissionFilters ? 'Clear Filters' : 'Create Permission'}
+                  onAction={
+                    hasPermissionFilters
+                      ? () => {
+                          setSearchQuery('')
+                          setSearchTerm('')
+                          setPermissionCategoryFilter('all')
+                        }
+                      : () => {
+                          setPermissionForm({
+                            key: '',
+                            name: '',
+                            description: '',
+                            category: 'general',
+                          })
                     setShowCreatePermission(true)
-                  }}
+                        }
+                  }
                 />
               ) : (
                 <div className="space-y-6">
-                  {Object.entries(permissions).map(([category, perms]) => (
-                    <div key={category} className="glass rounded-xl p-6 border border-white/10">
-                      <h3 className="text-lg font-semibold text-white mb-4 capitalize">
-                        {category} ({perms.length})
-                      </h3>
+                  {Object.entries(filteredPermissionsByCategory).map(([category, perms]) => (
+                    <div key={category} className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold text-white capitalize">{category}</h3>
+                          <p className="text-xs text-gray-400">{perms.length} permission{perms.length === 1 ? '' : 's'}</p>
+                        </div>
+                        <Badge variant="outline" className="border-white/20 text-white/80 bg-white/5">
+                          Category • {category}
+                        </Badge>
+                      </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {perms.map((perm) => (
-                          <div
-                            key={perm.id}
-                            className="bg-white/5 rounded-lg p-4 border border-white/10"
-                          >
-                            <div className="flex items-start justify-between mb-2">
-                              <div>
-                                <h4 className="text-sm font-medium text-white">{perm.name}</h4>
-                                <p className="text-xs text-gray-400 font-mono">{perm.key}</p>
+                          <div key={perm.id} className="rounded-xl border border-white/10 bg-white/10 p-4 space-y-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <h4 className="text-sm font-semibold text-white">{perm.name}</h4>
+                                  <Badge variant="outline" className="bg-white/5 text-white/80 border-white/10">
+                                    {perm.key}
+                                  </Badge>
+                                </div>
+                                <p className="text-xs text-gray-400">
+                                  {(perm.description || '').trim().length > 0
+                                    ? perm.description
+                                    : 'No description provided.'}
+                                </p>
                               </div>
                               <div className="flex gap-1">
-                                <button
+                                <Button
                                   onClick={() => openEditPermission(perm)}
-                                  className="p-1 hover:bg-blue-500/20 rounded text-blue-400 hover:text-blue-300 transition-colors"
-                                  title="Edit"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-blue-300 hover:text-white"
+                                  title="Edit permission"
                                 >
-                                  <Edit className="h-3 w-3" />
-                                </button>
-                                <button
+                                  <Edit className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
                                   onClick={() => {
                                     setSelectedPermission(perm)
                                     setShowDeletePermission(true)
                                   }}
-                                  className="p-1 hover:bg-error-500/20 rounded text-error-400 hover:text-error-300 transition-colors"
-                                  title="Delete"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-error-300 hover:text-white"
+                                  title="Delete permission"
                                 >
-                                  <Trash2 className="h-3 w-3" />
-                                </button>
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
                               </div>
                             </div>
-                            {perm.description && (
-                              <p className="text-xs text-gray-400">{perm.description}</p>
-                            )}
+                            <div className="text-[11px] uppercase tracking-wide text-gray-500">
+                              Key • {perm.key}
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -794,6 +1030,10 @@ export function RoleManagementTab() {
                   <span className="text-gray-400">
                     Total Users: <span className="text-white font-medium">{users.length}</span>
                   </span>
+                  <span className="text-gray-400">
+                    Showing:{' '}
+                    <span className="text-white font-medium">{filteredUsers.length}</span>
+                  </span>
                 </div>
                 <Button
                   onClick={() => {
@@ -808,7 +1048,31 @@ export function RoleManagementTab() {
                 </Button>
               </div>
 
-              <div className="glass rounded-xl overflow-hidden border border-white/10">
+              {filteredUsers.length === 0 ? (
+                <EmptyState
+                  icon={<Users className="h-10 w-10 text-gray-500" />}
+                  title={
+                    hasActiveSearch
+                      ? 'No matching users'
+                      : 'No users available for assignments'
+                  }
+                  message={
+                    hasActiveSearch
+                      ? 'No users match the current search. Try a different name or email.'
+                      : 'Looks like there are no users yet. Invite users before assigning roles.'
+                  }
+                  actionLabel={hasActiveSearch ? 'Clear Search' : undefined}
+                  onAction={
+                    hasActiveSearch
+                      ? () => {
+                          setSearchQuery('')
+                          setSearchTerm('')
+                        }
+                      : undefined
+                  }
+                />
+              ) : (
+                <div className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-white/5">
@@ -825,12 +1089,12 @@ export function RoleManagementTab() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/10">
-                      {users.map((user) => (
+                        {filteredUsers.map((user) => (
                         <tr key={user.id} className="hover:bg-white/5 transition-colors">
                           <td className="px-6 py-4">
                             <div>
                               <p className="text-sm font-medium text-white">
-                                {user.username || user.name || user.email}
+                                {user.username || user.email}
                               </p>
                               <p className="text-xs text-gray-400">{user.email}</p>
                             </div>
@@ -878,6 +1142,7 @@ export function RoleManagementTab() {
                   </table>
                 </div>
               </div>
+              )}
             </div>
           )}
         </>
@@ -1226,16 +1491,18 @@ export function RoleManagementTab() {
                 <select
                   value={permissionForm.category}
                   onChange={(e) =>
-                    setPermissionForm({ ...permissionForm, category: e.target.value })
+                    setPermissionForm({
+                      ...permissionForm,
+                      category: e.target.value.toLowerCase(),
+                    })
                   }
                   className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
                 >
-                  <option value="general">General</option>
-                  <option value="admin">Admin</option>
-                  <option value="content">Content</option>
-                  <option value="user">User</option>
-                  <option value="moderation">Moderation</option>
-                  <option value="feature">Feature</option>
+                  {categoryOptions.map((category) => (
+                    <option key={category} value={category}>
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -1318,16 +1585,18 @@ export function RoleManagementTab() {
                 <select
                   value={permissionForm.category}
                   onChange={(e) =>
-                    setPermissionForm({ ...permissionForm, category: e.target.value })
+                    setPermissionForm({
+                      ...permissionForm,
+                      category: e.target.value.toLowerCase(),
+                    })
                   }
                   className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
                 >
-                  <option value="general">General</option>
-                  <option value="admin">Admin</option>
-                  <option value="content">Content</option>
-                  <option value="user">User</option>
-                  <option value="moderation">Moderation</option>
-                  <option value="feature">Feature</option>
+                  {categoryOptions.map((category) => (
+                    <option key={category} value={category}>
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -1434,7 +1703,7 @@ export function RoleManagementTab() {
                   <option value="">Choose a user...</option>
                   {users.map((user) => (
                     <option key={user.id} value={user.id}>
-                      {user.username || user.name || user.email}
+                      {user.username || user.email}
                     </option>
                   ))}
                 </select>
@@ -1480,3 +1749,4 @@ export function RoleManagementTab() {
     </div>
   )
 }
+

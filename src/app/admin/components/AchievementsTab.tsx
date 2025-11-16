@@ -43,10 +43,13 @@ import {
   TrendingUp,
   Activity,
   AlertCircle,
-  Settings
+  Settings,
+  RefreshCw,
+  RotateCcw
 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 import { LoadingState } from '@/components/ui/loading-state'
+import { ErrorState, EmptyState } from '@/components/ui/error-state'
 import { Button } from '@/components/ui/button'
 import { AccessibleInput } from '@/components/ui/accessible-input'
 import { Badge } from '@/components/ui/badge'
@@ -185,6 +188,30 @@ const TIER_GRADIENTS = {
   diamond: 'bg-gradient-to-br from-purple-400/20 to-pink-600/30 border-purple-400/30'
 }
 
+const TIER_ICON_BG_CLASSES: Record<Achievement['tier'], string> = {
+  bronze: 'bg-amber-500/10',
+  silver: 'bg-gray-500/10',
+  gold: 'bg-yellow-500/10',
+  platinum: 'bg-cyan-500/10',
+  diamond: 'bg-purple-500/10'
+}
+
+const TIER_ICON_TEXT_CLASSES: Record<Achievement['tier'], string> = {
+  bronze: 'text-amber-400',
+  silver: 'text-gray-300',
+  gold: 'text-yellow-300',
+  platinum: 'text-cyan-300',
+  diamond: 'text-purple-300'
+}
+
+const TIER_BADGE_CLASSES: Record<Achievement['tier'], string> = {
+  bronze: 'bg-amber-500/20 text-amber-300',
+  silver: 'bg-gray-500/20 text-gray-300',
+  gold: 'bg-yellow-500/20 text-yellow-300',
+  platinum: 'bg-cyan-500/20 text-cyan-300',
+  diamond: 'bg-purple-500/20 text-purple-300'
+}
+
 // Helper function to get the appropriate icon component
 const getAchievementIcon = (key: string) => {
   const IconComponent = ACHIEVEMENT_ICONS[key as keyof typeof ACHIEVEMENT_ICONS] || ACHIEVEMENT_ICONS.default
@@ -195,15 +222,22 @@ export function AchievementsTab() {
   const { addToast } = useToast()
   const [achievements, setAchievements] = useState<Achievement[]>([])
   const [stats, setStats] = useState<AchievementStats | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [achievementsLoading, setAchievementsLoading] = useState(true)
+  const [statsLoading, setStatsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [statsError, setStatsError] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [search, setSearch] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [tierFilter, setTierFilter] = useState<string>('all')
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null)
   const [showBulkDialog, setShowBulkDialog] = useState(false)
+  const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [isBulkSaving, setIsBulkSaving] = useState(false)
 
   // Form state for editing
   const [formData, setFormData] = useState<{
@@ -230,34 +264,37 @@ export function AchievementsTab() {
 
   useEffect(() => {
     loadAchievements()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, searchTerm, categoryFilter, tierFilter])
+
+  useEffect(() => {
     loadStats()
-  }, [page, search, categoryFilter, tierFilter])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const loadAchievements = async () => {
     try {
-      setLoading(true)
+      setAchievementsLoading(true)
+      setLoadError(null)
+
       const response = await apiGetAchievements({
         page,
         limit: 20,
-        search: search || undefined,
+        search: searchTerm || undefined,
         category: categoryFilter !== 'all' ? categoryFilter : undefined,
         tier: tierFilter !== 'all' ? tierFilter : undefined
       })
 
-      // Handle different response formats
       if (response && typeof response === 'object') {
         const data = response as any
         if (data.result?.data) {
-          // tRPC response format
           const resultData = data.result.data
           setAchievements(resultData.achievements || [])
-          setTotalPages(resultData.pagination?.pages || 1)
-        } else if (data.achievements && Array.isArray(data.achievements)) {
-          // Direct data format
+          setTotalPages(resultData.pagination?.pages || resultData.pagination?.totalPages || 1)
+        } else if (Array.isArray(data.achievements)) {
           setAchievements(data.achievements)
-          setTotalPages(data.pagination?.pages || 1)
+          setTotalPages(data.pagination?.pages || data.pagination?.totalPages || 1)
         } else {
-          // Fallback
           setAchievements([])
           setTotalPages(1)
         }
@@ -265,23 +302,28 @@ export function AchievementsTab() {
         setAchievements([])
         setTotalPages(1)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load achievements:', error)
-      addToast({
-        title: 'Error',
-        description: 'Failed to load achievements',
-        variant: 'destructive'
-      })
-      // Set empty data on error
       setAchievements([])
       setTotalPages(1)
+      setLoadError(
+        error instanceof Error ? error.message || 'Failed to load achievements.' : 'Failed to load achievements.'
+      )
+      addToast({
+        title: 'Unable to load achievements',
+        description:
+          error instanceof Error ? error.message || 'Please try again shortly.' : 'Please try again shortly.',
+        variant: 'destructive'
+      })
     } finally {
-      setLoading(false)
+      setAchievementsLoading(false)
     }
   }
 
   const loadStats = async () => {
     try {
+      setStatsLoading(true)
+      setStatsError(null)
       const response = await apiGetAchievementStats()
       if (response && typeof response === 'object') {
         const data = response as any
@@ -290,11 +332,15 @@ export function AchievementsTab() {
         } else {
           setStats(data as AchievementStats)
         }
+      } else {
+        setStats(null)
       }
     } catch (error) {
       console.error('Failed to load stats:', error)
       setStats(null)
+      setStatsError(error instanceof Error ? error.message || 'Failed to load stats.' : 'Failed to load stats.')
     }
+    setStatsLoading(false)
   }
 
   const handleCreateSuccess = () => {
@@ -306,6 +352,7 @@ export function AchievementsTab() {
     if (!editingAchievement) return
 
     try {
+      setIsUpdating(true)
       await apiUpdateAchievement({
         id: editingAchievement.id,
         ...formData
@@ -324,6 +371,8 @@ export function AchievementsTab() {
         description: error.message || 'Failed to update achievement',
         variant: 'destructive'
       })
+    } finally {
+      setIsUpdating(false)
     }
   }
 
@@ -331,6 +380,7 @@ export function AchievementsTab() {
     if (!confirm(`Are you sure you want to delete "${achievement.name}"?`)) return
 
     try {
+      setDeleteLoadingId(achievement.id)
       await apiDeleteAchievement(achievement.id)
       addToast({
         title: 'Success',
@@ -344,11 +394,14 @@ export function AchievementsTab() {
         description: error.message || 'Failed to delete achievement',
         variant: 'destructive'
       })
+    } finally {
+      setDeleteLoadingId(null)
     }
   }
 
   const handleBulkCreate = async () => {
     try {
+      setIsBulkSaving(true)
       const lines = bulkData.split('\n').filter(line => line.trim())
       const achievements = lines.map(line => {
         const parts = line.split('|')
@@ -379,6 +432,8 @@ export function AchievementsTab() {
         description: error.message || 'Failed to create achievements',
         variant: 'destructive'
       })
+    } finally {
+      setIsBulkSaving(false)
     }
   }
 
@@ -409,264 +464,360 @@ export function AchievementsTab() {
     })
   }
 
-  if (loading && achievements.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-2">Achievement Management</h2>
-          <p className="text-gray-400">Create and manage user achievements</p>
-        </div>
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="w-8 h-8 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-400">Loading achievements...</p>
-          </div>
-        </div>
-      </div>
-    )
+  const handleSearch = () => {
+    const trimmed = searchQuery.trim()
+    const searchChanged = trimmed !== searchTerm
+    const pageChanged = page !== 1
+
+    setSearchTerm(trimmed)
+
+    if (searchChanged || pageChanged) {
+      setPage(1)
+    } else {
+      loadAchievements()
+    }
   }
 
+  const handleResetFilters = () => {
+    setSearchQuery('')
+    setSearchTerm('')
+    setCategoryFilter('all')
+    setTierFilter('all')
+    setPage(1)
+    loadAchievements()
+  }
+
+  const showInitialLoading = achievementsLoading && achievements.length === 0 && !loadError
+  const showError = !achievementsLoading && Boolean(loadError)
+  const showEmpty = !achievementsLoading && !loadError && achievements.length === 0
+  const hasActiveFilters =
+    searchTerm.length > 0 || categoryFilter !== 'all' || tierFilter !== 'all'
+  const resolvedErrorMessage = loadError || 'Failed to load achievements. Please try again.'
+  const showingCount = achievements.length
+  const totalCount = hasActiveFilters ? showingCount : stats?.totalAchievements ?? showingCount
+  const handleAchievementsRetry = () => loadAchievements()
+  const handleStatsRetry = () => loadStats()
+  const statsUnavailable = !stats && statsError
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary-500/10 via-secondary-500/10 to-primary-500/10 p-6 border border-white/10">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-secondary-500/5"></div>
-        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h2 className="text-3xl font-bold text-white flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-primary-400/20 to-secondary-400/20">
-                <Trophy className="h-6 w-6 text-primary-400" />
-              </div>
+      <header className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 via-white/0 to-primary-500/10 p-6 sm:p-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-3 rounded-xl bg-white/5 px-3 py-1.5 border border-white/10 text-sm text-primary-200">
+              <Trophy className="h-4 w-4" />
               Achievements Management
-            </h2>
-            <p className="text-gray-300 text-lg">Manage user achievements and badges</p>
+            </div>
+            <div>
+              <h2 className="text-3xl font-semibold text-white">Inspire Player Progress</h2>
+              <p className="text-sm text-gray-400">
+                Curate badges, monitor unlocks, and celebrate fan milestones.
+              </p>
+            </div>
           </div>
-          
-          <div className="flex gap-3">
-            <Button 
-              variant="outline" 
-              size="sm" 
+          <div className="flex flex-wrap items-start sm:items-center gap-3">
+            <Button
+              onClick={handleResetFilters}
+              variant="outline"
+              size="sm"
+              className="border-white/20 text-white hover:bg-white/10"
+            >
+              <RotateCcw className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Reset</span>
+            </Button>
+            <Button
+              onClick={handleAchievementsRetry}
+              variant="outline"
+              size="sm"
+              className="border-white/20 text-white hover:bg-white/10"
+            >
+              <RefreshCw className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Refresh</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setShowBulkDialog(true)}
-              className="bg-white/5 border-white/20 hover:bg-white/10 hover:border-white/30 transition-all duration-200"
+              className="border-white/20 text-white hover:bg-white/10"
             >
-              <Upload className="h-4 w-4 mr-2" />
-              Bulk Import
+              <Upload className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Bulk Import</span>
             </Button>
-
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               onClick={() => setShowCreateDialog(true)}
-              className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 transition-all duration-200 shadow-lg hover:shadow-primary-500/25 px-6 py-2.5 text-sm font-semibold"
+              className="bg-primary-500/80 hover:bg-primary-500 text-white"
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Create Achievement
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Create</span>
             </Button>
           </div>
         </div>
-      </div>
 
-      {/* Stats Cards */}
-      {stats && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6 hover:border-primary-500/30 transition-colors">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0">
-                <Trophy className="h-5 w-5 sm:h-6 sm:w-6 text-blue-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1">{stats.totalAchievements}</p>
-                <p className="text-sm font-medium text-gray-300 truncate">Achievements</p>
+        {statsLoading && !stats ? null : stats ? (
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-primary-500/15 flex items-center justify-center">
+                  <Trophy className="h-5 w-5 text-primary-300" />
+                </div>
+                <div>
+                  <p className="text-2xl font-semibold text-white">{stats.totalAchievements}</p>
+                  <p className="text-xs uppercase tracking-wide text-gray-400">Achievements</p>
+                </div>
               </div>
             </div>
-            <p className="text-xs text-gray-500 leading-relaxed">Total created</p>
-          </div>
-
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6 hover:border-primary-500/30 transition-colors">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-green-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1">{stats.totalUnlocks}</p>
-                <p className="text-sm font-medium text-gray-300 truncate">Unlocks</p>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-green-500/15 flex items-center justify-center">
+                  <Users className="h-5 w-5 text-green-300" />
+                </div>
+                <div>
+                  <p className="text-2xl font-semibold text-white">{stats.totalUnlocks}</p>
+                  <p className="text-xs uppercase tracking-wide text-gray-400">Total unlocks</p>
+                </div>
               </div>
             </div>
-            <p className="text-xs text-gray-500 leading-relaxed">Total earned</p>
-          </div>
-
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6 hover:border-primary-500/30 transition-colors">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
-                <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1">{stats.categoryStats.length}</p>
-                <p className="text-sm font-medium text-gray-300 truncate">Categories</p>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-purple-500/15 flex items-center justify-center">
+                  <BarChart3 className="h-5 w-5 text-purple-300" />
+                </div>
+                <div>
+                  <p className="text-2xl font-semibold text-white">{stats.categoryStats.length}</p>
+                  <p className="text-xs uppercase tracking-wide text-gray-400">Categories</p>
+                </div>
               </div>
             </div>
-            <p className="text-xs text-gray-500 leading-relaxed">Different types</p>
-          </div>
-
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6 hover:border-primary-500/30 transition-colors">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-yellow-500/10 flex items-center justify-center flex-shrink-0">
-                <Star className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1">
-                  {stats && stats.totalAchievements > 0 && typeof stats.totalUnlocks === 'number' 
-                    ? Math.round(stats.totalUnlocks / stats.totalAchievements) 
-                    : 0}
-                </p>
-                <p className="text-sm font-medium text-gray-300 truncate">Avg per achievement</p>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-yellow-500/15 flex items-center justify-center">
+                  <Star className="h-5 w-5 text-yellow-300" />
+                </div>
+                <div>
+                  <p className="text-2xl font-semibold text-white">
+                    {stats.totalAchievements > 0 && typeof stats.totalUnlocks === 'number'
+                      ? Math.round(stats.totalUnlocks / stats.totalAchievements)
+                      : 0}
+                  </p>
+                  <p className="text-xs uppercase tracking-wide text-gray-400">Avg unlocks</p>
+                </div>
               </div>
             </div>
-            <p className="text-xs text-gray-500 leading-relaxed">Unlocks per achievement</p>
           </div>
-        </div>
-      )}
+        ) : null}
+      </header>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <AccessibleInput
-            placeholder="Search achievements..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 px-4 py-2 pl-10 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
-          />
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <AccessibleInput
+              placeholder="Search achievements..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className="w-full rounded-lg border border-white/10 bg-white/5 px-10 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/40"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={handleSearch}
+              size="sm"
+              className="bg-primary-500/20 border border-primary-500/40 text-primary-100 hover:bg-primary-500/30"
+            >
+              <Search className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Search</span>
+            </Button>
+            <Button
+              onClick={handleResetFilters}
+              variant="outline"
+              size="sm"
+              className="border-white/20 text-white hover:bg-white/10"
+            >
+              <Filter className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Clear</span>
+            </Button>
+          </div>
         </div>
-        
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
-        >
-          <option value="all">All Categories</option>
-          <option value="watching">Watching</option>
-          <option value="rating">Rating</option>
-          <option value="social">Social</option>
-          <option value="discovery">Discovery</option>
-          <option value="special">Special</option>
-        </select>
-
-        <select
-          value={tierFilter}
-          onChange={(e) => setTierFilter(e.target.value)}
-          className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
-        >
-          <option value="all">All Tiers</option>
-          <option value="bronze">Bronze</option>
-          <option value="silver">Silver</option>
-          <option value="gold">Gold</option>
-          <option value="platinum">Platinum</option>
-          <option value="diamond">Diamond</option>
-        </select>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <select
+            value={categoryFilter}
+            onChange={(e) => {
+              setCategoryFilter(e.target.value)
+              setPage(1)
+            }}
+            className="flex-1 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:outline-none focus:border-primary-500/40"
+          >
+            <option value="all">All Categories</option>
+            <option value="watching">Watching</option>
+            <option value="rating">Rating</option>
+            <option value="social">Social</option>
+            <option value="discovery">Discovery</option>
+            <option value="special">Special</option>
+          </select>
+          <select
+            value={tierFilter}
+            onChange={(e) => {
+              setTierFilter(e.target.value)
+              setPage(1)
+            }}
+            className="flex-1 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:outline-none focus:border-primary-500/40"
+          >
+            <option value="all">All Tiers</option>
+            <option value="bronze">Bronze</option>
+            <option value="silver">Silver</option>
+            <option value="gold">Gold</option>
+            <option value="platinum">Platinum</option>
+            <option value="diamond">Diamond</option>
+          </select>
+        </div>
       </div>
 
       {/* Achievements Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-        {achievements.map((achievement) => {
-          const TierIcon = TIER_ICONS[achievement.tier]
-          const CategoryIcon = CATEGORY_ICONS[achievement.category]
-          
-          return (
-            <div 
-              key={achievement.id} 
-              className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6 hover:border-primary-500/30 transition-colors"
-            >
-              <div className="flex items-start gap-3 mb-4">
-                <div className={cn(
-                  'w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0',
-                  `bg-${achievement.tier === 'bronze' ? 'amber' : achievement.tier === 'silver' ? 'gray' : achievement.tier === 'gold' ? 'yellow' : achievement.tier === 'platinum' ? 'cyan' : 'purple'}-500/10`
-                )}>
-                  {(() => {
-                    const IconComponent = getAchievementIcon(achievement.key)
-                    return <IconComponent className={cn(
-                      'h-5 w-5 sm:h-6 sm:w-6',
-                      `text-${achievement.tier === 'bronze' ? 'amber' : achievement.tier === 'silver' ? 'gray' : achievement.tier === 'gold' ? 'yellow' : achievement.tier === 'platinum' ? 'cyan' : 'purple'}-400`
-                    )} />
-                  })()}
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="font-bold text-white truncate text-sm sm:text-base">{achievement.name}</h3>
-                    <span className={cn(
-                      'text-xs px-2 py-1 rounded-full font-medium',
-                      achievement.tier === 'bronze' && 'bg-amber-500/20 text-amber-300',
-                      achievement.tier === 'silver' && 'bg-gray-500/20 text-gray-300',
-                      achievement.tier === 'gold' && 'bg-yellow-500/20 text-yellow-300',
-                      achievement.tier === 'platinum' && 'bg-cyan-500/20 text-cyan-300',
-                      achievement.tier === 'diamond' && 'bg-purple-500/20 text-purple-300'
-                    )}>
-                      {achievement.tier}
-                    </span>
+      {showInitialLoading ? (
+        <LoadingState variant="inline" text="Loading achievements..." size="md" />
+      ) : showError ? (
+        <ErrorState
+          variant="inline"
+          title="Unable to load achievements"
+          message={resolvedErrorMessage}
+          showRetry
+          showHome={false}
+          onRetry={handleAchievementsRetry}
+        />
+      ) : showEmpty ? (
+        <EmptyState
+          icon={<Trophy className="h-10 w-10 text-primary-300" />}
+          title={hasActiveFilters ? 'No achievements match your filters' : 'No achievements yet'}
+          message={
+            hasActiveFilters
+              ? 'Try adjusting the search term or clearing the filters to see more achievements.'
+              : 'Create your first achievement to motivate the community.'
+          }
+          suggestions={
+            hasActiveFilters
+              ? ['Clear filters to view all achievements', 'Search by a different keyword', 'Try another category or tier']
+              : ['Use the Create Achievement button to add your first badge', 'Bulk import existing achievements to fast-track setup']
+          }
+          actionLabel={hasActiveFilters ? 'Reset filters' : undefined}
+          onAction={hasActiveFilters ? handleResetFilters : undefined}
+          secondaryActionLabel="Reload"
+          onSecondaryAction={handleAchievementsRetry}
+        />
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {achievements.map((achievement) => (
+              <div
+                key={achievement.id}
+                className="rounded-2xl border border-white/10 bg-white/5 p-5"
+              >
+                <div className="flex items-start gap-3 mb-4">
+                  <div
+                    className={cn(
+                      'w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0',
+                      TIER_ICON_BG_CLASSES[achievement.tier]
+                    )}
+                  >
+                    {(() => {
+                      const IconComponent = getAchievementIcon(achievement.key)
+                      return (
+                        <IconComponent
+                          className={cn(
+                            'h-5 w-5 sm:h-6 sm:w-6',
+                            TIER_ICON_TEXT_CLASSES[achievement.tier]
+                          )}
+                        />
+                      )
+                    })()}
                   </div>
-                  <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{achievement.description}</p>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-bold text-white truncate text-sm sm:text-base">
+                        {achievement.name}
+                      </h3>
+                      <span
+                        className={cn('text-xs px-2 py-1 rounded-full font-medium', TIER_BADGE_CLASSES[achievement.tier])}
+                      >
+                        {achievement.tier}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
+                      {achievement.description}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                  <span className={cn('capitalize font-medium', CATEGORY_COLORS[achievement.category])}>
+                    {achievement.category}
+                  </span>
+                  <span className="text-gray-400">{achievement.requirement} required • {achievement.points} pts</span>
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                  <span className="text-xs text-gray-500">
+                    <span className="font-semibold text-white">{achievement._count.userAchievements}</span>{' '}
+                    unlocks
+                  </span>
+
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => startEdit(achievement)}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-300 hover:bg-white/10"
+                      disabled={Boolean(deleteLoadingId)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(achievement)}
+                      disabled={deleteLoadingId === achievement.id}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-error-300 hover:bg-error-500/15 disabled:opacity-50"
+                    >
+                      {deleteLoadingId === achievement.id ? (
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
+            ))}
+          </div>
 
-              <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
-                <span className={cn('capitalize font-medium', CATEGORY_COLORS[achievement.category])}>
-                  {achievement.category}
-                </span>
-                <span className="text-gray-400">{achievement.requirement} required • {achievement.points} pts</span>
-              </div>
-
-              <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                <span className="text-xs text-gray-500">
-                  <span className="font-semibold text-white">{achievement._count.userAchievements}</span> unlocks
-                </span>
-                
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => startEdit(achievement)}
-                    className="h-8 w-8 p-0 hover:bg-white/10 transition-colors"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(achievement)}
-                    className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-400">
+                Showing {showingCount} • Page {page} of {totalPages}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1.5 bg-white/5 border border-white/10 text-white hover:bg-white/10 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </Button>
+                <Button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-3 py-1.5 bg-white/5 border border-white/10 text-white hover:bg-white/10 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </Button>
               </div>
             </div>
-          )
-        })}
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-6">
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="px-3 py-1.5 bg-white/5 border border-white/10 text-white hover:bg-white/10 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </Button>
-            <span className="text-sm text-gray-400 px-3">
-              Page {page} of {totalPages}
-            </span>
-            <Button
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="px-3 py-1.5 bg-white/5 border border-white/10 text-white hover:bg-white/10 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+          )}
+        </>
       )}
 
       {/* Modals */}
@@ -695,8 +846,15 @@ export function AchievementsTab() {
               className="w-full bg-white/5 border border-white/20 text-white rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:border-primary-400/50"
             />
           </div>
-          <Button onClick={handleBulkCreate} className="w-full">
-            Import Achievements
+          <Button onClick={handleBulkCreate} className="w-full" disabled={isBulkSaving}>
+            {isBulkSaving ? (
+              <span className="flex items-center justify-center gap-2">
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                Importing...
+              </span>
+            ) : (
+              'Import Achievements'
+            )}
           </Button>
         </div>
       </MobileModal>
@@ -712,6 +870,7 @@ export function AchievementsTab() {
           onChange={setFormData}
           onSubmit={handleUpdate}
           onCancel={() => setEditingAchievement(null)}
+          isSubmitting={isUpdating}
         />
       </MobileModal>
     </div>
@@ -733,9 +892,10 @@ interface AchievementFormProps {
   onChange: (data: AchievementFormProps['data']) => void
   onSubmit: () => void
   onCancel: () => void
+  isSubmitting: boolean
 }
 
-function AchievementForm({ data, onChange, onSubmit, onCancel }: AchievementFormProps) {
+function AchievementForm({ data, onChange, onSubmit, onCancel, isSubmitting }: AchievementFormProps) {
   const isFormValid = data.key && data.name && data.description && data.category && data.tier && data.requirement && data.points
   
   return (
@@ -750,13 +910,13 @@ function AchievementForm({ data, onChange, onSubmit, onCancel }: AchievementForm
           <div className="flex items-start gap-4">
             <div className={cn(
               'w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0',
-              `bg-${data.tier === 'bronze' ? 'amber' : data.tier === 'silver' ? 'gray' : data.tier === 'gold' ? 'yellow' : data.tier === 'platinum' ? 'cyan' : 'purple'}-500/10`
+              TIER_ICON_BG_CLASSES[data.tier]
             )}>
               {(() => {
                 const IconComponent = getAchievementIcon(data.key || 'default')
                 return <IconComponent className={cn(
                   'h-8 w-8',
-                  `text-${data.tier === 'bronze' ? 'amber' : data.tier === 'silver' ? 'gray' : data.tier === 'gold' ? 'yellow' : data.tier === 'platinum' ? 'cyan' : 'purple'}-400`
+                  TIER_ICON_TEXT_CLASSES[data.tier]
                 )} />
               })()}
             </div>
@@ -765,11 +925,7 @@ function AchievementForm({ data, onChange, onSubmit, onCancel }: AchievementForm
                 <h4 className="font-bold text-white text-lg">{data.name || 'Achievement Name'}</h4>
                 <span className={cn(
                   'text-xs px-3 py-1 rounded-full font-medium',
-                  data.tier === 'bronze' && 'bg-amber-500/20 text-amber-300',
-                  data.tier === 'silver' && 'bg-gray-500/20 text-gray-300',
-                  data.tier === 'gold' && 'bg-yellow-500/20 text-yellow-300',
-                  data.tier === 'platinum' && 'bg-cyan-500/20 text-cyan-300',
-                  data.tier === 'diamond' && 'bg-purple-500/20 text-purple-300'
+                  TIER_BADGE_CLASSES[data.tier]
                 )}>
                   {data.tier?.toUpperCase() || 'BRONZE'}
                 </span>
@@ -925,16 +1081,26 @@ function AchievementForm({ data, onChange, onSubmit, onCancel }: AchievementForm
       <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-white/10">
         <Button 
           onClick={onSubmit} 
-          disabled={!isFormValid}
+          disabled={!isFormValid || isSubmitting}
           className="flex-1 bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-primary-500/25 disabled:shadow-none"
         >
-          <Check className="h-4 w-4 mr-2" />
-          {data.id ? 'Update Achievement' : 'Create Achievement'}
+          {isSubmitting ? (
+            <span className="flex items-center justify-center gap-2">
+              <RefreshCw className="h-4 w-4 animate-spin" />
+              Saving...
+            </span>
+          ) : (
+            <span className="flex items-center justify-center gap-2">
+              <Check className="h-4 w-4" />
+              {data.id ? 'Update Achievement' : 'Create Achievement'}
+            </span>
+          )}
         </Button>
         <Button 
           variant="outline" 
           onClick={onCancel}
-          className="flex-1 bg-white/5 border-white/20 hover:bg-white/10 hover:border-white/30 transition-all duration-200"
+          disabled={isSubmitting}
+          className="flex-1 bg-white/5 border-white/20 hover:bg-white/10 hover:border-white/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <X className="h-4 w-4 mr-2" />
           Cancel

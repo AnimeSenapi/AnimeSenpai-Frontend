@@ -19,14 +19,22 @@ import {
   MousePointerClick,
   User,
   Target,
+  RotateCcw,
+  RefreshCw,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { LoadingState } from '@/components/ui/loading-state'
+import { ErrorState, EmptyState } from '@/components/ui/error-state'
+import { useToast } from '@/components/ui/toast'
 import { cn } from '@/app/lib/utils'
 
 export function AnalyticsTab() {
   const { enabled, summary, enable, disable, exportData } = useAnalytics()
+  const { addToast } = useToast()
 
   const [lastUpdated, setLastUpdated] = useState(new Date())
+  const [isExporting, setIsExporting] = useState(false)
+  const [exportError, setExportError] = useState<string | null>(null)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -76,56 +84,111 @@ export function AnalyticsTab() {
     }
   }
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <BarChart3 className="h-6 w-6 text-primary-400" />
-            User Analytics
-          </h2>
-          <p className="text-gray-400 text-sm mt-1">User behavior, engagement, and feature usage</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="text-sm text-gray-400">
-            Last updated: {lastUpdated.toLocaleTimeString()}
-          </div>
-          <Button
-            variant={enabled ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => (enabled ? disable() : enable())}
-          >
-            {enabled ? 'Analytics Enabled' : 'Analytics Disabled'}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
+  const handleExport = () => {
+    try {
+      setIsExporting(true)
+      setExportError(null)
               const data = exportData()
-              const blob = new Blob([JSON.stringify(data)], { type: 'application/json' })
+      if (!data) {
+        throw new Error('No analytics data available to export.')
+      }
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
               const url = URL.createObjectURL(blob)
               const a = document.createElement('a')
               a.href = url
               a.download = `analytics-data-${new Date().toISOString()}.json`
               a.click()
               URL.revokeObjectURL(url)
-            }}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Export
+      addToast({
+        title: 'Analytics exported',
+        description: 'The analytics data was downloaded as JSON.',
+        variant: 'success',
+      })
+    } catch (error: any) {
+      console.error('Failed to export analytics:', error)
+      setExportError(error instanceof Error ? error.message || 'Export failed.' : 'Export failed.')
+      addToast({
+        title: 'Export failed',
+        description:
+          error instanceof Error ? error.message || 'Unable to export analytics.' : 'Unable to export analytics.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const analyticsUnavailable = !summary
+
+  return (
+    <div className="space-y-8">
+      <header className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 via-white/0 to-primary-500/10 p-6 sm:p-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-3 rounded-xl bg-white/5 px-3 py-1.5 border border-white/10 text-sm text-primary-200">
+              <BarChart3 className="h-4 w-4" />
+              User Analytics
+            </div>
+            <div>
+              <h2 className="text-3xl font-semibold text-white">Understand Engagement</h2>
+              <p className="text-sm text-gray-400">
+                Track live sessions, event mix, and privacy-respecting insights.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <span className="text-sm text-gray-400">Last updated: {lastUpdated.toLocaleTimeString()}</span>
+            <Button
+              onClick={() => (enabled ? disable() : enable())}
+              variant={enabled ? 'default' : 'outline'}
+              size="sm"
+              className={enabled ? 'bg-primary-500 text-white' : undefined}
+            >
+              {enabled ? 'Disable Analytics' : 'Enable Analytics'}
+            </Button>
+            <Button
+              onClick={handleExport}
+              variant="outline"
+              size="sm"
+              disabled={isExporting || analyticsUnavailable}
+              className="border-white/20 text-white hover:bg-white/10 disabled:opacity-50"
+            >
+              <Download className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export Data'}</span>
           </Button>
         </div>
       </div>
+        {exportError && (
+          <div className="mt-4 rounded-xl border border-error-500/20 bg-error-500/10 px-3 py-2 text-xs text-error-200">
+            {exportError}
+          </div>
+        )}
+      </header>
 
+      {!summary ? (
+        <EmptyState
+          icon={<BarChart3 className="h-10 w-10 text-primary-300" />}
+          title={enabled ? 'No analytics data yet' : 'Analytics disabled'}
+          message={
+            enabled
+              ? 'Analytics are enabled but no activity has been captured yet. Interact with the site to generate data.'
+              : 'Enable analytics to start tracking user interactions and engagement metrics.'
+          }
+          actionLabel={enabled ? undefined : 'Enable analytics'}
+          onAction={enabled ? undefined : enable}
+          secondaryActionLabel={enabled ? 'Refresh' : undefined}
+          onSecondaryAction={enabled ? () => setLastUpdated(new Date()) : undefined}
+        />
+      ) : (
+        <>
       {/* Session Overview */}
-      <div className="glass rounded-xl p-6">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
         <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
           <Activity className="h-5 w-5 text-primary-400" />
           Current Session
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
             <div className="flex items-center gap-2 mb-2">
               <Clock className="h-4 w-4 text-gray-400" />
               <div className="text-gray-400 text-sm">Duration</div>
@@ -134,7 +197,7 @@ export function AnalyticsTab() {
               {summary.session ? formatDuration(summary.session.duration) : '0s'}
             </div>
           </div>
-          <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
             <div className="flex items-center gap-2 mb-2">
               <Eye className="h-4 w-4 text-gray-400" />
               <div className="text-gray-400 text-sm">Page Views</div>
@@ -143,7 +206,7 @@ export function AnalyticsTab() {
               {formatNumber(summary.session.pageViews)}
             </div>
           </div>
-          <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
             <div className="flex items-center gap-2 mb-2">
               <MousePointerClick className="h-4 w-4 text-gray-400" />
               <div className="text-gray-400 text-sm">Events</div>
@@ -152,7 +215,7 @@ export function AnalyticsTab() {
               {formatNumber(summary.session.events)}
             </div>
           </div>
-          <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
             <div className="flex items-center gap-2 mb-2">
               <Target className="h-4 w-4 text-gray-400" />
               <div className="text-gray-400 text-sm">Engagement</div>
@@ -168,12 +231,7 @@ export function AnalyticsTab() {
       </div>
 
       {/* Engagement Score */}
-      <div
-        className={cn(
-          'glass rounded-xl p-6 border-2',
-          getEngagementBgColor(summary.engagement.level)
-        )}
-      >
+          <div className={cn('rounded-2xl border p-6', getEngagementBgColor(summary.engagement.level))}>
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-bold text-white mb-1">Engagement Score</h3>
@@ -291,6 +349,8 @@ export function AnalyticsTab() {
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   )
 }

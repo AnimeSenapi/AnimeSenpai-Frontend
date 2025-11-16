@@ -146,7 +146,6 @@ export default function UserProfilePage() {
   const [favoriteAnime, setFavoriteAnime] = useState<any[]>([])
   const [activityStats, setActivityStats] = useState<any>(null)
   const [leaderboardRank, setLeaderboardRank] = useState<any>(null)
-  const [achievementStats, setAchievementStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [relationship, setRelationship] = useState<RelationshipStatus | null>(null)
@@ -241,15 +240,12 @@ export default function UserProfilePage() {
         // Load additional stats only if user is authenticated and viewing their own profile
         if (currentUser && isOwnProfile) {
           try {
-            const [activityData, leaderboardData, achievementsData] = await Promise.all([
+            const [activityData, leaderboardData] = await Promise.all([
               apiGetActivityStats(),
-              apiGetMyRank('watched'),
-              apiGetMyAchievements()
+              apiGetMyRank('watched')
             ])
-            
             setActivityStats(activityData)
             setLeaderboardRank(leaderboardData)
-            setAchievementStats(achievementsData)
           } catch (statsErr) {
             console.debug('Could not load additional stats:', statsErr)
           }
@@ -409,9 +405,9 @@ export default function UserProfilePage() {
                 {/* User Info */}
                   <div>
                   <h1 className="text-xl sm:text-2xl font-bold text-white">
-                    {user.name || user.username || 'User'}
+                    {user.username || 'User'}
                     </h1>
-                  <p className="text-primary-300 text-sm">@{user.username}</p>
+                  <p className="text-primary-300 text-sm">@{user.username || 'unknown'}</p>
                   {user.bio && (
                     <p className="text-gray-300 text-sm mt-1 max-w-md">{user.bio}</p>
                   )}
@@ -699,64 +695,7 @@ export default function UserProfilePage() {
                 </div>
               </div>
 
-              {/* Achievements */}
-              <div className="glass rounded-xl p-6 bg-gradient-to-br from-orange-500/10 to-yellow-500/10 border border-orange-500/20">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <div className="p-2 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-lg">
-                      <Trophy className="h-5 w-5 text-white" />
-                    </div>
-                    Achievements
-                    </h3>
-                  <Link href={`/user/@${user.username}/achievements`}>
-                    <Button variant="outline" size="sm" className="border-orange-400/30 text-orange-300 hover:bg-orange-400/10 text-xs px-3 py-1">
-                      View All
-                    </Button>
-                  </Link>
-                </div>
-
-                <div className="space-y-4">
-                  {/* Progress Bar */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-300">Progress</span>
-                      <span className="text-white font-semibold">
-                        {achievementStats?.unlockedCount || 0} / {achievementStats?.totalCount || 0}
-                      </span>
-                    </div>
-                    <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
-                      <div 
-                        className="bg-gradient-to-r from-orange-400 to-yellow-400 h-3 rounded-full transition-all duration-500 ease-out"
-                        style={{ 
-                          width: `${achievementStats?.totalCount ? 
-                            ((achievementStats.unlockedCount / achievementStats.totalCount) * 100) : 0}%` 
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                  
-                  {/* Points with Icon */}
-                  <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <Star className="h-4 w-4 text-yellow-400" />
-                      <span className="text-gray-300 text-sm">Points Earned</span>
-                    </div>
-                    <span className="text-white font-bold text-lg">{achievementStats?.totalPoints || 0}</span>
-                  </div>
-                  
-                  {/* Achievement Preview */}
-                  <div className="text-center">
-                    <p className="text-gray-400 text-xs">
-                      {!achievementStats 
-                        ? (isOwnProfile ? 'Sign in to view achievements' : 'Achievements not available')
-                        : achievementStats.unlockedCount === 0 
-                          ? "Start watching anime to unlock achievements!"
-                          : `${achievementStats.unlockedCount} achievement${achievementStats.unlockedCount === 1 ? '' : 's'} unlocked`
-                      }
-                    </p>
-                  </div>
-                </div>
-              </div>
+              
             </div>
             </div>
 

@@ -370,7 +370,7 @@ export function ShareAnimeCard({ anime, userRating, userStatus, isFavorite }: Sh
                         )}
                         <div className="flex-1 text-left min-w-0">
                           <p className="text-white font-medium text-sm truncate">
-                            {friend.name || friend.username}
+                            {friend.username}
                           </p>
                           <p className="text-gray-400 text-xs truncate">@{friend.username}</p>
                         </div>

@@ -5,7 +5,7 @@
  * WCAG 2.1 AA compliant
  */
 
-import React, { forwardRef } from 'react'
+import React, { forwardRef, useId } from 'react'
 import { cn } from '@/app/lib/utils'
 
 interface AccessibleInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -34,7 +34,8 @@ export const AccessibleInput = forwardRef<HTMLInputElement, AccessibleInputProps
     },
     ref
   ) => {
-    const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`
+    const generatedId = useId()
+    const inputId = id ?? `input-${generatedId}`
     const errorId = error ? `${inputId}-error` : undefined
     const helperId = helperText ? `${inputId}-helper` : undefined
     const ariaDescribedBy = [errorId, helperId].filter(Boolean).join(' ')

@@ -222,8 +222,8 @@ export function UserProfileSEOMetadata({
   }
   url?: string
 }) {
-  const title = user.name || user.username
-  const description = user.bio || `${title}'s anime list and profile on AnimeSenpai`
+  const title = user.username
+  const description = user.bio || `${user.username}'s anime list and profile on AnimeSenpai`
   const image = user.avatar || 'https://animesenpai.app/og-image.png'
   const pageUrl = url || `https://animesenpai.app/user/${user.username}`
 
@@ -242,7 +242,8 @@ export function UserProfileSEOMetadata({
         '@type': 'ProfilePage',
         mainEntity: {
           '@type': 'Person',
-          name: title,
+          name: user.username,
+          ...(user.name && { alternateName: user.name }),
           description,
           ...(user.avatar && { image: user.avatar }),
           url: pageUrl,
