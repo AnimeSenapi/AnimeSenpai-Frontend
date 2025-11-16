@@ -157,23 +157,23 @@ export function PerformanceTab() {
               <Activity className="h-4 w-4" />
               Performance Monitoring
             </div>
-            <div>
+        <div>
               <h2 className="text-3xl font-semibold text-white">Keep The App Fast</h2>
               <p className="text-sm text-gray-400">
                 Monitor Core Web Vitals and API latency with built-in anonymized tracking.
               </p>
-            </div>
+        </div>
           </div>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <span className="text-sm text-gray-400">Last updated: {lastUpdated.toLocaleTimeString()}</span>
-            <Button
+          <Button
               onClick={() => toggleMonitoring(!enabled)}
-              variant={enabled ? 'default' : 'outline'}
-              size="sm"
+            variant={enabled ? 'default' : 'outline'}
+            size="sm"
               className={enabled ? 'bg-primary-500 text-white' : undefined}
-            >
+          >
               {enabled ? 'Disable Monitoring' : 'Enable Monitoring'}
-            </Button>
+          </Button>
             <Button
               onClick={clear}
               variant="outline"
@@ -183,19 +183,19 @@ export function PerformanceTab() {
             >
               <RotateCcw className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Clear Metrics</span>
-            </Button>
-            <Button
+          </Button>
+          <Button
               onClick={handleExport}
-              variant="outline"
-              size="sm"
+            variant="outline"
+            size="sm"
               disabled={isExporting || (!hasWebVitals && !hasApiData)}
               className="border-white/20 text-white hover:bg-white/10 disabled:opacity-50"
-            >
+          >
               <Download className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export Data'}</span>
-            </Button>
-          </div>
+          </Button>
         </div>
+      </div>
       </header>
 
       {exportError && (
@@ -220,42 +220,42 @@ export function PerformanceTab() {
         />
       ) : (
         <>
-          {/* Web Vitals */}
+      {/* Web Vitals */}
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <Zap className="h-5 w-5 text-primary-400" />
-              Core Web Vitals
-            </h3>
+        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          <Zap className="h-5 w-5 text-primary-400" />
+          Core Web Vitals
+        </h3>
             {hasWebVitals ? (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {Object.entries(webVitalMetrics).map(([key, value]) => {
                     const score = webVitalScores[key as keyof typeof webVitalScores]
-                    return (
+            return (
                       <div key={key} className="rounded-xl border border-white/10 bg-white/5 p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            {getScoreIcon(score)}
-                            <span className="font-medium text-white">{key.toUpperCase()}</span>
-                          </div>
-                          <span className={cn('text-sm font-semibold', getScoreColor(score))}>{score}</span>
-                        </div>
-                        <div className="text-2xl font-bold text-white">{formatTime(value)}</div>
-                      </div>
-                    )
-                  })}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    {getScoreIcon(score)}
+                    <span className="font-medium text-white">{key.toUpperCase()}</span>
+                  </div>
+                  <span className={cn('text-sm font-semibold', getScoreColor(score))}>{score}</span>
                 </div>
+                <div className="text-2xl font-bold text-white">{formatTime(value)}</div>
+              </div>
+            )
+          })}
+        </div>
                 <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Overall Performance</span>
-                    <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-gray-400">Overall Performance</span>
+            <div className="flex items-center gap-2">
                       {getScoreIcon(webVitalOverall)}
                       <span className={cn('font-semibold', getScoreColor(webVitalOverall))}>
                         {webVitalOverall ? webVitalOverall.toUpperCase() : 'UNKNOWN'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              </span>
+            </div>
+          </div>
+        </div>
               </>
             ) : (
               <EmptyState
@@ -265,77 +265,77 @@ export function PerformanceTab() {
                 message="We haven’t collected any Core Web Vitals for this session."
               />
             )}
-          </div>
+      </div>
 
-          {/* API Performance */}
+      {/* API Performance */}
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <Server className="h-5 w-5 text-primary-400" />
-              API Performance
-            </h3>
+        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          <Server className="h-5 w-5 text-primary-400" />
+          API Performance
+        </h3>
             {hasApiData ? (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                   <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                    <div className="text-gray-400 text-sm mb-1">Total Requests</div>
+            <div className="text-gray-400 text-sm mb-1">Total Requests</div>
                     <div className="text-2xl font-bold text-white">{safeApiSummary.total}</div>
-                  </div>
+          </div>
                   <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                    <div className="text-gray-400 text-sm mb-1">Avg Response Time</div>
+            <div className="text-gray-400 text-sm mb-1">Avg Response Time</div>
                     <div className="text-2xl font-bold text-white">{formatTime(safeApiSummary.average)}</div>
-                  </div>
+          </div>
                   <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                    <div className="text-gray-400 text-sm mb-1">Error Rate</div>
-                    <div className="text-2xl font-bold text-red-400">
+            <div className="text-gray-400 text-sm mb-1">Error Rate</div>
+            <div className="text-2xl font-bold text-red-400">
                       {formatPercent(safeApiSummary.errorRate)}
-                    </div>
-                  </div>
+            </div>
+          </div>
                   <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                    <div className="text-gray-400 text-sm mb-1">Cache Hit Rate</div>
-                    <div className="text-2xl font-bold text-green-400">
+            <div className="text-gray-400 text-sm mb-1">Cache Hit Rate</div>
+            <div className="text-2xl font-bold text-green-400">
                       {formatPercent(safeApiSummary.cacheHitRate)}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <div className="text-gray-400 text-sm mb-1">Min Response Time</div>
+                    <div className="text-xl font-bold text-white">{formatTime(safeApiSummary.min)}</div>
+          </div>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <div className="text-gray-400 text-sm mb-1">P95 Response Time</div>
+                    <div className="text-xl font-bold text-white">{formatTime(safeApiSummary.p95)}</div>
+          </div>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <div className="text-gray-400 text-sm mb-1">P99 Response Time</div>
+                    <div className="text-xl font-bold text-white">{formatTime(safeApiSummary.p99)}</div>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="text-md font-semibold text-white mb-3">Performance by Endpoint</h4>
+          <div className="space-y-2">
+                    {Object.entries(safeApiSummary.byEndpoint ?? {})
+              .sort((a, b) => b[1].count - a[1].count)
+              .slice(0, 10)
+              .map(([endpoint, data]) => (
+                <div
+                  key={endpoint}
+                          className="rounded-xl border border-white/10 bg-white/5 p-3 flex items-center justify-between"
+                >
+                  <div className="flex-1">
+                    <div className="text-white text-sm font-medium truncate">{endpoint}</div>
+                    <div className="text-gray-400 text-xs">
+                      {data.count} requests • {formatTime(data.average)} avg
                     </div>
                   </div>
+                  {data.errors > 0 && (
+                    <div className="text-red-400 text-sm font-medium">{data.errors} errors</div>
+                  )}
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                    <div className="text-gray-400 text-sm mb-1">Min Response Time</div>
-                    <div className="text-xl font-bold text-white">{formatTime(safeApiSummary.min)}</div>
-                  </div>
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                    <div className="text-gray-400 text-sm mb-1">P95 Response Time</div>
-                    <div className="text-xl font-bold text-white">{formatTime(safeApiSummary.p95)}</div>
-                  </div>
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                    <div className="text-gray-400 text-sm mb-1">P99 Response Time</div>
-                    <div className="text-xl font-bold text-white">{formatTime(safeApiSummary.p99)}</div>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-md font-semibold text-white mb-3">Performance by Endpoint</h4>
-                  <div className="space-y-2">
-                    {Object.entries(safeApiSummary.byEndpoint ?? {})
-                      .sort((a, b) => b[1].count - a[1].count)
-                      .slice(0, 10)
-                      .map(([endpoint, data]) => (
-                        <div
-                          key={endpoint}
-                          className="rounded-xl border border-white/10 bg-white/5 p-3 flex items-center justify-between"
-                        >
-                          <div className="flex-1">
-                            <div className="text-white text-sm font-medium truncate">{endpoint}</div>
-                            <div className="text-gray-400 text-xs">
-                              {data.count} requests • {formatTime(data.average)} avg
-                            </div>
-                          </div>
-                          {data.errors > 0 && (
-                            <div className="text-red-400 text-sm font-medium">{data.errors} errors</div>
-                          )}
-                        </div>
-                      ))}
-                  </div>
+              ))}
+          </div>
                   {Object.keys(safeApiSummary.byEndpoint ?? {}).length === 0 && (
                     <EmptyState
                       variant="simple"
@@ -344,7 +344,7 @@ export function PerformanceTab() {
                       message="Once API requests are made, their performance will be summarized here."
                     />
                   )}
-                </div>
+        </div>
               </>
             ) : (
               <EmptyState
@@ -354,68 +354,68 @@ export function PerformanceTab() {
                 message="Trigger API requests to populate performance metrics."
               />
             )}
-          </div>
+      </div>
 
-          {/* Performance Thresholds */}
+      {/* Performance Thresholds */}
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary-400" />
-              Performance Thresholds
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          <TrendingUp className="h-5 w-5 text-primary-400" />
+          Performance Thresholds
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <div className="text-gray-400 text-sm mb-2">LCP (Largest Contentful Paint)</div>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-green-400" style={{ width: '100%' }} />
-                  </div>
-                  <span className="text-white text-sm font-medium">Good: &lt;2.5s</span>
-                </div>
+            <div className="text-gray-400 text-sm mb-2">LCP (Largest Contentful Paint)</div>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-full bg-green-400" style={{ width: '100%' }} />
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <div className="text-gray-400 text-sm mb-2">FID (First Input Delay)</div>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-green-400" style={{ width: '100%' }} />
-                  </div>
-                  <span className="text-white text-sm font-medium">Good: &lt;100ms</span>
-                </div>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <div className="text-gray-400 text-sm mb-2">CLS (Cumulative Layout Shift)</div>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-green-400" style={{ width: '100%' }} />
-                  </div>
-                  <span className="text-white text-sm font-medium">Good: &lt;0.1</span>
-                </div>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <div className="text-gray-400 text-sm mb-2">API Response Time</div>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-green-400" style={{ width: '100%' }} />
-                  </div>
-                  <span className="text-white text-sm font-medium">Good: &lt;200ms</span>
-                </div>
-              </div>
+              <span className="text-white text-sm font-medium">Good: &lt;2.5s</span>
             </div>
           </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <div className="text-gray-400 text-sm mb-2">FID (First Input Delay)</div>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-full bg-green-400" style={{ width: '100%' }} />
+              </div>
+              <span className="text-white text-sm font-medium">Good: &lt;100ms</span>
+            </div>
+          </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <div className="text-gray-400 text-sm mb-2">CLS (Cumulative Layout Shift)</div>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-full bg-green-400" style={{ width: '100%' }} />
+              </div>
+              <span className="text-white text-sm font-medium">Good: &lt;0.1</span>
+            </div>
+          </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <div className="text-gray-400 text-sm mb-2">API Response Time</div>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-full bg-green-400" style={{ width: '100%' }} />
+              </div>
+              <span className="text-white text-sm font-medium">Good: &lt;200ms</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
-          {/* Info */}
+      {/* Info */}
           <div className="rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4">
-            <div className="flex items-start gap-3">
-              <Globe className="h-5 w-5 text-blue-400 mt-0.5" />
-              <div>
-                <h4 className="font-semibold text-white mb-1">About Performance Monitoring</h4>
-                <p className="text-gray-400 text-sm">
-                  Performance metrics are automatically tracked and reported to Sentry. All metrics are
-                  stored in memory and reset when the page is refreshed. Export your metrics to keep a
-                  record of performance over time.
-                </p>
-              </div>
-            </div>
+        <div className="flex items-start gap-3">
+          <Globe className="h-5 w-5 text-blue-400 mt-0.5" />
+          <div>
+            <h4 className="font-semibold text-white mb-1">About Performance Monitoring</h4>
+            <p className="text-gray-400 text-sm">
+              Performance metrics are automatically tracked and reported to Sentry. All metrics are
+              stored in memory and reset when the page is refreshed. Export your metrics to keep a
+              record of performance over time.
+            </p>
           </div>
+        </div>
+      </div>
         </>
       )}
     </div>

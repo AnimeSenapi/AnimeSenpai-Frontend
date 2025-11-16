@@ -130,7 +130,7 @@ export function UsersTab() {
   }, [page, roleFilter])
 
   const loadUsers = async (override?: { page?: number; role?: string }) => {
-    setLoading(true)
+      setLoading(true)
     setLoadError(null)
 
     const activePage = override?.page ?? page
@@ -426,9 +426,9 @@ export function UsersTab() {
       const next = new Set(prev)
       if (next.has(userId)) {
         next.delete(userId)
-      } else {
+    } else {
         next.add(userId)
-      }
+    }
       return next
     })
   }
@@ -440,9 +440,9 @@ export function UsersTab() {
 
       if (allVisibleSelected) {
         visibleUsers.forEach((user) => next.delete(user.id))
-      } else {
+    } else {
         visibleUsers.forEach((user) => next.add(user.id))
-      }
+    }
 
       return next
     })
@@ -560,18 +560,18 @@ export function UsersTab() {
               <Users className="h-4 w-4" />
               User Management
             </div>
-            <div>
+        <div>
               <h2 className="text-3xl font-semibold text-white">Manage Members</h2>
               <p className="text-sm text-gray-400">Search users, adjust roles, and monitor account activity.</p>
-            </div>
+        </div>
           </div>
           <div className="flex items-start sm:items-center gap-3">
-            <Button
+        <Button
               onClick={() => handleResetFilters()}
-              variant="outline"
-              size="sm"
-              className="border-white/20 text-white hover:bg-white/10"
-            >
+          variant="outline"
+          size="sm"
+          className="border-white/20 text-white hover:bg-white/10"
+        >
               <RotateCcw className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Reset Filters</span>
             </Button>
@@ -583,46 +583,46 @@ export function UsersTab() {
             >
               <RefreshCw className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Refresh</span>
-            </Button>
+        </Button>
           </div>
-        </div>
+      </div>
 
         <div className="mt-6 flex flex-col gap-4">
           <div className="flex flex-col lg:flex-row gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
+          <input
+            type="text"
                 placeholder="Search users by email or username"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 className="w-full rounded-lg border border-white/10 bg-white/5 px-10 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/40"
               />
-            </div>
+        </div>
             <div className="flex flex-col sm:flex-row gap-2">
-              <select
-                value={roleFilter}
-                onChange={(e) => {
-                  setRoleFilter(e.target.value)
-                  setPage(1)
-                }}
+        <select
+          value={roleFilter}
+          onChange={(e) => {
+            setRoleFilter(e.target.value)
+            setPage(1)
+          }}
                 className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:outline-none focus:border-primary-500/40"
-              >
-                <option value="all">All Roles</option>
-                <option value="user">Users</option>
-                <option value="moderator">Moderators</option>
-                <option value="admin">Admins</option>
-              </select>
-              <select
-                value={verifiedFilter}
-                onChange={(e) => setVerifiedFilter(e.target.value as 'all' | 'verified' | 'unverified')}
+        >
+          <option value="all">All Roles</option>
+          <option value="user">Users</option>
+          <option value="moderator">Moderators</option>
+          <option value="admin">Admins</option>
+        </select>
+        <select
+          value={verifiedFilter}
+          onChange={(e) => setVerifiedFilter(e.target.value as 'all' | 'verified' | 'unverified')}
                 className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:outline-none focus;border-primary-500/40"
-              >
-                <option value="all">All Status</option>
-                <option value="verified">Verified</option>
-                <option value="unverified">Unverified</option>
-              </select>
+        >
+          <option value="all">All Status</option>
+          <option value="verified">Verified</option>
+          <option value="unverified">Unverified</option>
+        </select>
               <Button
                 onClick={handleSearch}
                 size="sm"
@@ -632,7 +632,7 @@ export function UsersTab() {
                 <span className="hidden sm:inline">Search</span>
               </Button>
             </div>
-          </div>
+      </div>
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs sm:text-sm text-gray-400">
             <div className="flex flex-wrap gap-4">

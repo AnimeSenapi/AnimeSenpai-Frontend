@@ -51,18 +51,18 @@ interface SystemSettingsFormState {
 }
 
 const INITIAL_FORM_STATE: SystemSettingsFormState = {
-  siteName: '',
-  siteDescription: '',
-  maintenanceMode: false,
-  maintenanceMessage: '',
-  registrationEnabled: true,
-  emailVerificationRequired: true,
+    siteName: '',
+    siteDescription: '',
+    maintenanceMode: false,
+    maintenanceMessage: '',
+    registrationEnabled: true,
+    emailVerificationRequired: true,
   maxUploadSize: 5_242_880,
-  rateLimit: 100,
+    rateLimit: 100,
   sessionTimeout: 86_400,
   maxUserListItems: 5_000,
-  enableRecommendations: true,
-  enableSocialFeatures: true,
+    enableRecommendations: true,
+    enableSocialFeatures: true,
 }
 
 const formatNumber = (value: number) => new Intl.NumberFormat().format(value)
@@ -381,8 +381,8 @@ export function SystemSettingsTab() {
             <div className="inline-flex items-center gap-3 rounded-xl bg-white/5 px-3 py-1.5 border border-white/10 text-sm text-primary-200">
               <Settings className="h-4 w-4" />
               System Settings
-            </div>
-            <div>
+          </div>
+          <div>
               <h2 className="text-3xl font-semibold text-white">Control Platform Defaults</h2>
               <p className="text-sm text-gray-400">
                 Manage global toggles, rate limits, and maintenance mode in one place.
@@ -401,10 +401,10 @@ export function SystemSettingsTab() {
             </div>
           </div>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <Button
+          <Button
               onClick={handleRefresh}
-              variant="outline"
-              size="sm"
+            variant="outline"
+            size="sm"
               disabled={loading || saving}
               className="border-white/20 text-white hover:bg-white/10"
             >
@@ -412,23 +412,23 @@ export function SystemSettingsTab() {
               <span className="hidden sm:inline">{loading ? 'Refreshing...' : 'Refresh'}</span>
             </Button>
             <Button
-              onClick={handleReset}
+            onClick={handleReset}
               variant="outline"
               size="sm"
               disabled={disableReset}
-              className="border-white/20 text-white hover:bg-white/10"
-            >
+            className="border-white/20 text-white hover:bg-white/10"
+          >
               <RotateCcw className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Reset to Defaults</span>
-            </Button>
-            <Button
-              onClick={handleSave}
+          </Button>
+          <Button
+            onClick={handleSave}
               disabled={disableSave}
               className="bg-primary-500 text-white hover:bg-primary-500/90"
-            >
+          >
               <Save className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">{saving ? 'Saving...' : 'Save Changes'}</span>
-            </Button>
+          </Button>
           </div>
         </div>
       </header>

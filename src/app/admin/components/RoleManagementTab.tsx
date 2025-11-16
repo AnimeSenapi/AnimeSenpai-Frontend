@@ -130,7 +130,7 @@ export function RoleManagementTab() {
   }, [activeTab])
 
   const loadData = async () => {
-    setLoading(true)
+      setLoading(true)
     setLoadError(null)
 
     try {
@@ -575,18 +575,18 @@ export function RoleManagementTab() {
               <Shield className="h-4 w-4" />
               Roles & Permissions
             </div>
-            <div>
+        <div>
               <h2 className="text-3xl font-semibold text-white">Access Control</h2>
               <p className="text-sm text-gray-400">Define roles, assign permissions, and manage user access consistently.</p>
-            </div>
+        </div>
           </div>
           <div className="flex items-start sm:items-center gap-3">
-            <Button
+        <Button
               onClick={() => setActiveTab('roles')}
-              variant="outline"
-              size="sm"
-              className="border-white/20 text-white hover:bg-white/10"
-            >
+          variant="outline"
+          size="sm"
+          className="border-white/20 text-white hover:bg-white/10"
+        >
               <Shield className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Roles</span>
             </Button>
@@ -607,9 +607,9 @@ export function RoleManagementTab() {
             >
               <Users className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Assignments</span>
-            </Button>
+        </Button>
           </div>
-        </div>
+      </div>
 
         <nav className="mt-6 flex gap-2 rounded-xl border border-white/10 bg-white/5 p-1 text-sm text-gray-400">
           {[
@@ -619,20 +619,20 @@ export function RoleManagementTab() {
           ].map((tab) => {
             const Icon = tab.icon
             return (
-              <button
+        <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
                 className={`flex-1 rounded-lg px-4 py-2.5 transition ${
                   activeTab === tab.id
                     ? 'bg-primary-500/20 text-primary-100 border border-primary-500/40'
                     : 'border border-transparent hover:border-white/10 hover:text-white'
-                }`}
-              >
+          }`}
+        >
                 <span className="flex items-center justify-center gap-2">
                   <Icon className="h-4 w-4" />
                   {tab.label}
                 </span>
-              </button>
+        </button>
             )
           })}
         </nav>
@@ -641,10 +641,10 @@ export function RoleManagementTab() {
           <div className="flex flex-col lg:flex-row gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder={`Search ${activeTab}...`}
-                value={searchQuery}
+          <input
+            type="text"
+            placeholder={`Search ${activeTab}...`}
+            value={searchQuery}
                 onChange={(e) => {
                   const value = e.target.value
                   setSearchQuery(value)
@@ -674,30 +674,30 @@ export function RoleManagementTab() {
                 </select>
               )}
               {activeTab === 'roles' && (
-                <Button
+          <Button
                   onClick={exportToCSV}
-                  variant="outline"
-                  size="sm"
-                  className="border-white/20 text-white hover:bg-white/10"
-                >
+            variant="outline"
+            size="sm"
+            className="border-white/20 text-white hover:bg-white/10"
+          >
                   <Download className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Export CSV</span>
-                </Button>
+          </Button>
               )}
-              <Button
+          <Button
                 onClick={() => {
                   setSearchQuery('')
                   setSearchTerm('')
                   setPermissionCategoryFilter('all')
                 }}
-                variant="outline"
-                size="sm"
-                className="border-white/20 text-white hover:bg-white/10"
-              >
+            variant="outline"
+            size="sm"
+            className="border-white/20 text-white hover:bg-white/10"
+          >
                 <Filter className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Clear</span>
-              </Button>
-            </div>
+          </Button>
+      </div>
           </div>
         </div>
       </header>
@@ -897,7 +897,7 @@ export function RoleManagementTab() {
                         ? `${showingPermissions}/${allPermissions.length}`
                         : allPermissions.length}
                     </p>
-                  </div>
+                </div>
                   <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
                     <p className="text-xs text-gray-400">Categories</p>
                     <p className="text-lg font-semibold text-white">
@@ -914,16 +914,16 @@ export function RoleManagementTab() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    onClick={() => {
-                      setPermissionForm({ key: '', name: '', description: '', category: 'general' })
-                      setShowCreatePermission(true)
-                    }}
-                    className="bg-primary-500 hover:bg-primary-600 text-white"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Permission
-                  </Button>
+                <Button
+                  onClick={() => {
+                    setPermissionForm({ key: '', name: '', description: '', category: 'general' })
+                    setShowCreatePermission(true)
+                  }}
+                  className="bg-primary-500 hover:bg-primary-600 text-white"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Permission
+                </Button>
                 </div>
               </div>
 
@@ -951,7 +951,7 @@ export function RoleManagementTab() {
                             description: '',
                             category: 'general',
                           })
-                          setShowCreatePermission(true)
+                    setShowCreatePermission(true)
                         }
                   }
                 />
@@ -1073,75 +1073,75 @@ export function RoleManagementTab() {
                 />
               ) : (
                 <div className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-white/5">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                            User
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                            Current Role
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-white/10">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-white/5">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          User
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Current Role
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/10">
                         {filteredUsers.map((user) => (
-                          <tr key={user.id} className="hover:bg-white/5 transition-colors">
-                            <td className="px-6 py-4">
-                              <div>
-                                <p className="text-sm font-medium text-white">
-                                  {user.username || user.email}
-                                </p>
-                                <p className="text-xs text-gray-400">{user.email}</p>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className={getRoleBadgeClasses(user.role)}>
-                                {(() => {
-                                  const { IconComponent, className } = getRoleIcon(user.role)
-                                  return <IconComponent className={className} />
-                                })()}
-                                <span className="capitalize">{user.role}</span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <div className="flex items-center justify-end gap-2">
+                        <tr key={user.id} className="hover:bg-white/5 transition-colors">
+                          <td className="px-6 py-4">
+                            <div>
+                              <p className="text-sm font-medium text-white">
+                                {user.username || user.email}
+                              </p>
+                              <p className="text-xs text-gray-400">{user.email}</p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className={getRoleBadgeClasses(user.role)}>
+                              {(() => {
+                                const { IconComponent, className } = getRoleIcon(user.role)
+                                return <IconComponent className={className} />
+                              })()}
+                              <span className="capitalize">{user.role}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                onClick={() => {
+                                  setSelectedUser(user)
+                                  setSelectedRoleForUser(user.role)
+                                  setShowAssignRole(true)
+                                }}
+                                variant="outline"
+                                size="sm"
+                                className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20"
+                              >
+                                <Edit className="h-3 w-3 mr-1" />
+                                Change
+                              </Button>
+                              {user.role !== 'user' && (
                                 <Button
-                                  onClick={() => {
-                                    setSelectedUser(user)
-                                    setSelectedRoleForUser(user.role)
-                                    setShowAssignRole(true)
-                                  }}
+                                  onClick={() => handleRemoveRole(user)}
                                   variant="outline"
                                   size="sm"
-                                  className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20"
+                                  className="border-warning-500/30 text-warning-400 hover:bg-warning-500/20"
                                 >
-                                  <Edit className="h-3 w-3 mr-1" />
-                                  Change
+                                  <X className="h-3 w-3 mr-1" />
+                                  Remove
                                 </Button>
-                                {user.role !== 'user' && (
-                                  <Button
-                                    onClick={() => handleRemoveRole(user)}
-                                    variant="outline"
-                                    size="sm"
-                                    className="border-warning-500/30 text-warning-400 hover:bg-warning-500/20"
-                                  >
-                                    <X className="h-3 w-3 mr-1" />
-                                    Remove
-                                  </Button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
+              </div>
               )}
             </div>
           )}

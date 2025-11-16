@@ -83,7 +83,7 @@ export function AnimeTab() {
 
   useEffect(() => {
     if (!isSearchMode) {
-      loadAnime()
+    loadAnime()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, isSearchMode])
@@ -404,48 +404,48 @@ export function AnimeTab() {
   const detailsModal =
     isMounted && showDetailsModal && selectedAnime
       ? createPortal(
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          onClick={() => setShowDetailsModal(false)}
+        >
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
-            onClick={() => setShowDetailsModal(false)}
-          >
-            <div
               className="glass rounded-2xl p-6 max-w-3xl w-full mx-4 border border-white/10 max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-white">Anime Details</h3>
-                <button
-                  onClick={() => setShowDetailsModal(false)}
-                  className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-white">Anime Details</h3>
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
 
               <div className="space-y-8">
                 <div className="flex flex-col lg:flex-row gap-8">
                   <div className="relative mx-auto lg:mx-0 w-full max-w-xs aspect-[2/3] overflow-hidden rounded-3xl border border-white/10 shadow-lg">
                     <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5" />
                     {selectedAnime.coverImage ? (
-                      <Image
-                        src={selectedAnime.coverImage}
-                        alt={selectedAnime.title}
-                        fill
+                  <Image
+                    src={selectedAnime.coverImage}
+                    alt={selectedAnime.title}
+                    fill
                         className="object-cover"
-                        sizes="(max-width: 768px) 100vw, 384px"
-                      />
+                    sizes="(max-width: 768px) 100vw, 384px"
+                  />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center text-gray-500">
                         <Film className="h-10 w-10" />
-                      </div>
-                    )}
+                </div>
+              )}
                     {selectedAnime.rating && (
                       <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1 border border-white/10 shadow">
                         <Star className="h-3.5 w-3.5 text-yellow-300 fill-yellow-300" />
                         <span className="text-sm font-semibold text-white">
                           {Number(selectedAnime.rating).toFixed(1)}
                         </span>
-                      </div>
+                </div>
                     )}
                   </div>
 
@@ -463,14 +463,14 @@ export function AnimeTab() {
                       {selectedAnime.titleJapanese && (
                         <p className="text-sm text-gray-500">{selectedAnime.titleJapanese}</p>
                       )}
-                    </div>
+                </div>
 
                     <div className="flex flex-wrap items-center gap-3">
                       {formattedSlug && (
                         <div className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs text-gray-300">
                           <span className="uppercase tracking-[0.28em] text-gray-500">Slug</span>
                           <span className="font-mono text-white">{selectedAnime.slug}</span>
-                        </div>
+                </div>
                       )}
                       {statusLabel && (
                         <span
@@ -480,7 +480,7 @@ export function AnimeTab() {
                           {statusLabel}
                         </span>
                       )}
-                    </div>
+                </div>
 
                     {metaCards.length > 0 && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -493,33 +493,33 @@ export function AnimeTab() {
                               {card.icon ? <card.icon className="h-4 w-4 text-primary-200" /> : null}
                               <p className="text-xs uppercase tracking-wide text-gray-400">
                                 {card.label}
-                              </p>
-                            </div>
-                            <p className="mt-2 text-base font-semibold text-white">{card.value}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  </p>
                 </div>
+                            <p className="mt-2 text-base font-semibold text-white">{card.value}</p>
+                  </div>
+                        ))}
+                  </div>
+                )}
+                  </div>
+              </div>
 
                 {hasGenres && (
-                  <div>
+                <div>
                     <h4 className="text-sm font-semibold text-gray-200 uppercase tracking-wide mb-3">
                       Genres
                     </h4>
-                    <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2">
                       {selectedAnime.genres?.map((genre, i) => (
                         <Badge
                           key={`${genre.name}-${i}`}
                           className="bg-primary-500/10 text-primary-200 border border-primary-500/20"
-                        >
-                          {genre.name}
+                      >
+                        {genre.name}
                         </Badge>
-                      ))}
-                    </div>
+                    ))}
                   </div>
-                )}
+                </div>
+              )}
 
                 {referenceCards.length > 0 && (
                   <div className="space-y-3">
@@ -537,8 +537,8 @@ export function AnimeTab() {
                           </p>
                           <p className="mt-1 text-sm font-medium text-white break-all">
                             {card.value}
-                          </p>
-                        </div>
+                  </p>
+                </div>
                       ))}
                     </div>
                   </div>
@@ -559,44 +559,44 @@ export function AnimeTab() {
                             {card.label}
                           </p>
                           <p className="mt-1 text-sm font-medium text-white">{card.value}</p>
-                        </div>
+                </div>
                       ))}
-                    </div>
+              </div>
                   </div>
                 )}
 
                 <div className="flex flex-col sm:flex-row sm:justify-end gap-3 pt-4 border-t border-white/10">
-                  <Link
-                    href={`/anime/${selectedAnime.slug}`}
-                    target="_blank"
+                <Link
+                  href={`/anime/${selectedAnime.slug}`}
+                  target="_blank"
                     className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg border border-primary-500/30 bg-primary-500/15 px-4 py-2 text-primary-200 hover:bg-primary-500/25 transition"
-                  >
-                    <Play className="h-4 w-4" />
-                    View Page
-                  </Link>
-                  <button
-                    onClick={() => {
-                      setShowDetailsModal(false)
-                      handleEditAnime(selectedAnime)
-                    }}
+                >
+                  <Play className="h-4 w-4" />
+                  View Page
+                </Link>
+                <button
+                  onClick={() => {
+                    setShowDetailsModal(false)
+                    handleEditAnime(selectedAnime)
+                  }}
                     className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg border border-primary-500/30 bg-primary-500/15 px-4 py-2 text-primary-200 hover:bg-primary-500/25 transition"
-                  >
-                    <Edit className="h-4 w-4" />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowDetailsModal(false)
-                      handleDeleteAnime(selectedAnime.id, selectedAnime.title)
-                    }}
+                >
+                  <Edit className="h-4 w-4" />
+                  Edit
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDetailsModal(false)
+                    handleDeleteAnime(selectedAnime.id, selectedAnime.title)
+                  }}
                     className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg border border-error-500/30 bg-error-500/15 px-4 py-2 text-error-200 hover:bg-error-500/25 transition"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete
-                  </button>
-                </div>
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </button>
               </div>
             </div>
+          </div>
           </div>,
           document.body
         )
@@ -605,161 +605,161 @@ export function AnimeTab() {
   const editModal =
     isMounted && showEditModal && selectedAnime
       ? createPortal(
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setShowEditModal(false)}
+        >
           <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowEditModal(false)}
+            className="glass rounded-2xl p-6 max-w-2xl w-full mx-4 border border-white/10 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div
-              className="glass rounded-2xl p-6 max-w-2xl w-full mx-4 border border-white/10 max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-white flex items-center gap-3">
-                  <Edit className="h-6 w-6 text-primary-400" />
-                  Edit Anime
-                </h3>
-                <button
-                  onClick={() => setShowEditModal(false)}
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                >
-                  <X className="h-5 w-5 text-gray-400" />
-                </button>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-white flex items-center gap-3">
+                <Edit className="h-6 w-6 text-primary-400" />
+                Edit Anime
+              </h3>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-400" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Title (Romanized) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Title (Romanized)
+                </label>
+                <input
+                  type="text"
+                  value={editFormData.title || ''}
+                  onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
+                />
               </div>
 
-              <div className="space-y-4">
-                {/* Title (Romanized) */}
+              {/* Title (English) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Title (English)
+                </label>
+                <input
+                  type="text"
+                  value={editFormData.titleEnglish || ''}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, titleEnglish: e.target.value })
+                  }
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
+                />
+              </div>
+
+              {/* Title (Japanese) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Title (Japanese)
+                </label>
+                <input
+                  type="text"
+                  value={editFormData.titleJapanese || ''}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, titleJapanese: e.target.value })
+                  }
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
+                />
+              </div>
+
+              {/* Year & Episodes */}
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
-                    Title (Romanized)
-                  </label>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Year</label>
                   <input
-                    type="text"
-                    value={editFormData.title || ''}
-                    onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                    type="number"
+                    value={editFormData.year || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, year: e.target.value })}
                     className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
                   />
                 </div>
-
-                {/* Title (English) */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
-                    Title (English)
-                  </label>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Episodes</label>
                   <input
-                    type="text"
-                    value={editFormData.titleEnglish || ''}
-                    onChange={(e) =>
-                      setEditFormData({ ...editFormData, titleEnglish: e.target.value })
-                    }
-                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
-                  />
-                </div>
-
-                {/* Title (Japanese) */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
-                    Title (Japanese)
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.titleJapanese || ''}
-                    onChange={(e) =>
-                      setEditFormData({ ...editFormData, titleJapanese: e.target.value })
-                    }
-                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
-                  />
-                </div>
-
-                {/* Year & Episodes */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">Year</label>
-                    <input
-                      type="number"
-                      value={editFormData.year || ''}
-                      onChange={(e) => setEditFormData({ ...editFormData, year: e.target.value })}
-                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">Episodes</label>
-                    <input
-                      type="number"
-                      value={editFormData.episodes || ''}
+                    type="number"
+                    value={editFormData.episodes || ''}
                       onChange={(e) =>
                         setEditFormData({ ...editFormData, episodes: e.target.value })
                       }
-                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
-                    />
-                  </div>
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
+                  />
                 </div>
+              </div>
 
-                {/* Status & Type */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">Status</label>
-                    <select
-                      value={editFormData.status || ''}
-                      onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
-                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
-                    >
+              {/* Status & Type */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Status</label>
+                  <select
+                    value={editFormData.status || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
+                  >
                       <option value="currently-airing">Currently Airing</option>
                       <option value="finished-airing">Finished Airing</option>
                       <option value="not-yet-aired">Not Yet Aired</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">Type</label>
-                    <select
-                      value={editFormData.type || ''}
-                      onChange={(e) => setEditFormData({ ...editFormData, type: e.target.value })}
-                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
-                    >
-                      <option value="TV">TV</option>
-                      <option value="Movie">Movie</option>
-                      <option value="OVA">OVA</option>
-                      <option value="ONA">ONA</option>
-                      <option value="Special">Special</option>
-                    </select>
-                  </div>
+                  </select>
                 </div>
-
-                {/* Rating */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Rating</label>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Type</label>
+                  <select
+                    value={editFormData.type || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, type: e.target.value })}
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
+                  >
+                    <option value="TV">TV</option>
+                    <option value="Movie">Movie</option>
+                    <option value="OVA">OVA</option>
+                    <option value="ONA">ONA</option>
+                      <option value="Special">Special</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Rating */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Rating</label>
                   <input
                     type="number"
                     min="0"
                     max="10"
                     step="0.01"
-                    value={editFormData.rating || ''}
-                    onChange={(e) => setEditFormData({ ...editFormData, rating: e.target.value })}
-                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
+                  value={editFormData.rating || ''}
+                  onChange={(e) => setEditFormData({ ...editFormData, rating: e.target.value })}
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-500/50"
                   />
-                </div>
+              </div>
 
                 <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
                   <Button
                     variant="ghost"
-                    onClick={() => setShowEditModal(false)}
+                  onClick={() => setShowEditModal(false)}
                     className="border border-white/10 text-gray-400 hover:text-white"
-                    disabled={isSaving}
-                  >
-                    Cancel
+                  disabled={isSaving}
+                >
+                  Cancel
                   </Button>
                   <Button
-                    onClick={handleSaveEdit}
-                    disabled={isSaving}
+                  onClick={handleSaveEdit}
+                  disabled={isSaving}
                     className="bg-primary-500/20 border border-primary-500/30 text-primary-300 hover:bg-primary-500/30"
-                  >
-                    {isSaving ? (
+                >
+                  {isSaving ? (
                       <span className="flex items-center gap-2">
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                        Saving...
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                      Saving...
                       </span>
-                    ) : (
-                      'Save Changes'
-                    )}
+                  ) : (
+                    'Save Changes'
+                  )}
                   </Button>
                 </div>
               </div>
@@ -1019,8 +1019,8 @@ export function AnimeTab() {
                             title="Delete"
                           >
                             <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
+                </button>
+              </div>
                       </td>
                     </tr>
                   ))}
@@ -1054,7 +1054,7 @@ export function AnimeTab() {
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
-            </div>
+        </div>
           </div>
         </>
       )}

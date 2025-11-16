@@ -237,71 +237,71 @@ export function DashboardTab() {
               <LayoutDashboard className="h-4 w-4" />
               Overview
             </div>
-            <div>
+        <div>
               <h2 className="text-3xl font-semibold text-white">Admin Overview</h2>
               <p className="text-sm text-gray-400">Real-time platform health and growth indicators.</p>
-            </div>
+        </div>
           </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <div className="text-left sm:text-right text-xs sm:text-sm">
               <p className="text-gray-400">Last refreshed</p>
               <p className="text-white font-medium tracking-wide">
                 {lastRefresh.toLocaleTimeString()}
               </p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={loadStats}
-                variant="outline"
-                size="sm"
+          </div>
+          <div className="flex gap-2">
+            <Button
+              onClick={loadStats}
+              variant="outline"
+              size="sm"
                 className="min-h-[42px] border-white/20 text-white hover:bg-white/10"
-                disabled={loading}
-              >
+              disabled={loading}
+            >
                 <RefreshCw className={cn('h-4 w-4 sm:mr-2', loading && 'animate-spin')} />
-                <span className="hidden sm:inline">Refresh</span>
-              </Button>
-              <Button
-                onClick={() => setAutoRefresh(!autoRefresh)}
-                size="sm"
+              <span className="hidden sm:inline">Refresh</span>
+            </Button>
+            <Button
+              onClick={() => setAutoRefresh(!autoRefresh)}
+              size="sm"
                 className={cn(
                   'min-h-[42px] border-white/20 text-white hover:bg-white/10',
                   autoRefresh && 'bg-primary-500/20 border-primary-500/40 text-primary-100 hover:bg-primary-500/30'
                 )}
-              >
-                <Activity className="h-4 w-4 sm:mr-2" />
+            >
+              <Activity className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">{autoRefresh ? 'Auto Refresh: On' : 'Auto Refresh: Off'}</span>
                 <span className="sm:hidden">{autoRefresh ? 'On' : 'Off'}</span>
-              </Button>
-            </div>
+            </Button>
           </div>
         </div>
+      </div>
         <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-5">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-xl bg-primary-500/10 flex items-center justify-center border border-primary-500/20">
-                {getHealthIcon(systemHealth)}
+            {getHealthIcon(systemHealth)}
               </div>
-              <div>
+            <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-gray-500">System Health</p>
                 <p className="text-lg font-semibold text-white">Overall platform status</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className={cn('text-2xl font-semibold capitalize', getHealthColor(systemHealth))}>
-                {systemHealth}
-              </span>
-              <p className="text-xs text-gray-500">
-                {systemHealth === 'excellent'
-                  ? 'All systems operational'
-                  : systemHealth === 'good'
-                    ? 'Running smoothly'
-                    : systemHealth === 'fair'
-                      ? 'Needs attention'
-                      : 'Critical – immediate action required'}
-              </p>
             </div>
           </div>
+          <div className="text-right">
+              <span className={cn('text-2xl font-semibold capitalize', getHealthColor(systemHealth))}>
+              {systemHealth}
+              </span>
+              <p className="text-xs text-gray-500">
+              {systemHealth === 'excellent'
+                ? 'All systems operational'
+                : systemHealth === 'good'
+                  ? 'Running smoothly'
+                  : systemHealth === 'fair'
+                    ? 'Needs attention'
+                      : 'Critical – immediate action required'}
+            </p>
+          </div>
         </div>
+      </div>
       </header>
 
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -355,9 +355,9 @@ export function DashboardTab() {
               <div key={item.label} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-4 py-3">
                 <span className="text-sm text-gray-400">{item.label}</span>
                 <span className={cn('text-lg font-semibold', item.color)}>{item.value.toLocaleString()}</span>
-              </div>
+            </div>
             ))}
-          </div>
+            </div>
         </article>
 
         <article className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
@@ -421,8 +421,8 @@ export function DashboardTab() {
             <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-3">
               <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center', autoRefresh ? 'bg-green-500/10' : 'bg-gray-500/10')}>
                 <Clock className={cn('h-5 w-5', autoRefresh ? 'text-green-400' : 'text-gray-400')} />
-              </div>
-              <div>
+            </div>
+            <div>
                 <p className="text-xs text-gray-400">Auto-Refresh</p>
                 <p className="text-sm font-semibold text-white">{autoRefresh ? 'Enabled (30s)' : 'Disabled'}</p>
               </div>
@@ -430,8 +430,8 @@ export function DashboardTab() {
             <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-3">
               <div className="h-10 w-10 rounded-lg bg-primary-500/10 flex items-center justify-center">
                 <Database className="h-5 w-5 text-primary-300" />
-              </div>
-              <div>
+            </div>
+            <div>
                 <p className="text-xs text-gray-400">Database</p>
                 <p className="text-sm font-semibold text-white">Connected</p>
               </div>
@@ -439,8 +439,8 @@ export function DashboardTab() {
             <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-3">
               <div className="h-10 w-10 rounded-lg bg-success-500/10 flex items-center justify-center">
                 <CheckCircle className="h-5 w-5 text-success-300" />
-              </div>
-              <div>
+            </div>
+            <div>
                 <p className="text-xs text-gray-400">API Status</p>
                 <p className="text-sm font-semibold text-white">Online</p>
               </div>
@@ -472,7 +472,7 @@ export function DashboardTab() {
                 </button>
               )
             })}
-          </div>
+        </div>
         </article>
       </section>
     </div>
