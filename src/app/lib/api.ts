@@ -360,13 +360,13 @@ async function trpcQuery<TOutput>(
     const res = await fetchWithRetry(
       url,
       {
-        method: 'GET',
-        headers: {
-          ...authHeaders,
-          ...(init?.headers || {}),
-        },
-        credentials: 'include',
-        ...init,
+      method: 'GET',
+      headers: {
+        ...authHeaders,
+        ...(init?.headers || {}),
+      },
+      credentials: 'include',
+      ...init,
       },
       retryConfig
     )
@@ -534,7 +534,7 @@ async function trpcQuery<TOutput>(
         logger.info('Optional endpoint returned tRPC error; returning null result', { path, code })
         return null as TOutput
       }
-
+      
       throw new Error(getUserFriendlyError(code, err.message))
     }
 
@@ -675,17 +675,17 @@ async function trpcMutation<TInput, TOutput>(
         // that will persist until the backend is fixed, so logging them would spam error tracking
       } else if (!shouldSkipSentryLogging) {
       // Always log locally for debugging
-        logger.error('tRPC mutation error', {
-          path,
-          status: res.status,
-          code,
-          message,
-          payload: JSON.stringify(payload),
-        })
-        captureException(new Error(`tRPC mutation failed: ${code}`), {
-          context: { path, code, message, status: res.status },
-          tags: { operation: 'trpc_mutation' },
-        })
+      logger.error('tRPC mutation error', {
+        path,
+        status: res.status,
+        code,
+        message,
+        payload: JSON.stringify(payload),
+      })
+      captureException(new Error(`tRPC mutation failed: ${code}`), {
+        context: { path, code, message, status: res.status },
+        tags: { operation: 'trpc_mutation' },
+      })
       } else {
         // Log at debug level for optional mutations with expected errors
         logger.debug('tRPC mutation expected error (skipped Sentry)', {
@@ -770,16 +770,16 @@ async function trpcMutation<TInput, TOutput>(
         // that will persist until the backend is fixed, so logging them would spam error tracking
       } else if (!shouldSkipSentryLogging) {
       // Always log locally for debugging
-        logger.error('tRPC mutation error in response', {
-          path,
-          code,
-          message: err.message,
-          data: err.data,
-        })
-        captureException(new Error(`tRPC mutation failed: ${code}`), {
-          context: { path, code, message: err.message },
-          tags: { operation: 'trpc_mutation' },
-        })
+      logger.error('tRPC mutation error in response', {
+        path,
+        code,
+        message: err.message,
+        data: err.data,
+      })
+      captureException(new Error(`tRPC mutation failed: ${code}`), {
+        context: { path, code, message: err.message },
+        tags: { operation: 'trpc_mutation' },
+      })
       } else {
         // Log at debug level for optional mutations with expected errors
         logger.debug('tRPC mutation expected error in response (skipped Sentry)', {
@@ -838,15 +838,15 @@ async function trpcMutation<TInput, TOutput>(
 
     // Only log to Sentry if it's not a network error on an optional mutation
     if (!(isOptionalMutation && isNetworkError)) {
-      logger.error('tRPC mutation failed', {
-        path,
-        trpcUrl: TRPC_URL,
-        error: error instanceof Error ? error.message : String(error),
-      })
-      captureException(error, {
-        context: { path, input },
-        tags: { operation: 'trpc_mutation' },
-      })
+    logger.error('tRPC mutation failed', {
+      path,
+      trpcUrl: TRPC_URL,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    captureException(error, {
+      context: { path, input },
+      tags: { operation: 'trpc_mutation' },
+    })
     } else {
       // Log network errors on optional mutations at debug level
       logger.debug('tRPC mutation network error on optional endpoint (skipped Sentry)', {
@@ -2483,6 +2483,90 @@ export async function apiUpdateEnhancedPrivacySettings(settings: {
 
 export async function apiApplyPrivacyPreset(preset: 'public' | 'friends_only' | 'private') {
   return trpcMutation('privacy.applyPreset', { preset })
+}
+
+// -------------------------------
+// App Status Badge (Frontend UI)
+// -------------------------------
+// Fetches status badge configuration from the backend via tRPC proxy.
+// Expected tRPC procedure on backend (example): appStatus.getBadge
+// Return shape example:
+// {
+//   status: 'beta',
+//   tooltip?: 'Public beta',
+//   variant?: 'glass' | 'solid' | 'outline',
+//   pulse?: boolean,
+//   link?: string,
+//   enabled?: boolean
+// }
+export interface AppStatusBadgeConfig {
+  status: string
+  tooltip?: string
+  variant?: 'glass' | 'solid' | 'outline'
+  pulse?: boolean
+  link?: string
+  enabled?: boolean
+}
+
+export async function apiGetAppStatus(): Promise<AppStatusBadgeConfig | null> {
+  try {
+    // Silent optional fetch (no console errors on 404/missing procedures)
+    async function trpcQueryOptional(path: string): Promise<any | null> {
+      try {
+        const url = `${TRPC_URL}/${path}`
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          credentials: 'include',
+        })
+        if (!res.ok) return null
+        const json: TRPCResponse<any> = await res.json().catch(() => ({}) as any)
+        if (!json || typeof json !== 'object' || 'error' in json) return null
+        return (json as any).result?.data ?? null
+      } catch {
+        return null
+      }
+    }
+
+    // Prefer admin endpoint; fallback to public appStatus.getBadge; then to local storage
+    const result =
+      (await trpcQueryOptional('admin.getAppStatus')) ??
+      (await trpcQueryOptional('appStatus.getBadge'))
+    if (!result || typeof result !== 'object') {
+      // Fallback: use client-side persisted value if API not available
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem('ui:appStatusBadge')
+          if (raw) {
+            const parsed = JSON.parse(raw)
+            if (parsed && typeof parsed === 'object') {
+              return parsed as AppStatusBadgeConfig
+            }
+          }
+        } catch {
+          // ignore parse errors
+        }
+      }
+      return null
+    }
+    return result as AppStatusBadgeConfig
+  } catch {
+    // As a last resort, check local fallback
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('ui:appStatusBadge')
+        if (raw) {
+          const parsed = JSON.parse(raw)
+          if (parsed && typeof parsed === 'object') {
+            return parsed as AppStatusBadgeConfig
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return null
+  }
 }
 
 export async function apiCanViewContent(

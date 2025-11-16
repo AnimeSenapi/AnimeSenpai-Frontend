@@ -101,7 +101,7 @@ export function FriendTagger({ onTagsChange, initialTags: _initialTags = [] }: F
   }
 
   const filteredFriends = friends.filter((friend) =>
-    !taggedFriends.some((f) => f.id === friend.id) &&
+      !taggedFriends.some((f) => f.id === friend.id) &&
     friend.username.toLowerCase().includes(searchQuery.toLowerCase())
   )
 

@@ -29,78 +29,78 @@ export function AuthDrawer({ isOpen, onClose }: AuthDrawerProps) {
     const displayInitial = displayIdentifier.trim().charAt(0).toUpperCase()
 
     return (
-      <div className="p-4">
-        {/* Mobile User Menu */}
-        {isAuthenticated && user && (
-          <div>
-            <div className="px-4 py-2 text-xs text-gray-400 font-medium uppercase tracking-wider">
-              Account
-            </div>
-            <div className="px-4 py-2">
-              <div className="flex items-center gap-3 mb-4">
-                {user.avatar ? (
-                  <img
-                    src={user.avatar}
+    <div className="p-4">
+      {/* Mobile User Menu */}
+      {isAuthenticated && user && (
+        <div>
+          <div className="px-4 py-2 text-xs text-gray-400 font-medium uppercase tracking-wider">
+            Account
+          </div>
+          <div className="px-4 py-2">
+            <div className="flex items-center gap-3 mb-4">
+              {user.avatar ? (
+                <img
+                  src={user.avatar}
                     alt={displayIdentifier}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-white/20"
-                  />
-                ) : (
-                  <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-lg">
+                  className="w-12 h-12 rounded-full object-cover border-2 border-white/20"
+                />
+              ) : (
+                <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">
                       {displayInitial}
-                    </span>
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-base font-medium text-white truncate">
-                    {displayIdentifier}
-                  </p>
-                  <p className="text-sm text-gray-400 truncate">{user.email}</p>
+                  </span>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Link
-                  href="/user/profile"
-                  onClick={onClose}
-                  className="flex items-center gap-4 px-4 py-4 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 active:bg-white/15 transition-all duration-200 text-base font-medium touch-manipulation min-h-[48px]"
-                >
-                  <User className="h-5 w-5" />
-                  <span>Profile</span>
-                </Link>
-                <Link
-                  href="/user/settings"
-                  onClick={onClose}
-                  className="flex items-center gap-4 px-4 py-4 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 active:bg-white/15 transition-all duration-200 text-base font-medium touch-manipulation min-h-[48px]"
-                >
-                  <Settings className="h-5 w-5" />
-                  <span>Settings</span>
-                </Link>
-                {(user.role === 'admin' || user.role === 'owner') && (
-                  <Link
-                    href="/admin"
-                    onClick={onClose}
-                    className="flex items-center gap-4 px-4 py-4 rounded-lg text-yellow-300 hover:text-white hover:bg-yellow-500/10 active:bg-yellow-500/15 transition-all duration-200 text-base font-medium touch-manipulation min-h-[48px]"
-                  >
-                    <Shield className="h-5 w-5" />
-                    <span>Admin Panel</span>
-                  </Link>
-                )}
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-base font-medium text-white truncate">
+                    {displayIdentifier}
+                </p>
+                <p className="text-sm text-gray-400 truncate">{user.email}</p>
               </div>
             </div>
-            <div className="px-4 py-2 border-t border-white/10">
-              <NotificationsDropdown />
+            <div className="space-y-2">
+              <Link
+                href="/user/profile"
+                onClick={onClose}
+                className="flex items-center gap-4 px-4 py-4 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 active:bg-white/15 transition-all duration-200 text-base font-medium touch-manipulation min-h-[48px]"
+              >
+                <User className="h-5 w-5" />
+                <span>Profile</span>
+              </Link>
+              <Link
+                href="/user/settings"
+                onClick={onClose}
+                className="flex items-center gap-4 px-4 py-4 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 active:bg-white/15 transition-all duration-200 text-base font-medium touch-manipulation min-h-[48px]"
+              >
+                <Settings className="h-5 w-5" />
+                <span>Settings</span>
+              </Link>
+              {(user.role === 'admin' || user.role === 'owner') && (
+                <Link
+                  href="/admin"
+                  onClick={onClose}
+                  className="flex items-center gap-4 px-4 py-4 rounded-lg text-yellow-300 hover:text-white hover:bg-yellow-500/10 active:bg-yellow-500/15 transition-all duration-200 text-base font-medium touch-manipulation min-h-[48px]"
+                >
+                  <Shield className="h-5 w-5" />
+                  <span>Admin Panel</span>
+                </Link>
+              )}
             </div>
           </div>
-        )}
+          <div className="px-4 py-2 border-t border-white/10">
+            <NotificationsDropdown />
+          </div>
+        </div>
+      )}
 
-        {/* Mobile Auth Buttons */}
-        {!isAuthenticated && (
-          <div>
-            <GuestAuth onClose={onClose} />
-          </div>
-        )}
-      </div>
-    )
+      {/* Mobile Auth Buttons */}
+      {!isAuthenticated && (
+        <div>
+          <GuestAuth onClose={onClose} />
+        </div>
+      )}
+    </div>
+  )
   }
 
   return (

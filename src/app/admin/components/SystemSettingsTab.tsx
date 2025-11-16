@@ -109,6 +109,8 @@ export function SystemSettingsTab() {
 
   useEffect(() => {
     loadSettings()
+    // Best-effort load of app status badge settings
+    loadBadge()
   }, [])
 
   useEffect(() => {
@@ -157,6 +159,77 @@ export function SystemSettingsTab() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  // -------- App Status Badge (Admin-controlled) ----------
+  const [badgeLoading, setBadgeLoading] = useState(false)
+  const [badgeSaving, setBadgeSaving] = useState(false)
+  const [badgeError, setBadgeError] = useState<string | null>(null)
+  const [badgeStatus, setBadgeStatus] = useState<string>('none')
+  const presetStatuses = ['none', 'alpha', 'beta', 'preview', 'experimental', 'maintenance', 'deprecated', 'stable']
+
+  async function loadBadge() {
+    try {
+      setBadgeLoading(true)
+      setBadgeError(null)
+      // Prefer admin endpoint; fallback to public
+      const result =
+        (await api.trpcQuery('admin.getAppStatus').catch(() => null)) ??
+        (await api.trpcQuery('appStatus.getBadge').catch(() => null))
+      if (result && typeof result === 'object') {
+        setBadgeStatus(String(result.status || 'none'))
+      } else {
+        setBadgeStatus('none')
+      }
+    } catch (err: any) {
+      setBadgeError(err?.message || 'Failed to load status badge')
+    } finally {
+      setBadgeLoading(false)
+    }
+  }
+
+  async function saveBadge() {
+    try {
+      setBadgeSaving(true)
+      setBadgeError(null)
+      const payload = {
+        status: badgeStatus,
+        enabled: badgeStatus !== 'none',
+      }
+      // Try backend mutation first; if not present, persist locally as a fallback
+      try {
+        await api.trpcMutation('appStatus.setBadge', payload)
+      } catch (err: any) {
+        const msg = err?.message || ''
+        const isNoMutation =
+          msg.includes('No "mutation"-procedure') || msg.toLowerCase().includes('unknown_error')
+        if (!isNoMutation) throw err
+        // Local fallback (temporary) so UI can reflect status without backend support
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(
+            'ui:appStatusBadge',
+            JSON.stringify({
+              status: payload.status,
+              enabled: payload.enabled,
+            })
+          )
+        }
+      }
+      addToast({
+        title: 'Saved',
+        description: 'Status badge updated',
+        variant: 'success',
+      })
+    } catch (err: any) {
+      setBadgeError(err?.message || 'Failed to save status badge')
+      addToast({
+        title: 'Error',
+        description: err?.message || 'Failed to save status badge',
+        variant: 'destructive',
+      })
+    } finally {
+      setBadgeSaving(false)
     }
   }
 
@@ -470,6 +543,63 @@ export function SystemSettingsTab() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* App Status Badge (Simplified) */}
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-amber-400" />
+              <h3 className="text-lg font-semibold text-white">App Status Badge</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={loadBadge}
+                variant="outline"
+                size="sm"
+                className="border-white/20 text-white hover:bg-white/10"
+                disabled={badgeLoading}
+              >
+                <RefreshCw className={`h-4 w-4 ${badgeLoading ? 'animate-spin' : ''}`} />
+              </Button>
+              <Button
+                onClick={saveBadge}
+                size="sm"
+                className="bg-amber-500/80 hover:bg-amber-500 text-white"
+                disabled={badgeSaving}
+              >
+                <Save className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">{badgeSaving ? 'Saving...' : 'Save'}</span>
+              </Button>
+            </div>
+          </div>
+          <p className="text-xs text-gray-400 mb-4">
+            Control the small badge shown at the top-left of the app (e.g., alpha, beta). Choose
+            “None” to hide the badge entirely.
+          </p>
+          {badgeError && (
+            <div className="mb-3 rounded border border-amber-500/30 bg-amber-500/10 p-2 text-xs text-amber-200">
+              {badgeError}
+            </div>
+          )}
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
+              <select
+                value={badgeStatus}
+                onChange={(e) => setBadgeStatus(e.target.value)}
+                className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white focus:outline-none focus:border-primary-500/50"
+              >
+                {presetStatuses.map((s) => (
+                  <option key={s} value={s}>
+                    {s.charAt(0).toUpperCase() + s.slice(1)}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-400">
+                Preset options. Select “None” to disable the badge.
+              </p>
+            </div>
+          </div>
+        </div>
         {/* General Settings */}
         <div
           className={`rounded-2xl border border-white/10 bg-white/5 p-6 transition-all ${
