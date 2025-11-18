@@ -16,7 +16,7 @@ import Link from 'next/link'
 import { cn } from '../../app/lib/utils'
 import { useToast } from '../ui/toast'
 import { apiAddToList } from '../../app/lib/api'
-import type { ListStatus } from '../../../types/anime'
+import type { ListStatus } from '../../types/anime'
 
 interface Episode {
   id: string
@@ -122,7 +122,7 @@ export function EpisodeCard({
       addToast({
         title: 'Failed to mark as watched',
         description: err instanceof Error ? err.message : 'Please try again',
-        variant: 'error',
+        variant: 'destructive',
       })
     } finally {
       setIsMarkingWatched(false)
@@ -146,7 +146,7 @@ export function EpisodeCard({
       addToast({
         title: 'Failed to add to list',
         description: err instanceof Error ? err.message : 'Please try again',
-        variant: 'error',
+        variant: 'destructive',
       })
     } finally {
       setShowActions(false)

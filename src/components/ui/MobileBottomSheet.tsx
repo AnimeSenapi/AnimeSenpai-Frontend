@@ -60,14 +60,14 @@ export function MobileBottomSheet({
   }, [isOpen])
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (!enableSwipeToDismiss) return
+    if (!enableSwipeToDismiss || !e.touches[0]) return
     startY.current = e.touches[0].clientY
     currentY.current = startY.current
     setIsDragging(true)
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || !enableSwipeToDismiss) return
+    if (!isDragging || !enableSwipeToDismiss || !e.touches[0]) return
 
     currentY.current = e.touches[0].clientY
     const deltaY = currentY.current - startY.current

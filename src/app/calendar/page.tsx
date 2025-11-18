@@ -217,7 +217,7 @@ export default function CalendarPage() {
       addToast({
         title: 'Refresh failed',
         description: err instanceof Error ? err.message : 'Failed to refresh calendar data',
-        variant: 'error',
+        variant: 'destructive',
       })
     } finally {
       setIsRefreshing(false)

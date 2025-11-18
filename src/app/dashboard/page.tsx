@@ -150,7 +150,6 @@ export default function DashboardPage() {
       setHiddenGemsRecs([])
       setDiscoveryRecs([])
       setContinueWatching([])
-      setNewReleases([])
       setTrendingAnime([])
       setTopRatedSeries([])
       setRecentlyAddedSeries([])

@@ -30,6 +30,7 @@ import {
 import { Play, Bookmark, Heart, Star, Check, Plus, X, Loader2, Tv2, Sparkles, ChevronDown, ChevronUp } from 'lucide-react'
 import { TRPC_URL as API_URL } from '../../lib/api'
 import { useIsMobile } from '../../../hooks/use-touch-gestures'
+import { cn } from '../../../lib/utils'
 
 interface AnimeDetail extends Anime {
   titleEnglish?: string
@@ -71,6 +72,7 @@ export default function AnimePage() {
   const { isAuthenticated, user } = useAuth()
   const { addToast } = useToast()
   const slug = params?.slug as string
+  const isMobile = useIsMobile()
 
   const [anime, setAnime] = useState<AnimeDetail | null>(null)
   const [relatedSeasons, setRelatedSeasons] = useState<Anime[]>([])
@@ -95,6 +97,11 @@ export default function AnimePage() {
   const [userReview, setUserReview] = useState('')
   const [hoverRating, setHoverRating] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // Collapsed sections state for mobile
+  const [collapsedSections, setCollapsedSections] = useState({
+    about: false,
+  })
 
   const getAuthHeaders = (): Record<string, string> => {
     const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')

@@ -5,6 +5,7 @@
 
 import { useEffect, useRef, useCallback } from 'react'
 import { useIntersectionObserver, useIdleCallback } from '../hooks/use-performance'
+import { TRPC_URL } from '../app/lib/api'
 
 interface PrefetchOptions {
   /**
@@ -181,7 +182,6 @@ export function usePrefetchNextPage(
  * Prefetch anime details on card hover
  */
 export function usePrefetchAnime(slug: string) {
-  const { TRPC_URL } = await import('@/app/lib/api')
   const url = `${TRPC_URL}/anime.getBySlug?input=${encodeURIComponent(JSON.stringify({ slug }))}`
 
   return usePrefetch(url, {
@@ -196,7 +196,6 @@ export function usePrefetchAnime(slug: string) {
  * Prefetch user profile on hover
  */
 export function usePrefetchUser(username: string) {
-  const { TRPC_URL } = await import('@/app/lib/api')
   const url = `${TRPC_URL}/user.getProfile?input=${encodeURIComponent(JSON.stringify({ username }))}`
 
   return usePrefetch(url, {

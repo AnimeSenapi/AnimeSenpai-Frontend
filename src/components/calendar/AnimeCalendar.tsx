@@ -386,7 +386,9 @@ export function AnimeCalendar({
   }
 
   const weekDates = getWeekDates()
-  const isCurrentWeek = weekDates[0].getTime() <= new Date().getTime() && weekDates[6].getTime() >= new Date().getTime()
+  const firstDate = weekDates[0]
+  const lastDate = weekDates[6]
+  const isCurrentWeek = firstDate && lastDate && firstDate.getTime() <= new Date().getTime() && lastDate.getTime() >= new Date().getTime()
   const isToday = weekDates.some(date => date.toDateString() === new Date().toDateString())
 
   // Smooth scroll to today on mount if viewing current week
@@ -474,7 +476,7 @@ export function AnimeCalendar({
         <span>Calendar</span>
         <span>/</span>
         <span className="text-white">
-          {weekDates[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {weekDates[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          {firstDate?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {lastDate?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
         </span>
       </div>
 
