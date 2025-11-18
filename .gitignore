@@ -53,3 +53,18 @@ next-env.d.ts
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Duplicate files (files with " 2" suffix - often created by editors)
+* 2.*
+* 2.ts
+* 2.tsx
+* 2.js
+* 2.jsx
+* 2.json
+* 2.md
+* 2.mjs
+* 2.cjs
+* 2.sql
+
+# Lighthouse CI reports
+.lighthouseci/
