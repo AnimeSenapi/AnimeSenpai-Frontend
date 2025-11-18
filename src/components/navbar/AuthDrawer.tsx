@@ -149,7 +149,7 @@ export function AuthDrawer({ isOpen, onClose }: AuthDrawerProps) {
                 Sign in to access your personalized anime list and more
               </p>
             </div>
-            <GuestAuth onClose={onClose} />
+            <GuestAuth onClose={onClose} variant="mobile" />
           </div>
         )}
       </div>
