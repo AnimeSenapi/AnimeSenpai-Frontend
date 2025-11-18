@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '../ui/button'
-import { MobileDrawer } from '../ui/mobile-modal'
 import {
   User,
   Settings,
@@ -19,7 +18,6 @@ import {
 } from 'lucide-react'
 import { getRoleConfig, getRoleIcon, getRoleBadgeClasses } from '../../lib/role-config'
 import { useAuth } from '../../app/lib/auth-context'
-import { useIsMobile } from '../../hooks/use-touch-gestures'
 
 interface StandaloneDropdownProps {
   user: {
@@ -40,7 +38,6 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
   const buttonRef = useRef<HTMLButtonElement>(null)
   const { signout } = useAuth()
   const router = useRouter()
-  const isMobile = useIsMobile()
   const displayName = user.username || user.email || 'User'
   const displayInitial = (displayName || 'U').trim().charAt(0).toUpperCase()
 
@@ -100,7 +97,7 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
 
   if (!mounted) return null
 
-  // Mobile drawer content
+  // Desktop dropdown content
   const UserMenuContent = () => (
     <div className="p-3">
       <div className="flex items-center gap-2 mb-3 pb-3 border-b border-white/10">
@@ -265,19 +262,8 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
         )}
       </Button>
 
-      {/* Mobile Drawer */}
-      {isMobile && (
-        <MobileDrawer
-          isOpen={isOpen}
-          onClose={() => setIsOpen(false)}
-          title="User Menu"
-        >
-          <UserMenuContent />
-        </MobileDrawer>
-      )}
-
       {/* Desktop dropdown content */}
-      {!isMobile && isOpen && isPositioned &&
+      {isOpen && isPositioned &&
         createPortal(
           <div className="fixed inset-0 z-[9998]" onClick={() => setIsOpen(false)}>
             <div
