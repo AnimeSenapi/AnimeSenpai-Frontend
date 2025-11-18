@@ -66,6 +66,7 @@ async function handler(req: Request) {
     })
 
     // Read response body once (can only be read once)
+    // Note: If backend response is compressed, .text() will automatically decompress it
     const responseBody = await response.text()
     
     // For debugging signin errors
@@ -79,12 +80,30 @@ async function handler(req: Request) {
       })
     }
     
+    // Copy headers but exclude compression-related headers
+    // The backend may send compressed responses, but we've decompressed them with .text()
+    // Vercel will handle compression automatically for the Next.js route response
+    const headersToExclude = new Set([
+      'content-encoding',
+      'content-length',
+      'transfer-encoding',
+      'connection',
+      'keep-alive'
+    ])
+    
+    const responseHeaders: Record<string, string> = {}
+    for (const [key, value] of response.headers.entries()) {
+      if (!headersToExclude.has(key.toLowerCase())) {
+        responseHeaders[key] = value
+      }
+    }
+    
     // Return the response with CORS headers
     return new Response(responseBody, {
       status: response.status,
       statusText: response.statusText,
       headers: {
-        ...Object.fromEntries(response.headers.entries()),
+        ...responseHeaders,
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
