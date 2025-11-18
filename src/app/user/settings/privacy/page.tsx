@@ -65,8 +65,7 @@ export default function PrivacySettingsPage() {
     try {
       setLoading(true)
 
-      const API_URL =
-        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+      const { TRPC_URL: API_URL } = await import('@/app/lib/api')
       const url = `${API_URL}/privacy.getSettings`
 
       const response = await fetch(url, {
@@ -102,8 +101,7 @@ export default function PrivacySettingsPage() {
     try {
       setSaving(true)
 
-      const API_URL =
-        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+      const { TRPC_URL: API_URL } = await import('@/app/lib/api')
       const url = `${API_URL}/privacy.updateSettings`
 
       const response = await fetch(url, {
@@ -145,8 +143,7 @@ export default function PrivacySettingsPage() {
     try {
       setSaving(true)
 
-      const API_URL =
-        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+      const { TRPC_URL: API_URL } = await import('@/app/lib/api')
       const url = `${API_URL}/privacy.applyPreset`
 
       const response = await fetch(url, {

@@ -15,6 +15,7 @@ import {
   Share2,
 } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
+import { TRPC_URL as API_URL } from '@/app/lib/api'
 
 interface Review {
   id: string
@@ -74,7 +75,7 @@ export function ReviewList({ animeId: _animeId, reviews, onReviewUpdate }: Revie
       })
 
       // API call
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews.${isLiked ? 'unlike' : 'like'}`, {
+      await fetch(`${API_URL}/reviewInteractions.${isLiked ? 'unlikeReview' : 'likeReview'}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -107,7 +108,7 @@ export function ReviewList({ animeId: _animeId, reviews, onReviewUpdate }: Revie
     if (!confirm('Are you sure you want to delete this review?')) return
 
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews.delete`, {
+      await fetch(`${API_URL}/user.deleteReview`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

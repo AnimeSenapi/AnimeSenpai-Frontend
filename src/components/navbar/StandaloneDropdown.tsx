@@ -5,10 +5,6 @@ import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '../ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu'
 import { MobileDrawer } from '../ui/mobile-modal'
 import {
   User,
@@ -18,10 +14,12 @@ import {
   Activity,
   MessageCircle,
   Trophy,
+  Calendar,
+  Users,
 } from 'lucide-react'
 import { getRoleConfig, getRoleIcon, getRoleBadgeClasses } from '../../lib/role-config'
 import { useAuth } from '../../app/lib/auth-context'
-import { useIsMobile } from '../../lib/use-mobile'
+import { useIsMobile } from '../../hooks/use-touch-gestures'
 
 interface StandaloneDropdownProps {
   user: {
@@ -181,6 +179,26 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
           <Trophy className="mr-3 h-4 w-4" />
           <span className="text-sm">Achievements</span>
         </button>
+        <button
+          className="w-full text-left text-gray-300 hover:text-white hover:bg-white/10 rounded-md px-3 py-2 transition-all duration-150 flex items-center touch-manipulation min-h-[40px]"
+          onClick={() => {
+            setIsOpen(false)
+            router.push('/social/friends')
+          }}
+        >
+          <Users className="mr-3 h-4 w-4" />
+          <span className="text-sm">Friends</span>
+        </button>
+        <button
+          className="w-full text-left text-gray-300 hover:text-white hover:bg-white/10 rounded-md px-3 py-2 transition-all duration-150 flex items-center touch-manipulation min-h-[40px]"
+          onClick={() => {
+            setIsOpen(false)
+            router.push('/calendar')
+          }}
+        >
+          <Calendar className="mr-3 h-4 w-4" />
+          <span className="text-sm">Calendar</span>
+        </button>
         {(user.role === 'admin' || user.role === 'owner') && (
           <>
             <div className="border-t border-white/10 my-2"></div>
@@ -248,7 +266,7 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
       </Button>
 
       {/* Mobile Drawer */}
-      {isMobile ? (
+      {isMobile && (
         <MobileDrawer
           isOpen={isOpen}
           onClose={() => setIsOpen(false)}
@@ -256,13 +274,6 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
         >
           <UserMenuContent />
         </MobileDrawer>
-      ) : (
-        /* Desktop Dropdown */
-        <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-          <DropdownMenuTrigger asChild>
-            <div></div>
-          </DropdownMenuTrigger>
-        </DropdownMenu>
       )}
 
       {/* Desktop dropdown content */}

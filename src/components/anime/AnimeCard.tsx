@@ -143,7 +143,7 @@ export const AnimeCard = memo(function AnimeCard({
             <div className="absolute top-2 right-2 z-10">
               <Button
                 size="sm"
-                className="border-0 h-10 w-10 sm:h-8 sm:w-8 p-0 transition-all bg-black/50 hover:bg-black/70 active:bg-black/80 touch-manipulation"
+                className="border-0 h-11 w-11 sm:h-10 sm:w-10 md:h-8 md:w-8 p-0 transition-all bg-black/50 hover:bg-black/70 active:bg-black/80 active:scale-95 touch-manipulation min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0"
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
@@ -153,7 +153,7 @@ export const AnimeCard = memo(function AnimeCard({
               >
                 <Star
                   className={cn(
-                    'h-4 w-4 sm:h-3.5 sm:w-3.5 transition-all',
+                    'h-5 w-5 sm:h-4 sm:w-4 md:h-3.5 md:w-3.5 transition-all',
                     isFavorited
                       ? 'fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]'
                       : 'text-white'
@@ -168,18 +168,18 @@ export const AnimeCard = memo(function AnimeCard({
         </div>
 
         {/* Content overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 z-[2]">
-          <h3 className="font-semibold text-white text-sm mb-2 truncate drop-shadow-lg">{title}</h3>
+        <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-3 md:p-2.5 z-[2]">
+          <h3 className="font-semibold text-white text-base sm:text-sm mb-2 sm:mb-1.5 truncate drop-shadow-lg leading-tight">{title}</h3>
 
           {/* Subtle Genre Display - Clickable */}
-          <div className="flex flex-wrap gap-1 mb-2 min-h-[16px]">
+          <div className="flex flex-wrap gap-1.5 sm:gap-1 mb-2 sm:mb-1.5 min-h-[20px] sm:min-h-[16px]">
             {genreTags.slice(0, 2).map((item: any, index: number) => {
               // Handle both genre objects and tag strings
               const genreName = typeof item === 'object' ? item.name : getTagById(item)?.name
               return genreName ? (
-                <span
+                <button
                   key={index}
-                  className="text-xs text-gray-400 hover:text-primary-400 transition-colors hover:underline cursor-pointer"
+                  className="text-xs sm:text-[10px] text-gray-400 hover:text-primary-400 transition-colors hover:underline cursor-pointer touch-manipulation py-0.5 px-1 -mx-1 rounded active:bg-white/10"
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
@@ -187,22 +187,22 @@ export const AnimeCard = memo(function AnimeCard({
                   }}
                 >
                   {genreName}
-                </span>
+                </button>
               ) : null
             })}
             {genreTags.length > 2 && (
-              <span className="text-xs text-gray-500">• {genreTags.length - 2} more</span>
+              <span className="text-xs sm:text-[10px] text-gray-500">• {genreTags.length - 2} more</span>
             )}
           </div>
 
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1">
-              <Star className="h-3 w-3 text-cyan-400 fill-current drop-shadow-md" />
-              <span className="text-xs text-white font-medium drop-shadow-md">
+          <div className="flex items-center justify-between mb-2 sm:mb-1.5">
+            <div className="flex items-center gap-1.5 sm:gap-1">
+              <Star className="h-4 w-4 sm:h-3 sm:w-3 text-cyan-400 fill-current drop-shadow-md" />
+              <span className="text-sm sm:text-xs text-white font-medium drop-shadow-md">
                 {rating || 'N/A'}
               </span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-300 drop-shadow-md">
+            <div className="flex items-center gap-2 text-sm sm:text-xs text-gray-300 drop-shadow-md">
               {(anime.totalEpisodes || episodes) && (
                 <span>{anime.totalEpisodes || episodes} eps</span>
               )}
@@ -212,8 +212,8 @@ export const AnimeCard = memo(function AnimeCard({
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-300 drop-shadow-md">{year || 'TBA'}</span>
-            <span className="text-xs text-gray-400 drop-shadow-md truncate max-w-20">
+            <span className="text-sm sm:text-xs text-gray-300 drop-shadow-md">{year || 'TBA'}</span>
+            <span className="text-sm sm:text-xs text-gray-400 drop-shadow-md truncate max-w-24 sm:max-w-20">
               {studio || ''}
             </span>
           </div>
@@ -359,37 +359,37 @@ export const AnimeCard = memo(function AnimeCard({
           })
 
     return (
-      <div className="flex items-center gap-2 p-1.5 rounded-md bg-white/5 hover:bg-white/10 transition-colors">
-        <div className="w-6 h-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded flex items-center justify-center overflow-hidden relative">
+      <div className="flex items-center gap-2 sm:gap-2 p-2 sm:p-1.5 rounded-md bg-white/5 hover:bg-white/10 transition-colors touch-manipulation min-h-[44px] sm:min-h-0">
+        <div className="w-8 h-10 sm:w-6 sm:h-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded flex items-center justify-center overflow-hidden relative flex-shrink-0">
           {anime.coverImage ? (
             <Image
               src={anime.coverImage}
               alt={title}
-              width={24}
-              height={32}
-              className="object-cover"
-              sizes="24px"
+              width={32}
+              height={40}
+              className="object-cover w-full h-full"
+              sizes="(max-width: 640px) 32px, 24px"
             />
           ) : (
-            <div className="text-xs text-gray-300 font-bold">{year || 'TBA'}</div>
+            <div className="text-xs sm:text-[10px] text-gray-300 font-bold">{year || 'TBA'}</div>
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h5 className="font-medium text-white text-xs truncate">{title}</h5>
-          <div className="flex items-center gap-1 min-h-[14px]">
+          <h5 className="font-medium text-white text-sm sm:text-xs truncate leading-tight">{title}</h5>
+          <div className="flex items-center gap-1 min-h-[16px] sm:min-h-[14px]">
             {genreTags.slice(0, 1).map((item: any, index: number) => {
               const genreName = typeof item === 'object' ? item.name : getTagById(item)?.name
               return genreName ? (
-                <span key={index} className="text-xs text-gray-400">
+                <span key={index} className="text-xs sm:text-[10px] text-gray-400">
                   {genreName}
                 </span>
               ) : null
             })}
           </div>
         </div>
-        <div className="flex items-center gap-1">
-          <Star className="h-2.5 w-2.5 text-cyan-400 fill-current" />
-          <span className="text-xs text-gray-300">{rating || 'N/A'}</span>
+        <div className="flex items-center gap-1.5 sm:gap-1 flex-shrink-0">
+          <Star className="h-3 w-3 sm:h-2.5 sm:w-2.5 text-cyan-400 fill-current" />
+          <span className="text-sm sm:text-xs text-gray-300">{rating || 'N/A'}</span>
         </div>
       </div>
     )

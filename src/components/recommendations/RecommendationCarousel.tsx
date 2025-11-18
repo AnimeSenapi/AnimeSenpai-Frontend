@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X, Trash2 } from 'lucide-react'
 import { Button } from '../ui/button'
 import { AnimeCard } from '../anime/AnimeCard'
+import { SwipeableCard } from '../gestures/SwipeableCard'
 import { useAuth } from '../../app/lib/auth-context'
 import { useFavorites } from '../../app/lib/favorites-context'
 import { useToast } from '../ui/toast'
+import { useIsMobile } from '../../hooks/use-touch-gestures'
 
 interface RecommendationAnime {
   id: string
@@ -51,6 +53,7 @@ export function RecommendationCarousel({
   const { isAuthenticated } = useAuth()
   const { isFavorited, toggleFavorite } = useFavorites()
   const { addToast } = useToast()
+  const isMobile = useIsMobile()
 
   if (recommendations.length === 0) {
     return null
@@ -206,57 +209,78 @@ export function RecommendationCarousel({
         className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide scroll-smooth pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory touch-pan-x"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {recommendations
-          .slice(0, 20)
-          .filter((rec) => rec && rec.anime && rec.anime.slug)
-          .map(({ anime, reason }) => (
-            <div
-              key={anime.id}
-              className="flex-shrink-0 w-36 sm:w-44 lg:w-48 relative group/card snap-start"
-            >
-              {/* Dismiss Button - Top Left, Show on Hover */}
-              {onDismiss && (
-                <button
-                  onClick={(e) => {
-                    e.preventDefault()
-                    onDismiss(anime.id)
-                  }}
-                  className="absolute top-2 left-2 z-20 w-7 h-7 bg-gray-900/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-error-500/90 transition-all opacity-0 group-hover/card:opacity-100"
-                >
-                  <X className="h-4 w-4 text-white" />
-                </button>
-              )}
+          {recommendations
+            .slice(0, 20)
+            .filter((rec) => rec && rec.anime && rec.anime.slug)
+            .map(({ anime, reason }) => {
+              const cardContent = (
+                <div className="flex-shrink-0 w-36 sm:w-44 lg:w-48 relative group/card snap-start">
+                  {/* Dismiss Button - Top Left, Show on Hover (Desktop) */}
+                  {onDismiss && !isMobile && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        onDismiss(anime.id)
+                      }}
+                      className="absolute top-2 left-2 z-20 w-7 h-7 bg-gray-900/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-error-500/90 transition-all opacity-0 group-hover/card:opacity-100"
+                    >
+                      <X className="h-4 w-4 text-white" />
+                    </button>
+                  )}
 
-              {/* Use AnimeCard for consistency - without status badge */}
-              <AnimeCard
-                anime={{
-                  id: anime.id,
-                  slug: anime.slug,
-                  title: anime.title,
-                  titleEnglish: anime.titleEnglish || undefined,
-                  titleJapanese: anime.titleJapanese || undefined,
-                  titleSynonyms: anime.titleSynonyms || undefined,
-                  coverImage: anime.coverImage || undefined,
-                  year: anime.year || 0,
-                  rating: anime.averageRating || 0,
-                  popularity: 0,
-                  status: 'trending' as const,
-                  tags: [],
-                  genres: (anime.genres || []).map((g) => ({ ...g, slug: g.id })),
-                }}
-                variant="featured"
-                onFavorite={() => handleFavorite(anime.id, anime.titleEnglish || anime.title)}
-                isFavorited={isFavorited(anime.id)}
-              />
+                  {/* Use AnimeCard for consistency - without status badge */}
+                  <AnimeCard
+                    anime={{
+                      id: anime.id,
+                      slug: anime.slug,
+                      title: anime.title,
+                      titleEnglish: anime.titleEnglish || undefined,
+                      titleJapanese: anime.titleJapanese || undefined,
+                      titleSynonyms: anime.titleSynonyms || undefined,
+                      coverImage: anime.coverImage || undefined,
+                      year: anime.year || 0,
+                      rating: anime.averageRating || 0,
+                      popularity: 0,
+                      status: 'trending' as const,
+                      tags: [],
+                      genres: (anime.genres || []).map((g) => ({ ...g, slug: g.id })),
+                    }}
+                    variant="featured"
+                    onFavorite={() => handleFavorite(anime.id, anime.titleEnglish || anime.title)}
+                    isFavorited={isFavorited(anime.id)}
+                  />
 
-              {/* Reason text below card */}
-              {reason && showReasons && (
-                <div className="mt-2 px-1">
-                  <p className="text-xs text-gray-400 italic line-clamp-2">{reason}</p>
+                  {/* Reason text below card */}
+                  {reason && showReasons && (
+                    <div className="mt-2 px-1">
+                      <p className="text-xs text-gray-400 italic line-clamp-2">{reason}</p>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          ))}
+              )
+
+              // Wrap with SwipeableCard on mobile if onDismiss is provided
+              if (isMobile && onDismiss) {
+                return (
+                  <SwipeableCard
+                    key={anime.id}
+                    onSwipeLeft={() => onDismiss(anime.id)}
+                    threshold={80}
+                    rightAction={
+                      <div className="flex items-center gap-2 text-error-400">
+                        <Trash2 className="h-5 w-5" />
+                        <span className="text-sm font-medium">Dismiss</span>
+                      </div>
+                    }
+                    className="flex-shrink-0"
+                  >
+                    {cardContent}
+                  </SwipeableCard>
+                )
+              }
+
+              return <div key={anime.id}>{cardContent}</div>
+            })}
 
         {/* See All Button - Matches anime card size */}
         {recommendations.length > 10 && (

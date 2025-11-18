@@ -62,6 +62,9 @@ import {
 } from 'lucide-react'
 import { cn } from '../../../lib/utils'
 import { Badge } from '../../../components/ui/badge'
+import Script from 'next/script'
+import { buildBreadcrumbJsonLd, buildCanonical, buildPersonJsonLd } from '@/lib/seo'
+
 
 interface UserStats {
   totalAnime: number
@@ -359,6 +362,36 @@ export default function UserProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
+      <Script
+        id="ld-user-breadcrumb"
+        type="application/ld+json"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            buildBreadcrumbJsonLd([
+              { name: 'Home', item: buildCanonical('/') },
+              { name: 'Users', item: buildCanonical('/discover') },
+              { name: user.username || 'User', item: buildCanonical(`/user/${user.username || ''}`) },
+            ])
+          ),
+        }}
+      />
+      <Script
+        id="ld-user-person"
+        type="application/ld+json"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            buildPersonJsonLd({
+              username: user.username || 'user',
+              name: user.name || user.username || 'User',
+              url: buildCanonical(`/user/${user.username || ''}`),
+              image: user.avatar || undefined,
+              description: user.bio || undefined,
+            })
+          ),
+        }}
+      />
       {/* Subtle Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-64 h-64 bg-primary-500/5 rounded-full blur-3xl"></div>

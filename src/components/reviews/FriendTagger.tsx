@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { AtSign, X } from 'lucide-react'
 import { Badge } from '../ui/badge'
 import { useAuth } from '../../app/lib/auth-context'
+import { TRPC_URL as API_URL } from '@/app/lib/api'
 
 interface Friend {
   id: string
@@ -53,8 +54,6 @@ export function FriendTagger({ onTagsChange, initialTags: _initialTags = [] }: F
     try {
       setLoading(true)
 
-      const API_URL =
-        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
       const url = `${API_URL}/social.getFriends`
 
       const response = await fetch(url, {

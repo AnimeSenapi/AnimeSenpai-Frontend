@@ -181,8 +181,7 @@ export function usePrefetchNextPage(
  * Prefetch anime details on card hover
  */
 export function usePrefetchAnime(slug: string) {
-  const TRPC_URL =
-    process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+  const { TRPC_URL } = await import('@/app/lib/api')
   const url = `${TRPC_URL}/anime.getBySlug?input=${encodeURIComponent(JSON.stringify({ slug }))}`
 
   return usePrefetch(url, {
@@ -197,8 +196,7 @@ export function usePrefetchAnime(slug: string) {
  * Prefetch user profile on hover
  */
 export function usePrefetchUser(username: string) {
-  const TRPC_URL =
-    process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+  const { TRPC_URL } = await import('@/app/lib/api')
   const url = `${TRPC_URL}/user.getProfile?input=${encodeURIComponent(JSON.stringify({ username }))}`
 
   return usePrefetch(url, {

@@ -31,7 +31,7 @@ export function NotesButton({
 
   const handleSaveNotes = async (newNotes: string) => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+      const { TRPC_URL: API_URL } = await import('@/app/lib/api')
       const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
       
       if (!token) {

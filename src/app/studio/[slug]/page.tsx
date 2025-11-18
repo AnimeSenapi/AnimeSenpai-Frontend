@@ -84,7 +84,7 @@ export default function StudioPage({ params }: { params: Promise<{ slug: string 
       setLoading(true)
       setError(null)
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003/api/trpc'
+      const { TRPC_URL: API_URL } = await import('@/app/lib/api')
       const url = `${API_URL}/studio.getStudioBySlug?input=${encodeURIComponent(
         JSON.stringify({
           slug,

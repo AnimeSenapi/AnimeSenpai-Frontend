@@ -18,6 +18,7 @@ import { LoadingState } from '../../components/ui/loading-state'
 import { EmptyState, ErrorState } from '../../components/ui/error-state'
 import { VerificationGuard } from '../../lib/verification-guard'
 import { VirtualGrid, VirtualList } from '../../components/VirtualList'
+import { PullToRefresh } from '../../components/gestures/PullToRefresh'
 import {
   Bookmark,
   Heart,
@@ -397,8 +398,9 @@ export default function MyListPage() {
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
           </div>
 
-          <main className="container px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 md:pt-40 pb-8 sm:pb-12 md:pb-16 lg:pb-20 relative z-10">
-            {/* Stats and Controls Card */}
+          <PullToRefresh onRefresh={fetchUserList} disabled={isLoading}>
+            <main className="container px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 md:pt-40 pb-8 sm:pb-12 md:pb-16 lg:pb-20 relative z-10">
+              {/* Stats and Controls Card */}
             <div className="glass rounded-xl p-3 sm:p-4 border border-white/10 mb-6 shadow-xl backdrop-blur-xl">
               {/* Stats Row - Clickable Filters */}
               <div className="grid grid-cols-5 gap-2 sm:gap-2.5 mb-3 sm:mb-4">
@@ -742,7 +744,8 @@ export default function MyListPage() {
                 }
               />
             )}
-          </main>
+            </main>
+          </PullToRefresh>
         </div>
       </>
     </VerificationGuard>

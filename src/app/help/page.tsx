@@ -77,25 +77,37 @@ const faqs: FAQItem[] = [
     category: 'Anime Lists',
     question: 'How do I add anime to my list?',
     answer:
-      'Click on any anime card to view its details, then click "Add to List". Choose a status (Watching, Completed, Plan to Watch, or Favorite) and it will be added to your collection!',
+      'Click on any anime card to view its details, then click "Add to List". Choose a status (Watching, Completed, Plan to Watch, On Hold, or Dropped) and optionally mark it as Favorite. You can also rate it immediately!',
   },
   {
     category: 'Anime Lists',
     question: "What's the difference between Favorite and other statuses?",
     answer:
-      'Favorite is for anime you absolutely love! It\'s separate from your watch status. You can mark an anime as both "Completed" and "Favorite".',
+      'Favorite is for anime you absolutely love! It\'s separate from your watch status. You can mark an anime as both "Completed" and "Favorite". Favorites help improve your recommendations and show on your profile.',
   },
   {
     category: 'Anime Lists',
     question: 'How do I rate anime?',
     answer:
-      'Add the anime to your list first, then click "Rate Anime" on the detail page. You can rate from 1-10 stars and optionally write a review!',
+      'Add the anime to your list first, then click "Rate Anime" on the detail page. You can rate from 1-10 stars and optionally write a review! Ratings help improve your recommendations and show on your profile.',
   },
   {
     category: 'Anime Lists',
     question: 'Can I search my own list?',
     answer:
-      'Yes! Go to "My List" and use the search bar to find anime by title or studio. You can also filter by category and sort by different criteria.',
+      'Yes! Go to "My List" and use the search bar to find anime by title or studio. You can also filter by status (Watching, Completed, etc.) and sort by different criteria like rating, date added, or title.',
+  },
+  {
+    category: 'Anime Lists',
+    question: 'How do I update my progress on an anime?',
+    answer:
+      'On the anime detail page, you can update your progress (episode number) and change the status. Your progress saves automatically and shows on your list.',
+  },
+  {
+    category: 'Anime Lists',
+    question: 'Can I organize my list into custom categories?',
+    answer:
+      'Currently, we use standard statuses (Watching, Completed, Plan to Watch, On Hold, Dropped) and Favorites. You can filter and sort your list in many ways on the My List page.',
   },
 
   // Recommendations
@@ -103,19 +115,25 @@ const faqs: FAQItem[] = [
     category: 'Recommendations',
     question: 'How do recommendations work?',
     answer:
-      'We use a triple-hybrid system: content-based filtering (genre/tags), collaborative filtering (similar users), and ML embeddings (semantic similarity). The more anime you add and rate, the better your recommendations become!',
+      'We use a triple-hybrid system: content-based filtering (genre/tags), collaborative filtering (similar users), and ML embeddings (semantic similarity). The more anime you add and rate, the better your recommendations become! Our system automatically learns your preferences from your watch history, favorites, and ratings.',
   },
   {
     category: 'Recommendations',
-    question: 'Why am I seeing the same recommendations?',
+    question: 'Why am I seeing recommendations I don\'t like?',
     answer:
-      "Try rating more anime! Our algorithm improves as you interact with the platform. Also complete the onboarding if you haven't already - it helps us understand your preferences.",
+      "Try rating more anime! Our algorithm improves as you interact with the platform. You can also dismiss recommendations you don't like - this helps the system learn. Make sure to mark anime as favorites and rate what you've watched to improve accuracy.",
   },
   {
     category: 'Recommendations',
     question: 'Can I see what my friends are watching?',
     answer:
-      'Yes! Follow other users and you\'ll see "Your Friends Are Watching" on your dashboard. This shows popular anime among people you follow.',
+      'Yes! Follow other users and you\'ll see "Your Friends Are Watching" on your dashboard. You can also visit the Friends page from your profile menu to see what your friends are watching, their favorites, and get recommendations based on their lists.',
+  },
+  {
+    category: 'Recommendations',
+    question: 'How do I get better recommendations?',
+    answer:
+      '1. Rate anime you\'ve watched (especially ones you love or hate) 2. Mark favorites to show what you really enjoy 3. Add anime to your plan-to-watch list 4. Complete your profile and onboarding 5. Interact with recommendations (dismiss ones you don\'t like). The more data you provide, the smarter the recommendations become!',
   },
 
   // Features
@@ -124,6 +142,18 @@ const faqs: FAQItem[] = [
     question: 'Where can I watch the anime?',
     answer:
       'On each anime detail page, we show "Where to Watch" with links to streaming platforms like Crunchyroll, Funimation, Netflix, and Hulu (when available).',
+  },
+  {
+    category: 'Features',
+    question: 'What is the Calendar feature?',
+    answer:
+      'The Calendar shows upcoming episode releases and seasonal anime schedules. Visit the Calendar page from your profile menu to see what\'s airing this week, browse by season, and never miss a new episode!',
+  },
+  {
+    category: 'Features',
+    question: 'How do I use the Calendar?',
+    answer:
+      'Go to Calendar from your profile menu. You can switch between "Episodes" (upcoming releases) and "Seasonal" (anime by season). Click on any anime to view details or add it to your list.',
   },
   {
     category: 'Features',
@@ -141,7 +171,19 @@ const faqs: FAQItem[] = [
     category: 'Features',
     question: "Can I see other users' profiles?",
     answer:
-      'Yes! Click on any username to view their public profile. You can see their stats, favorites, and recent activity (depending on their privacy settings).',
+      'Yes! Click on any username to view their public profile. You can see their stats, favorites, and recent activity (depending on their privacy settings). You can also follow users to see their activity in your feed.',
+  },
+  {
+    category: 'Features',
+    question: 'How do I follow or friend other users?',
+    answer:
+      'Visit any user\'s profile and click "Follow" to see their activity. To send a friend request, click "Add Friend". Once accepted, you\'ll see them in your Friends page. You can manage all your friends, followers, and following from the Friends page in your profile menu.',
+  },
+  {
+    category: 'Features',
+    question: 'What are Achievements?',
+    answer:
+      'Achievements are badges you unlock by using AnimeSenpai! Watch anime, rate shows, write reviews, and interact with the community to unlock achievements. View all your achievements from your profile menu.',
   },
 
   // Technical
@@ -312,34 +354,113 @@ export default function HelpPage() {
           </div>
 
           {/* Quick Links */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
             <Link href="/dashboard">
               <div className="glass rounded-xl p-6 hover:bg-white/10 transition-colors cursor-pointer">
                 <div className="w-12 h-12 bg-primary-500/20 rounded-lg flex items-center justify-center mb-4">
                   <Bookmark className="h-6 w-6 text-primary-400" />
                 </div>
-                <h3 className="text-white font-semibold mb-2">Browse Anime</h3>
-                <p className="text-gray-400 text-sm">Discover thousands of anime titles</p>
+                <h3 className="text-white font-semibold mb-2">Dashboard</h3>
+                <p className="text-gray-400 text-sm">Your personalized anime feed</p>
+              </div>
+            </Link>
+            <Link href="/discover">
+              <div className="glass rounded-xl p-6 hover:bg-white/10 transition-colors cursor-pointer">
+                <div className="w-12 h-12 bg-secondary-500/20 rounded-lg flex items-center justify-center mb-4">
+                  <Search className="h-6 w-6 text-secondary-400" />
+                </div>
+                <h3 className="text-white font-semibold mb-2">Discover</h3>
+                <p className="text-gray-400 text-sm">Find new anime to watch</p>
               </div>
             </Link>
             <Link href="/user/settings">
               <div className="glass rounded-xl p-6 hover:bg-white/10 transition-colors cursor-pointer">
-                <div className="w-12 h-12 bg-secondary-500/20 rounded-lg flex items-center justify-center mb-4">
-                  <Settings className="h-6 w-6 text-secondary-400" />
+                <div className="w-12 h-12 bg-success-500/20 rounded-lg flex items-center justify-center mb-4">
+                  <Settings className="h-6 w-6 text-success-400" />
                 </div>
-                <h3 className="text-white font-semibold mb-2">Account Settings</h3>
-                <p className="text-gray-400 text-sm">Manage your profile and preferences</p>
+                <h3 className="text-white font-semibold mb-2">Settings</h3>
+                <p className="text-gray-400 text-sm">Manage your account</p>
               </div>
             </Link>
             <a href="mailto:support@animesenpai.com">
               <div className="glass rounded-xl p-6 hover:bg-white/10 transition-colors cursor-pointer">
-                <div className="w-12 h-12 bg-success-500/20 rounded-lg flex items-center justify-center mb-4">
-                  <Mail className="h-6 w-6 text-success-400" />
+                <div className="w-12 h-12 bg-error-500/20 rounded-lg flex items-center justify-center mb-4">
+                  <Mail className="h-6 w-6 text-error-400" />
                 </div>
                 <h3 className="text-white font-semibold mb-2">Contact Support</h3>
                 <p className="text-gray-400 text-sm">Get help from our team</p>
               </div>
             </a>
+          </div>
+          
+          {/* Getting Started Guide */}
+          <div className="glass rounded-2xl p-8 mb-12">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-xl flex items-center justify-center">
+                <BookOpen className="h-6 w-6 text-primary-400" />
+              </div>
+              <h2 className="text-2xl font-bold text-white">Quick Start Guide</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary-500/20 rounded-lg flex items-center justify-center text-primary-400 font-bold">
+                    1
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold mb-1">Create Your Account</h3>
+                    <p className="text-gray-400 text-sm">Sign up and verify your email to get started</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary-500/20 rounded-lg flex items-center justify-center text-primary-400 font-bold">
+                    2
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold mb-1">Complete Onboarding</h3>
+                    <p className="text-gray-400 text-sm">Tell us your favorite genres to get personalized recommendations</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary-500/20 rounded-lg flex items-center justify-center text-primary-400 font-bold">
+                    3
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold mb-1">Add Anime to Your List</h3>
+                    <p className="text-gray-400 text-sm">Start adding anime you've watched or want to watch</p>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-secondary-500/20 rounded-lg flex items-center justify-center text-secondary-400 font-bold">
+                    4
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold mb-1">Rate & Review</h3>
+                    <p className="text-gray-400 text-sm">Rate anime you've watched to improve recommendations</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-secondary-500/20 rounded-lg flex items-center justify-center text-secondary-400 font-bold">
+                    5
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold mb-1">Explore Recommendations</h3>
+                    <p className="text-gray-400 text-sm">Check your Dashboard for personalized anime suggestions</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-secondary-500/20 rounded-lg flex items-center justify-center text-secondary-400 font-bold">
+                    6
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold mb-1">Connect with Friends</h3>
+                    <p className="text-gray-400 text-sm">Follow other users and see what they're watching</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* FAQ Sections */}

@@ -43,8 +43,7 @@ export function BlockReportModal({
     try {
       setLoading(true)
 
-      const API_URL =
-        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+      const { TRPC_URL: API_URL } = await import('@/app/lib/api')
 
       const response = await fetch(`${API_URL}/safety.blockUser`, {
         method: 'POST',
@@ -91,8 +90,7 @@ export function BlockReportModal({
     try {
       setLoading(true)
 
-      const API_URL =
-        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+      const { TRPC_URL: API_URL } = await import('@/app/lib/api')
 
       const response = await fetch(`${API_URL}/safety.reportUser`, {
         method: 'POST',

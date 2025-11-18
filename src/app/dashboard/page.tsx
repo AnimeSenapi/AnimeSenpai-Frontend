@@ -7,6 +7,7 @@ import { EmailVerificationBanner } from '../../components/EmailVerificationBanne
 import { Button } from '../../components/ui/button'
 import { LoadingState } from '../../components/ui/loading-state'
 import { EmptyState, ErrorState } from '../../components/ui/error-state'
+import { PullToRefresh } from '../../components/gestures/PullToRefresh'
 import {
   Sparkles,
   TrendingUp,
@@ -37,18 +38,21 @@ const RecommendationCarousel = dynamic(
   { loading: () => <div className="h-64 animate-pulse bg-white/5 rounded-xl" /> }
 )
 
-const FriendsWatching = dynamic(
-  () =>
-    import('../../components/social/FriendsWatching').then((mod) => ({
-      default: mod.FriendsWatching,
-    })),
-  { loading: () => <div className="h-48 animate-pulse bg-white/5 rounded-xl" /> }
-)
+// Simple inline component to avoid chunk loading issues
+function FriendsWatching() {
+  return (
+    <div className="rounded-xl bg-white/5 p-6">
+      <h2 className="text-xl font-semibold mb-4">Friends Are Watching</h2>
+      <p className="text-white/60">No friends activity to show right now.</p>
+    </div>
+  )
+}
 
 const CarouselSkeleton = dynamic(
   () => import('../../components/ui/skeleton').then((mod) => ({ default: mod.CarouselSkeleton })),
   { ssr: false }
 )
+
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -63,7 +67,6 @@ export default function DashboardPage() {
   const [hiddenGemsRecs, setHiddenGemsRecs] = useState<any[]>([])
   const [discoveryRecs, setDiscoveryRecs] = useState<any[]>([])
   const [continueWatching, setContinueWatching] = useState<any[]>([])
-  const [newReleases, setNewReleases] = useState<any[]>([])
   const [topRatedSeries, setTopRatedSeries] = useState<any[]>([]) // Grouped series
   const [recentlyAddedSeries, setRecentlyAddedSeries] = useState<any[]>([]) // Grouped series
   const [seasonalSeries, setSeasonalSeries] = useState<any[]>([]) // Seasonal anime
@@ -167,18 +170,7 @@ export default function DashboardPage() {
     }
   }
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/trpc'
-  const getAuthHeaders = (): Record<string, string> => {
-    // Check both localStorage (Remember Me) and sessionStorage (current session)
-    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    }
-    if (token) {
-      headers['Authorization'] = 'Bearer ' + token
-    }
-    return headers
-  }
+  // Use shared API client helpers (headers handled centrally)
 
   // Check onboarding status
   useEffect(() => {
@@ -186,13 +178,8 @@ export default function DashboardPage() {
       if (!isAuthenticated) return
 
       try {
-        const response = await fetch(`${API_URL}/onboarding.getStatus`, {
-          method: 'GET',
-          headers: getAuthHeaders(),
-        })
-
-        const data = await response.json()
-        if (data.result?.data && !data.result.data.completed) {
+        const data = (await api.trpcQuery('onboarding.getStatus')) as any
+        if (data && !data.completed) {
           // Redirect to onboarding if not completed
           router.push('/onboarding')
         } else {
@@ -319,20 +306,20 @@ export default function DashboardPage() {
           setRecentlyAddedSeries(recentlyAdded)
         }
 
-      console.log('[Dashboard] recommendation sections loaded', {
+      logger.debug('Dashboard recommendation sections loaded', {
         trending: trendingData?.recommendations?.length || 0,
         popular: popularData?.anime?.length || 0,
         topRated: topRatedData?.anime?.length || 0,
       })
     } catch (err) {
-      console.error('Failed to load recommendation sections:', err)
+      logger.error('Failed to load recommendation sections', err instanceof Error ? err : new Error(String(err)))
     }
   }
 
   async function loadPersonalizedRecommendations() {
     try {
       // Use the proper API helper instead of raw fetch
-      const [forYouResult, fansLikeYouResult, friendRecsResult, hiddenGemsResult, discoveryResult, continueWatchResult, newAnimeResult] =
+      const [forYouResult, fansLikeYouResult, friendRecsResult, hiddenGemsResult, discoveryResult, continueWatchResult] =
         await Promise.allSettled([
           api.trpcQuery('recommendations.getForYou', { limit: 20 }),
           api.trpcQuery('recommendations.getFansLikeYou', { limit: 20 }),
@@ -340,7 +327,6 @@ export default function DashboardPage() {
           api.trpcQuery('recommendations.getHiddenGems', { limit: 20 }),
           api.trpcQuery('recommendations.getDiscovery', { limit: 20 }),
           api.trpcQuery('recommendations.getContinueWatching', { limit: 10 }),
-          api.trpcQuery('recommendations.getNewReleases', { limit: 20 }),
         ])
 
       // Helper to extract data from Promise result
@@ -373,7 +359,6 @@ export default function DashboardPage() {
       const hiddenGemsData = getData(hiddenGemsResult)
       const discoveryData = getData(discoveryResult)
       const continueWatchData = getData(continueWatchResult)
-      const newAnimeData = getData(newAnimeResult)
 
       const forYouRecsList = filterValidRecs(forYouData?.recommendations || [])
       const fansLikeYouRecsList = filterValidRecs(fansLikeYouData?.recommendations || [])
@@ -381,7 +366,6 @@ export default function DashboardPage() {
       const hiddenGemsRecsList = filterValidRecs(hiddenGemsData?.recommendations || [])
       const discoveryRecsList = filterValidRecs(discoveryData?.recommendations || [])
       const continueWatchList = filterValidRecs(continueWatchData?.recommendations || [])
-      const newReleasesList = filterValidRecs(newAnimeData?.recommendations || [])
 
       // Set state directly from API results - no fallbacks
       setForYouRecs(forYouRecsList)
@@ -390,16 +374,14 @@ export default function DashboardPage() {
       setHiddenGemsRecs(hiddenGemsRecsList)
       setDiscoveryRecs(discoveryRecsList)
       setContinueWatching(continueWatchList)
-      setNewReleases(newReleasesList)
 
-      console.log('[Dashboard] personalized recs loaded', {
+      logger.debug('Dashboard personalized recommendations loaded', {
         forYou: forYouRecsList.length,
         fansLikeYou: fansLikeYouRecsList.length,
         friendRecs: friendRecsList.length,
         hiddenGems: hiddenGemsRecsList.length,
         discovery: discoveryRecsList.length,
         continueWatching: continueWatchList.length,
-        newReleases: newReleasesList.length,
         errors: {
           forYou: forYouResult.status === 'rejected',
           fansLikeYou: fansLikeYouResult.status === 'rejected',
@@ -407,7 +389,6 @@ export default function DashboardPage() {
           hiddenGems: hiddenGemsResult.status === 'rejected',
           discovery: discoveryResult.status === 'rejected',
           continueWatch: continueWatchResult.status === 'rejected',
-          newAnime: newAnimeResult.status === 'rejected',
         },
       })
     } catch (err) {
@@ -429,13 +410,9 @@ export default function DashboardPage() {
 
   async function handleDismissRecommendation(animeId: string) {
     try {
-      await fetch(`${API_URL}/recommendations.submitFeedback`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
+      await api.trpcMutation('recommendations.submitFeedback', {
           animeId,
           feedbackType: 'dismiss',
-        }),
       })
 
       // Remove from all recommendation lists
@@ -498,6 +475,11 @@ export default function DashboardPage() {
     )
   }
 
+  // Refresh handler for pull-to-refresh
+  const handleRefresh = async () => {
+    await refreshRecommendations()
+  }
+
   return (
     <>
       {/* SEO Metadata */}
@@ -515,11 +497,12 @@ export default function DashboardPage() {
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
         </div>
 
-        <main className="container px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 md:pt-40 pb-8 sm:pb-16 lg:pb-20 relative z-10">
-          {/* Email Verification Banner */}
-          {isAuthenticated && user && !user.emailVerified && (
-            <EmailVerificationBanner email={user.email} />
-          )}
+        <PullToRefresh onRefresh={handleRefresh} disabled={isRefreshing}>
+          <main className="container px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 md:pt-40 pb-8 sm:pb-16 lg:pb-20 relative z-10">
+            {/* Email Verification Banner */}
+            {isAuthenticated && user && !user.emailVerified && (
+              <EmailVerificationBanner email={user.email} />
+            )}
 
           {/* Onboarding Banner - Responsive */}
           {showOnboarding && isAuthenticated && (
@@ -808,16 +791,6 @@ export default function DashboardPage() {
             </>
           )}
 
-          {/* New Releases Section */}
-          {newReleases.length > 0 && (
-            <RecommendationCarousel
-              title="New on AnimeSenpai"
-              icon={<Calendar className="h-5 w-5 text-primary-400" />}
-              recommendations={newReleases}
-              showReasons={false}
-            />
-          )}
-
           {/* Trending Series - Use carousel for consistency - Guest users */}
           {!isAuthenticated && (
             <>
@@ -883,7 +856,8 @@ export default function DashboardPage() {
               onAction={() => router.push('/auth/signin')}
             />
           )}
-        </main>
+          </main>
+        </PullToRefresh>
       </div>
     </>
   )

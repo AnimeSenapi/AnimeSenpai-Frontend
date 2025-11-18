@@ -24,7 +24,7 @@ export function EmailVerificationBanner({ email, onDismiss }: EmailVerificationB
     try {
       setIsResending(true)
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003/api/trpc'
+      const { TRPC_URL: API_URL } = await import('@/app/lib/api')
       const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
 
       const response = await fetch(`${API_URL}/auth.resendVerification`, {
@@ -172,7 +172,7 @@ export function EmailVerificationPrompt({ email }: { email: string }) {
     try {
       setIsResending(true)
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003/api/trpc'
+      const { TRPC_URL: API_URL } = await import('@/app/lib/api')
       const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
 
       const response = await fetch(`${API_URL}/auth.resendVerification`, {

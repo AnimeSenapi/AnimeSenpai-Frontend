@@ -111,7 +111,7 @@ export default function UserSettingsPage() {
   const [deleteReason, setDeleteReason] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3005/api/trpc'
+  const { TRPC_URL: API_URL } = await import('@/app/lib/api')
 
   const getAuthHeaders = (): Record<string, string> => {
     const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')

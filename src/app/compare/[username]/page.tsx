@@ -40,8 +40,7 @@ export default function CompareListsPage({ params }: { params: Promise<{ usernam
   const loadFriend = async () => {
     try {
       // Get friend ID from username
-      const API_URL =
-        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+      const { TRPC_URL: API_URL } = await import('@/app/lib/api')
       const url = `${API_URL}/social.getUserProfile?input=${encodeURIComponent(JSON.stringify({ username }))}`
 
       const response = await fetch(url, {
@@ -71,8 +70,7 @@ export default function CompareListsPage({ params }: { params: Promise<{ usernam
     try {
       setLoading(true)
 
-      const API_URL =
-        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+      const { TRPC_URL: API_URL } = await import('@/app/lib/api')
       const url = `${API_URL}/listTools.compareWithFriend?input=${encodeURIComponent(
         JSON.stringify({
           friendId: userId,

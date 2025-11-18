@@ -98,13 +98,13 @@
       ]
     },
     {
-      "name": "Stats",
-      "short_name": "Stats",
-      "description": "View your anime statistics",
-      "url": "/stats",
+      "name": "Calendar",
+      "short_name": "Calendar",
+      "description": "View anime release calendar",
+      "url": "/calendar",
       "icons": [
         {
-          "src": "/icons/shortcut-stats.png",
+          "src": "/icons/shortcut-calendar.png",
           "sizes": "96x96"
         }
       ]

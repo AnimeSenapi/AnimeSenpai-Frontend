@@ -10,10 +10,10 @@
  * Technical errors like "UNAUTHORIZED" become "Your session has expired. Please sign in again."
  */
 
-import type { 
-  Anime, 
-  AuthUser, 
-  AuthResponse, 
+import type {
+  Anime,
+  AuthUser,
+  AuthResponse,
   SignupInput,
   AnimeListItem,
   UserListResponse,
@@ -25,6 +25,8 @@ import { handleApiError } from '../../lib/api-errors'
 import { clientCache, CacheTTL } from '../../lib/client-cache'
 import { logger, captureException } from '../../lib/logger'
 import { trackAPI } from '../../lib/performance-monitor'
+import { env } from '../../lib/env'
+import * as Sentry from '@sentry/nextjs'
 
 type TRPCErrorShape = {
   message: string
@@ -40,9 +42,9 @@ type TRPCErrorShape = {
 
 type TRPCResponse<T> = { result: { data: T } } | { error: TRPCErrorShape }
 
-// Backend runs on port 3005 (check .env.local file)
-const TRPC_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3005/api/trpc'
+// Always use the Next.js proxy route for same-origin requests (no CORS issues)
+// The proxy route at /api/trpc will forward to the backend using NEXT_PUBLIC_API_URL
+export const TRPC_URL = '/api/trpc'
 
 // API URL configuration
 // TRPC_URL is set from environment variables
@@ -104,76 +106,14 @@ function getAuthHeaders(): Record<string, string> {
   return accessToken ? { Authorization: 'Bearer ' + accessToken } : {}
 }
 
+function generateClientTraceId(): string {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+}
+
 // Refresh the access token using the refresh token
 async function refreshAccessToken(): Promise<boolean> {
-  if (typeof window === 'undefined') return false
-
-  // If already refreshing, wait for that to complete
-  if (isRefreshing && refreshPromise) {
-    return refreshPromise
-  }
-
-  isRefreshing = true
-  refreshPromise = (async () => {
-    try {
-      const refreshToken =
-        localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken')
-      if (!refreshToken) {
-        return false
-      }
-
-      const url = `${TRPC_URL}/auth.refreshToken`
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refreshToken }),
-        credentials: 'include',
-      })
-
-      if (!res.ok) {
-        // If refresh token is invalid/expired (401), clear all tokens
-        if (res.status === 401) {
-          localStorage.removeItem('accessToken')
-          localStorage.removeItem('refreshToken')
-          sessionStorage.removeItem('accessToken')
-          sessionStorage.removeItem('refreshToken')
-        }
-        return false
-      }
-
-      const json = (await res.json()) as TRPCResponse<{
-        accessToken: string
-        refreshToken: string
-        expiresAt: string
-      }>
-
-      if ('error' in json) {
-        return false
-      }
-
-      const data = json.result.data
-
-      // Store new tokens in the same storage that had the old refresh token
-      const storage = localStorage.getItem('refreshToken') ? localStorage : sessionStorage
-      storage.setItem('accessToken', data.accessToken)
-      storage.setItem('refreshToken', data.refreshToken)
-
-      return true
-    } catch (error) {
-      logger.error('Token refresh failed', {
-        error: error instanceof Error ? error.message : String(error),
-      })
-      captureException(error, { context: { operation: 'token_refresh' } })
-      return false
-    } finally {
-      isRefreshing = false
-      refreshPromise = null
-    }
-  })()
-
-  return refreshPromise
+  // Tokens are rotated server-side via cookies; nothing to do client-side
+  return false
 }
 
 // Convert technical error codes to user-friendly messages
@@ -348,7 +288,17 @@ async function trpcQuery<TOutput>(
   const hasToken = 'Authorization' in authHeaders
   const optionalEndpoint = isOptionalQuery(path)
   const retryConfig = optionalEndpoint ? OPTIONAL_RETRY_CONFIG : DEFAULT_RETRY_CONFIG
-  if (!hasToken && typeof window !== 'undefined') {
+  
+  // Debug logging for auth.me specifically
+  if (path === 'auth.me' && typeof window !== 'undefined') {
+    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
+    console.log('[API] auth.me called - Token exists:', !!token, 'Has auth header:', hasToken)
+    if (token) {
+      console.log('[API] Token preview:', token.substring(0, 20) + '...')
+    }
+  }
+  
+  if (!hasToken && typeof window !== 'undefined' && path !== 'auth.me') {
     const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
     console.warn('⚠️ No auth token found for request:', path, 'Token exists:', !!token)
   }
@@ -357,19 +307,24 @@ async function trpcQuery<TOutput>(
   const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
   
   try {
-    const res = await fetchWithRetry(
-      url,
-      {
-      method: 'GET',
-      headers: {
-        ...authHeaders,
-        ...(init?.headers || {}),
-      },
-      credentials: 'include',
-      ...init,
-      },
-      retryConfig
-    )
+    const clientTraceId = generateClientTraceId()
+    const res = await Sentry.startSpan({ op: 'http.client', name: `GET ${url}` }, async () => {
+      const r = await fetchWithRetry(
+        url,
+        {
+          method: 'GET',
+          headers: {
+            'x-client-trace-id': clientTraceId,
+            ...authHeaders,
+            ...(init?.headers || {}),
+          },
+          credentials: 'include',
+          ...init,
+        },
+        retryConfig
+      )
+      return r
+    })
 
     // Calculate duration
     const duration =
@@ -384,6 +339,15 @@ async function trpcQuery<TOutput>(
       false,
       !res.ok ? `HTTP ${res.status}` : undefined
     )
+    // Tag Sentry span with correlation IDs
+    const reqId = res.headers.get('x-request-id') || res.headers.get('X-Request-ID') || undefined
+    const activeSpan = (Sentry as any).getActiveSpan?.()
+    if (activeSpan && typeof activeSpan.setAttribute === 'function') {
+      if (reqId) activeSpan.setAttribute('request.id', reqId)
+      activeSpan.setAttribute('client.trace_id', clientTraceId)
+      activeSpan.setAttribute('api.path', path)
+      activeSpan.setAttribute('http.status_code', res.status)
+    }
 
     if (!res.ok) {
       // Try to parse tRPC error
@@ -424,11 +388,12 @@ async function trpcQuery<TOutput>(
         message.includes('P6002') ||
         message.includes('P5000')
 
-      // auth.me - skip all expected auth errors
+      // auth.me and user endpoints - skip all expected auth errors
       const isAuthCheck = path.includes('auth.me')
+      const isUserEndpoint = path.includes('user.getFavoritedAnimeIds') || path.includes('user.')
 
       const shouldSkipLogging =
-        (isAuthCheck && isExpectedAuthError) || (optionalEndpoint && isExpectedAuthError)
+        ((isAuthCheck || isUserEndpoint) && isExpectedAuthError) || (optionalEndpoint && isExpectedAuthError)
 
       // Handle database configuration errors with session-based logging
       if (isDatabaseConfigError) {
@@ -472,25 +437,24 @@ async function trpcQuery<TOutput>(
         }
       }
 
-      // Try to refresh token on auth errors (only once)
-      if (
-        (code === 'UNAUTHORIZED' ||
-          message.includes('session') ||
-          message.includes('expired') ||
-          message.includes('token')) &&
-        retryCount === 0
-      ) {
-        const refreshed = await refreshAccessToken()
-        if (refreshed) {
-          // Retry the request with new token
-          return trpcQuery<TOutput>(path, init, retryCount + 1)
-        }
+      // For expected auth errors on user endpoints, return null instead of throwing
+      // This prevents UI crashes when user is not logged in
+      // EXCEPT for auth.me - we need to throw so auth context can handle it properly
+      if (isExpectedAuthError && (isUserEndpoint || isAuthCheck) && !path.includes('auth.me')) {
+        return null as TOutput
+      }
 
-        // If refresh failed, clear tokens
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('accessToken')
-          localStorage.removeItem('refreshToken')
-        }
+      // For auth.me, always throw errors so auth context can handle them
+      if (path === 'auth.me' && isExpectedAuthError) {
+        console.log('[API] auth.me auth error - throwing:', code, message)
+        throw new Error(getUserFriendlyError(code, message))
+      }
+
+      // No client-side token refresh; rely on cookie-based sessions
+      if (
+        false
+      ) {
+        // no-op
       }
       
       throw new Error(getUserFriendlyError(code, message))
@@ -501,28 +465,21 @@ async function trpcQuery<TOutput>(
     if ('error' in json) {
       const err = json.error
       const code = err.data?.code || 'UNKNOWN_ERROR'
+      const message = err.message || 'Unknown error'
       
-      console.error('❌ tRPC GET Error:', { code, message: err.message })
+      // For auth.me, always throw errors so auth context can handle them
+      if (path === 'auth.me') {
+        console.log('[API] auth.me tRPC error - throwing:', code, message)
+        throw new Error(getUserFriendlyError(code, message))
+      }
+      
+      console.error('❌ tRPC GET Error:', { code, message })
 
-      // Try to refresh token on auth errors (only once)
+      // No client-side token refresh; rely on cookie-based sessions
       if (
-        (code === 'UNAUTHORIZED' ||
-          err.message.includes('session') ||
-          err.message.includes('expired') ||
-          err.message.includes('token')) &&
-        retryCount === 0
+        false
       ) {
-        const refreshed = await refreshAccessToken()
-        if (refreshed) {
-          // Retry the request with new token
-          return trpcQuery<TOutput>(path, init, retryCount + 1)
-        }
-
-        // If refresh failed, clear tokens
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('accessToken')
-          localStorage.removeItem('refreshToken')
-        }
+        // no-op
       }
       
       if (optionalEndpoint) {
@@ -535,7 +492,7 @@ async function trpcQuery<TOutput>(
         return null as TOutput
       }
       
-      throw new Error(getUserFriendlyError(code, err.message))
+      throw new Error(getUserFriendlyError(code, message))
     }
 
     // Filter out any undefined/null items from array responses
@@ -602,16 +559,21 @@ async function trpcMutation<TInput, TOutput>(
   const startTime = performance.now()
   
   try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders(),
-        ...(init?.headers || {}),
-      },
-      body: input !== undefined ? JSON.stringify(input) : undefined,
-      credentials: 'include',
-      ...init,
+    const clientTraceId = generateClientTraceId()
+    const res = await Sentry.startSpan({ op: 'http.client', name: `POST ${url}` }, async () => {
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-client-trace-id': clientTraceId,
+          ...getAuthHeaders(),
+          ...(init?.headers || {}),
+        },
+        body: input !== undefined ? JSON.stringify(input) : undefined,
+        credentials: 'include',
+        ...init,
+      })
+      return r
     })
 
     // Calculate duration
@@ -619,15 +581,67 @@ async function trpcMutation<TInput, TOutput>(
 
     // Track API performance
     trackAPI(path, 'POST', duration, res.status, false, !res.ok ? `HTTP ${res.status}` : undefined)
+    // Tag Sentry span with correlation IDs
+    const reqId = res.headers.get('x-request-id') || res.headers.get('X-Request-ID') || undefined
+    const activeSpan = (Sentry as any).getActiveSpan?.()
+    if (activeSpan && typeof activeSpan.setAttribute === 'function') {
+      if (reqId) activeSpan.setAttribute('request.id', reqId)
+      activeSpan.setAttribute('client.trace_id', clientTraceId)
+      activeSpan.setAttribute('api.path', path)
+      activeSpan.setAttribute('http.status_code', res.status)
+    }
 
     if (!res.ok) {
       // Try to parse tRPC error
       let payload: TRPCResponse<unknown> | undefined
+      let responseText = ''
+      
+      // Log response details first
+      const responseHeaders: Record<string, string> = {}
+      res.headers.forEach((value, key) => {
+        responseHeaders[key] = value
+      })
+      console.error('[API] Error response received:')
+      console.error('  Status:', res.status)
+      console.error('  StatusText:', res.statusText)
+      console.error('  URL:', res.url || url)
+      console.error('  Headers:', responseHeaders)
+      
       try {
-        payload = await res.json()
-      } catch {
-        throw new Error(getUserFriendlyError('NETWORK_ERROR', 'Unable to connect to the server'))
+        responseText = await res.text()
+        console.error('[API] Response text length:', responseText.length)
+        console.error('[API] Response text (first 1000 chars):', responseText.substring(0, 1000))
+        
+        if (!responseText || responseText.trim() === '') {
+          console.error('[API] ERROR: Empty response body from server!')
+          throw new Error('Empty response body')
+        }
+        
+        payload = JSON.parse(responseText) as TRPCResponse<unknown>
+        console.error('[API] Parsed payload:', payload)
+      } catch (parseError) {
+        console.error('[API] Failed to parse error response:')
+        console.error('  Status:', res.status)
+        console.error('  StatusText:', res.statusText)
+        console.error('  ResponseText length:', responseText.length)
+        console.error('  ResponseText (first 500 chars):', responseText.substring(0, 500))
+        console.error('  ParseError:', parseError instanceof Error ? parseError.message : String(parseError))
+        throw new Error(getUserFriendlyError('NETWORK_ERROR', `Unable to connect to the server (${res.status} ${res.statusText})`))
       }
+      
+      // Log the full error response for debugging
+      if (path === 'auth.signin') {
+        console.error('[API] Signin error response details:')
+        console.error('  Status:', res.status)
+        console.error('  StatusText:', res.statusText)
+        console.error('  Payload:', payload)
+        console.error('  Payload type:', typeof payload)
+        console.error('  Has error key:', payload ? 'error' in payload : false)
+        if (payload && 'error' in payload) {
+          console.error('  Error object:', payload.error)
+        }
+      }
+      
       const message = payload && 'error' in payload ? payload.error.message : 'Request failed'
       const code = (payload && 'error' in payload && payload.error.data?.code) || 'UNKNOWN_ERROR'
       
@@ -724,10 +738,35 @@ async function trpcMutation<TInput, TOutput>(
       throw new Error(getUserFriendlyError(code, message))
     }
 
-    const json = (await res.json()) as TRPCResponse<TOutput>
+    // Parse response - read as JSON
+    let json: TRPCResponse<TOutput>
+    try {
+      const responseText = await res.text()
+      console.log('[API] Success response text length:', responseText.length)
+      if (path === 'auth.signin') {
+        console.log('[API] Signin success response text:', responseText.substring(0, 500))
+      }
+      json = JSON.parse(responseText) as TRPCResponse<TOutput>
+      if (path === 'auth.signin') {
+        console.log('[API] Signin parsed JSON:', JSON.stringify(json, null, 2))
+      }
+    } catch (parseError) {
+      console.error('[API] Failed to parse success response:', parseError)
+      throw new Error('Invalid response from server')
+    }
+    
     if ('error' in json) {
       const err = json.error
       const code = err.data?.code || 'UNKNOWN_ERROR'
+      
+      // Log signin errors for debugging
+      if (path === 'auth.signin') {
+        console.error('[API] Signin tRPC error in response:', {
+          code,
+          message: err.message,
+          fullError: JSON.stringify(err, null, 2)
+        })
+      }
       
       // Database configuration errors (Prisma Accelerate API key issues)
       const isDatabaseConfigError = 
@@ -818,13 +857,37 @@ async function trpcMutation<TInput, TOutput>(
       throw new Error(getUserFriendlyError(code, err.message))
     }
 
+    // Extract data from tRPC response format: { result: { data: ... } }
+    let data: TOutput
+    
+    if ('result' in json && json.result && 'data' in json.result) {
+      // Standard tRPC response format
+      data = json.result.data as TOutput
+    } else if ('result' in json && json.result && !('data' in json.result)) {
+      // Some tRPC responses might return data directly in result
+      data = json.result as TOutput
+    } else if (!('result' in json) && !('error' in json)) {
+      // Response might be the data directly (non-standard but possible)
+      console.warn('[API] Non-standard response format, treating entire response as data:', json)
+      data = json as unknown as TOutput
+    } else {
+      console.error('[API] Invalid tRPC response format:', json)
+      console.error('[API] Response keys:', Object.keys(json))
+      throw new Error('Invalid response format from server')
+    }
+    
+    if (path === 'auth.signin') {
+      console.log('[API] Signin extracted data:', data)
+      console.log('[API] Signin data type:', typeof data)
+      console.log('[API] Signin data keys:', data && typeof data === 'object' ? Object.keys(data) : 'not an object')
+    }
+    
     // Filter out any undefined/null items from array responses
-    const data = json.result.data
     if (Array.isArray(data)) {
       return data.filter((item) => item != null) as TOutput
     }
 
-    return data
+    return data as TOutput
   } catch (error: unknown) {
     // Skip Sentry logging for network errors on optional mutations
     // These are often transient and don't indicate a real problem
@@ -866,10 +929,6 @@ async function trpcMutation<TInput, TOutput>(
 // Auth API
 export async function apiSignup(input: SignupInput) {
   const data = await trpcMutation<SignupInput, AuthResponse>('auth.signup', input)
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('accessToken', data.accessToken)
-    localStorage.setItem('refreshToken', data.refreshToken)
-  }
   return data
 }
 
@@ -938,8 +997,8 @@ export async function apiVerify2FALogin(input: { email: string; code: string }) 
 }
 
 export function clearSession() {
+  // Clear tokens from both storage locations
   if (typeof window !== 'undefined') {
-    // Clear tokens from both storage types
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
     localStorage.removeItem('rememberMe')
@@ -1164,6 +1223,225 @@ export async function apiSearchAnime(query: string): Promise<Anime[]> {
   )
 }
 
+// ===== CALENDAR API =====
+
+export interface Episode {
+  id: string
+  animeId: string
+  animeTitle: string
+  animeSlug: string
+  animeImage?: string
+  episodeNumber: number
+  title?: string
+  airDate: string
+  airTime: string
+  duration?: number
+  isNewEpisode: boolean
+  isWatching: boolean
+  isCompleted: boolean
+  studio?: string
+  season?: string
+  year?: number
+  genres?: string[]
+  type?: string
+}
+
+export interface SeasonalAnime {
+  id: string
+  title: string
+  titleEnglish?: string
+  slug: string
+  image?: string
+  season: 'Winter' | 'Spring' | 'Summer' | 'Fall'
+  year: number
+  status: 'Airing' | 'Upcoming' | 'Completed'
+  episodes: number
+  episodesAired?: number
+  genres: string[]
+  studios: string[]
+  score?: number
+  popularity: number
+  isWatching: boolean
+  isCompleted: boolean
+  isPlanToWatch: boolean
+  airDate?: string
+  endDate?: string
+  description?: string
+}
+
+export interface CalendarStats {
+  episodesThisWeek: number
+  watchingEpisodes: number
+  trendingCount: number
+}
+
+export async function apiGetEpisodeSchedule(
+  startDate: string,
+  endDate: string,
+  useCache: boolean = true
+): Promise<Episode[]> {
+  const cacheKey = `calendar:episodes:${startDate}:${endDate}`
+
+  if (useCache) {
+    const cached = clientCache.get<Episode[]>(cacheKey)
+    if (cached !== null) {
+      return cached
+    }
+  }
+
+  const url = `${TRPC_URL}/calendar.getEpisodeSchedule?input=${encodeURIComponent(
+    JSON.stringify({ startDate, endDate })
+  )}`
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch episode schedule: ${response.statusText}`)
+  }
+
+  const data: TRPCResponse<Episode[]> = await response.json()
+
+  if ('error' in data) {
+    const code = data.error.data?.code || 'UNKNOWN_ERROR'
+    const message = data.error.message || 'An error occurred'
+    throw new Error(getUserFriendlyError(code, message))
+  }
+
+  const result = data.result.data
+
+  // Cache for 5 minutes (episode schedules change weekly)
+  clientCache.set(cacheKey, result, CacheTTL.short)
+
+  return result
+}
+
+export async function apiGetSeasonalAnime(
+  season: 'Winter' | 'Spring' | 'Summer' | 'Fall',
+  year: number,
+  useCache: boolean = true
+): Promise<SeasonalAnime[]> {
+  const cacheKey = `calendar:seasonal:${season}:${year}`
+
+  if (useCache) {
+    const cached = clientCache.get<SeasonalAnime[]>(cacheKey)
+    if (cached !== null) {
+      return cached
+    }
+  }
+
+  const url = `${TRPC_URL}/calendar.getSeasonalAnime?input=${encodeURIComponent(
+    JSON.stringify({ season, year })
+  )}`
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch seasonal anime: ${response.statusText}`)
+  }
+
+  const data: TRPCResponse<SeasonalAnime[]> = await response.json()
+
+  if ('error' in data) {
+    const code = data.error.data?.code || 'UNKNOWN_ERROR'
+    const message = data.error.message || 'An error occurred'
+    throw new Error(getUserFriendlyError(code, message))
+  }
+
+  const result = data.result.data
+
+  // Cache for 10 minutes (seasonal data changes infrequently)
+  clientCache.set(cacheKey, result, CacheTTL.medium)
+
+  return result
+}
+
+export async function apiGetCalendarStats(
+  startDate?: string,
+  endDate?: string,
+  useCache: boolean = true
+): Promise<CalendarStats> {
+  const cacheKey = `calendar:stats:${startDate || 'default'}:${endDate || 'default'}`
+
+  if (useCache) {
+    const cached = clientCache.get<CalendarStats>(cacheKey)
+    if (cached !== null) {
+      return cached
+    }
+  }
+
+  const input: { startDate?: string; endDate?: string } = {}
+  if (startDate) input.startDate = startDate
+  if (endDate) input.endDate = endDate
+
+  const url = `${TRPC_URL}/calendar.getCalendarStats?input=${encodeURIComponent(JSON.stringify(input))}`
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch calendar stats: ${response.statusText}`)
+  }
+
+  const data: TRPCResponse<CalendarStats> = await response.json()
+
+  if ('error' in data) {
+    const code = data.error.data?.code || 'UNKNOWN_ERROR'
+    const message = data.error.message || 'An error occurred'
+    throw new Error(getUserFriendlyError(code, message))
+  }
+
+  const result = data.result.data
+
+  // Cache for 5 minutes
+  clientCache.set(cacheKey, result, CacheTTL.short)
+
+  return result
+}
+
+export async function apiSyncCalendarData(animeId?: string): Promise<{ success: boolean; message: string }> {
+  const url = `${TRPC_URL}/calendar.syncCalendarData`
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify({ input: animeId ? { animeId } : {} }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to sync calendar data: ${response.statusText}`)
+  }
+
+  const data: TRPCResponse<{ success: boolean; message: string }> = await response.json()
+
+  if ('error' in data) {
+    const code = data.error.data?.code || 'UNKNOWN_ERROR'
+    const message = data.error.message || 'An error occurred'
+    throw new Error(getUserFriendlyError(code, message))
+  }
+
+  return data.result.data
+}
+
 // ===== MY LIST API =====
 
 export async function apiGetUserList(): Promise<UserListResponse> {
@@ -1226,6 +1504,10 @@ export async function apiGetFavoritedAnimeIds(useCache: boolean = true): Promise
 
   try {
     const result = await trpcQuery<{ animeIds: string[] }>('user.getFavoritedAnimeIds')
+    // Handle null result (when user is not authenticated)
+    if (!result) {
+      return []
+    }
     const animeIds = result.animeIds || []
 
     // Cache for 1 minute (favorites change frequently)

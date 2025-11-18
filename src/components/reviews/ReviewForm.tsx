@@ -57,7 +57,8 @@ export function ReviewForm({
 
     try {
       // API call to submit review
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews.create`, {
+      const { TRPC_URL } = await import('@/app/lib/api')
+      const response = await fetch(`${TRPC_URL}/reviews.create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

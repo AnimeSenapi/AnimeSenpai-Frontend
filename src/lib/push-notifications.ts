@@ -3,6 +3,9 @@
  * Handles browser push notifications for Phase 2 Social Features
  */
 
+// Use the Next.js proxy route for same-origin requests (no CORS issues)
+const API_URL = '/api/trpc'
+
 export class PushNotificationService {
   private static instance: PushNotificationService
   private registration: ServiceWorkerRegistration | null = null
@@ -131,9 +134,6 @@ export class PushNotificationService {
     if (!token) return
 
     try {
-      const API_URL =
-        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
-
       const response = await fetch(`${API_URL}/notifications.subscribeToPush`, {
         method: 'POST',
         headers: {
@@ -166,9 +166,6 @@ export class PushNotificationService {
     if (!token) return
 
     try {
-      const API_URL =
-        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
-
       await fetch(`${API_URL}/notifications.unsubscribeFromPush`, {
         method: 'POST',
         headers: {

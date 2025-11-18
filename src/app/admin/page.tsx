@@ -39,6 +39,7 @@ type Tab =
   | 'analytics-performance'
   | 'system'
 
+
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard')
 

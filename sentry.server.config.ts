@@ -26,6 +26,30 @@ Sentry.init({
 
   // Before sending errors, clean up sensitive data
   beforeSend(event, hint) {
+    // Redact PII in request data
+    if (event.request) {
+      if (event.request.headers) {
+        const h = event.request.headers as Record<string, string>
+        if (h.authorization) h.authorization = "[REDACTED]"
+        if (h.cookie) h.cookie = "[REDACTED]"
+      }
+      if (event.request.data && typeof event.request.data === "string") {
+        event.request.data = event.request.data.replace(/(token|password|email)=([^&\s]+)/gi, "$1=[REDACTED]")
+      }
+      if (event.request.cookies) {
+        event.request.cookies = {}
+      }
+    }
+    // Redact common fields
+    if (event.extra) {
+      const extra = event.extra as Record<string, any>
+      for (const key of Object.keys(extra)) {
+        if (/(token|password|cookie|authorization|email)/i.test(key)) {
+          extra[key] = "[REDACTED]"
+        }
+      }
+    }
+
     // Don't send errors in development
     if (process.env.NODE_ENV === "development") {
       // Suppress performance warnings in development

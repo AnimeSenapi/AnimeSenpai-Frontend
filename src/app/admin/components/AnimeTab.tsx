@@ -178,8 +178,7 @@ export function AnimeTab() {
       setLoadError(null)
       setIsSearchMode(false)
 
-      const TRPC_URL =
-        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+      const { TRPC_URL } = await import('@/app/lib/api')
       const url = `${TRPC_URL}/anime.getAll?input=${encodeURIComponent(
         JSON.stringify({
           page: currentPage,
@@ -248,8 +247,7 @@ export function AnimeTab() {
     try {
       setLoading(true)
       setLoadError(null)
-      const TRPC_URL =
-        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+      const { TRPC_URL } = await import('@/app/lib/api')
       const url = `${TRPC_URL}/anime.search?input=${encodeURIComponent(
         JSON.stringify({
           query: term,

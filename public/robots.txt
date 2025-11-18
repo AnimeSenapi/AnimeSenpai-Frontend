@@ -4,11 +4,13 @@ Allow: /
 
 # Disallow private pages
 Disallow: /auth/
+Disallow: /admin/
 Disallow: /dashboard
 Disallow: /mylist
 Disallow: /user/settings
 Disallow: /user/profile
 Disallow: /api/
+Disallow: /_next/
 
 # Sitemap
 Sitemap: https://animesenpai.app/sitemap.xml

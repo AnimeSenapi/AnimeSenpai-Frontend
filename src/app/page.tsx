@@ -11,6 +11,7 @@ import {
 import { SEOMetadata } from '../components/SEOMetadata'
 import { PageErrorBoundary } from '../components/PageErrorBoundary'
 
+
 export default function HomePage() {
   const router = useRouter()
   const { isLoading } = useAuth()
