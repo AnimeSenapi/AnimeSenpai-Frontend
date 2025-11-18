@@ -33,23 +33,38 @@ export function QuickActions({
   const { addToast } = useToast()
 
   const handleAddToList = async (newStatus: ListStatus) => {
+    // Optimistically update UI
+    const previousStatus = status
+    setStatus(newStatus)
+    
     setIsLoading(true)
     try {
-      await apiAddToList({
-        animeId: anime.id,
-        status: newStatus,
-        isFavorite: favorite,
-      })
+      if (previousStatus) {
+        // Update existing entry
+        const { apiUpdateListStatus } = await import('@/app/lib/api')
+        await apiUpdateListStatus({
+          animeId: anime.id,
+          status: newStatus,
+        })
+      } else {
+        // Add new entry
+        await apiAddToList({
+          animeId: anime.id,
+          status: newStatus,
+          isFavorite: favorite,
+        })
+      }
 
-      setStatus(newStatus)
       onUpdate?.()
 
       addToast({
-        title: 'Added to list!',
-        description: `${anime.title} added to ${newStatus.replace('-', ' ')}`,
+        title: previousStatus ? 'Updated!' : 'Added to list!',
+        description: `${anime.title} ${previousStatus ? 'updated' : 'added'} to ${newStatus.replace('-', ' ')}`,
         variant: 'success',
       })
     } catch (error) {
+      // Revert optimistic update
+      setStatus(previousStatus)
       addToast({
         title: 'Failed to add',
         description: error instanceof Error ? error.message : 'Please try again',

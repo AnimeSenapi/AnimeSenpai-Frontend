@@ -6,7 +6,7 @@ import { UserPlus, UserMinus, Loader2 } from 'lucide-react'
 import { useAuth } from '../../app/lib/auth-context'
 import { useToast } from '../ui/toast'
 
-import { TRPC_URL as API_URL } from '@/app/lib/api'
+import { apiFollowUser, apiUnfollowUser, apiGetRelationshipStatus } from '@/app/lib/api'
 
 interface FollowButtonProps {
   userId: string
@@ -25,7 +25,7 @@ export function FollowButton({
   size = 'default',
   variant = 'default',
 }: FollowButtonProps) {
-  const { user, getAuthHeaders } = useAuth()
+  const { user } = useAuth()
   const { addToast } = useToast()
   const [isFollowing, setIsFollowing] = useState(initialFollowing)
   const [isLoading, setIsLoading] = useState(false)
@@ -46,17 +46,9 @@ export function FollowButton({
     if (!user) return
 
     try {
-      const response = await fetch(
-        `${API_URL}/social.checkFollowing?input=${encodeURIComponent(JSON.stringify({ followerId: user.id, followingId: userId }))}`,
-        {
-          method: 'GET',
-          headers: getAuthHeaders(),
-        }
-      )
-
-      const data = await response.json()
-      if (data.result?.data) {
-        setIsFollowing(data.result.data.following)
+      const relationship = await apiGetRelationshipStatus(userId) as { isFollowing?: boolean }
+      if (relationship?.isFollowing !== undefined) {
+        setIsFollowing(relationship.isFollowing)
       }
     } catch (error) {
       console.error('Error checking follow status:', error)
@@ -84,31 +76,19 @@ export function FollowButton({
       return
     }
 
+    // Optimistically update UI
+    const newFollowingState = !isFollowing
+    setIsFollowing(newFollowingState)
+    onFollowChange?.(newFollowingState)
+
     setIsLoading(true)
 
     try {
-      const endpoint = isFollowing ? 'social.unfollow' : 'social.follow'
-
-      const response = await fetch(`${API_URL}/${endpoint}`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ userId }),
-      })
-
-      const data = await response.json()
-
-      if (data.error) {
-        addToast({
-        title: 'Error',
-        description: data.error.message || 'Failed to update follow status',
-        variant: 'destructive',
-      })
-        return
+      if (isFollowing) {
+        await apiUnfollowUser(userId)
+      } else {
+        await apiFollowUser(userId)
       }
-
-      const newFollowingState = !isFollowing
-      setIsFollowing(newFollowingState)
-      onFollowChange?.(newFollowingState)
 
       if (newFollowingState) {
         addToast({

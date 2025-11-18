@@ -8,7 +8,7 @@ import { Button } from '../../components/ui/button'
 import { UserListResponse } from '../../types/anime'
 import { useAuth } from '../lib/auth-context'
 import { useFavorites } from '../lib/favorites-context'
-import { apiGetUserList, apiAddToList } from '../lib/api'
+import { apiGetUserList, apiUpdateListStatus } from '../lib/api'
 import { groupAnimeIntoSeries } from '../../lib/series-grouping'
 import {
   StatsCardSkeleton,
@@ -99,15 +99,36 @@ export default function MyListPage() {
 
   // Handle status change
   const handleStatusChange = async (animeId: string, status: 'watching' | 'completed' | 'plan-to-watch') => {
+    console.log('handleStatusChange in mylist page:', { animeId, status })
+    
+    // Optimistically update the UI immediately
+    if (userList) {
+      setUserList({
+        ...userList,
+        items: userList.items.map((item) => {
+          if (item.anime?.id === animeId) {
+            return {
+              ...item,
+              listStatus: status as typeof item.listStatus,
+            }
+          }
+          return item
+        }),
+      })
+    }
+    
     try {
-      await apiAddToList({
+      const result = await apiUpdateListStatus({
         animeId,
         status,
       })
-      // Refetch the list to update the UI
-      await fetchUserList()
+      console.log('Status update successful:', result)
+      // Optionally refetch to ensure consistency, but UI is already updated
+      // await fetchUserList()
     } catch (err) {
       console.error('Failed to update status:', err)
+      // Revert optimistic update on error
+      await fetchUserList()
     }
   }
 
@@ -132,6 +153,7 @@ export default function MyListPage() {
       .filter((item) => item.anime) // Only include items with anime data
       .map((item) => ({
         ...item.anime!,
+        listId: item.listId, // Preserve listId from the API response
         listStatus: item.listStatus as
           | 'watching'
           | 'completed'

@@ -31,29 +31,12 @@ export function NotesButton({
 
   const handleSaveNotes = async (newNotes: string) => {
     try {
-      const { TRPC_URL: API_URL } = await import('@/app/lib/api')
-      const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
+      const { apiUpdateListEntry } = await import('@/app/lib/api')
       
-      if (!token) {
-        throw new Error('Authentication required')
-      }
-
-      const response = await fetch(`${API_URL}/user.addToList`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          animeId,
-          notes: newNotes,
-        }),
+      await apiUpdateListEntry({
+        animeId,
+        notes: newNotes,
       })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error?.message || 'Failed to save notes')
-      }
 
       setNotes(newNotes)
       onNotesUpdate?.(newNotes)

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { cn } from '../../app/lib/utils'
 import { Anime } from '../../types/anime'
 import { getTagById } from '../../types/tags'
@@ -32,25 +32,39 @@ export function MyListAnimeCard({
 }: MyListAnimeCardProps) {
   const router = useRouter()
   const [showStatusMenu, setShowStatusMenu] = useState(false)
+  const statusMenuRef = useRef<HTMLDivElement>(null)
   // Prefer English title over romanized Japanese
   const displayTitle = anime.titleEnglish || anime.title
 
   // Close status menu when clicking outside
   useEffect(() => {
     if (showStatusMenu) {
-      const handleClickOutside = () => {
-        setShowStatusMenu(false)
+      const handleClickOutside = (event: MouseEvent) => {
+        if (statusMenuRef.current && !statusMenuRef.current.contains(event.target as Node)) {
+          setShowStatusMenu(false)
+        }
       }
-      document.addEventListener('click', handleClickOutside)
-      return () => document.removeEventListener('click', handleClickOutside)
+      // Use a small delay to ensure button clicks register first
+      const timeoutId = setTimeout(() => {
+        document.addEventListener('click', handleClickOutside)
+      }, 0)
+      return () => {
+        clearTimeout(timeoutId)
+        document.removeEventListener('click', handleClickOutside)
+      }
     }
     return undefined
   }, [showStatusMenu])
 
   const handleStatusChange = (status: 'watching' | 'completed' | 'plan-to-watch', e?: React.MouseEvent) => {
-    e?.preventDefault()
-    e?.stopPropagation()
-    onStatusChange?.(anime.id, status)
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    console.log('handleStatusChange called:', { animeId: anime.id, status, hasCallback: !!onStatusChange })
+    if (onStatusChange) {
+      onStatusChange(anime.id, status)
+    }
     setShowStatusMenu(false)
   }
 
@@ -127,7 +141,7 @@ export function MyListAnimeCard({
               {/* Status Badge with Dropdown - Subtle Dark Style */}
               <div className="absolute -top-2 -right-2 z-10">
                 {onStatusChange ? (
-                  <div className="relative">
+                  <div className="relative" ref={statusMenuRef}>
                     <button
                       onClick={(e) => {
                         e.preventDefault()
@@ -151,9 +165,24 @@ export function MyListAnimeCard({
                       )} />
                     </button>
                     {showStatusMenu && (
-                      <div className="absolute top-full right-0 mt-2 glass rounded-lg p-1.5 min-w-[160px] z-50 border border-white/20 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2">
+                      <div 
+                        className="absolute top-full right-0 mt-2 glass rounded-lg p-1.5 min-w-[160px] z-50 border border-white/20 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                        }}
+                        onMouseDown={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                        }}
+                      >
                         <button
-                          onClick={(e) => handleStatusChange('watching', e)}
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            handleStatusChange('watching', e)
+                          }}
                           className={cn(
                             'w-full text-left px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 text-sm',
                             anime.listStatus === 'watching'
@@ -165,7 +194,12 @@ export function MyListAnimeCard({
                           <span>Watching</span>
                         </button>
                         <button
-                          onClick={(e) => handleStatusChange('completed', e)}
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            handleStatusChange('completed', e)
+                          }}
                           className={cn(
                             'w-full text-left px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 text-sm',
                             anime.listStatus === 'completed'
@@ -177,7 +211,12 @@ export function MyListAnimeCard({
                           <span>Completed</span>
                         </button>
                         <button
-                          onClick={(e) => handleStatusChange('plan-to-watch', e)}
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            handleStatusChange('plan-to-watch', e)
+                          }}
                           className={cn(
                             'w-full text-left px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 text-sm',
                             anime.listStatus === 'plan-to-watch'
@@ -328,7 +367,7 @@ export function MyListAnimeCard({
           {/* Status Badge with Dropdown - Top Left */}
           <div className="absolute top-3 left-3 z-10">
             {onStatusChange ? (
-              <div className="relative">
+              <div className="relative" ref={statusMenuRef}>
                 <button
                   onClick={(e) => {
                     e.preventDefault()
@@ -352,9 +391,24 @@ export function MyListAnimeCard({
                   )} />
                 </button>
                 {showStatusMenu && (
-                  <div className="absolute top-full left-0 mt-2 glass rounded-lg p-1.5 min-w-[160px] z-50 border border-white/20 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2">
+                  <div 
+                    className="absolute top-full left-0 mt-2 glass rounded-lg p-1.5 min-w-[160px] z-50 border border-white/20 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                    }}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                    }}
+                  >
                     <button
-                      onClick={(e) => handleStatusChange('watching', e)}
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        handleStatusChange('watching', e)
+                      }}
                       className={cn(
                         'w-full text-left px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 text-sm',
                         anime.listStatus === 'watching'
@@ -366,7 +420,12 @@ export function MyListAnimeCard({
                       <span>Watching</span>
                     </button>
                     <button
-                      onClick={(e) => handleStatusChange('completed', e)}
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        handleStatusChange('completed', e)
+                      }}
                       className={cn(
                         'w-full text-left px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 text-sm',
                         anime.listStatus === 'completed'
@@ -378,7 +437,12 @@ export function MyListAnimeCard({
                       <span>Completed</span>
                     </button>
                     <button
-                      onClick={(e) => handleStatusChange('plan-to-watch', e)}
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        handleStatusChange('plan-to-watch', e)
+                      }}
                       className={cn(
                         'w-full text-left px-3 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 text-sm',
                         anime.listStatus === 'plan-to-watch'

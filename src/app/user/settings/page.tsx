@@ -10,7 +10,7 @@ import { RequireAuth } from '../../lib/protected-route'
 import { useAuth } from '../../lib/auth-context'
 import { useToast } from '../../../components/ui/toast'
 import { NotificationSettings } from '../../../components/settings/NotificationSettings'
-import { apiGet2FAStatus, apiEnable2FA, apiVerify2FASetup, apiDisable2FA, apiExportUserData, apiRequestAccountDeletion, TRPC_URL } from '../../lib/api'
+import { apiGet2FAStatus, apiEnable2FA, apiVerify2FASetup, apiDisable2FA, apiExportUserData, apiRequestAccountDeletion, apiUpdateProfile, apiUpdatePreferences, TRPC_URL } from '../../lib/api'
 import {
   Settings,
   User,
@@ -249,29 +249,18 @@ export default function UserSettingsPage() {
   }
 
   async function handleSaveProfile() {
+    // Optimistically update UI
+    const previousUsername = user?.username
+    const previousBio = user?.bio
+
     try {
       setIsSaving(true)
       setError(null)
 
-      const response = await fetch(`${API_URL}/auth.updateProfile`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          username,
-          bio,
-        }),
+      await apiUpdateProfile({
+        username,
+        bio,
       })
-
-      const data = await response.json()
-      if (data.error) {
-        setError(data.error.message || 'Failed to update profile')
-        addToast({
-        title: 'Error',
-        description: data.error.message || 'Failed to update profile',
-        variant: 'destructive',
-      })
-        return
-      }
 
       setSaveSuccess(true)
       await refreshUser()
@@ -282,38 +271,47 @@ export default function UserSettingsPage() {
       })
       setTimeout(() => setSaveSuccess(false), 3000)
     } catch (err) {
-      setError('Failed to update profile. Please try again.')
+      setError(err instanceof Error ? err.message : 'Failed to update profile. Please try again.')
       addToast({
         title: 'Error',
-        description: 'Failed to update profile. Please try again.',
+        description: err instanceof Error ? err.message : 'Failed to update profile. Please try again.',
         variant: 'destructive',
       })
+      // Revert optimistic update
+      if (user) {
+        await refreshUser()
+      }
     } finally {
       setIsSaving(false)
     }
   }
 
   async function handleSavePreferences() {
+    // Optimistically update UI - preferences are already in state
+    const previousPreferences = { ...preferences }
+
     try {
       setIsSaving(true)
       setError(null)
 
-      const response = await fetch(`${API_URL}/user.updatePreferences`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(preferences),
-      })
-
-      const data = await response.json()
-      if (data.error) {
-        setError(data.error.message || 'Failed to save settings')
-        return
-      }
+      await apiUpdatePreferences(preferences)
 
       setSaveSuccess(true)
+      addToast({
+        title: 'Success',
+        description: 'Preferences saved successfully!',
+        variant: 'success',
+      })
       setTimeout(() => setSaveSuccess(false), 3000)
     } catch (err) {
-      setError('Failed to save settings. Please try again.')
+      setError(err instanceof Error ? err.message : 'Failed to save settings. Please try again.')
+      // Revert optimistic update
+      setPreferences(previousPreferences)
+      addToast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to save settings. Please try again.',
+        variant: 'destructive',
+      })
     } finally {
       setIsSaving(false)
     }

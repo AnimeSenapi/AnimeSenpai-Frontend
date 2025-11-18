@@ -156,13 +156,13 @@ const nextConfigBase = {
           },
         ],
       },
-      // Cache API responses (short TTL)
+      // Disable caching for tRPC API routes (dynamic API calls should not be cached)
       {
-        source: '/api/:path*',
+        source: '/api/trpc/:path*',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, s-maxage=60, stale-while-revalidate=300',
+            value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
           },
         ],
       },

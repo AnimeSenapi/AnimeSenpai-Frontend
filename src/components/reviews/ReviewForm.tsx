@@ -56,24 +56,12 @@ export function ReviewForm({
     setIsSubmitting(true)
 
     try {
-      // API call to submit review
-      const { TRPC_URL } = await import('@/app/lib/api')
-      const response = await fetch(`${TRPC_URL}/reviews.create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')}`,
-        },
-        body: JSON.stringify({
-          animeId,
-          rating,
-          comment: comment.trim(),
-        }),
+      const { apiCreateReview } = await import('@/app/lib/api')
+      await apiCreateReview({
+        animeId,
+        rating,
+        comment: comment.trim(),
       })
-
-      if (!response.ok) {
-        throw new Error('Failed to submit review')
-      }
 
       addToast({
         title: 'Success',
@@ -85,7 +73,7 @@ export function ReviewForm({
       console.error('Failed to submit review:', error)
       addToast({
         title: 'Error',
-        description: 'Failed to submit review',
+        description: error instanceof Error ? error.message : 'Failed to submit review',
         variant: 'destructive',
       })
     } finally {
