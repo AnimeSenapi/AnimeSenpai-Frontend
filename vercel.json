@@ -1,0 +1,4 @@
+{
+  "installCommand": "CYPRESS_INSTALL_BINARY=0 bun install"
+}
+
