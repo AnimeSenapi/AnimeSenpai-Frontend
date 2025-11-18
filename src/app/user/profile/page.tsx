@@ -14,6 +14,7 @@ import { LoadingState } from '../../../components/ui/loading-state'
 import { EmptyState } from '../../../components/ui/error-state'
 import { groupAnimeIntoSeries } from '../../../lib/series-grouping'
 import { apiGetUserList } from '../../lib/api'
+import { TRPC_URL as API_URL } from '../../lib/api'
 import {
   User,
   Settings,
@@ -86,8 +87,6 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<'recent' | 'favorites'>('recent')
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [avatarError, setAvatarError] = useState<string | null>(null)
-
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/trpc'
 
   const getAuthHeaders = (): Record<string, string> => {
     const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')

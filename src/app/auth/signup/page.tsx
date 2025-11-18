@@ -270,9 +270,13 @@ export default function SignUpPage() {
                     id="username"
                     name="username"
                     type="text"
+                    inputMode="text"
+                    autoComplete="username"
+                    autoCapitalize="none"
+                    autoCorrect="off"
                     value={formData.username}
                     onChange={handleInputChange}
-                    className={`w-full pl-12 pr-12 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all text-base ${
+                    className={`w-full pl-12 pr-12 py-3.5 sm:py-3 bg-white/5 border rounded-md rounded-input text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all text-base sm:text-sm min-h-[44px] sm:min-h-0 ${
                       formErrors.username
                         ? 'border-red-500/50'
                         : usernameStatus === 'available'
@@ -281,6 +285,7 @@ export default function SignUpPage() {
                     }`}
                     placeholder="yourname"
                     suppressHydrationWarning
+                    style={{ fontSize: '16px' }}
                   />
                   <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
                     {usernameStatus === 'checking' && (
@@ -311,13 +316,18 @@ export default function SignUpPage() {
                     id="email"
                     name="email"
                     type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className={`w-full pl-12 pr-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all text-base ${
+                    className={`w-full pl-12 pr-4 py-3.5 sm:py-3 bg-white/5 border rounded-md rounded-input text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all text-base sm:text-sm min-h-[44px] sm:min-h-0 ${
                       formErrors.email ? 'border-red-500/50' : 'border-white/10'
                     }`}
                     placeholder="you@example.com"
                     suppressHydrationWarning
+                    style={{ fontSize: '16px' }}
                   />
                 </div>
                 {formErrors.email && (
@@ -336,13 +346,15 @@ export default function SignUpPage() {
                     id="password"
                     name="password"
                     type={showPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className={`w-full pl-12 pr-12 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all text-base ${
+                    className={`w-full pl-12 pr-12 py-3.5 sm:py-3 bg-white/5 border rounded-md rounded-input text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all text-base sm:text-sm min-h-[44px] sm:min-h-0 ${
                       formErrors.password ? 'border-red-500/50' : 'border-white/10'
                     }`}
                     placeholder="••••••••"
                     suppressHydrationWarning
+                    style={{ fontSize: '16px' }}
                   />
                   <button
                     type="button"
@@ -430,9 +442,10 @@ export default function SignUpPage() {
                     id="confirmPassword"
                     name="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className={`w-full pl-12 pr-12 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all text-base ${
+                    className={`w-full pl-12 pr-12 py-3.5 sm:py-3 bg-white/5 border rounded-md rounded-input text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all text-base sm:text-sm min-h-[44px] sm:min-h-0 ${
                       formErrors.confirmPassword
                         ? 'border-red-500/50'
                         : isPasswordMatch
@@ -441,6 +454,7 @@ export default function SignUpPage() {
                     }`}
                     placeholder="••••••••"
                     suppressHydrationWarning
+                    style={{ fontSize: '16px' }}
                   />
                   <button
                     type="button"

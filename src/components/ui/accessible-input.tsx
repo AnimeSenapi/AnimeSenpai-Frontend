@@ -68,17 +68,25 @@ export const AccessibleInput = forwardRef<HTMLInputElement, AccessibleInputProps
             aria-required={required}
             required={required}
             className={cn(
-              'flex h-10 w-full rounded-lg border bg-white/5 px-3 py-2 text-sm text-white',
+              'flex h-11 sm:h-10 w-full rounded-lg border bg-white/5 px-4 sm:px-3 py-3 sm:py-2 text-base sm:text-sm text-white',
               'placeholder:text-gray-500',
               'focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 focus:ring-offset-gray-900',
               'disabled:cursor-not-allowed disabled:opacity-50',
               'transition-colors duration-200',
+              'touch-manipulation', // Prevent double-tap zoom on iOS
               error && 'border-red-500 focus:ring-red-400',
               !error && 'border-white/10',
-              leftIcon && 'pl-10',
-              rightIcon && 'pr-10',
+              leftIcon && 'pl-12 sm:pl-10',
+              rightIcon && 'pr-12 sm:pr-10',
               className
             )}
+            style={{
+              // Prevent zoom on iOS when focusing inputs
+              fontSize: '16px',
+              ...(typeof window !== 'undefined' && window.innerWidth >= 640 && {
+                fontSize: '14px',
+              }),
+            }}
             {...props}
           />
 

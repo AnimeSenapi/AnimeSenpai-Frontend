@@ -298,22 +298,29 @@ export function useHaptic() {
 
 /**
  * Mobile detection hook
+ * Returns false initially to avoid hydration mismatch, then updates after mount
  */
 export function useIsMobile() {
+  // Start with false to match server-side rendering
   const [isMobile, setIsMobile] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768)
     }
 
+    // Check immediately after mount
     checkMobile()
     window.addEventListener('resize', checkMobile)
 
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  return isMobile
+  // Return false during SSR and initial client render to avoid hydration mismatch
+  // The value will update after mount via useEffect
+  return mounted ? isMobile : false
 }
 
 /**

@@ -6,9 +6,7 @@
  */
 
 import { createTRPCClient, httpBatchLink } from '@trpc/client'
-
-// Backend API URL
-const TRPC_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3005/api/trpc'
+import { TRPC_URL } from '@/app/lib/api'
 
 // Create the tRPC client with any type to avoid router constraint issues
 export const trpc = createTRPCClient<any>({

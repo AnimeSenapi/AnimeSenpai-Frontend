@@ -6,8 +6,7 @@ import Image from 'next/image'
 import { User, Users, Loader2 } from 'lucide-react'
 import { FollowButton } from './FollowButton'
 import { useAuth } from '../../app/lib/auth-context'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL
+import { TRPC_URL as API_URL } from '@/app/lib/api'
 
 interface FollowUser {
   id: string

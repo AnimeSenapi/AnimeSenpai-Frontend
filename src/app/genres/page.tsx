@@ -29,6 +29,7 @@ interface Genre {
   avgRating?: number
 }
 
+
 const GENRE_ICONS: Record<string, any> = {
   action: Sword,
   adventure: Mountain,

@@ -19,6 +19,7 @@ import { useToast } from '../../../components/ui/toast'
 import { NotesButton } from '../../../components/notes'
 import { apiToggleFavoriteByAnimeId } from '../../lib/api'
 import { RecommendationCarousel } from '../../../components/recommendations/RecommendationCarousel'
+import { MobileAnimeActions } from '../../../components/anime/MobileAnimeActions'
 import type { Anime } from '../../../types/anime'
 import { 
   generateAnimeStructuredData,
@@ -26,9 +27,10 @@ import {
   generateAnimeKeywords,
   generateCanonicalURL,
 } from '../../../lib/seo-utils'
-import { Play, Bookmark, Heart, Star, Check, Plus, X, Loader2, Tv2, Sparkles } from 'lucide-react'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3005/api/trpc'
+import { Play, Bookmark, Heart, Star, Check, Plus, X, Loader2, Tv2, Sparkles, ChevronDown, ChevronUp } from 'lucide-react'
+import { TRPC_URL as API_URL } from '../../lib/api'
+import { useIsMobile } from '../../../hooks/use-touch-gestures'
+import { cn } from '../../../lib/utils'
 
 interface AnimeDetail extends Anime {
   titleEnglish?: string
@@ -63,12 +65,14 @@ interface Review {
   createdAt: string
 }
 
+
 export default function AnimePage() {
   const params = useParams()
   const router = useRouter()
   const { isAuthenticated, user } = useAuth()
   const { addToast } = useToast()
   const slug = params?.slug as string
+  const isMobile = useIsMobile()
 
   const [anime, setAnime] = useState<AnimeDetail | null>(null)
   const [relatedSeasons, setRelatedSeasons] = useState<Anime[]>([])
@@ -93,6 +97,11 @@ export default function AnimePage() {
   const [userReview, setUserReview] = useState('')
   const [hoverRating, setHoverRating] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // Collapsed sections state for mobile
+  const [collapsedSections, setCollapsedSections] = useState({
+    about: false,
+  })
 
   const getAuthHeaders = (): Record<string, string> => {
     const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
@@ -761,20 +770,40 @@ export default function AnimePage() {
             {/* About Section - Combined Synopsis & Background */}
             {(anime.synopsis || anime.background) && (
               <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6 hover:border-primary-500/20 transition-all duration-300">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-8 w-1 bg-gradient-to-b from-primary-500 to-secondary-500 rounded-full"></div>
-                  <h2 className="text-lg sm:text-xl font-bold text-white">About</h2>
-                </div>
-            {anime.synopsis && (
-                  <div className="mb-4">
-                <p className="text-sm sm:text-base lg:text-lg text-gray-300 leading-relaxed">{anime.synopsis}</p>
+                <button
+                  onClick={() => setCollapsedSections(prev => ({ ...prev, about: !prev.about }))}
+                  className={cn(
+                    'flex items-center justify-between w-full gap-3 mb-4',
+                    isMobile && 'cursor-pointer'
+                  )}
+                  aria-expanded={!collapsedSections.about}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-1 bg-gradient-to-b from-primary-500 to-secondary-500 rounded-full"></div>
+                    <h2 className="text-lg sm:text-xl font-bold text-white">About</h2>
                   </div>
-                )}
-                {anime.background && (
-                  <div className={anime.synopsis ? 'pt-4 border-t border-white/10' : ''}>
-                    <h3 className="text-xs sm:text-sm font-semibold text-gray-400 mb-2 uppercase tracking-wide">Background</h3>
-                    <p className="text-sm sm:text-base text-gray-300 leading-relaxed">{anime.background}</p>
-                  </div>
+                  {isMobile && (
+                    collapsedSections.about ? (
+                      <ChevronDown className="h-5 w-5 text-gray-400" />
+                    ) : (
+                      <ChevronUp className="h-5 w-5 text-gray-400" />
+                    )
+                  )}
+                </button>
+                {(!isMobile || !collapsedSections.about) && (
+                  <>
+                    {anime.synopsis && (
+                      <div className="mb-4">
+                        <p className="text-sm sm:text-base lg:text-lg text-gray-300 leading-relaxed">{anime.synopsis}</p>
+                      </div>
+                    )}
+                    {anime.background && (
+                      <div className={anime.synopsis ? 'pt-4 border-t border-white/10' : ''}>
+                        <h3 className="text-xs sm:text-sm font-semibold text-gray-400 mb-2 uppercase tracking-wide">Background</h3>
+                        <p className="text-sm sm:text-base text-gray-300 leading-relaxed">{anime.background}</p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -1084,6 +1113,18 @@ export default function AnimePage() {
           </div>
         </div>
       )}
+
+      {/* Mobile Sticky Actions Bar */}
+      <MobileAnimeActions
+        isAuthenticated={isAuthenticated}
+        isFavorite={isFavorite}
+        listStatus={listStatus}
+        isSubmitting={isSubmitting}
+        onAddToList={handleAddToList}
+        onToggleFavorite={handleToggleFavorite}
+        onRate={() => setShowRatingModal(true)}
+        onRemoveFromList={handleRemoveFromList}
+      />
     </div>
   )
 }

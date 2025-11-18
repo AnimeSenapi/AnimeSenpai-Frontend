@@ -6,7 +6,7 @@ import { UserPlus, UserMinus, Loader2 } from 'lucide-react'
 import { useAuth } from '../../app/lib/auth-context'
 import { useToast } from '../ui/toast'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL
+import { TRPC_URL as API_URL } from '@/app/lib/api'
 
 interface FollowButtonProps {
   userId: string

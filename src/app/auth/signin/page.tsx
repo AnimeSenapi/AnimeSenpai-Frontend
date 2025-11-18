@@ -148,7 +148,7 @@ export default function SignInPage() {
                         setFormErrors({ ...formErrors, email: undefined })
                       }
                     }}
-                    className={`w-full pl-12 pr-4 py-3 sm:py-3.5 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all text-base ${
+                    className={`w-full pl-12 pr-4 py-3 sm:py-3.5 bg-white/5 border rounded-md rounded-input text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all text-base ${
                       formErrors.email ? 'border-red-500/50' : 'border-white/10'
                     }`}
                     placeholder="you@example.com"
@@ -179,7 +179,7 @@ export default function SignInPage() {
                         setFormErrors({ ...formErrors, password: undefined })
                       }
                     }}
-                    className={`w-full pl-12 pr-12 py-3 sm:py-3.5 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all text-base ${
+                    className={`w-full pl-12 pr-12 py-3 sm:py-3.5 bg-white/5 border rounded-md rounded-input text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all text-base ${
                       formErrors.password ? 'border-red-500/50' : 'border-white/10'
                     }`}
                     placeholder="••••••••"

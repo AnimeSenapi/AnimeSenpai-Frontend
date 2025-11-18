@@ -1,6 +1,7 @@
 'use client'
 
 import { logger } from './logger'
+import { headers } from 'next/headers'
 
 interface AnalyticsEvent {
   event: string
@@ -44,6 +45,8 @@ class AnalyticsTracker {
   private session: UserSession
   private flushTimer?: NodeJS.Timeout
   private isOnline = true
+  private enabled = true
+  private vercelTrack?: (event: string, props?: Record<string, any>) => void
 
   constructor(config: Partial<AnalyticsConfig> = {}) {
     this.config = {
@@ -56,7 +59,30 @@ class AnalyticsTracker {
     }
 
     this.session = this.createSession()
+    this.enabled = this.shouldEnable()
+    // Lazy import vercel analytics custom event tracker if present
+    if (typeof window !== 'undefined') {
+      import('@vercel/analytics').then((mod) => {
+        if (mod && typeof mod.track === 'function') {
+          this.vercelTrack = mod.track
+        }
+      }).catch(() => {})
+    }
     this.initializeTracking()
+  }
+
+  private shouldEnable(): boolean {
+    if (typeof window === 'undefined') return true
+    // Respect Do Not Track
+    if ((navigator as any).doNotTrack === '1' || (window as any).doNotTrack === '1') {
+      return false
+    }
+    // Optional local opt-out flag
+    try {
+      const consent = localStorage.getItem('analytics:consent')
+      if (consent === 'denied') return false
+    } catch {}
+    return true
   }
 
   private createSession(): UserSession {
@@ -100,6 +126,7 @@ class AnalyticsTracker {
 
   private initializeTracking() {
     if (typeof window === 'undefined') return
+    if (!this.enabled) return
 
     // Sample rate check
     if (Math.random() > this.config.sampleRate) return
@@ -145,14 +172,41 @@ class AnalyticsTracker {
   setUserId(userId: string) {
     this.session.userId = userId
   }
+  
+  identify(userId: string, traits?: Record<string, any>) {
+    this.setUserId(userId)
+    // Do not include PII (emails, tokens, message bodies)
+    const safeTraits = Object.fromEntries(
+      Object.entries(traits || {}).filter(([k]) => !/email|token|password|message|content/i.test(k))
+    )
+    this.track('identify', { userId, ...safeTraits })
+  }
 
   track(event: string, properties?: Record<string, any>) {
     if (typeof window === 'undefined') return
+    if (!this.enabled) return
     
+    // Context
+    const urlObj = new URL(window.location.href)
+    const locale = navigator.language || 'en'
+    const connection = (navigator as any).connection?.effectiveType
+    const device = /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
+    const route = urlObj.pathname
+    const abFlags = (() => {
+      try {
+        return JSON.parse(localStorage.getItem('ab:flags') || 'null') || undefined
+      } catch { return undefined }
+    })()
+
     const analyticsEvent: AnalyticsEvent = {
       event,
       properties: {
         ...properties,
+        route,
+        locale,
+        device,
+        connection,
+        abFlags,
         sessionId: this.session.sessionId,
         userId: this.session.userId
       },
@@ -175,6 +229,10 @@ class AnalyticsTracker {
     if (this.config.debug) {
       console.log('Analytics event:', analyticsEvent)
     }
+    // Best-effort fan-out to Vercel custom events if available
+    try {
+      this.vercelTrack?.(event, analyticsEvent.properties)
+    } catch {}
 
     // Auto-flush if batch size reached
     if (this.events.length >= this.config.batchSize) {
@@ -331,6 +389,9 @@ export const getAnalyticsTracker = () => {
 export const analytics = {
   get track() {
     return getAnalyticsTracker()?.track.bind(getAnalyticsTracker()) || (() => {})
+  },
+  get identify() {
+    return getAnalyticsTracker()?.identify.bind(getAnalyticsTracker()) || ((_id: string, _traits?: Record<string, any>) => {})
   },
   get trackPageView() {
     return getAnalyticsTracker()?.trackPageView.bind(getAnalyticsTracker()) || (() => {})

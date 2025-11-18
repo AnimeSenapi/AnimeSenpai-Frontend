@@ -25,6 +25,7 @@ import {
   Star,
 } from 'lucide-react'
 
+
 // Map UI sort options to API sort params
 const mapSortToAPI = (sortBy: SortOption): { sortBy: string; sortOrder: string } => {
   switch (sortBy) {
@@ -133,7 +134,7 @@ export default function SearchPage() {
         }
       } catch (err) {
         console.error('❌ Failed to load anime from API:', err)
-        console.error('API URL:', process.env.NEXT_PUBLIC_API_URL)
+        // Using centralized TRPC_URL; logged above if needed
         setAllAnime([])
       } finally {
         setIsLoading(false)

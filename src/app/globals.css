@@ -162,6 +162,57 @@
   .text-xs {
     font-size: 12px;
   }
+
+  /* Optimize animations for mobile */
+  * {
+    /* Use GPU acceleration for transforms */
+    will-change: auto;
+  }
+
+  /* Reduce animation complexity on mobile */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Optimize scrolling performance */
+  .overflow-y-auto,
+  .overflow-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* Optimize image loading */
+  img {
+    content-visibility: auto;
+  }
+
+  /* Reduce repaints on scroll */
+  .sticky,
+  .fixed {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  /* Enhanced focus management for mobile */
+  *:focus-visible {
+    outline: 2px solid var(--primary-400, #60a5fa);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Ensure touch targets are accessible */
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible {
+    outline-width: 3px;
+    outline-offset: 3px;
+  }
   
   .text-sm {
     font-size: 14px;
@@ -650,6 +701,11 @@ a:hover,
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
   
+  /* Forcefully rounded inputs (overrides iOS fix that zeros radius) */
+  .rounded-input {
+    border-radius: 0.5rem !important; /* Slightly more rounded (Tailwind rounded-lg) */
+  }
+  
   /* Glass with hover effect */
   .glass-hover {
     background: rgba(255, 255, 255, 0.05);
@@ -726,6 +782,16 @@ a:hover,
     background-color: #374151;
     color: #ffffff;
     border-color: #4b5563;
+  }
+  
+  /* Hide scrollbar but maintain scroll functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
   }
 }
 

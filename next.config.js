@@ -1,6 +1,18 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  // Temporarily ignore ESLint errors during build (TypeScript errors still checked)
+const withBundleAnalyzer =
+  process.env.ANALYZE === 'true'
+    ? require('@next/bundle-analyzer')({
+        enabled: true,
+        openAnalyzer: false,
+        analyzerMode: 'static',
+        reportFilename: './.next/analyze/client.html',
+      })
+    : (config) => config
+
+const nextConfigBase = {
+  // Enforce ESLint during builds
+  // Temporarily ignoring ESLint errors during builds to allow deployment
+  // TODO: Fix ESLint errors incrementally
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -18,7 +30,6 @@ const nextConfig = {
     },
   },
   images: {
-    // Add your image CDN domains here
     remotePatterns: [
       {
         protocol: 'https',
@@ -30,27 +41,20 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: '**.animesenpai.app', // For future CDN
-      },
-      {
-        protocol: 'https',
-        hostname: '**.cloudinary.com', // Popular image CDN
-      },
-      {
-        protocol: 'https',
-        hostname: '**.imagekit.io', // Alternative CDN
-      },
-      {
-        protocol: 'https',
         hostname: 'cdn.myanimelist.net', // MyAnimeList CDN for anime images
       },
       {
         protocol: 'https',
-        hostname: '**.githubusercontent.com', // GitHub avatars
+        hostname: 'i.ytimg.com', // YouTube thumbnails
+      },
+      // Site assets/CDN exact hosts only
+      {
+        protocol: 'https',
+        hostname: 'animesenpai.app',
       },
       {
         protocol: 'https',
-        hostname: 'i.ytimg.com', // YouTube thumbnails
+        hostname: 'www.animesenpai.app',
       },
     ],
     // Use modern image formats for better compression
@@ -101,9 +105,46 @@ const nextConfig = {
           },
           {
             key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin'
+            value: 'strict-origin-when-cross-origin'
           },
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin'
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'same-site'
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains; preload'
+          }
         ],
+      },
+      // X-Robots-Tag for sensitive routes
+      {
+        source: '/auth/:path*',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      },
+      {
+        source: '/user/settings',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      },
+      {
+        source: '/admin/:path*',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      },
+      {
+        source: '/api/:path*',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      },
+      {
+        source: '/dashboard/:path*',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      },
+      {
+        source: '/error/:path*',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
       },
       // Cache static assets
       {
@@ -139,7 +180,7 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+module.exports = withBundleAnalyzer(nextConfigBase)
 
 
 // Temporarily disabled Sentry to fix OpenTelemetry issues

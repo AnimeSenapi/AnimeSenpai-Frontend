@@ -1,7 +1,8 @@
 'use client'
 
-import { useRef, useState, useEffect, ReactNode } from 'react'
+import { useRef, useState, useEffect, ReactNode, useMemo } from 'react'
 import { useThrottle } from '../hooks/use-performance'
+import { useMobileOptimization } from '../lib/mobile-performance'
 
 interface VirtualListProps<T> {
   items: T[]
@@ -34,12 +35,18 @@ export function VirtualList<T>({
   itemHeight,
   height,
   renderItem,
-  overscan = 3,
+  overscan,
   className = '',
   gap = 0,
 }: VirtualListProps<T>) {
   const [scrollTop, setScrollTop] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
+  const { virtualScrollOverscan } = useMobileOptimization()
+  
+  // Use adaptive overscan based on device performance
+  const adaptiveOverscan = useMemo(() => {
+    return overscan !== undefined ? overscan : virtualScrollOverscan
+  }, [overscan, virtualScrollOverscan])
 
   const handleScroll = useThrottle(() => {
     if (containerRef.current) {
@@ -56,10 +63,10 @@ export function VirtualList<T>({
   }, [handleScroll])
 
   // Calculate visible range
-  const startIndex = Math.max(0, Math.floor(scrollTop / (itemHeight + gap)) - overscan)
+  const startIndex = Math.max(0, Math.floor(scrollTop / (itemHeight + gap)) - adaptiveOverscan)
   const endIndex = Math.min(
     items.length - 1,
-    Math.ceil((scrollTop + height) / (itemHeight + gap)) + overscan
+    Math.ceil((scrollTop + height) / (itemHeight + gap)) + adaptiveOverscan
   )
 
   // Calculate total height and offset

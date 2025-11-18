@@ -1,28 +1,6 @@
 /**
- * Layout Error Boundary
- *
- * Wraps the entire layout to catch errors in the app shell
- * This is the outermost error boundary
+ * @deprecated Use ErrorBoundary or LayoutErrorBoundary from './ErrorBoundary' instead
+ * This file is kept for backward compatibility but will be removed in a future version
  */
 
-'use client'
-
-import { ErrorBoundary } from './ErrorBoundary'
-import { ReactNode } from 'react'
-
-interface LayoutErrorBoundaryProps {
-  children: ReactNode
-}
-
-export function LayoutErrorBoundary({ children }: LayoutErrorBoundaryProps) {
-  return (
-    <ErrorBoundary
-      level="page"
-      onError={(error, errorInfo) => {
-        console.error('Layout Error:', error, errorInfo)
-      }}
-    >
-      {children}
-    </ErrorBoundary>
-  )
-}
+export { LayoutErrorBoundary } from './ErrorBoundary'

@@ -57,11 +57,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log error to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Error Boundary caught an error:', error, errorInfo)
-    }
-
     // Update state with error info
     this.setState({
       errorInfo,
@@ -292,4 +287,106 @@ export function withErrorBoundary<P extends object>(
   WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`
 
   return WrappedComponent
+}
+
+/**
+ * Convenience wrappers for different error boundary levels
+ */
+
+interface ComponentErrorBoundaryProps {
+  children: ReactNode
+  componentName?: string
+  fallback?: ReactNode
+  className?: string
+}
+
+export function ComponentErrorBoundary({
+  children,
+  componentName,
+  fallback,
+  className,
+}: ComponentErrorBoundaryProps) {
+  return (
+    <ErrorBoundary
+      level="component"
+      fallback={fallback}
+      className={className}
+      onError={(error, errorInfo) => {
+        Sentry.captureException(error, {
+          tags: { errorBoundary: true, level: 'component', componentName },
+          contexts: { react: { componentStack: errorInfo.componentStack } },
+        })
+      }}
+    >
+      {children}
+    </ErrorBoundary>
+  )
+}
+
+interface PageErrorBoundaryProps {
+  children: ReactNode
+  pageName?: string
+}
+
+export function PageErrorBoundary({ children, pageName }: PageErrorBoundaryProps) {
+  return (
+    <ErrorBoundary
+      level="page"
+      onError={(error, errorInfo) => {
+        Sentry.captureException(error, {
+          tags: { errorBoundary: true, level: 'page', pageName },
+          contexts: { react: { componentStack: errorInfo.componentStack } },
+        })
+      }}
+    >
+      {children}
+    </ErrorBoundary>
+  )
+}
+
+interface SectionErrorBoundaryProps {
+  children: ReactNode
+  sectionName?: string
+  className?: string
+}
+
+export function SectionErrorBoundary({
+  children,
+  sectionName,
+  className,
+}: SectionErrorBoundaryProps) {
+  return (
+    <ErrorBoundary
+      level="section"
+      className={className}
+      onError={(error, errorInfo) => {
+        Sentry.captureException(error, {
+          tags: { errorBoundary: true, level: 'section', sectionName },
+          contexts: { react: { componentStack: errorInfo.componentStack } },
+        })
+      }}
+    >
+      {children}
+    </ErrorBoundary>
+  )
+}
+
+interface LayoutErrorBoundaryProps {
+  children: ReactNode
+}
+
+export function LayoutErrorBoundary({ children }: LayoutErrorBoundaryProps) {
+  return (
+    <ErrorBoundary
+      level="page"
+      onError={(error, errorInfo) => {
+        Sentry.captureException(error, {
+          tags: { errorBoundary: true, level: 'layout' },
+          contexts: { react: { componentStack: errorInfo.componentStack } },
+        })
+      }}
+    >
+      {children}
+    </ErrorBoundary>
+  )
 }

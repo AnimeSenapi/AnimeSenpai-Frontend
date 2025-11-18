@@ -70,7 +70,7 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true) // Start as true to check auth on mount
   const [error, setError] = useState<string | null>(null)
   const isInitialized = useState(true)[0]
 
@@ -85,24 +85,114 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (accessToken) {
         try {
-          setIsLoading(true)
           const userData = (await apiMe()) as any
+          // If apiMe returns null, it means the token is invalid
+          if (!userData) {
+            console.warn('[Auth] apiMe returned null, attempting token refresh')
+            // Try to refresh the token before clearing session
+            const refreshToken = localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken')
+            if (refreshToken) {
+              try {
+                const { TRPC_URL } = await import('./api')
+                const response = await fetch(TRPC_URL + '/auth.refreshToken', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ refreshToken }),
+                  credentials: 'include',
+                })
+
+                if (response.ok) {
+                  const json = await response.json()
+                  if ('result' in json && json.result?.data) {
+                    const data = json.result.data
+                    const storage = localStorage.getItem('refreshToken') ? localStorage : sessionStorage
+                    storage.setItem('accessToken', data.accessToken)
+                    storage.setItem('refreshToken', data.refreshToken)
+                    console.log('[Auth] Token refreshed successfully, retrying auth.me')
+                    // Retry apiMe with new token
+                    const retryUserData = (await apiMe()) as any
+                    if (retryUserData) {
+                      console.log('[Auth] Successfully authenticated user after refresh:', retryUserData.email)
+                      setUser(retryUserData)
+                      setIsLoading(false)
+                      return
+                    }
+                  }
+                }
+              } catch (refreshError) {
+                console.warn('[Auth] Token refresh failed:', refreshError)
+              }
+            }
+            // If refresh failed or no refresh token, clear session
+            console.warn('[Auth] Clearing session after failed refresh')
+            clearSession()
+            setIsLoading(false)
+            return
+          }
+          console.log('[Auth] Successfully authenticated user:', userData.email)
           setUser(userData)
         } catch (err: unknown) {
           // Only clear tokens if it's a token-related error, not a network error
           const errorMessage = err instanceof Error ? err.message : ''
-          if (
+          const isTokenError = 
             errorMessage.includes('TOKEN_INVALID') ||
             errorMessage.includes('UNAUTHORIZED') ||
-            errorMessage.includes('expired')
-          ) {
+            errorMessage.includes('expired') ||
+            errorMessage.includes('session') ||
+            errorMessage.includes('invalid')
+          
+          if (isTokenError) {
+            console.warn('[Auth] Token error detected, attempting refresh before clearing:', errorMessage)
+            // Try to refresh the token before clearing
+            const refreshToken = localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken')
+            if (refreshToken) {
+              try {
+                const { TRPC_URL } = await import('./api')
+                const response = await fetch(TRPC_URL + '/auth.refreshToken', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ refreshToken }),
+                  credentials: 'include',
+                })
+
+                if (response.ok) {
+                  const json = await response.json()
+                  if ('result' in json && json.result?.data) {
+                    const data = json.result.data
+                    const storage = localStorage.getItem('refreshToken') ? localStorage : sessionStorage
+                    storage.setItem('accessToken', data.accessToken)
+                    storage.setItem('refreshToken', data.refreshToken)
+                    console.log('[Auth] Token refreshed successfully, retrying auth.me')
+                    // Retry apiMe with new token
+                    const retryUserData = (await apiMe()) as any
+                    if (retryUserData) {
+                      console.log('[Auth] Successfully authenticated user after refresh:', retryUserData.email)
+                      setUser(retryUserData)
+                      setIsLoading(false)
+                      return
+                    }
+                  }
+                }
+              } catch (refreshError) {
+                console.warn('[Auth] Token refresh failed:', refreshError)
+              }
+            }
+            // If refresh failed, clear session
+            console.warn('[Auth] Clearing session after failed refresh')
             clearSession()
+          } else {
+            console.warn('[Auth] Non-token error during auth check (keeping session):', errorMessage)
           }
         } finally {
           setIsLoading(false)
         }
       } else {
         // No token found, set loading to false immediately
+        console.log('[Auth] No token found in storage')
         setIsLoading(false)
       }
     }
@@ -121,9 +211,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken')
       if (refreshToken) {
         try {
-          const apiUrl =
-            process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
-          const response = await fetch(apiUrl + '/auth.refreshToken', {
+          const { TRPC_URL } = await import('./api')
+          const response = await fetch(TRPC_URL + '/auth.refreshToken', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -167,6 +256,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       const data = (await apiSignin({ email, password, rememberMe })) as any
+      console.log('[Auth] Signin response:', { 
+        hasUser: !!data.user, 
+        hasAccessToken: !!data.accessToken, 
+        hasRefreshToken: !!data.refreshToken,
+        rememberMe 
+      })
+      
+      if (!data.accessToken || !data.refreshToken) {
+        console.error('[Auth] Signin response missing tokens!', data)
+        throw new Error('Sign in failed: No tokens received from server')
+      }
+
       setUser(data.user)
 
       // Store tokens based on "Remember Me" preference
@@ -174,6 +275,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       storage.setItem('accessToken', data.accessToken)
       storage.setItem('refreshToken', data.refreshToken)
+      
+      console.log('[Auth] Tokens stored in:', rememberMe ? 'localStorage' : 'sessionStorage')
+      console.log('[Auth] Token stored - accessToken exists:', !!storage.getItem('accessToken'))
+      console.log('[Auth] Token stored - refreshToken exists:', !!storage.getItem('refreshToken'))
 
       // If using sessionStorage, clear localStorage tokens
       if (!rememberMe) {
@@ -185,6 +290,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
         sessionStorage.removeItem('accessToken')
         sessionStorage.removeItem('refreshToken')
         localStorage.setItem('rememberMe', 'true')
+      }
+      
+      // Verify tokens are actually stored
+      const verifyStorage = rememberMe ? localStorage : sessionStorage
+      const storedAccessToken = verifyStorage.getItem('accessToken')
+      const storedRefreshToken = verifyStorage.getItem('refreshToken')
+      console.log('[Auth] Verification - accessToken in storage:', !!storedAccessToken)
+      console.log('[Auth] Verification - refreshToken in storage:', !!storedRefreshToken)
+      
+      if (!storedAccessToken || !storedRefreshToken) {
+        console.error('[Auth] CRITICAL: Tokens were not stored correctly!')
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Sign in failed'

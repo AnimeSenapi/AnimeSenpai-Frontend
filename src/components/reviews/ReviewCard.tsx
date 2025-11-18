@@ -86,8 +86,7 @@ export function ReviewCard({
     }
 
     try {
-      const API_URL =
-        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+      const { TRPC_URL: API_URL } = await import('../../app/lib/api')
       const endpoint = liked ? 'unlikeReview' : 'likeReview'
 
       const response = await fetch(`${API_URL}/reviewInteractions.${endpoint}`, {
@@ -126,8 +125,7 @@ export function ReviewCard({
     try {
       setLoadingComments(true)
 
-      const API_URL =
-        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+      const { TRPC_URL: API_URL } = await import('../../app/lib/api')
       const url = `${API_URL}/reviewInteractions.getComments?input=${encodeURIComponent(
         JSON.stringify({
           reviewId: review.id,
@@ -178,8 +176,7 @@ export function ReviewCard({
     try {
       setSubmittingComment(true)
 
-      const API_URL =
-        process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+      const { TRPC_URL: API_URL } = await import('../../app/lib/api')
 
       const response = await fetch(`${API_URL}/reviewInteractions.addComment`, {
         method: 'POST',

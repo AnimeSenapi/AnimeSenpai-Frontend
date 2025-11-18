@@ -5,8 +5,7 @@
  * to reduce network overhead and improve performance.
  */
 
-const TRPC_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3003/api/trpc'
+import { TRPC_URL } from '@/app/lib/api'
 
 interface BatchRequest {
   procedure: string

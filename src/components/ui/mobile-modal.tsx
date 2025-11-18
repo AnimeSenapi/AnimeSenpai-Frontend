@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
+import { MobileBottomSheet } from './MobileBottomSheet'
 
 interface MobileModalProps {
   isOpen: boolean
@@ -151,56 +152,5 @@ export function MobileDrawer({ isOpen, onClose, title, children, className }: Mo
 }
 
 // Mobile-optimized bottom sheet variant
-export function MobileBottomSheet({
-  isOpen,
-  onClose,
-  title,
-  children,
-  snapPoints: _snapPoints = ['50vh', '90vh'],
-  className,
-}: MobileModalProps & { snapPoints?: string[] }) {
-  if (!isOpen) return null
-
-  return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 transition-opacity duration-300"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-
-      {/* Bottom Sheet */}
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={title ? 'bottom-sheet-title' : undefined}
-        className={cn(
-          'fixed inset-x-0 bottom-0 z-50 transition-transform duration-300 ease-out',
-          'bg-gray-900 border-t border-white/10 rounded-t-2xl shadow-2xl',
-          'h-[50vh] overflow-hidden',
-          className
-        )}
-      >
-        {/* Drag handle */}
-        <div className="flex justify-center py-3">
-          <div className="w-12 h-1.5 bg-white/20 rounded-full" />
-        </div>
-
-        {/* Header */}
-        {title && (
-          <div className="px-4 pb-3 border-b border-white/10">
-            <h3 id="bottom-sheet-title" className="text-lg font-bold text-white text-center">
-              {title}
-            </h3>
-          </div>
-        )}
-
-        {/* Content */}
-        <div className="overflow-y-auto h-[calc(50vh-80px)] safe-area-bottom">
-          <div className="p-4">{children}</div>
-        </div>
-      </div>
-    </>
-  )
-}
+// Re-export from dedicated component
+export { MobileBottomSheet }

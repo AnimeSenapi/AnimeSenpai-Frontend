@@ -19,6 +19,7 @@ interface LeaderboardEntry {
   count: number
 }
 
+
 export default function LeaderboardsPage() {
   const [topWatchers, setTopWatchers] = useState<LeaderboardEntry[]>([])
   const [topReviewers, setTopReviewers] = useState<LeaderboardEntry[]>([])
