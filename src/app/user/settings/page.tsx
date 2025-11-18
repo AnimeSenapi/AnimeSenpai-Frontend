@@ -10,7 +10,7 @@ import { RequireAuth } from '../../lib/protected-route'
 import { useAuth } from '../../lib/auth-context'
 import { useToast } from '../../../components/ui/toast'
 import { NotificationSettings } from '../../../components/settings/NotificationSettings'
-import { apiGet2FAStatus, apiEnable2FA, apiVerify2FASetup, apiDisable2FA, apiExportUserData, apiRequestAccountDeletion } from '../../lib/api'
+import { apiGet2FAStatus, apiEnable2FA, apiVerify2FASetup, apiDisable2FA, apiExportUserData, apiRequestAccountDeletion, TRPC_URL } from '../../lib/api'
 import {
   Settings,
   User,
@@ -111,7 +111,7 @@ export default function UserSettingsPage() {
   const [deleteReason, setDeleteReason] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const { TRPC_URL: API_URL } = await import('@/app/lib/api')
+  const API_URL = TRPC_URL
 
   const getAuthHeaders = (): Record<string, string> => {
     const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
