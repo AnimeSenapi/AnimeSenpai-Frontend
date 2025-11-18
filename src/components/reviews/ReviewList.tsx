@@ -15,7 +15,7 @@ import {
   Share2,
 } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
-import { TRPC_URL as API_URL } from '@/app/lib/api'
+import { apiLikeReview, apiUnlikeReview, apiDeleteReview } from '@/app/lib/api'
 
 interface Review {
   id: string
@@ -75,14 +75,11 @@ export function ReviewList({ animeId: _animeId, reviews, onReviewUpdate }: Revie
       })
 
       // API call
-      await fetch(`${API_URL}/reviewInteractions.${isLiked ? 'unlikeReview' : 'likeReview'}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')}`,
-        },
-        body: JSON.stringify({ reviewId }),
-      })
+      if (isLiked) {
+        await apiUnlikeReview(reviewId)
+      } else {
+        await apiLikeReview(reviewId)
+      }
 
       onReviewUpdate()
     } catch (error) {
@@ -97,9 +94,9 @@ export function ReviewList({ animeId: _animeId, reviews, onReviewUpdate }: Revie
         return next
       })
       addToast({
-        title: 'Success',
-        description: 'Like updated successfully',
-        variant: 'success',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to update like',
+        variant: 'destructive',
       })
     }
   }
@@ -108,14 +105,7 @@ export function ReviewList({ animeId: _animeId, reviews, onReviewUpdate }: Revie
     if (!confirm('Are you sure you want to delete this review?')) return
 
     try {
-      await fetch(`${API_URL}/user.deleteReview`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')}`,
-        },
-        body: JSON.stringify({ reviewId }),
-      })
+      await apiDeleteReview(reviewId)
 
       addToast({
         title: 'Success',

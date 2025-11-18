@@ -17,10 +17,10 @@ import { SEOHead } from '../../../components/SEOHead'
 import { useAuth } from '../../lib/auth-context'
 import { useToast } from '../../../components/ui/toast'
 import { NotesButton } from '../../../components/notes'
-import { apiToggleFavoriteByAnimeId } from '../../lib/api'
+import { apiToggleFavoriteByAnimeId, apiAddToList, apiUpdateListStatus, apiRemoveFromList, apiUpdateListEntry } from '../../lib/api'
 import { RecommendationCarousel } from '../../../components/recommendations/RecommendationCarousel'
 import { MobileAnimeActions } from '../../../components/anime/MobileAnimeActions'
-import type { Anime } from '../../../types/anime'
+import type { Anime, ListStatus as ListStatusType } from '../../../types/anime'
 import { 
   generateAnimeStructuredData,
   generateAnimeMetaDescription,
@@ -264,44 +264,77 @@ export default function AnimePage() {
     const targetStatus = status || selectedListStatus
     const isUpdating = listStatus.inList
 
+    // Handle favorite separately (it's not a ListStatus)
+    if (targetStatus === 'favorite') {
+      setIsSubmitting(true)
+      try {
+        const result = await apiToggleFavoriteByAnimeId(anime.id)
+        setIsFavorite(result.isFavorite)
+        addToast({
+          title: 'Success',
+          description: result.isFavorite ? 'Added to favorites!' : 'Removed from favorites',
+          variant: 'success',
+        })
+      } catch (err) {
+        console.error('Failed to toggle favorite:', err)
+        addToast({
+          title: 'Error',
+          description: 'Failed to update favorite',
+          variant: 'destructive',
+        })
+      } finally {
+        setIsSubmitting(false)
+      }
+      return
+    }
+
+    // For regular status updates, ensure it's a valid ListStatus
+    const validStatus = targetStatus as 'watching' | 'completed' | 'plan-to-watch'
+
+    // Optimistically update UI
+    setListStatus({
+      inList: true,
+      status: validStatus,
+      progress: listStatus.progress || 0,
+      score: listStatus.score,
+    })
+    setShowAddToListModal(false)
+
     setIsSubmitting(true)
     try {
-      const response = await fetch(`${API_URL}/user.addToList`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
+      if (isUpdating) {
+        await apiUpdateListStatus({
           animeId: anime.id,
-          status: targetStatus,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (data.error) {
-        addToast({
-        title: 'Error',
-        description: isUpdating ? 'Failed to update list' : 'Failed to add to list',
-        variant: 'destructive',
-      })
-        return
+          status: validStatus,
+        })
+      } else {
+        await apiAddToList({
+          animeId: anime.id,
+          status: validStatus,
+        })
       }
 
-      setListStatus({
-        inList: true,
-        status: targetStatus,
-        progress: listStatus.progress || 0,
-        score: listStatus.score,
-      })
-      setShowAddToListModal(false)
       addToast({
         title: 'Success',
         description: isUpdating
-          ? `Moved to ${targetStatus.replace('-', ' ')} list!`
-          : `Added to ${targetStatus.replace('-', ' ')} list!`,
+          ? `Moved to ${validStatus.replace('-', ' ')} list!`
+          : `Added to ${validStatus.replace('-', ' ')} list!`,
         variant: 'success',
       })
     } catch (err) {
       console.error('Failed to add to list:', err)
+      // Revert optimistic update
+      if (isUpdating) {
+        // Restore previous status
+        setListStatus({
+          inList: true,
+          status: listStatus.status || 'plan-to-watch',
+          progress: listStatus.progress || 0,
+          score: listStatus.score,
+        })
+      } else {
+        setListStatus({ inList: false })
+      }
       addToast({
         title: 'Error',
         description: isUpdating
@@ -319,29 +352,15 @@ export default function AnimePage() {
 
     if (!confirm('Remove this anime from your list?')) return
 
+    // Optimistically update UI
+    const previousStatus = listStatus
+    setListStatus({ inList: false })
+    setIsFavorite(false)
+
     setIsSubmitting(true)
     try {
-      const response = await fetch(`${API_URL}/user.removeFromList`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          animeId: anime.id,
-        }),
-      })
+      await apiRemoveFromList(anime.id)
 
-      const data = await response.json()
-
-      if (data.error) {
-        addToast({
-        title: 'Error',
-        description: 'Failed to remove from list',
-        variant: 'destructive',
-      })
-        return
-      }
-
-      setListStatus({ inList: false })
-      setIsFavorite(false)
       addToast({
         title: 'Success',
         description: 'Removed from your list',
@@ -349,6 +368,8 @@ export default function AnimePage() {
       })
     } catch (err) {
       console.error('Failed to remove from list:', err)
+      // Revert optimistic update
+      setListStatus(previousStatus)
       addToast({
         title: 'Error',
         description: 'Failed to remove from list',
@@ -397,30 +418,27 @@ export default function AnimePage() {
       return
     }
 
+    // Optimistically update UI
+    const previousScore = listStatus.score
+    setListStatus((prev) => ({ ...prev, score: userRating }))
+
     setIsSubmitting(true)
     try {
-      const response = await fetch(`${API_URL}/user.rateAnime`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          animeId: anime.id,
-          rating: userRating,
-          review: userReview || undefined,
-        }),
+      // Update rating using updateListEntry
+      // Ensure status is a valid ListStatus (exclude 'favorite')
+      const currentStatus = listStatus.status
+      const validStatus: ListStatusType | undefined = 
+        currentStatus && currentStatus !== 'favorite' 
+          ? (currentStatus as ListStatusType)
+          : 'plan-to-watch'
+      
+      await apiUpdateListEntry({
+        animeId: anime.id,
+        status: validStatus,
+        score: userRating,
+        notes: userReview || undefined,
       })
 
-      const data = await response.json()
-
-      if (data.error) {
-        addToast({
-        title: 'Error',
-        description: 'Failed to submit rating',
-        variant: 'destructive',
-      })
-        return
-      }
-
-      setListStatus((prev) => ({ ...prev, score: userRating }))
       setShowRatingModal(false)
       setUserReview('')
       addToast({
@@ -430,6 +448,8 @@ export default function AnimePage() {
       })
     } catch (err) {
       console.error('Failed to submit rating:', err)
+      // Revert optimistic update
+      setListStatus((prev) => ({ ...prev, score: previousScore }))
       addToast({
         title: 'Error',
         description: 'Failed to submit rating',

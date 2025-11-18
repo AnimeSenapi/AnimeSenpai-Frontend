@@ -103,7 +103,61 @@ function getAuthHeaders(): Record<string, string> {
 
   // Check both localStorage (Remember Me) and sessionStorage (current session only)
   const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
-  return accessToken ? { Authorization: 'Bearer ' + accessToken } : {}
+  const headers: Record<string, string> = {}
+  
+  if (accessToken) {
+    headers.Authorization = 'Bearer ' + accessToken
+  }
+  
+  // Get CSRF token from cookies
+  const csrfToken = getCsrfTokenFromCookie()
+  if (csrfToken) {
+    headers['x-csrf-token'] = csrfToken
+  }
+  
+  return headers
+}
+
+function getCsrfTokenFromCookie(): string | null {
+  if (typeof document === 'undefined') return null
+  
+        // First, try to get existing token from cookie
+        const cookies = document.cookie.split(';')
+        for (const cookie of cookies) {
+          const [name, value] = cookie.trim().split('=')
+          if (name === 'csrf_token' && value) {
+            return decodeURIComponent(value)
+          }
+        }
+  
+  // If no token exists, generate one and store it in a cookie
+  const token = generateCsrfToken()
+  setCsrfTokenCookie(token)
+  return token
+}
+
+function generateCsrfToken(): string {
+  // Generate a random 32-byte hex string (64 characters)
+  const array = new Uint8Array(32)
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    crypto.getRandomValues(array)
+  } else {
+    // Fallback for environments without crypto.getRandomValues
+    for (let i = 0; i < array.length; i++) {
+      array[i] = Math.floor(Math.random() * 256)
+    }
+  }
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
+}
+
+function setCsrfTokenCookie(token: string): void {
+  if (typeof document === 'undefined') return
+  
+  // Set cookie with 1 year expiry, SameSite=Lax for CSRF protection
+  const isProd = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1')
+  const maxAge = 60 * 60 * 24 * 365 // 1 year
+  const cookieOptions = `Path=/; Max-Age=${maxAge}; SameSite=Lax${isProd ? '; Secure' : ''}`
+  document.cookie = `csrf_token=${encodeURIComponent(token)}; ${cookieOptions}`
 }
 
 function generateClientTraceId(): string {
@@ -1458,22 +1512,67 @@ export async function apiAddToList(input: {
   status: ListStatus
   isFavorite?: boolean 
 }): Promise<AnimeListItem> {
-  return trpcMutation<typeof input, AnimeListItem>('mylist.addToList', input)
+  return trpcMutation<typeof input, AnimeListItem>('user.addToList', input)
 }
 
-export async function apiRemoveFromList(listItemId: string): Promise<{ success: boolean }> {
-  return trpcMutation<{ listItemId: string }, { success: boolean }>('mylist.removeFromList', {
-    listItemId,
+export async function apiRemoveFromList(animeId: string): Promise<{ success: boolean }> {
+  return trpcMutation<{ animeId: string }, { success: boolean }>('user.removeFromList', {
+    animeId,
   })
 }
 
 export async function apiUpdateListStatus(input: {
-  listItemId: string
+  animeId: string
   status: ListStatus
 }): Promise<AnimeListItem> {
-  return trpcMutation<typeof input, AnimeListItem>('mylist.updateStatus', input)
+  return trpcMutation<typeof input, AnimeListItem>('user.updateListEntry', input)
 }
 
+export async function apiUpdateListEntry(input: {
+  animeId: string
+  status?: ListStatus
+  score?: number
+  notes?: string
+  isFavorite?: boolean
+}): Promise<AnimeListItem> {
+  return trpcMutation<typeof input, AnimeListItem>('user.updateListEntry', input)
+}
+
+// Update user profile
+export async function apiUpdateProfile(input: {
+  username?: string
+  bio?: string
+  avatar?: string
+}): Promise<any> {
+  return trpcMutation<typeof input, any>('auth.updateProfile', input)
+}
+
+// Update user preferences
+export async function apiUpdatePreferences(input: {
+  theme?: string
+  language?: string
+  timezone?: string
+  dateFormat?: string
+  emailNotifications?: boolean
+  pushNotifications?: boolean
+  weeklyDigest?: boolean
+  newEpisodes?: boolean
+  recommendations?: boolean
+  socialUpdates?: boolean
+  profileVisibility?: string
+  showWatchHistory?: boolean
+  showFavorites?: boolean
+  showRatings?: boolean
+  allowMessages?: boolean
+  autoplay?: boolean
+  skipIntro?: boolean
+  skipOutro?: boolean
+  defaultQuality?: string
+  subtitles?: boolean
+  volume?: number
+}): Promise<any> {
+  return trpcMutation<typeof input, any>('user.updatePreferences', input)
+}
 
 export async function apiToggleFavorite(listItemId: string): Promise<AnimeListItem> {
   return trpcMutation<{ listItemId: string }, AnimeListItem>('mylist.toggleFavorite', {
@@ -2444,6 +2543,18 @@ export async function apiDeleteReview(reviewId: string) {
   return trpcMutation('moderation.deleteReview', { reviewId })
 }
 
+export async function apiCreateReview(input: {
+  animeId: string
+  rating: number
+  comment: string
+}): Promise<any> {
+  return trpcMutation('reviews.create', input)
+}
+
+export async function apiResendVerification(): Promise<any> {
+  return trpcMutation('auth.resendVerification', {})
+}
+
 export async function apiGetFlaggedUsers() {
   return trpcQuery('moderation.getFlaggedUsers')
 }
@@ -2663,7 +2774,7 @@ export async function apiGetReviewLikes(
   return trpcQuery(path)
 }
 
-export async function apiAddReviewComment(reviewId: string, content: string) {
+export async function apiAddReviewComment(reviewId: string, content: string): Promise<{ success: boolean; comment: any }> {
   return trpcMutation('reviewInteractions.addComment', { reviewId, content })
 }
 

@@ -85,32 +85,30 @@ export function ReviewCard({
       return
     }
 
+    // Optimistically update UI
+    const newLikedState = !liked
+    setLiked(newLikedState)
+    setLikeCount((prev) => (liked ? prev - 1 : prev + 1))
+
     try {
-      const { TRPC_URL: API_URL } = await import('../../app/lib/api')
-      const endpoint = liked ? 'unlikeReview' : 'likeReview'
-
-      const response = await fetch(`${API_URL}/reviewInteractions.${endpoint}`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          reviewId: review.id,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to update like')
+      const { apiLikeReview, apiUnlikeReview } = await import('../../app/lib/api')
+      
+      if (liked) {
+        await apiUnlikeReview(review.id)
+      } else {
+        await apiLikeReview(review.id)
       }
-
-      setLiked(!liked)
-      setLikeCount((prev) => (liked ? prev - 1 : prev + 1))
 
       if (onLike && !liked) onLike(review.id)
       if (onUnlike && liked) onUnlike(review.id)
     } catch (error) {
       console.error('Failed to update like:', error)
+      // Revert optimistic update
+      setLiked(liked)
+      setLikeCount((prev) => (liked ? prev + 1 : prev - 1))
       addToast({
         title: 'Error',
-        description: 'Failed to update like',
+        description: error instanceof Error ? error.message : 'Failed to update like',
         variant: 'destructive',
       })
     }
@@ -176,26 +174,12 @@ export function ReviewCard({
     try {
       setSubmittingComment(true)
 
-      const { TRPC_URL: API_URL } = await import('../../app/lib/api')
+      const { apiAddReviewComment } = await import('../../app/lib/api')
 
-      const response = await fetch(`${API_URL}/reviewInteractions.addComment`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          reviewId: review.id,
-          content: newComment,
-        }),
-      })
+      const result = await apiAddReviewComment(review.id, newComment)
 
-      if (!response.ok) {
-        throw new Error('Failed to add comment')
-      }
-
-      const json = await response.json()
-      const data = json.result?.data
-
-      if (data?.comment) {
-        setComments((prev) => [data.comment, ...prev])
+      if (result?.comment) {
+        setComments((prev) => [result.comment, ...prev])
         setNewComment('')
         addToast({
         title: 'Success',

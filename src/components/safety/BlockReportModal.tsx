@@ -5,6 +5,7 @@ import { AlertTriangle, Ban, Flag, X, Loader2 } from 'lucide-react'
 import { Button } from '../ui/button'
 import { useToast } from '../ui/toast'
 import { cn } from '../../app/lib/utils'
+import { apiBlockUser, apiReportUser } from '../../app/lib/api'
 
 interface BlockReportModalProps {
   userId: string
@@ -31,32 +32,11 @@ export function BlockReportModal({
   const [blockReason, setBlockReason] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
-    return {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    }
-  }
-
   const handleBlock = async () => {
     try {
       setLoading(true)
 
-      const { TRPC_URL: API_URL } = await import('@/app/lib/api')
-
-      const response = await fetch(`${API_URL}/safety.blockUser`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          userId,
-          reason: blockReason,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to block user')
-      }
+      await apiBlockUser(userId, blockReason || undefined)
 
       addToast({
         title: 'User Blocked',
@@ -69,7 +49,7 @@ export function BlockReportModal({
       console.error('Failed to block user:', error)
       addToast({
         title: 'Error',
-        description: 'Failed to block user',
+        description: error instanceof Error ? error.message : 'Failed to block user',
         variant: 'destructive',
       })
     } finally {
@@ -90,21 +70,7 @@ export function BlockReportModal({
     try {
       setLoading(true)
 
-      const { TRPC_URL: API_URL } = await import('@/app/lib/api')
-
-      const response = await fetch(`${API_URL}/safety.reportUser`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          userId,
-          reason: reportReason,
-          description: reportDescription,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to report user')
-      }
+      await apiReportUser(userId, reportReason, reportDescription)
 
       addToast({
         title: 'Report Submitted',
@@ -117,7 +83,7 @@ export function BlockReportModal({
       console.error('Failed to report user:', error)
       addToast({
         title: 'Error',
-        description: 'Failed to submit report',
+        description: error instanceof Error ? error.message : 'Failed to submit report',
         variant: 'destructive',
       })
     } finally {
