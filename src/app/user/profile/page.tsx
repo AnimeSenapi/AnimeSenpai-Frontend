@@ -13,7 +13,7 @@ import { AnimeCard } from '../../../components/anime/AnimeCard'
 import { LoadingState } from '../../../components/ui/loading-state'
 import { EmptyState } from '../../../components/ui/error-state'
 import { groupAnimeIntoSeries } from '../../../lib/series-grouping'
-import { apiGetUserList } from '../../lib/api'
+import { apiGetUserList, apiUpdateProfile } from '../../lib/api'
 import { TRPC_URL as API_URL } from '../../lib/api'
 import {
   User,
@@ -125,19 +125,9 @@ export default function ProfilePage() {
         reader.readAsDataURL(file)
       })
 
-      const response = await fetch(`${API_URL}/auth.updateProfile`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          avatar: avatarData,
-        }),
+      await apiUpdateProfile({
+        avatar: avatarData,
       })
-
-      const data = await response.json()
-      if (data.error) {
-        setAvatarError('Failed to update avatar')
-        return
-      }
 
       await refreshUser()
       addToast({
@@ -146,10 +136,11 @@ export default function ProfilePage() {
         variant: 'success',
       })
     } catch (err) {
-      setAvatarError('Failed to upload avatar')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to upload avatar'
+      setAvatarError(errorMessage)
       addToast({
         title: 'Error',
-        description: 'Failed to upload avatar. Please try again.',
+        description: errorMessage,
         variant: 'destructive',
       })
     } finally {
