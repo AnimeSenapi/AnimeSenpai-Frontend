@@ -13,7 +13,7 @@ import { AnimeCard } from '../../../components/anime/AnimeCard'
 import { LoadingState } from '../../../components/ui/loading-state'
 import { EmptyState } from '../../../components/ui/error-state'
 import { groupAnimeIntoSeries } from '../../../lib/series-grouping'
-import { apiGetUserList } from '../../lib/api'
+import { apiGetUserList, apiUpdateProfile } from '../../lib/api'
 import { TRPC_URL as API_URL } from '../../lib/api'
 import {
   User,
@@ -125,19 +125,9 @@ export default function ProfilePage() {
         reader.readAsDataURL(file)
       })
 
-      const response = await fetch(`${API_URL}/auth.updateProfile`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          avatar: avatarData,
-        }),
+      await apiUpdateProfile({
+        avatar: avatarData,
       })
-
-      const data = await response.json()
-      if (data.error) {
-        setAvatarError('Failed to update avatar')
-        return
-      }
 
       await refreshUser()
       addToast({
@@ -146,10 +136,11 @@ export default function ProfilePage() {
         variant: 'success',
       })
     } catch (err) {
-      setAvatarError('Failed to upload avatar')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to upload avatar'
+      setAvatarError(errorMessage)
       addToast({
         title: 'Error',
-        description: 'Failed to upload avatar. Please try again.',
+        description: errorMessage,
         variant: 'destructive',
       })
     } finally {
@@ -379,9 +370,9 @@ export default function ProfilePage() {
           <div className="max-w-6xl mx-auto">
             
             {/* Compact Header */}
-            <div className="glass rounded-2xl p-6 mb-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+            <div className="glass rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+                <div className="flex items-center gap-4 w-full sm:w-auto">
                     {/* Avatar */}
                     <div className="relative group">
                       {user?.avatar ? (
@@ -422,13 +413,13 @@ export default function ProfilePage() {
                     </div>
 
                     {/* User Info */}
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <h1 className="text-xl sm:text-2xl font-bold text-white">
                       {user?.username || 'User'}
                       </h1>
                     <p className="text-primary-300 text-sm">@{user?.username || 'unknown'}</p>
                     {user?.bio && (
-                      <p className="text-gray-300 text-sm mt-1 max-w-md">{user.bio}</p>
+                      <p className="text-gray-300 text-sm mt-1 max-w-full sm:max-w-md break-words">{user.bio}</p>
                     )}
                       {avatarError && (
                       <div className="flex items-center gap-2 text-xs text-red-400 mt-1">
@@ -440,15 +431,15 @@ export default function ProfilePage() {
                   </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-2">
-                    <Link href="/user/settings">
-                    <Button size="sm" className="bg-white/10 hover:bg-white/20 text-white border border-white/20">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <Link href="/user/settings" className="w-full sm:w-auto">
+                    <Button size="sm" className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border border-white/20">
                         <Settings className="h-4 w-4 mr-2" />
                       Edit
                       </Button>
                     </Link>
-                    <Link href={`/user/@${user?.username}`}>
-                    <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10">
+                    <Link href={`/user/@${user?.username}`} className="w-full sm:w-auto">
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto border-white/20 text-white hover:bg-white/10">
                         <Eye className="h-4 w-4 mr-2" />
                       Public
                       </Button>
@@ -457,22 +448,22 @@ export default function ProfilePage() {
                 </div>
 
               {/* Social Stats */}
-              <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
+              <div className="mt-4 pt-4 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
                 <div className="flex items-center gap-6">
                   <div className="text-center">
-                    <div className="text-lg font-bold text-white">{socialCounts.followers}</div>
+                    <div className="text-base sm:text-lg font-bold text-white">{socialCounts.followers}</div>
                     <div className="text-xs text-gray-400">Followers</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-lg font-bold text-white">{socialCounts.following}</div>
+                    <div className="text-base sm:text-lg font-bold text-white">{socialCounts.following}</div>
                     <div className="text-xs text-gray-400">Following</div>
                   </div>
                 </div>
                 
                 {/* Member Since - Right side with better styling */}
-                <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-lg border border-white/10">
+                <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-lg border border-white/10 w-full sm:w-auto">
                   <Calendar className="h-4 w-4 text-gray-400" />
-                  <div className="text-right">
+                  <div className="text-left sm:text-right">
                     <div className="text-sm font-medium text-white">{joinDate}</div>
                     <div className="text-xs text-gray-400">Member Since</div>
                   </div>
@@ -487,13 +478,13 @@ export default function ProfilePage() {
                   <div className="lg:col-span-2">
                     
                     {/* Combined Activity & Favorites with Tabs */}
-                    <div className="glass rounded-xl p-4">
+                    <div className="glass rounded-xl p-4 sm:p-6">
                       {/* Tab Headers */}
-                      <div className="flex items-center justify-between mb-4">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0 mb-4">
                         <div className="flex gap-1 bg-white/5 rounded-lg p-1">
                           <button
                             onClick={() => setActiveTab('recent')}
-                            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                            className={`px-4 py-2 sm:px-3 sm:py-1.5 rounded-md text-sm font-medium transition-colors touch-manipulation ${
                               activeTab === 'recent'
                                 ? 'bg-primary-500 text-white'
                                 : 'text-gray-400 hover:text-white'
@@ -506,7 +497,7 @@ export default function ProfilePage() {
                           </button>
                           <button
                             onClick={() => setActiveTab('favorites')}
-                            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                            className={`px-4 py-2 sm:px-3 sm:py-1.5 rounded-md text-sm font-medium transition-colors touch-manipulation ${
                               activeTab === 'favorites'
                                 ? 'bg-primary-500 text-white'
                                 : 'text-gray-400 hover:text-white'
@@ -519,8 +510,8 @@ export default function ProfilePage() {
                           </button>
             </div>
 
-                        <Link href={activeTab === 'recent' ? '/mylist' : '/mylist?filter=favorites'}>
-                          <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10 text-xs px-2 py-1">
+                        <Link href={activeTab === 'recent' ? '/mylist' : '/mylist?filter=favorites'} className="w-full sm:w-auto">
+                          <Button variant="outline" size="sm" className="w-full sm:w-auto border-white/20 text-white hover:bg-white/10 text-xs px-2 py-1">
                             View All
                 </Button>
               </Link>
@@ -542,7 +533,7 @@ export default function ProfilePage() {
                       </Button>
                   </div>
                 ) : (
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                     {recentAnime.map((anime) => (
                       <AnimeCard key={anime.id} anime={anime} variant="grid" />
                     ))}
@@ -563,7 +554,7 @@ export default function ProfilePage() {
                             </Button>
                           </div>
                         ) : (
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                             {favoriteAnime.map((anime) => (
                               <AnimeCard key={anime.id} anime={anime} variant="grid" />
                             ))}
@@ -575,10 +566,10 @@ export default function ProfilePage() {
                 </div>
 
               {/* Right Column - Stats & Info */}
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 
                     {/* Quick Stats */}
-                    <div className="glass rounded-xl p-6">
+                    <div className="glass rounded-xl p-4 sm:p-6">
                       <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                         <BarChart3 className="h-5 w-5 text-blue-400" />
                         Quick Stats
@@ -617,7 +608,7 @@ export default function ProfilePage() {
 
 
                 {/* Performance Stats */}
-                <div className="glass rounded-xl p-6">
+                <div className="glass rounded-xl p-4 sm:p-6">
                   <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                     <TrendingUp className="h-5 w-5 text-green-400" />
                     Performance

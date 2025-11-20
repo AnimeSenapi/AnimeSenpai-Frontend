@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 
+// Force dynamic rendering for error test route
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   // Simulate a 500 error
   return NextResponse.json(

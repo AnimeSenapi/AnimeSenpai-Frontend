@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { SearchAnimeCard } from '../anime/SearchAnimeCard'
 import { Search, X, ArrowRight, Filter, User } from 'lucide-react'
-import { apiSearchAnime, apiGetTrending, apiSearchUsers } from '../../app/lib/api'
+import { apiSearchAnime, apiGetTrending, apiSearchUsers, apiGetUserProfile } from '../../app/lib/api'
 import { useAnalytics } from '../AnalyticsProvider'
 
 interface SearchBarProps {
@@ -47,11 +47,14 @@ export function SearchBar({
   const [detectedFilters, setDetectedFilters] = useState<string[]>([])
   const [searchType, setSearchType] = useState<'anime' | 'user'>('anime')
   const [mounted, setMounted] = useState(false)
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number; width: number }>({ top: 0, left: 0, width: 0 })
+  const [isPositioned, setIsPositioned] = useState(false)
 
   const router = useRouter()
   const searchRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const debounceTimer = useRef<NodeJS.Timeout | null>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Mount effect for SSR safety
   useEffect(() => {
@@ -85,25 +88,57 @@ export function SearchBar({
       if (query.trim()) {
         setIsSearching(true)
 
-        // Check if it's a user search
+        // Check if it's a user search (starts with @)
         if (query.startsWith('@')) {
           setSearchType('user')
+          setSelectedIndex(-1) // Reset selected index when switching to user search
           const username = query.slice(1).trim()
           if (username.length >= 2) {
             try {
-              const users = (await apiSearchUsers(username, 5)) as any
-              setUserResults(users)
+              // Try to search users first (if endpoint exists)
+              let users = await apiSearchUsers(username, 5)
+              let userResultsArray = Array.isArray(users) ? users : []
+              
+              // If no results from search and username looks complete (no spaces, reasonable length),
+              // try fetching the user profile directly as a fallback
+              // This handles the case where searchUsers endpoint doesn't exist
+              if (userResultsArray.length === 0 && username.length >= 3 && !username.includes(' ')) {
+                try {
+                  // Use silentErrors=true to suppress error logging for expected "user not found" cases
+                  const userProfile = await apiGetUserProfile(username, false, true)
+                  if (userProfile && userProfile.user) {
+                    // Format user profile to match expected structure
+                    userResultsArray = [{
+                      id: userProfile.user.id,
+                      username: userProfile.user.username,
+                      avatar: userProfile.user.avatar,
+                      name: userProfile.user.name || userProfile.user.username
+                    }]
+                  }
+                } catch (profileError) {
+                  // User doesn't exist - silently ignore (expected behavior)
+                  userResultsArray = []
+                }
+              }
+              
+              // Always update results, even if empty, to show the current state
+              setUserResults(userResultsArray)
               setFilteredSuggestions([])
             } catch (error) {
+              // Silently handle search errors
               setUserResults([])
             }
           } else {
+            // Show empty state for user search when typing just "@" or "@x"
             setUserResults([])
+            setFilteredSuggestions([])
           }
         } else {
-          // Regular anime search
+          // Regular search - search both anime and users
           setSearchType('anime')
-          setUserResults([])
+          setSelectedIndex(-1) // Reset selected index when switching to anime search
+          
+          // Search anime
           try {
             const results = (await apiSearchAnime(query)) as any
             // Filter out any undefined/null items or items without slugs
@@ -112,6 +147,46 @@ export function SearchBar({
           } catch (error) {
             setFilteredSuggestions([])
           }
+
+          // Also search users if query is long enough (3+ characters for better results)
+          // Only search users if query doesn't contain spaces (likely not a username)
+          if (query.trim().length >= 3 && !query.trim().includes(' ')) {
+            try {
+              // Try to search users first (if endpoint exists)
+              let users = await apiSearchUsers(query.trim(), 3)
+              let userResultsArray = Array.isArray(users) ? users : []
+              
+              // If no results from search and query looks like a complete username,
+              // try fetching the user profile directly as a fallback
+              // This handles the case where searchUsers endpoint doesn't exist
+              if (userResultsArray.length === 0 && query.trim().length >= 3 && !query.trim().includes(' ')) {
+                try {
+                  // Use silentErrors=true to suppress error logging for expected "user not found" cases
+                  const userProfile = await apiGetUserProfile(query.trim(), false, true)
+                  if (userProfile && userProfile.user) {
+                    // Format user profile to match expected structure
+                    userResultsArray = [{
+                      id: userProfile.user.id,
+                      username: userProfile.user.username,
+                      avatar: userProfile.user.avatar,
+                      name: userProfile.user.name || userProfile.user.username
+                    }]
+                  }
+                } catch (profileError) {
+                  // User doesn't exist - silently ignore (expected behavior)
+                  userResultsArray = []
+                }
+              }
+              
+              // Always update results, even if empty, to show the current state
+              setUserResults(userResultsArray)
+            } catch (error) {
+              // Silently handle search errors
+              setUserResults([])
+            }
+          } else {
+            setUserResults([])
+          }
         }
 
         setIsSearching(false)
@@ -119,7 +194,7 @@ export function SearchBar({
         setFilteredSuggestions([])
         setUserResults([])
       }
-    }, 150) // 150ms debounce
+    }, 200) // 200ms debounce - slightly longer to ensure user has stopped typing
   }, [])
 
   // Detect advanced search syntax in real-time
@@ -164,17 +239,44 @@ export function SearchBar({
     }
   }, [searchQuery, debouncedFilter])
 
+  // Trigger final search when user stops typing (after a longer delay)
+  useEffect(() => {
+    if (!searchQuery.trim()) return
+
+    const finalSearchTimer = setTimeout(() => {
+      // Trigger a final search to ensure we have the latest results
+      debouncedFilter(searchQuery)
+    }, 500) // 500ms after last keystroke
+
+    return () => {
+      clearTimeout(finalSearchTimer)
+    }
+  }, [searchQuery, debouncedFilter])
+
+  // Reset selected index when search type changes
+  useEffect(() => {
+    setSelectedIndex(-1)
+  }, [searchType])
+
   // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
+      const target = event.target as Node
+      if (searchRef.current && !searchRef.current.contains(target)) {
+        // Also check if click is on the backdrop or dropdown
+        if (renderDropdownOutside && dropdownRef.current) {
+          if (!dropdownRef.current.contains(target)) {
+            setIsOpen(false)
+          }
+        } else {
+          setIsOpen(false)
+        }
       }
     }
 
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  }, [renderDropdownOutside])
 
   // Load recent searches from localStorage
   useEffect(() => {
@@ -277,12 +379,43 @@ export function SearchBar({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    const totalItems = searchQuery.trim() ? filteredSuggestions.length : popularAnime.length
+    // Calculate total items based on search type
+    // When searching normally (not @), show both anime and users
+    let totalItems = 0
+    if (searchQuery.trim()) {
+      if (searchType === 'user') {
+        totalItems = userResults.length
+      } else {
+        // Combine anime and user results for keyboard navigation
+        totalItems = filteredSuggestions.length + userResults.length
+      }
+    } else {
+      totalItems = popularAnime.length
+    }
 
     if (e.key === 'Enter') {
       e.preventDefault()
-      if (selectedIndex >= 0 && selectedIndex < filteredSuggestions.length) {
-        selectSuggestion(filteredSuggestions[selectedIndex])
+      if (selectedIndex >= 0) {
+        // Handle user selection (users come first when both are shown)
+        if (searchType === 'anime' && selectedIndex < userResults.length) {
+          const user = userResults[selectedIndex]
+          router.push(`/user/${user.username}`)
+          setIsOpen(false)
+          setSearchQuery('')
+        } else if (searchType === 'user' && selectedIndex < userResults.length) {
+          const user = userResults[selectedIndex]
+          router.push(`/user/${user.username}`)
+          setIsOpen(false)
+          setSearchQuery('')
+        } else {
+          // Handle anime selection (adjust index for user results)
+          const animeIndex = searchType === 'anime' ? selectedIndex - userResults.length : selectedIndex
+          if (animeIndex >= 0 && animeIndex < filteredSuggestions.length) {
+            selectSuggestion(filteredSuggestions[animeIndex])
+          } else {
+            handleSearch(searchQuery)
+          }
+        }
       } else {
         handleSearch(searchQuery)
       }
@@ -313,33 +446,108 @@ export function SearchBar({
   const handleInputFocus = () => {
     setIsOpen(true)
     setIsFocused(true)
+    // Trigger search if there's already a query
+    if (searchQuery.trim()) {
+      debouncedFilter(searchQuery)
+    }
     onFocus?.()
   }
 
   const handleInputBlur = () => {
     // Delay blur to allow click events on dropdown
+    // Keep dropdown open longer if there are results to give user time to click
+    const delay = userResults.length > 0 || filteredSuggestions.length > 0 ? 300 : 200
     setTimeout(() => {
       setIsFocused(false)
       onBlur?.()
-    }, 200)
+    }, delay)
   }
 
-  // Get dropdown position for portal rendering
-  const getDropdownPosition = () => {
-    if (!searchRef.current) return { top: 0, left: 0, width: 0 }
-    
-    const rect = searchRef.current.getBoundingClientRect()
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft
-    
-    return {
-      top: dropdownDirection === 'up' 
-        ? rect.top + scrollTop - 380 // Position even higher above to avoid overlap
-        : rect.bottom + scrollTop + 12, // Position below
-      left: rect.left + scrollLeft,
-      width: rect.width
+  // Enhanced dropdown position calculation with viewport boundary detection
+  const calculateDropdownPosition = useCallback(() => {
+    if (!searchRef.current || !inputRef.current) {
+      return { top: 0, left: 0, width: 0 }
     }
-  }
+    
+    // Use input element position instead of searchRef to avoid filters affecting position
+    const inputRect = inputRef.current.getBoundingClientRect()
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    
+    // Estimate dropdown dimensions
+    const dropdownMaxHeight = 384 // max-h-96 = 24rem = 384px
+    const margin = 12 // Margin from viewport edges
+    
+    // Calculate initial position (using viewport coordinates for fixed positioning)
+    // Position relative to input, not the entire searchRef container
+    let top = dropdownDirection === 'up' 
+      ? inputRect.top - dropdownMaxHeight - margin
+      : inputRect.bottom + margin
+    let left = inputRect.left
+    let width = Math.min(Math.max(inputRect.width, 300), 448) // min-w-[300px], max-w-md = 28rem = 448px
+    
+    // Ensure dropdown doesn't go off the right edge
+    if (left + width > viewportWidth - margin) {
+      left = viewportWidth - width - margin
+    }
+    
+    // Ensure dropdown doesn't go off the left edge
+    if (left < margin) {
+      left = margin
+      // If we're constrained on the left, try to expand width if possible
+      width = Math.min(viewportWidth - margin * 2, Math.max(inputRect.width, 300))
+    }
+    
+    // If dropdown would go off bottom, try to position it above
+    const dropdownBottom = top + dropdownMaxHeight
+    if (dropdownBottom > viewportHeight - margin && dropdownDirection === 'down') {
+      const spaceAbove = inputRect.top - margin
+      const spaceBelow = viewportHeight - inputRect.bottom - margin
+      
+      // Position above if there's more space above
+      if (spaceAbove > spaceBelow && spaceAbove > dropdownMaxHeight) {
+        top = inputRect.top - dropdownMaxHeight - margin
+      }
+    }
+    
+    // Ensure dropdown doesn't go off the top
+    if (top < margin) {
+      top = margin
+    }
+    
+    return { top, left, width }
+  }, [dropdownDirection])
+
+  // Update dropdown position when it opens or window resizes
+  useEffect(() => {
+    if (isOpen && showDropdown && renderDropdownOutside && mounted && searchRef.current) {
+      const position = calculateDropdownPosition()
+      setDropdownPosition(position)
+      setIsPositioned(true)
+    } else {
+      setIsPositioned(false)
+    }
+  }, [isOpen, showDropdown, renderDropdownOutside, mounted, calculateDropdownPosition])
+
+  // Handle window resize to recalculate position
+  useEffect(() => {
+    if (!renderDropdownOutside || !isOpen) return
+
+    const handleResize = () => {
+      if (isOpen && searchRef.current) {
+        const position = calculateDropdownPosition()
+        setDropdownPosition(position)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    window.addEventListener('scroll', handleResize, true) // Listen to scroll events too
+    
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      window.removeEventListener('scroll', handleResize, true)
+    }
+  }, [isOpen, renderDropdownOutside, calculateDropdownPosition])
 
   // Dropdown content component
   const DropdownContent = () => (
@@ -347,15 +555,18 @@ export function SearchBar({
       {searchQuery.trim() ? (
         // Search Results
         <div className="p-2">
-          {/* User Search Results */}
-          {searchType === 'user' && userResults.length > 0 ? (
+          {/* User Search Results - Show when searching with @ or when users found in regular search */}
+          {userResults.length > 0 && (
             <>
               <div className="px-4 py-2 text-[11px] text-gray-500 font-semibold uppercase tracking-wider flex items-center gap-2">
                 <User className="h-3 w-3" />
                 {userResults.length} {userResults.length === 1 ? 'User' : 'Users'}
               </div>
               <div className="space-y-1 px-1">
-                {userResults.map((user, index) => (
+                {userResults.map((user, index) => {
+                  // Users always come first, so index is correct
+                  const isSelected = selectedIndex === index
+                  return (
                   <div
                     key={user.id}
                     onClick={() => {
@@ -364,7 +575,7 @@ export function SearchBar({
                       setSearchQuery('')
                     }}
                     className={`p-3 transition-all duration-200 rounded-lg cursor-pointer flex items-center gap-3 ${
-                      selectedIndex === index
+                      isSelected
                         ? 'bg-gray-800/80 ring-1 ring-primary-500/50'
                         : 'hover:bg-gray-800/40'
                     }`}
@@ -391,29 +602,58 @@ export function SearchBar({
                     </div>
                     <ArrowRight className="h-4 w-4 text-gray-600 group-hover:text-primary-400 flex-shrink-0" />
                   </div>
-                ))}
+                  )
+                })}
               </div>
             </>
-          ) : searchType === 'anime' && filteredSuggestions.length > 0 ? (
+          )}
+
+          {/* User Search Empty State - Only show when searching with @ */}
+          {searchType === 'user' && userResults.length === 0 && (
+            <div className="px-3 py-8 text-center text-gray-500">
+              {searchQuery.slice(1).trim().length < 2 ? (
+                <>
+                  <User className="h-8 w-8 mx-auto mb-3 opacity-20" />
+                  <p className="text-sm mb-1">Type a username</p>
+                  <p className="text-[10px] text-gray-600">Type at least 2 characters after @</p>
+                </>
+              ) : (
+                <>
+                  <User className="h-8 w-8 mx-auto mb-3 opacity-20" />
+                  <p className="text-sm mb-1">No users found</p>
+                  <p className="text-[10px] text-gray-600">Try a different username</p>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Anime Search Results */}
+          {filteredSuggestions.length > 0 ? (
             <>
               <div className="px-4 py-2 text-[11px] text-gray-500 font-semibold uppercase tracking-wider">
                 {filteredSuggestions.length}{' '}
                 {filteredSuggestions.length === 1 ? 'Result' : 'Results'}
               </div>
               <div className="space-y-1 px-1">
-                {filteredSuggestions.map((anime, index) => (
+                {filteredSuggestions.map((anime, index) => {
+                  // For regular search, adjust index to account for user results
+                  // For @ search, this won't be shown
+                  const animeIndex = searchType === 'anime' ? userResults.length + index : index
+                  const isSelected = selectedIndex === animeIndex
+                  return (
                   <div
                     key={anime.id}
                     onClick={() => selectSuggestion(anime)}
                     className={`transition-all duration-200 rounded-lg cursor-pointer ${
-                      selectedIndex === index
+                      isSelected
                         ? 'bg-gray-800/80 ring-1 ring-gray-700'
                         : 'hover:bg-gray-800/40'
                     }`}
                   >
                     <SearchAnimeCard anime={anime} variant="compact" />
                   </div>
-                ))}
+                  )
+                })}
               </div>
               <div className="mt-2 pt-2 border-t border-gray-800/50">
                 <button
@@ -425,23 +665,13 @@ export function SearchBar({
                 </button>
               </div>
             </>
-          ) : (
+          ) : searchType === 'anime' && userResults.length === 0 ? (
             <div className="px-3 py-8 text-center text-gray-500">
-              {searchType === 'user' ? (
-                <>
-                  <User className="h-8 w-8 mx-auto mb-3 opacity-20" />
-                  <p className="text-sm mb-1">No users found</p>
-                  <p className="text-[10px] text-gray-600">Try a different username</p>
-                </>
-              ) : (
-                <>
-                  <Search className="h-8 w-8 mx-auto mb-3 opacity-20" />
-                  <p className="text-sm mb-1">No anime found</p>
-                  <p className="text-[10px] text-gray-600">Try a different search</p>
-                </>
-              )}
+              <Search className="h-8 w-8 mx-auto mb-3 opacity-20" />
+              <p className="text-sm mb-1">No results found</p>
+              <p className="text-[10px] text-gray-600">Try a different search</p>
             </div>
-          )}
+          ) : null}
         </div>
       ) : (
         // Default suggestions
@@ -561,60 +791,56 @@ export function SearchBar({
         )}
       </div>
 
-      {/* Active Filters Display - Improved Design */}
-      {detectedFilters.length > 0 && isFocused && (
-        <div className="mt-2 flex flex-wrap gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="text-[10px] text-gray-500 px-2 py-1">Active Filters:</div>
-          {detectedFilters.map((filter, index) => (
-            <div
-              key={index}
-              className="text-xs px-3 py-1 bg-gradient-to-r from-primary-500/20 to-secondary-500/20 text-primary-300 rounded-full border border-primary-400/30 font-medium shadow-sm shadow-primary-500/10 animate-in fade-in slide-in-from-left-2"
-              style={{ animationDelay: `${index * 50}ms` }}
-            >
-              {filter}
-            </div>
-          ))}
-        </div>
-      )}
 
-      {/* Dropdown - Solid Dark Design */}
+      {/* Dropdown - Enhanced Design with Backdrop */}
       {isOpen && showDropdown && mounted && (
         renderDropdownOutside ? (
-          createPortal(
-            <div 
-              className="fixed bg-gray-900 rounded-xl shadow-2xl border border-white/10 z-[9999] max-h-96 overflow-hidden min-w-[300px] animate-in fade-in duration-200"
-              style={{
-                top: getDropdownPosition().top,
-                left: getDropdownPosition().left,
-                width: getDropdownPosition().width,
-              }}
-            >
-              <DropdownContent />
-              {/* Custom Scrollbar Styles */}
-              <style jsx>{`
-                .custom-scrollbar::-webkit-scrollbar {
-                  width: 6px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                  background: rgba(255, 255, 255, 0.05);
-                  border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                  background: rgba(6, 182, 212, 0.3);
-                  border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                  background: rgba(6, 182, 212, 0.5);
-                }
-              `}</style>
-            </div>,
+          isPositioned && createPortal(
+            <>
+              {/* Backdrop Overlay */}
+              <div 
+                className="fixed inset-0 z-[9998] bg-black/20 transition-opacity duration-200"
+                onClick={() => setIsOpen(false)}
+                aria-hidden="true"
+              />
+              {/* Dropdown */}
+              <div 
+                ref={dropdownRef}
+                className="fixed bg-gray-950/95 backdrop-blur-xl rounded-xl shadow-2xl border border-white/10 z-[9999] max-h-96 overflow-hidden min-w-[300px] max-w-md animate-in slide-in-from-top-2 fade-in duration-200"
+                style={{
+                  top: `${dropdownPosition.top}px`,
+                  left: `${dropdownPosition.left}px`,
+                  width: `${dropdownPosition.width}px`,
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <DropdownContent />
+                {/* Custom Scrollbar Styles */}
+                <style jsx>{`
+                  .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                  }
+                  .custom-scrollbar::-webkit-scrollbar-track {
+                    background: rgba(255, 255, 255, 0.05);
+                    border-radius: 10px;
+                  }
+                  .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: rgba(6, 182, 212, 0.3);
+                    border-radius: 10px;
+                  }
+                  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: rgba(6, 182, 212, 0.5);
+                  }
+                `}</style>
+              </div>
+            </>,
             document.body
           )
         ) : (
-          <div className={`absolute left-0 right-0 bg-gray-900 rounded-xl shadow-2xl border border-white/10 z-50 max-h-96 overflow-hidden min-w-[300px] animate-in fade-in duration-200 ${
+          <div className={`absolute left-0 right-0 bg-gray-950/95 backdrop-blur-xl rounded-xl shadow-2xl border border-white/10 z-50 max-h-96 overflow-hidden min-w-[300px] max-w-md animate-in slide-in-from-top-2 fade-in duration-200 ${
             dropdownDirection === 'up' 
               ? 'bottom-full mb-3 slide-in-from-bottom-2' 
-              : 'top-full mt-3 slide-in-from-top-2'
+              : 'top-full mt-3'
           }`}>
             <DropdownContent />
             {/* Custom Scrollbar Styles */}
