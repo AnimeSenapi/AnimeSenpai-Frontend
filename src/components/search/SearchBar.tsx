@@ -495,7 +495,7 @@ export function SearchBar({
     if (left < margin) {
       left = margin
       // If we're constrained on the left, try to expand width if possible
-      width = Math.min(viewportWidth - margin * 2, Math.max(rect.width, 300))
+      width = Math.min(viewportWidth - margin * 2, Math.max(inputRect.width, 300))
     }
     
     // If dropdown would go off bottom, try to position it above

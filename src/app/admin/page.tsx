@@ -2,6 +2,9 @@
 
 import { useState } from 'react'
 import { AdminRoute } from '../lib/admin-route'
+
+// Force dynamic rendering for admin page
+export const dynamic = 'force-dynamic'
 import {
   LayoutDashboard,
   Users,
