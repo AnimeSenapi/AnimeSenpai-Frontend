@@ -399,23 +399,23 @@ export default function UserProfilePage() {
         </div>
 
           {/* Back Button */}
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
           <Link
             href="/dashboard"
-          className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6"
+          className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-4 sm:mb-6 py-2 px-3 touch-manipulation"
           >
           <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
           </Link>
       </div>
 
-      <div className="relative pt-8 px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12">
+      <div className="relative pt-4 sm:pt-8 px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12">
         <div className="max-w-6xl mx-auto">
           
           {/* Compact Header */}
-          <div className="glass rounded-2xl p-6 mb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+          <div className="glass rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+              <div className="flex items-center gap-4 w-full sm:w-auto">
               {/* Avatar */}
                 <div className="relative group">
                 {user.avatar ? (
@@ -436,92 +436,94 @@ export default function UserProfilePage() {
               </div>
 
                 {/* User Info */}
-                  <div>
+                  <div className="flex-1 min-w-0">
                   <h1 className="text-xl sm:text-2xl font-bold text-white">
                     {user.username || 'User'}
                     </h1>
                   <p className="text-primary-300 text-sm">@{user.username || 'unknown'}</p>
                   {user.bio && (
-                    <p className="text-gray-300 text-sm mt-1 max-w-md">{user.bio}</p>
+                    <p className="text-gray-300 text-sm mt-1 max-w-full sm:max-w-md break-words">{user.bio}</p>
                   )}
                 </div>
                   </div>
 
                   {/* Action Buttons */}
-              <div className="flex gap-2">
-                {/* Follow/Unfollow Button */}
-                  {!isOwnProfile && currentUser && (
-                      <Button
-                        onClick={handleFollow}
-                        disabled={actionLoading}
-                        variant={relationship?.isFollowing ? 'outline' : 'default'}
-                        className={cn(
-                          relationship?.isFollowing
-                            ? 'border-white/20 text-white hover:bg-white/10'
-                        : 'bg-gradient-to-r from-secondary-500 to-primary-500 hover:from-secondary-600 hover:to-primary-600'
-                        )}
-                      >
-                        {actionLoading ? (
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        ) : relationship?.isFollowing ? (
-                          <UserMinus className="h-4 w-4 mr-2" />
-                        ) : (
-                          <UserPlus className="h-4 w-4 mr-2" />
-                        )}
-                        {relationship?.isFollowing ? 'Unfollow' : 'Follow'}
-                      </Button>
-                )}
+              {!isOwnProfile && currentUser && (
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  {/* Follow/Unfollow Button */}
+                  <div className="w-full sm:w-auto">
+                    <Button
+                      onClick={handleFollow}
+                      disabled={actionLoading}
+                      size="sm"
+                      className={cn(
+                        'w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white border border-white/20',
+                        relationship?.isFollowing && 'bg-white/10 hover:bg-white/20'
+                      )}
+                    >
+                      {actionLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : relationship?.isFollowing ? (
+                        <UserMinus className="h-4 w-4 mr-2" />
+                      ) : (
+                        <UserPlus className="h-4 w-4 mr-2" />
+                      )}
+                      {relationship?.isFollowing ? 'Unfollow' : 'Follow'}
+                    </Button>
+                  </div>
 
-                {/* Friend Request Button */}
-                {!isOwnProfile && currentUser && relationship && (
+                  {/* Friend Request Button */}
+                  {relationship && (
+                    <div className="w-full sm:w-auto">
                       <Button
                         onClick={handleFriendRequest}
                         disabled={actionLoading || !!relationship?.pendingFriendRequest}
-                        variant={relationship?.isFriend ? 'outline' : 'default'}
-                        className={cn(
-                          relationship?.isFriend || relationship?.pendingFriendRequest
-                            ? 'border-white/20 text-white hover:bg-white/10'
-                            : 'bg-gradient-to-r from-secondary-500 to-primary-500 hover:from-secondary-600 hover:to-primary-600'
-                        )}
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto border-white/20 text-white hover:bg-white/10"
                       >
                         {actionLoading ? (
                           <Loader2 className="h-4 w-4 animate-spin mr-2" />
                         ) : relationship?.isFriend ? (
-                          <UserCheck className="h-4 w-4 mr-2" />
+                          <>
+                            <UserCheck className="h-4 w-4 mr-2" />
+                            Friends
+                          </>
                         ) : relationship?.pendingFriendRequest ? (
-                          <UserCheck className="h-4 w-4 mr-2" />
+                          <>
+                            <UserCheck className="h-4 w-4 mr-2" />
+                            {relationship?.pendingFriendRequest?.sentByMe ? 'Request Sent' : 'Request Pending'}
+                          </>
                         ) : (
-                          <Users className="h-4 w-4 mr-2" />
+                          <>
+                            <Users className="h-4 w-4 mr-2" />
+                            Add Friend
+                          </>
                         )}
-                        {relationship?.isFriend
-                          ? 'Friends'
-                          : relationship?.pendingFriendRequest?.sentByMe
-                            ? 'Request Sent'
-                            : relationship?.pendingFriendRequest
-                              ? 'Request Pending'
-                              : 'Add Friend'}
                       </Button>
-                )}
-              </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Social Stats */}
-            <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
+            <div className="mt-4 pt-4 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
               <div className="flex items-center gap-6">
                 <div className="text-center">
-                  <div className="text-lg font-bold text-white">{profileStats.followers}</div>
+                  <div className="text-base sm:text-lg font-bold text-white">{profileStats.followers}</div>
                   <div className="text-xs text-gray-400">Followers</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-bold text-white">{profileStats.following}</div>
+                  <div className="text-base sm:text-lg font-bold text-white">{profileStats.following}</div>
                   <div className="text-xs text-gray-400">Following</div>
                 </div>
               </div>
 
               {/* Member Since - Right side with better styling */}
-              <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-lg border border-white/10">
+              <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-lg border border-white/10 w-full sm:w-auto">
                 <Calendar className="h-4 w-4 text-gray-400" />
-                <div className="text-right">
+                <div className="text-left sm:text-right">
                   <div className="text-sm font-medium text-white">
                     {new Date(user.createdAt).toLocaleDateString('en-US', {
                       year: 'numeric',
@@ -537,7 +539,7 @@ export default function UserProfilePage() {
 
             {/* Privacy Notice */}
             {privacy.profileVisibility === 'private' && !isOwnProfile && (
-            <div className="glass rounded-xl p-6 mb-6 border border-yellow-500/20 bg-yellow-500/5">
+            <div className="glass rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 border border-yellow-500/20 bg-yellow-500/5">
               <div className="flex items-center gap-3">
                 <Lock className="h-5 w-5 text-yellow-400" />
                 <div>
@@ -557,13 +559,13 @@ export default function UserProfilePage() {
             <div className="lg:col-span-2">
               
               {/* Combined Activity & Favorites with Tabs */}
-              <div className="glass rounded-xl p-4">
+              <div className="glass rounded-xl p-4 sm:p-6">
                 {/* Tab Headers */}
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0 mb-4">
                   <div className="flex gap-1 bg-white/5 rounded-lg p-1">
                     <button
                       onClick={() => setActiveTab('recent')}
-                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                      className={`px-4 py-2 sm:px-3 sm:py-1.5 rounded-md text-sm font-medium transition-colors touch-manipulation ${
                         activeTab === 'recent'
                           ? 'bg-primary-500 text-white'
                           : 'text-gray-400 hover:text-white'
@@ -576,7 +578,7 @@ export default function UserProfilePage() {
                     </button>
                     <button
                       onClick={() => setActiveTab('favorites')}
-                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                      className={`px-4 py-2 sm:px-3 sm:py-1.5 rounded-md text-sm font-medium transition-colors touch-manipulation ${
                         activeTab === 'favorites'
                           ? 'bg-primary-500 text-white'
                           : 'text-gray-400 hover:text-white'
@@ -589,8 +591,8 @@ export default function UserProfilePage() {
                     </button>
                   </div>
 
-                  <Link href={activeTab === 'recent' ? '/mylist' : '/mylist?filter=favorites'}>
-                    <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10 text-xs px-2 py-1">
+                  <Link href={activeTab === 'recent' ? '/mylist' : '/mylist?filter=favorites'} className="w-full sm:w-auto">
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto border-white/20 text-white hover:bg-white/10 text-xs px-2 py-1">
                       View All
                     </Button>
                   </Link>
@@ -605,7 +607,7 @@ export default function UserProfilePage() {
                       <p className="text-gray-500 text-xs">This user hasn't added any anime to their list yet</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                       {recentAnime.map((anime) => (
                         <AnimeCard key={anime.id} anime={anime} variant="grid" />
                       ))}
@@ -619,7 +621,7 @@ export default function UserProfilePage() {
                       <p className="text-gray-500 text-xs">This user hasn't marked any anime as favorites</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                       {favoriteAnime.map((anime) => (
                         <AnimeCard key={anime.id} anime={anime} variant="grid" />
                       ))}
@@ -672,7 +674,7 @@ export default function UserProfilePage() {
               </div>
 
               {/* Performance Stats */}
-              <div className="glass rounded-xl p-6">
+              <div className="glass rounded-xl p-4 sm:p-6">
                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                   <TrendingUp className="h-5 w-5 text-green-400" />
                   Performance

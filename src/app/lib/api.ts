@@ -432,6 +432,15 @@ async function trpcQuery<TOutput>(
         message.includes('session') ||
         message.includes('token')
 
+      // User profile lookup errors - suppress "user not found" errors (expected during search)
+      const isUserProfileLookup = path.includes('social.getUserProfile')
+      // Only suppress errors that are clearly "user not found" - be more specific
+      const isUserNotFoundError = 
+        (message.includes('Failed to load user profile') && res.status === 500) ||
+        message.includes('User not found') ||
+        (message.includes('not found') && isUserProfileLookup) ||
+        code === 'NOT_FOUND'
+
       // Database configuration errors should always be logged
       const isDatabaseConfigError = 
         code === 'DATABASE_CONFIGURATION_ERROR' ||
@@ -447,7 +456,9 @@ async function trpcQuery<TOutput>(
       const isUserEndpoint = path.includes('user.getFavoritedAnimeIds') || path.includes('user.')
 
       const shouldSkipLogging =
-        ((isAuthCheck || isUserEndpoint) && isExpectedAuthError) || (optionalEndpoint && isExpectedAuthError)
+        ((isAuthCheck || isUserEndpoint) && isExpectedAuthError) || 
+        (optionalEndpoint && isExpectedAuthError) ||
+        (isUserProfileLookup && isUserNotFoundError)
 
       // Handle database configuration errors with session-based logging
       if (isDatabaseConfigError) {
@@ -498,9 +509,16 @@ async function trpcQuery<TOutput>(
         return null as TOutput
       }
 
+      // For user profile lookups with "user not found" errors, return null instead of throwing
+      // This is expected behavior during search when users don't exist
+      if (isUserProfileLookup && isUserNotFoundError) {
+        return null as TOutput
+      }
+
       // For auth.me, always throw errors so auth context can handle them
+      // But don't log expected auth errors (invalid session, etc.) as they're normal when not logged in
       if (path === 'auth.me' && isExpectedAuthError) {
-        console.log('[API] auth.me auth error - throwing:', code, message)
+        // Silently throw - auth context will handle it
         throw new Error(getUserFriendlyError(code, message))
       }
 
@@ -522,18 +540,53 @@ async function trpcQuery<TOutput>(
       const message = err.message || 'Unknown error'
       
       // For auth.me, always throw errors so auth context can handle them
+      // But suppress logging for expected auth errors (invalid session, etc.)
       if (path === 'auth.me') {
-        console.log('[API] auth.me tRPC error - throwing:', code, message)
+        const isExpectedAuthError =
+          code === 'UNAUTHORIZED' ||
+          code === 'TOKEN_INVALID' ||
+          code === 'TOKEN_EXPIRED' ||
+          message.includes('session') ||
+          message.includes('token') ||
+          message.includes('invalid')
+        
+        if (!isExpectedAuthError) {
+          console.log('[API] auth.me tRPC error - throwing:', code, message)
+        }
         throw new Error(getUserFriendlyError(code, message))
       }
       
-      console.error('❌ tRPC GET Error:', { code, message })
+      // Suppress error logging for user profile lookups that fail with "user not found"
+      const isUserProfileLookup = path.includes('social.getUserProfile')
+      const isUserNotFoundError = 
+        message.includes('Failed to load user profile') ||
+        message.includes('User not found') ||
+        message.includes('not found') ||
+        code === 'NOT_FOUND' ||
+        (code === 'UNKNOWN_ERROR' && message.includes('profile'))
+      
+      if (!(isUserProfileLookup && isUserNotFoundError)) {
+        console.error('❌ tRPC GET Error:', { code, message })
+      }
 
       // No client-side token refresh; rely on cookie-based sessions
       if (
         false
       ) {
         // no-op
+      }
+      
+      // Suppress error logging for user profile lookups that fail with "user not found"
+      const isUserProfileLookup2 = path.includes('social.getUserProfile')
+      // Only suppress actual "user not found" errors, not all errors
+      const isUserNotFoundError2 = 
+        message.includes('User not found') ||
+        (message.includes('not found') && isUserProfileLookup2) ||
+        code === 'NOT_FOUND'
+      
+      // For user profile lookups with "user not found" errors, return null instead of throwing
+      if (isUserProfileLookup2 && isUserNotFoundError2) {
+        return null as TOutput
       }
       
       if (optionalEndpoint) {
@@ -1735,17 +1788,30 @@ export async function apiSearchUsers(query: string, limit: number = 10): Promise
     })
 
     if (!response.ok) {
+      // Silently handle 404 - endpoint may not exist yet
+      if (response.status === 404) {
+        return []
+      }
+      // Only log non-404 errors
+      console.error(`User search failed with status ${response.status}`)
       return []
     }
 
     const data: TRPCResponse<{ users: any[] }> = await response.json()
     if ('error' in data) {
+      console.error('User search API error:', data.error)
       return []
     }
 
-    return data.result.data.users || []
+    const users = data.result?.data?.users
+    if (!Array.isArray(users)) {
+      console.error('User search returned invalid data structure:', data)
+      return []
+    }
+
+    return users
   } catch (error) {
-    console.error('Failed to search users:', error)
+    // Silently handle network errors - endpoint may not be available
     return []
   }
 }
@@ -2658,7 +2724,7 @@ export async function apiGetFollowing(userId?: string, page?: number, limit?: nu
 }
 
 // User Profiles
-export async function apiGetUserProfile(username: string, useCache: boolean = true) {
+export async function apiGetUserProfile(username: string, useCache: boolean = true, silentErrors: boolean = false) {
   // Normalize username: decode, then strip any leading %40 or @ (defensive)
   let cleanUsername = username || ''
   try {
@@ -2670,8 +2736,8 @@ export async function apiGetUserProfile(username: string, useCache: boolean = tr
   if (cleanUsername.startsWith('@')) cleanUsername = cleanUsername.slice(1)
   const cacheKey = `social:userProfile:${cleanUsername}`
 
-  // Check cache first
-  if (useCache) {
+  // Check cache first (but skip cache if silentErrors is true to avoid stale null results from failed searches)
+  if (useCache && !silentErrors) {
     const cached = clientCache.get<any>(cacheKey)
     if (cached !== null) {
       return cached
@@ -2682,12 +2748,23 @@ export async function apiGetUserProfile(username: string, useCache: boolean = tr
   const input = JSON.stringify({ username: cleanUsername })
   const path = `social.getUserProfile?input=${encodeURIComponent(input)}`
 
-  const result = await trpcQuery(path)
-
-  // Cache for 5 minutes (user profiles change occasionally)
-  clientCache.set(cacheKey, result, CacheTTL.medium)
-
-  return result
+  try {
+    const result = await trpcQuery(path)
+    // Only cache successful results (not null from "user not found")
+    // Also don't cache when silentErrors is true to avoid caching failed searches
+    if (result !== null && result !== undefined && !silentErrors) {
+      // Cache for 5 minutes (user profiles change occasionally)
+      clientCache.set(cacheKey, result, CacheTTL.medium)
+    }
+    return result
+  } catch (error) {
+    // If silentErrors is true, don't throw - just return null
+    // This is useful for search scenarios where "user not found" is expected
+    if (silentErrors) {
+      return null
+    }
+    throw error
+  }
 }
 
 // Privacy Settings (Phase 1 - deprecated, use Phase 2 enhanced versions)

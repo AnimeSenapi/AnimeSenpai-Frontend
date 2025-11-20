@@ -12,7 +12,7 @@ import Image from 'next/image'
 import { Search, X, Mic, MicOff, Clock, TrendingUp, Sparkles, User, ArrowRight, Filter } from 'lucide-react'
 import { MobileBottomSheet } from '../ui/MobileBottomSheet'
 import { SearchAnimeCard } from '../anime/SearchAnimeCard'
-import { apiSearchAnime, apiGetTrending, apiSearchUsers } from '../../app/lib/api'
+import { apiSearchAnime, apiGetTrending, apiSearchUsers, apiGetUserProfile } from '../../app/lib/api'
 import { useAnalytics } from '../AnalyticsProvider'
 import { useHapticFeedback } from '../../hooks/use-haptic-feedback'
 import { cn } from '../../app/lib/utils'
@@ -95,31 +95,104 @@ export function MobileSearchOverlay({
       if (query.trim()) {
         setIsSearching(true)
 
-        // Check if it's a user search
+        // Check if it's a user search (starts with @)
         if (query.startsWith('@')) {
           setSearchType('user')
+          setSelectedIndex(-1) // Reset selected index when switching to user search
           const username = query.slice(1).trim()
           if (username.length >= 2) {
             try {
-              const users = (await apiSearchUsers(username, 5)) as any
-              setUserResults(users)
+              // Try to search users first (if endpoint exists)
+              let users = await apiSearchUsers(username, 5)
+              let userResultsArray = Array.isArray(users) ? users : []
+              
+              // If no results from search and username looks complete (no spaces, reasonable length),
+              // try fetching the user profile directly as a fallback
+              // This handles the case where searchUsers endpoint doesn't exist
+              if (userResultsArray.length === 0 && username.length >= 3 && !username.includes(' ')) {
+                try {
+                  // Use silentErrors=true to suppress error logging for expected "user not found" cases
+                  const userProfile = await apiGetUserProfile(username, false, true)
+                  if (userProfile && userProfile.user) {
+                    // Format user profile to match expected structure
+                    userResultsArray = [{
+                      id: userProfile.user.id,
+                      username: userProfile.user.username,
+                      avatar: userProfile.user.avatar,
+                      name: userProfile.user.name || userProfile.user.username
+                    }]
+                  }
+                } catch (profileError) {
+                  // User doesn't exist - silently ignore (expected behavior)
+                  userResultsArray = []
+                }
+              }
+              
+              // Always update results, even if empty, to show the current state
+              setUserResults(userResultsArray)
               setFilteredSuggestions([])
             } catch (error) {
+              // Silently handle search errors
               setUserResults([])
             }
           } else {
+            // Show empty state for user search when typing just "@" or "@x"
             setUserResults([])
+            setFilteredSuggestions([])
           }
         } else {
-          // Regular anime search
+          // Regular search - search both anime and users
           setSearchType('anime')
-          setUserResults([])
+          setSelectedIndex(-1) // Reset selected index when switching to anime search
+          
+          // Search anime
           try {
             const results = (await apiSearchAnime(query)) as any
+            // Filter out any undefined/null items or items without slugs
             const validResults = (results || []).filter((anime: any) => anime && anime.slug)
             setFilteredSuggestions(validResults.slice(0, 5))
           } catch (error) {
             setFilteredSuggestions([])
+          }
+
+          // Also search users if query is long enough (3+ characters for better results)
+          // Only search users if query doesn't contain spaces (likely not a username)
+          if (query.trim().length >= 3 && !query.trim().includes(' ')) {
+            try {
+              // Try to search users first (if endpoint exists)
+              let users = await apiSearchUsers(query.trim(), 3)
+              let userResultsArray = Array.isArray(users) ? users : []
+              
+              // If no results from search and query looks like a complete username,
+              // try fetching the user profile directly as a fallback
+              // This handles the case where searchUsers endpoint doesn't exist
+              if (userResultsArray.length === 0 && query.trim().length >= 3 && !query.trim().includes(' ')) {
+                try {
+                  // Use silentErrors=true to suppress error logging for expected "user not found" cases
+                  const userProfile = await apiGetUserProfile(query.trim(), false, true)
+                  if (userProfile && userProfile.user) {
+                    // Format user profile to match expected structure
+                    userResultsArray = [{
+                      id: userProfile.user.id,
+                      username: userProfile.user.username,
+                      avatar: userProfile.user.avatar,
+                      name: userProfile.user.name || userProfile.user.username
+                    }]
+                  }
+                } catch (profileError) {
+                  // User doesn't exist - silently ignore (expected behavior)
+                  userResultsArray = []
+                }
+              }
+              
+              // Always update results, even if empty, to show the current state
+              setUserResults(userResultsArray)
+            } catch (error) {
+              // Silently handle search errors
+              setUserResults([])
+            }
+          } else {
+            setUserResults([])
           }
         }
 
@@ -128,13 +201,38 @@ export function MobileSearchOverlay({
         setFilteredSuggestions([])
         setUserResults([])
       }
-    }, 150) // 150ms debounce (same as desktop)
+    }, 200) // 200ms debounce - same as desktop
   }, [])
 
   // Update search when query changes
   useEffect(() => {
     debouncedFilter(searchQuery)
+
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current)
+      }
+    }
   }, [searchQuery, debouncedFilter])
+
+  // Trigger final search when user stops typing (after a longer delay)
+  useEffect(() => {
+    if (!searchQuery.trim()) return
+
+    const finalSearchTimer = setTimeout(() => {
+      // Trigger a final search to ensure we have the latest results
+      debouncedFilter(searchQuery)
+    }, 500) // 500ms after last keystroke
+
+    return () => {
+      clearTimeout(finalSearchTimer)
+    }
+  }, [searchQuery, debouncedFilter])
+
+  // Reset selected index when search type changes
+  useEffect(() => {
+    setSelectedIndex(-1)
+  }, [searchType])
 
   // Detect advanced search syntax (same as desktop)
   useEffect(() => {
@@ -434,20 +532,6 @@ export function MobileSearchOverlay({
           </button>
         </div>
 
-        {/* Detected Filters */}
-        {detectedFilters.length > 0 && (
-          <div className="px-4 mt-2 flex flex-wrap gap-2">
-            {detectedFilters.map((filter, index) => (
-              <div
-                key={index}
-                className="px-2 py-1 bg-primary-500/20 border border-primary-500/30 rounded-lg text-xs text-primary-300 flex items-center gap-1"
-              >
-                <Filter className="h-3 w-3" />
-                {filter}
-              </div>
-            ))}
-          </div>
-        )}
 
         {/* Voice Error */}
         {voiceError && (
@@ -471,91 +555,118 @@ export function MobileSearchOverlay({
                 </div>
                 <p className="text-sm text-gray-400">Searching...</p>
               </div>
-            ) : searchType === 'user' && userResults.length > 0 ? (
-              <>
-                <div className="px-2 py-2 text-xs text-gray-400 font-semibold uppercase tracking-wider flex items-center gap-2 mb-2">
-                  <User className="h-4 w-4" />
-                  {userResults.length} {userResults.length === 1 ? 'User' : 'Users'}
-                </div>
-                <div className="space-y-2">
-                  {userResults.map((user, index) => (
-                    <button
-                      key={user.id}
-                      onClick={() => selectUser(user)}
-                      className={cn(
-                        'w-full p-3 transition-all duration-200 rounded-xl cursor-pointer flex items-center gap-3 touch-manipulation active:scale-[0.98]',
-                        selectedIndex === index
-                          ? 'bg-primary-500/20 ring-2 ring-primary-500/50 shadow-lg shadow-primary-500/10'
-                          : 'bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:border-white/20'
-                      )}
-                    >
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 flex items-center justify-center text-white font-semibold flex-shrink-0 relative overflow-hidden">
-                        {user.avatar ? (
-                          <Image
-                            src={user.avatar}
-                            alt={user.username}
-                            fill
-                            className="object-cover"
-                            sizes="48px"
-                          />
-                        ) : (
-                          user.username.charAt(0).toUpperCase()
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0 text-left">
-                        <div className="font-medium text-white text-sm truncate">
-                          @{user.username}
-                        </div>
-                      </div>
-                      <ArrowRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
-                    </button>
-                  ))}
-                </div>
-              </>
-            ) : searchType === 'anime' && filteredSuggestions.length > 0 ? (
-              <>
-                <div className="px-2 py-2 text-xs text-gray-400 font-semibold uppercase tracking-wider mb-2">
-                  {filteredSuggestions.length}{' '}
-                  {filteredSuggestions.length === 1 ? 'Result' : 'Results'}
-                </div>
-                <div className="space-y-2">
-                  {filteredSuggestions.map((anime, index) => (
-                    <div
-                      key={anime.id}
-                      onClick={() => selectSuggestion(anime)}
-                      className={cn(
-                        'transition-all duration-200 rounded-xl cursor-pointer touch-manipulation active:scale-[0.98]',
-                        selectedIndex === index
-                          ? 'ring-2 ring-primary-500/50 shadow-lg shadow-primary-500/10'
-                          : ''
-                      )}
-                    >
-                      <SearchAnimeCard anime={anime} variant="compact" />
-                    </div>
-                  ))}
-                </div>
-                <button
-                  onClick={() => handleSearch(searchQuery)}
-                  className="w-full mt-4 px-4 py-3 text-sm font-medium text-primary-400 hover:text-primary-300 hover:bg-primary-500/10 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 touch-manipulation active:scale-95 border border-primary-500/20 backdrop-blur-sm shadow-lg shadow-primary-500/10"
-                >
-                  <span>View All Results</span>
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </>
             ) : (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                  {searchType === 'user' ? (
-                    <User className="h-8 w-8 text-gray-600" />
-                  ) : (
-                    <Search className="h-8 w-8 text-gray-600" />
-                  )}
-                </div>
-                <p className="text-sm text-gray-400 mb-1">
-                  No {searchType === 'user' ? 'users' : 'anime'} found
-                </p>
-                <p className="text-xs text-gray-500">Try a different search</p>
-              </div>
+              <>
+                {/* User Search Results - Show when searching with @ or when users found in regular search */}
+                {userResults.length > 0 && (
+                  <>
+                    <div className="px-2 py-2 text-xs text-gray-400 font-semibold uppercase tracking-wider flex items-center gap-2 mb-2">
+                      <User className="h-4 w-4" />
+                      {userResults.length} {userResults.length === 1 ? 'User' : 'Users'}
+                    </div>
+                    <div className="space-y-2">
+                      {userResults.map((user, index) => {
+                        // Users always come first, so index is correct
+                        const isSelected = selectedIndex === index
+                        return (
+                        <button
+                          key={user.id}
+                          onClick={() => selectUser(user)}
+                          className={cn(
+                            'w-full p-3 transition-all duration-200 rounded-xl cursor-pointer flex items-center gap-3 touch-manipulation active:scale-[0.98]',
+                            isSelected
+                              ? 'bg-primary-500/20 ring-2 ring-primary-500/50 shadow-lg shadow-primary-500/10'
+                              : 'bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:border-white/20'
+                          )}
+                        >
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500/20 to-secondary-500/20 flex items-center justify-center text-white font-semibold flex-shrink-0 relative overflow-hidden">
+                            {user.avatar ? (
+                              <Image
+                                src={user.avatar}
+                                alt={user.username}
+                                fill
+                                className="object-cover"
+                                sizes="48px"
+                              />
+                            ) : (
+                              user.username.charAt(0).toUpperCase()
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0 text-left">
+                            <div className="font-medium text-white text-sm truncate">
+                              @{user.username}
+                            </div>
+                          </div>
+                          <ArrowRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                        </button>
+                        )
+                      })}
+                    </div>
+                  </>
+                )}
+
+                {/* User Search Empty State - Only show when searching with @ */}
+                {searchType === 'user' && userResults.length === 0 && (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <User className="h-8 w-8 text-gray-600" />
+                    </div>
+                    <p className="text-sm text-gray-400 mb-1">
+                      {searchQuery.slice(1).trim().length < 2 ? 'Type a username' : 'No users found'}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {searchQuery.slice(1).trim().length < 2 ? 'Type at least 2 characters after @' : 'Try a different username'}
+                    </p>
+                  </div>
+                )}
+
+                {/* Anime Search Results */}
+                {filteredSuggestions.length > 0 ? (
+                  <>
+                    <div className="px-2 py-2 text-xs text-gray-400 font-semibold uppercase tracking-wider mb-2">
+                      {filteredSuggestions.length}{' '}
+                      {filteredSuggestions.length === 1 ? 'Result' : 'Results'}
+                    </div>
+                    <div className="space-y-2">
+                      {filteredSuggestions.map((anime, index) => {
+                        // For regular search, adjust index to account for user results
+                        // For @ search, this won't be shown
+                        const animeIndex = searchType === 'anime' ? userResults.length + index : index
+                        const isSelected = selectedIndex === animeIndex
+                        return (
+                        <div
+                          key={anime.id}
+                          onClick={() => selectSuggestion(anime)}
+                          className={cn(
+                            'transition-all duration-200 rounded-xl cursor-pointer touch-manipulation active:scale-[0.98]',
+                            isSelected
+                              ? 'ring-2 ring-primary-500/50 shadow-lg shadow-primary-500/10'
+                              : ''
+                          )}
+                        >
+                          <SearchAnimeCard anime={anime} variant="compact" />
+                        </div>
+                        )
+                      })}
+                    </div>
+                    <button
+                      onClick={() => handleSearch(searchQuery)}
+                      className="w-full mt-4 px-4 py-3 text-sm font-medium text-primary-400 hover:text-primary-300 hover:bg-primary-500/10 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 touch-manipulation active:scale-95 border border-primary-500/20 backdrop-blur-sm shadow-lg shadow-primary-500/10"
+                    >
+                      <span>View All Results</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </>
+                ) : searchType === 'anime' && userResults.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Search className="h-8 w-8 text-gray-600" />
+                    </div>
+                    <p className="text-sm text-gray-400 mb-1">No results found</p>
+                    <p className="text-xs text-gray-500">Try a different search</p>
+                  </div>
+                ) : null}
+              </>
             )}
           </div>
         ) : (

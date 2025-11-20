@@ -29,7 +29,7 @@ export const NavbarSearch = memo(function NavbarSearch({
         aria-label="Search anime"
         id="search"
       >
-        <SearchBar placeholder="Search..." showDropdown={true} size="sm" variant="navbar" />
+        <SearchBar placeholder="Search..." showDropdown={true} size="sm" variant="navbar" renderDropdownOutside={true} />
       </div>
 
       {/* Mobile/Tablet Search Button */}
