@@ -36,7 +36,7 @@ export function extractSeriesInfo(
   // But exclude if it's part of a season indicator
   const ofPattern = /^(.+\s+of)\s+(.+)$/i
   const ofMatch = workingTitle.match(ofPattern)
-  if (ofMatch && ofMatch[1] && !ofMatch[2].match(/Season|Part|Final|Arc|\d/i)) {
+  if (ofMatch && ofMatch[1] && ofMatch[2] && !ofMatch[2].match(/Season|Part|Final|Arc|\d/i)) {
     const baseSeriesName = ofMatch[1].trim()
     return {
       seriesName: baseSeriesName,
@@ -49,7 +49,7 @@ export function extractSeriesInfo(
   // But exclude if it's part of a season indicator
   const inPattern = /^(.+\s+in)\s+(.+)$/i
   const inMatch = workingTitle.match(inPattern)
-  if (inMatch && inMatch[1] && !inMatch[2].match(/Season|Part|Final|Arc|\d/i)) {
+  if (inMatch && inMatch[1] && inMatch[2] && !inMatch[2].match(/Season|Part|Final|Arc|\d/i)) {
     const baseSeriesName = inMatch[1].trim()
     return {
       seriesName: baseSeriesName,
