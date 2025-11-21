@@ -96,8 +96,8 @@ export const PRIMARY_NAV_ITEMS: NavItemConfig[] = [
     activePatterns: ['/user/profile', '/user/settings'],
     authOnly: true,
     showInDesktop: false, // Profile is in dropdown, not top nav
-    showInMobile: true,
-    showInBottomNav: true,
+    showInMobile: false, // Profile is in AuthDrawer, not nav
+    showInBottomNav: false, // Profile is in AuthDrawer, not bottom nav
   },
 ]
 

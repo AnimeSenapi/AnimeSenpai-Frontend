@@ -30,15 +30,14 @@ export const MobileNavDrawer = memo(function MobileNavDrawer({
 }: MobileNavDrawerProps) {
   const router = useRouter()
   const haptic = useHapticFeedback()
-  const { setIsMoreMenuOpen, setIsAuthDrawerOpen } = useNavbarDrawers()
+  const { setIsAuthDrawerOpen } = useNavbarDrawers()
 
   // Close other drawers when nav drawer opens
   useEffect(() => {
     if (isOpen) {
-      setIsMoreMenuOpen(false)
       setIsAuthDrawerOpen(false)
     }
-  }, [isOpen, setIsMoreMenuOpen, setIsAuthDrawerOpen])
+  }, [isOpen, setIsAuthDrawerOpen])
 
   const handleItemClick = (item: NavItemConfig) => {
     haptic.selection()

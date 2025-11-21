@@ -11,7 +11,7 @@ const siteUrl = 'https://animesenpai.app'
 const defaultTitle = 'AnimeSenpai'
 const defaultDescription =
   'Discover, track, and explore your favorite anime. Personalized recommendations, lists, stats, and a friendly anime community.'
-const ogImage = `${siteUrl}/assets/logo/AnimeSenpai-logo.png`
+const ogImage = `${siteUrl}/assets/logos/AS-logo-800x200-300-C.png`
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -49,8 +49,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: ogImage,
-        width: 1200,
-        height: 630,
+        width: 800,
+        height: 200,
         alt: 'AnimeSenpai',
       },
     ],

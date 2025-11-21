@@ -5,26 +5,16 @@ import { useRouter } from 'next/navigation'
 import { MobileDrawer } from '../ui/mobile-modal'
 import { useAuth } from '../../app/lib/auth-context'
 import { useHapticFeedback } from '../../hooks/use-haptic-feedback'
-import { useEffect, useState } from 'react'
 import {
-  Calendar,
-  Bell,
-  Activity,
-  MessageSquare,
   HelpCircle,
   Trophy,
-  Award,
   List,
   Users,
   User,
-  Settings,
-  Shield,
-  LogOut,
   Info,
   FileText,
   Lock,
 } from 'lucide-react'
-import { apiGetUnreadNotificationCount, apiGetUnreadMessageCount } from '../../app/lib/api'
 
 interface MobileMoreMenuProps {
   isOpen: boolean
@@ -44,45 +34,9 @@ interface MenuItem {
 }
 
 export function MobileMoreMenu({ isOpen, onClose }: MobileMoreMenuProps) {
-  const { isAuthenticated, user, signout } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const router = useRouter()
   const haptic = useHapticFeedback()
-  const [notificationBadge, setNotificationBadge] = useState(0)
-  const [messageBadge, setMessageBadge] = useState(0)
-
-  // Load notification and message badges
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setNotificationBadge(0)
-      setMessageBadge(0)
-      return
-    }
-
-    const loadBadges = async () => {
-      try {
-        const [notifData, msgData] = await Promise.all([
-          apiGetUnreadNotificationCount(),
-          apiGetUnreadMessageCount(),
-        ])
-        setNotificationBadge((notifData as any)?.count || 0)
-        setMessageBadge((msgData as any)?.count || 0)
-      } catch (error) {
-        // Silently fail
-        setNotificationBadge(0)
-        setMessageBadge(0)
-      }
-    }
-
-    loadBadges()
-    const interval = setInterval(loadBadges, 30000) // Poll every 30 seconds
-    return () => clearInterval(interval)
-  }, [isAuthenticated])
-
-  const handleSignOut = () => {
-    haptic.medium()
-    onClose()
-    signout()
-  }
 
   const handleItemClick = (item: MenuItem) => {
     haptic.selection()
@@ -95,38 +49,8 @@ export function MobileMoreMenu({ isOpen, onClose }: MobileMoreMenuProps) {
     }
   }
 
-  const quickActions: MenuItem[] = [
-    {
-      id: 'calendar',
-      label: 'Calendar',
-      icon: <Calendar className="h-5 w-5" />,
-      href: '/calendar',
-      authOnly: true,
-    },
-    {
-      id: 'notifications',
-      label: 'Notifications',
-      icon: <Bell className="h-5 w-5" />,
-      href: '/notifications',
-      badge: notificationBadge > 0 ? notificationBadge : undefined,
-      authOnly: true,
-    },
-    {
-      id: 'activity',
-      label: 'Activity Feed',
-      icon: <Activity className="h-5 w-5" />,
-      href: '/activity',
-      authOnly: true,
-    },
-    {
-      id: 'messages',
-      label: 'Messages',
-      icon: <MessageSquare className="h-5 w-5" />,
-      href: '/messages',
-      badge: messageBadge > 0 ? messageBadge : undefined,
-      authOnly: true,
-    },
-  ]
+  // Quick Actions removed - these are now in AuthDrawer to match desktop
+  const quickActions: MenuItem[] = []
 
   const secondaryNav: MenuItem[] = [
     {
@@ -140,13 +64,6 @@ export function MobileMoreMenu({ isOpen, onClose }: MobileMoreMenuProps) {
       label: 'Leaderboards',
       icon: <Trophy className="h-5 w-5" />,
       href: '/leaderboards',
-    },
-    {
-      id: 'achievements',
-      label: 'Achievements',
-      icon: <Award className="h-5 w-5" />,
-      href: '/achievements',
-      authOnly: true,
     },
     {
       id: 'lists',
@@ -163,37 +80,8 @@ export function MobileMoreMenu({ isOpen, onClose }: MobileMoreMenuProps) {
     },
   ]
 
-  const accountItems: MenuItem[] = [
-    {
-      id: 'profile',
-      label: 'Profile',
-      icon: <User className="h-5 w-5" />,
-      href: '/user/profile',
-      authOnly: true,
-    },
-    {
-      id: 'settings',
-      label: 'Settings',
-      icon: <Settings className="h-5 w-5" />,
-      href: '/user/settings',
-      authOnly: true,
-    },
-    {
-      id: 'admin',
-      label: 'Admin Panel',
-      icon: <Shield className="h-5 w-5" />,
-      href: '/admin',
-      authOnly: true,
-      adminOnly: true,
-    },
-    {
-      id: 'signout',
-      label: 'Sign Out',
-      icon: <LogOut className="h-5 w-5" />,
-      onClick: handleSignOut,
-      authOnly: true,
-    },
-  ]
+  // Account items removed - these are now in AuthDrawer to match desktop
+  const accountItems: MenuItem[] = []
 
   const appInfo: MenuItem[] = [
     {
@@ -269,20 +157,6 @@ export function MobileMoreMenu({ isOpen, onClose }: MobileMoreMenuProps) {
           </div>
         )}
 
-        {/* Quick Actions Section */}
-        {isAuthenticated && filterItems(quickActions).length > 0 && (
-          <div className="mb-6">
-            <div className="px-4 py-2 text-xs text-gray-400 font-medium uppercase tracking-wider">
-              Quick Actions
-            </div>
-            <div className="space-y-1">
-              {filterItems(quickActions).map((item) => (
-                <MenuItemButton key={item.id} item={item} onClick={() => handleItemClick(item)} />
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Secondary Navigation Section */}
         {filterItems(secondaryNav).length > 0 && (
           <div className="mb-6">
@@ -291,20 +165,6 @@ export function MobileMoreMenu({ isOpen, onClose }: MobileMoreMenuProps) {
             </div>
             <div className="space-y-1">
               {filterItems(secondaryNav).map((item) => (
-                <MenuItemButton key={item.id} item={item} onClick={() => handleItemClick(item)} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Account Section */}
-        {isAuthenticated && filterItems(accountItems).length > 0 && (
-          <div className="mb-6">
-            <div className="px-4 py-2 text-xs text-gray-400 font-medium uppercase tracking-wider">
-              Account
-            </div>
-            <div className="space-y-1">
-              {filterItems(accountItems).map((item) => (
                 <MenuItemButton key={item.id} item={item} onClick={() => handleItemClick(item)} />
               ))}
             </div>

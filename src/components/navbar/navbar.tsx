@@ -11,7 +11,6 @@ import { NavbarLogo } from './components/NavbarLogo'
 import { NavbarItems } from './components/NavbarItems'
 import { NavbarSearch } from './components/NavbarSearch'
 import { NavbarAuth } from './components/NavbarAuth'
-import { NavbarMoreButton } from './components/NavbarMoreButton'
 import { MobileNavMenu } from './components/MobileNavMenu'
 
 /**
@@ -21,8 +20,6 @@ import { MobileNavMenu } from './components/MobileNavMenu'
 export function Navbar() {
   const { isAuthenticated } = useAuth()
   const {
-    isMoreMenuOpen,
-    setIsMoreMenuOpen,
     isMobileSearchOpen,
     setIsMobileSearchOpen,
     isMobileNavOpen,
@@ -60,12 +57,6 @@ export function Navbar() {
 
             {/* Auth Section */}
             <NavbarAuth />
-
-            {/* More Menu Button */}
-            <NavbarMoreButton
-              isOpen={isMoreMenuOpen}
-              onToggle={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-            />
           </div>
         </div>
       </nav>
@@ -80,8 +71,6 @@ export function Navbar() {
  */
 export function NavbarDrawersWrapper() {
   const {
-    isMoreMenuOpen,
-    setIsMoreMenuOpen,
     isAuthDrawerOpen,
     setIsAuthDrawerOpen,
     isMobileSearchOpen,
@@ -129,8 +118,6 @@ export function NavbarDrawersWrapper() {
 
   return (
     <NavbarDrawers
-      isMoreMenuOpen={isMoreMenuOpen}
-      setIsMoreMenuOpen={setIsMoreMenuOpen}
       isAuthDrawerOpen={isAuthDrawerOpen}
       setIsAuthDrawerOpen={setIsAuthDrawerOpen}
       isMobileSearchOpen={isMobileSearchOpen}

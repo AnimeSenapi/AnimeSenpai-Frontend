@@ -187,7 +187,7 @@ export function generateOrganizationData() {
     '@type': 'Organization',
     name: 'AnimeSenpai',
     url: 'https://animesenpai.app',
-    logo: 'https://animesenpai.app/assets/logo/AnimeSenpai_Inline.svg',
+    logo: 'https://animesenpai.app/assets/logos/AS-logo-1920x400-W.svg',
     description:
       'Track, discover, and explore your favorite anime. Get personalized recommendations and build your ultimate anime collection.',
     sameAs: [

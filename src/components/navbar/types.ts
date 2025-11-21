@@ -69,12 +69,3 @@ export interface NavbarAuthProps {
   className?: string
 }
 
-/**
- * Navbar more button props
- */
-export interface NavbarMoreButtonProps {
-  isOpen: boolean
-  onToggle: () => void
-  className?: string
-}
-

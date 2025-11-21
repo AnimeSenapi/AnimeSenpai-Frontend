@@ -9,7 +9,7 @@ const IMAGE_CACHE_NAME = 'animesenpai-images-v1'
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
-  '/assets/logo/AnimeSenpai_Inline.svg',
+  '/assets/logos/AS-logo-1920x400-W.svg',
 ]
 
 // API endpoints to cache (with TTL)

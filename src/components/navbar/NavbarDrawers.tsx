@@ -1,14 +1,11 @@
 'use client'
 
-import { MobileMoreMenu } from './MobileMoreMenu'
 import { AuthDrawer } from './AuthDrawer'
 import { MobileSearchOverlay } from '../search/MobileSearchOverlay'
 import { MobileNavDrawer } from './components/MobileNavDrawer'
 import type { NavItemConfig } from './types'
 
 interface NavbarDrawersProps {
-  isMoreMenuOpen: boolean
-  setIsMoreMenuOpen: (open: boolean) => void
   isAuthDrawerOpen: boolean
   setIsAuthDrawerOpen: (open: boolean) => void
   isMobileSearchOpen: boolean
@@ -23,8 +20,6 @@ interface NavbarDrawersProps {
 }
 
 export function NavbarDrawers({
-  isMoreMenuOpen,
-  setIsMoreMenuOpen,
   isAuthDrawerOpen,
   setIsAuthDrawerOpen,
   isMobileSearchOpen,
@@ -45,12 +40,6 @@ export function NavbarDrawers({
         onClose={() => setIsMobileNavOpen(false)}
         items={mobileNavItems}
         pathname={pathname}
-      />
-
-      {/* Mobile More Menu - Portal Component */}
-      <MobileMoreMenu
-        isOpen={isMoreMenuOpen}
-        onClose={() => setIsMoreMenuOpen(false)}
       />
 
       {/* Mobile Auth Drawer - Portal Component */}

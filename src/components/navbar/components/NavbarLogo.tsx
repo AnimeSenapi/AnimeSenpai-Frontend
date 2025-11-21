@@ -17,11 +17,11 @@ export const NavbarLogo = memo(function NavbarLogo({ className }: NavbarLogoProp
       aria-label="AnimeSenpai home"
     >
       <Image
-        src="/assets/logo/AnimeSenpai_Inline.svg"
+        src="/assets/logos/AS-logo-800x200-300-W.png"
         alt="AnimeSenpai"
-        width={450}
-        height={112}
-        className="h-7 sm:h-12 md:h-14 lg:h-20 xl:h-24 w-auto max-w-[100px] sm:max-w-[140px] md:max-w-none invert drop-shadow-lg flex-shrink-0"
+        width={800}
+        height={200}
+        className="h-5 sm:h-7 md:h-8 lg:h-10 xl:h-12 w-auto max-w-[80px] sm:max-w-[100px] md:max-w-[120px] lg:max-w-[140px] drop-shadow-lg flex-shrink-0"
         priority
       />
     </Link>

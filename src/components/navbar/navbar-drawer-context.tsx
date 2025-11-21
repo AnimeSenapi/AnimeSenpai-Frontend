@@ -3,8 +3,6 @@
 import { createContext, useContext, useState, ReactNode } from 'react'
 
 interface NavbarDrawerContextType {
-  isMoreMenuOpen: boolean
-  setIsMoreMenuOpen: (open: boolean) => void
   isAuthDrawerOpen: boolean
   setIsAuthDrawerOpen: (open: boolean) => void
   isMobileSearchOpen: boolean
@@ -16,7 +14,6 @@ interface NavbarDrawerContextType {
 const NavbarDrawerContext = createContext<NavbarDrawerContextType | undefined>(undefined)
 
 export function NavbarDrawerProvider({ children }: { children: ReactNode }) {
-  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false)
   const [isAuthDrawerOpen, setIsAuthDrawerOpen] = useState(false)
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
@@ -24,8 +21,6 @@ export function NavbarDrawerProvider({ children }: { children: ReactNode }) {
   return (
     <NavbarDrawerContext.Provider
       value={{
-        isMoreMenuOpen,
-        setIsMoreMenuOpen,
         isAuthDrawerOpen,
         setIsAuthDrawerOpen,
         isMobileSearchOpen,

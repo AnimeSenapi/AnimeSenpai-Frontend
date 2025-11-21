@@ -64,8 +64,8 @@ const nextConfigBase = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     // Cache optimized images for 1 year
     minimumCacheTTL: 31536000,
-    // Disable SVG for security
-    dangerouslyAllowSVG: false,
+    // Enable SVG for logo support
+    dangerouslyAllowSVG: true,
     // Enable unoptimized for development speed
     unoptimized: process.env.NODE_ENV === 'development',
   },

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 const siteUrl = 'https://animesenpai.app'
 const brandName = 'AnimeSenpai'
-const defaultOg = `${siteUrl}/assets/logo/AnimeSenpai-logo.png`
+const defaultOg = `${siteUrl}/assets/logos/AS-logo-800x200-300-C.png`
 
 export function buildCanonical(path: string = '/'): string {
   if (!path || path === '/') return siteUrl
@@ -24,7 +24,7 @@ export function siteOpenGraph(overrides?: Partial<NonNullable<Metadata['openGrap
     type: 'website',
     url: siteUrl,
     siteName: brandName,
-    images: [{ url: defaultOg, width: 1200, height: 630, alt: brandName }],
+    images: [{ url: defaultOg, width: 800, height: 200, alt: brandName }],
     locale: 'en_US',
     ...overrides,
   }
