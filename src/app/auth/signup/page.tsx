@@ -11,6 +11,7 @@ import { useToast } from '../../../components/ui/toast'
 import { RequireGuest } from '../../lib/protected-route'
 import { apiCheckUsernameAvailability } from '../../lib/api'
 import PageLoading from '../../../components/ui/page-loading'
+import { PasswordStrengthMeter } from '../../../components/ui/password-strength-meter'
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -88,9 +89,49 @@ export default function SignUpPage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
     if (error) clearError()
     
+    // Real-time validation for email
+    if (name === 'email' && value) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        setFormErrors((prev) => ({ ...prev, email: 'Please enter a valid email address' }))
+      } else {
+        setFormErrors((prev) => ({ ...prev, email: undefined }))
+      }
+    }
+    
+    // Real-time validation for password
+    if (name === 'password' && value) {
+      if (value.length < 8) {
+        setFormErrors((prev) => ({ ...prev, password: 'Password must be at least 8 characters' }))
+      } else if (
+        !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]+$/.test(value)
+      ) {
+        setFormErrors((prev) => ({ ...prev, password: 'Password must contain uppercase, lowercase, number, and special character' }))
+      } else {
+        setFormErrors((prev) => ({ ...prev, password: undefined }))
+      }
+      
+      // Also validate confirm password if it has a value
+      if (formData.confirmPassword) {
+        if (value !== formData.confirmPassword) {
+          setFormErrors((prev) => ({ ...prev, confirmPassword: "Passwords don't match" }))
+        } else {
+          setFormErrors((prev) => ({ ...prev, confirmPassword: undefined }))
+        }
+      }
+    }
+    
+    // Real-time validation for confirm password
+    if (name === 'confirmPassword' && value) {
+      if (value !== formData.password) {
+        setFormErrors((prev) => ({ ...prev, confirmPassword: "Passwords don't match" }))
+      } else {
+        setFormErrors((prev) => ({ ...prev, confirmPassword: undefined }))
+      }
+    }
+    
     // Only clear errors for non-username fields
     // Username validation is handled by useEffect
-    if (name !== 'username' && formErrors[name as keyof typeof formErrors]) {
+    if (name !== 'username' && formErrors[name as keyof typeof formErrors] && !value) {
       setFormErrors((prev) => ({ ...prev, [name]: undefined }))
     }
   }
@@ -365,65 +406,16 @@ export default function SignUpPage() {
                   </button>
                 </div>
                 {formErrors.password && (
-                  <p className="mt-2 text-sm text-red-400">{formErrors.password}</p>
+                  <p className="mt-2 text-sm text-red-400 flex items-center gap-1.5">
+                    <X className="h-4 w-4" />
+                    {formErrors.password}
+                  </p>
                 )}
 
-                {/* Password Requirements */}
+                {/* Password Strength Meter */}
                 {formData.password && (
-                  <div className="mt-3 p-3 bg-white/5 border border-white/10 rounded-lg">
-                    <p className="text-xs font-medium text-gray-400 mb-2">Password must contain:</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div
-                        className={`flex items-center gap-1.5 text-xs ${passwordChecks.length ? 'text-green-400' : 'text-gray-400'}`}
-                      >
-                        {passwordChecks.length ? (
-                          <Check className="h-3.5 w-3.5" />
-                        ) : (
-                          <X className="h-3.5 w-3.5" />
-                        )}
-                        <span>8+ characters</span>
-                      </div>
-                      <div
-                        className={`flex items-center gap-1.5 text-xs ${passwordChecks.uppercase ? 'text-green-400' : 'text-gray-400'}`}
-                      >
-                        {passwordChecks.uppercase ? (
-                          <Check className="h-3.5 w-3.5" />
-                        ) : (
-                          <X className="h-3.5 w-3.5" />
-                        )}
-                        <span>Uppercase letter</span>
-                      </div>
-                      <div
-                        className={`flex items-center gap-1.5 text-xs ${passwordChecks.lowercase ? 'text-green-400' : 'text-gray-400'}`}
-                      >
-                        {passwordChecks.lowercase ? (
-                          <Check className="h-3.5 w-3.5" />
-                        ) : (
-                          <X className="h-3.5 w-3.5" />
-                        )}
-                        <span>Lowercase letter</span>
-                      </div>
-                      <div
-                        className={`flex items-center gap-1.5 text-xs ${passwordChecks.number ? 'text-green-400' : 'text-gray-400'}`}
-                      >
-                        {passwordChecks.number ? (
-                          <Check className="h-3.5 w-3.5" />
-                        ) : (
-                          <X className="h-3.5 w-3.5" />
-                        )}
-                        <span>Number</span>
-                      </div>
-                      <div
-                        className={`flex items-center gap-1.5 text-xs col-span-2 ${passwordChecks.special ? 'text-green-400' : 'text-gray-400'}`}
-                      >
-                        {passwordChecks.special ? (
-                          <Check className="h-3.5 w-3.5" />
-                        ) : (
-                          <X className="h-3.5 w-3.5" />
-                        )}
-                        <span>Special character (@$!%*?&)</span>
-                      </div>
-                    </div>
+                  <div className="mt-3">
+                    <PasswordStrengthMeter password={formData.password} />
                   </div>
                 )}
               </div>

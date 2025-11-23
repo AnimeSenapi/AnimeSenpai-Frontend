@@ -36,8 +36,6 @@ interface SystemSettings {
 }
 
 interface SystemSettingsFormState {
-  siteName: string
-  siteDescription: string
   maintenanceMode: boolean
   maintenanceMessage: string
   registrationEnabled: boolean
@@ -51,8 +49,6 @@ interface SystemSettingsFormState {
 }
 
 const INITIAL_FORM_STATE: SystemSettingsFormState = {
-    siteName: '',
-    siteDescription: '',
     maintenanceMode: false,
     maintenanceMessage: '',
     registrationEnabled: true,
@@ -129,8 +125,6 @@ export function SystemSettingsTab() {
     try {
       const data = await api.trpcQuery('systemSettings.getSettings')
       const nextFormData: SystemSettingsFormState = {
-        siteName: data.siteName,
-        siteDescription: data.siteDescription,
         maintenanceMode: data.maintenanceMode,
         maintenanceMessage: data.maintenanceMessage || '',
         registrationEnabled: data.registrationEnabled,
@@ -407,9 +401,6 @@ export function SystemSettingsTab() {
 
   const validationErrors: string[] = []
   if (maintenanceMessageError) validationErrors.push(maintenanceMessageError)
-  if (formData.siteName.trim().length === 0) validationErrors.push('Site name cannot be empty.')
-  if (formData.siteDescription.trim().length === 0)
-    validationErrors.push('Site description cannot be empty.')
 
   const isFormValid = validationErrors.length === 0
   const disableSave = saving || isResetting || loading || !hasChanges || !isFormValid
@@ -597,46 +588,6 @@ export function SystemSettingsTab() {
               <p className="mt-1 text-xs text-gray-400">
                 Preset options. Select “None” to disable the badge.
               </p>
-            </div>
-          </div>
-        </div>
-        {/* General Settings */}
-        <div
-          className={`rounded-2xl border border-white/10 bg-white/5 p-6 transition-all ${
-            isSectionDirty(['siteName', 'siteDescription']) ? 'border-primary-500/60 shadow-[0_0_25px_rgba(59,130,246,0.25)]' : ''
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <Globe className="w-5 h-5 text-primary-400" />
-            <h3 className="text-lg font-semibold text-white">
-              General
-              {isSectionDirty(['siteName', 'siteDescription']) && (
-                <span className="ml-2 text-xs font-medium text-primary-200">Updated</span>
-              )}
-            </h3>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Site Name</label>
-              <input
-                type="text"
-                value={formData.siteName}
-                onChange={handleTextChange('siteName')}
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white focus:outline-none focus:border-primary-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Site Description
-              </label>
-              <textarea
-                value={formData.siteDescription}
-                onChange={handleTextChange('siteDescription')}
-                rows={3}
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white focus:outline-none focus:border-primary-500 resize-none"
-              />
             </div>
           </div>
         </div>

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { memo } from 'react'
 import { cn } from '../../app/lib/utils'
 import { Anime } from '../../types/anime'
 import { Star, Play, Calendar } from 'lucide-react'
@@ -18,7 +19,7 @@ interface SearchAnimeCardProps {
   isFavorited?: boolean
 }
 
-export function SearchAnimeCard({
+function SearchAnimeCardComponent({
   anime,
   variant = 'grid',
   className,
@@ -303,3 +304,14 @@ export function SearchAnimeCard({
     </Link>
   )
 }
+
+export const SearchAnimeCard = memo(SearchAnimeCardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.anime.id === nextProps.anime.id &&
+    prevProps.variant === nextProps.variant &&
+    prevProps.isFavorited === nextProps.isFavorited &&
+    prevProps.className === nextProps.className
+  )
+})
+
+SearchAnimeCard.displayName = 'SearchAnimeCard'

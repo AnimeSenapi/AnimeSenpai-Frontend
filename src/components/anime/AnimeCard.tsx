@@ -1,12 +1,12 @@
 'use client'
 
-import { memo } from 'react'
+import { memo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
-import { Star } from 'lucide-react'
+import { Star, Plus, Play, Eye } from 'lucide-react'
 import { cn } from '../../app/lib/utils'
 import { Anime } from '../../types/anime'
 import { getTagById } from '../../types/tags'
@@ -59,6 +59,7 @@ export const AnimeCard = memo(function AnimeCard({
 }: AnimeCardProps) {
   const router = useRouter()
   const analytics = useAnalytics()
+  const [isHovered, setIsHovered] = useState(false)
 
   if (!anime) return null
 
@@ -103,16 +104,21 @@ export const AnimeCard = memo(function AnimeCard({
             })
 
     return (
-      <div className="group relative glass rounded-xl overflow-hidden hover:bg-white/10 transition-all duration-300 hover:scale-[1.02]">
+      <div 
+        className="group relative glass rounded-xl overflow-hidden hover:bg-white/10 transition-all duration-300 hover:scale-[1.02]"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         <div className="aspect-[2/3] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center relative overflow-hidden">
           {anime.coverImage ? (
             <Image
               src={anime.coverImage}
               alt={title}
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-300 group-hover:scale-110"
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
               priority={false}
+              loading="lazy"
             />
           ) : (
             <div className="text-gray-600 text-4xl">🎬</div>
@@ -139,11 +145,56 @@ export const AnimeCard = memo(function AnimeCard({
               </div>
             </div>
           )}
+          {/* Quick Actions - Show on hover */}
+          <div className={cn(
+            "absolute inset-0 z-10 flex items-center justify-center gap-2 transition-all duration-300",
+            isHovered ? "opacity-100" : "opacity-0"
+          )}>
+            <div className="flex items-center gap-2">
+              {_onPlay && (
+                <Button
+                  size="sm"
+                  className="h-10 w-10 rounded-full bg-primary-500/90 hover:bg-primary-500 backdrop-blur-sm border-0 shadow-lg transition-all hover:scale-110"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    _onPlay()
+                  }}
+                  aria-label="Play trailer"
+                >
+                  <Play className="h-5 w-5 fill-white text-white" />
+                </Button>
+              )}
+              {onFavorite && (
+                <Button
+                  size="sm"
+                  className="h-10 w-10 rounded-full bg-black/70 hover:bg-black/90 backdrop-blur-sm border-0 shadow-lg transition-all hover:scale-110"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    onFavorite()
+                  }}
+                  aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  <Star
+                    className={cn(
+                      'h-5 w-5 transition-all',
+                      isFavorited
+                        ? 'fill-yellow-400 text-yellow-400'
+                        : 'text-white'
+                    )}
+                  />
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Favorite Button - Always visible (fallback for mobile) */}
           {onFavorite && (
-            <div className="absolute top-2 right-2 z-10">
+            <div className="absolute top-2 right-2 z-10 sm:hidden">
               <Button
                 size="sm"
-                className="border-0 h-11 w-11 sm:h-10 sm:w-10 md:h-8 md:w-8 p-0 transition-all bg-black/50 hover:bg-black/70 active:bg-black/80 active:scale-95 touch-manipulation min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0"
+                className="border-0 h-11 w-11 p-0 transition-all bg-black/50 hover:bg-black/70 active:bg-black/80 active:scale-95 touch-manipulation min-h-[44px] min-w-[44px]"
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
@@ -153,7 +204,7 @@ export const AnimeCard = memo(function AnimeCard({
               >
                 <Star
                   className={cn(
-                    'h-5 w-5 sm:h-4 sm:w-4 md:h-3.5 md:w-3.5 transition-all',
+                    'h-5 w-5 transition-all',
                     isFavorited
                       ? 'fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]'
                       : 'text-white'
@@ -243,6 +294,7 @@ export const AnimeCard = memo(function AnimeCard({
               height={56}
               className="object-cover"
               sizes="40px"
+              loading="lazy"
             />
           ) : (
             <div className="text-xs text-gray-300 font-bold">{year || 'TBA'}</div>
@@ -301,8 +353,9 @@ export const AnimeCard = memo(function AnimeCard({
               src={anime.coverImage}
               alt={title}
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-300 group-hover:scale-110"
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              loading="lazy"
             />
           ) : (
             <div className="text-gray-600 text-2xl">🎬</div>
@@ -369,6 +422,7 @@ export const AnimeCard = memo(function AnimeCard({
               height={40}
               className="object-cover w-full h-full"
               sizes="(max-width: 640px) 32px, 24px"
+              loading="lazy"
             />
           ) : (
             <div className="text-xs sm:text-[10px] text-gray-300 font-bold">{year || 'TBA'}</div>

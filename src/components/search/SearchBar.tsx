@@ -390,12 +390,29 @@ export function SearchBar({
         totalItems = filteredSuggestions.length + userResults.length
       }
     } else {
-      totalItems = popularAnime.length
+      // Include popular anime and recent searches
+      totalItems = popularAnime.length + recentSearches.length
     }
 
     if (e.key === 'Enter') {
       e.preventDefault()
       if (selectedIndex >= 0) {
+        // Handle recent searches (when no query and showing popular)
+        if (!searchQuery.trim() && selectedIndex < popularAnime.length) {
+          selectSuggestion(popularAnime[selectedIndex])
+          return
+        }
+        
+        // Handle recent searches (after popular anime)
+        if (!searchQuery.trim() && selectedIndex >= popularAnime.length && selectedIndex < popularAnime.length + recentSearches.length) {
+          const recentIndex = selectedIndex - popularAnime.length
+          const recentSearch = recentSearches[recentIndex]
+          if (recentSearch) {
+            handleSearch(recentSearch)
+          }
+          return
+        }
+        
         // Handle user selection (users come first when both are shown)
         if (searchType === 'anime' && selectedIndex < userResults.length) {
           const user = userResults[selectedIndex]
@@ -708,6 +725,46 @@ export function SearchBar({
                     <SearchAnimeCard anime={anime} variant="compact" />
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recent Searches */}
+          {recentSearches.length > 0 && (
+            <div className="mb-2">
+              <div className="px-4 py-2 text-[11px] text-gray-500 font-semibold uppercase tracking-wider border-t border-gray-800/50 pt-3 flex items-center justify-between">
+                <span>Recent Searches</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setRecentSearches([])
+                    localStorage.removeItem('recentSearches')
+                  }}
+                  className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors"
+                  aria-label="Clear recent searches"
+                >
+                  Clear
+                </button>
+              </div>
+              <div className="space-y-1 px-1">
+                {recentSearches.slice(0, 5).map((search, index) => {
+                  const isSelected = selectedIndex === popularAnime.length + index
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleSearch(search)}
+                      className={`w-full text-left p-3 transition-all duration-200 rounded-lg flex items-center gap-3 ${
+                        isSelected
+                          ? 'bg-gray-800/80 ring-1 ring-primary-500/50'
+                          : 'hover:bg-gray-800/40'
+                      }`}
+                    >
+                      <Search className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                      <span className="text-sm text-gray-300 flex-1 truncate">{search}</span>
+                      <ArrowRight className="h-3.5 w-3.5 text-gray-600 flex-shrink-0" />
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}

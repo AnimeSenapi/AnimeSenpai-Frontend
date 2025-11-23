@@ -16,6 +16,37 @@ export interface Context {
   }
 }
 
+/**
+ * Decode JWT token payload without verification
+ * Note: Verification happens on the backend - this is just for extracting user info
+ */
+function decodeJWT(token: string): { userId?: string; email?: string; sessionId?: string } | null {
+  try {
+    // JWT tokens have three parts: header.payload.signature
+    const parts = token.split('.')
+    if (parts.length !== 3) {
+      return null
+    }
+
+    // Decode the payload (second part)
+    const payload = parts[1]
+    if (!payload) return null
+    // Add padding if needed for base64 decoding
+    const paddedPayload = payload + '='.repeat((4 - (payload.length % 4)) % 4)
+    const decoded = Buffer.from(paddedPayload, 'base64url').toString('utf-8')
+    const parsed = JSON.parse(decoded)
+
+    return {
+      userId: parsed.userId,
+      email: parsed.email,
+      sessionId: parsed.sessionId,
+    }
+  } catch (error) {
+    // Invalid token format
+    return null
+  }
+}
+
 export function createContext({ req }: { req: NextRequest }): Context {
   // Extract user information from the request if available
   // This would typically come from JWT tokens or session cookies
@@ -24,17 +55,19 @@ export function createContext({ req }: { req: NextRequest }): Context {
 
   if (authHeader?.startsWith('Bearer ')) {
     try {
-      // In a real implementation, you would decode the JWT token here
-      // For now, we'll just return a basic context
       const token = authHeader.substring(7)
-      // TODO: Decode JWT token and extract user info
-      user = {
-        id: 'user-id',
-        email: 'user@example.com',
-        role: 'user'
+      const payload = decodeJWT(token)
+      
+      if (payload?.userId && payload?.email) {
+        user = {
+          id: payload.userId,
+          email: payload.email,
+          role: 'user', // Default role - actual role is determined by backend
+        }
       }
     } catch (error) {
       // Invalid token, user remains undefined
+      console.debug('Failed to decode JWT token in context:', error)
     }
   }
 

@@ -207,6 +207,50 @@ export function NotificationsDropdown() {
     }
   }
 
+  const getNotificationType = (type: string): 'social' | 'activity' | 'reviews' | 'anime' | 'all' => {
+    if (type.includes('friend') || type.includes('follower') || type.includes('follow')) {
+      return 'social'
+    }
+    if (type.includes('review')) {
+      return 'reviews'
+    }
+    if (type.includes('anime') || type.includes('watching') || type.includes('episode')) {
+      return 'anime'
+    }
+    return 'activity'
+  }
+
+  const groupNotificationsByType = (notifications: Notification[]) => {
+    const groups: Record<string, Notification[]> = {
+      social: [],
+      activity: [],
+      reviews: [],
+      anime: [],
+      all: [],
+    }
+
+    notifications.forEach((notification) => {
+      const groupType = getNotificationType(notification.type)
+      if (groups[groupType]) {
+        groups[groupType].push(notification)
+      }
+    })
+
+    // Return groups that have notifications, preserving order
+    const result: Array<{ type: string; notifications: Notification[] }> = []
+    if (groups.social && groups.social.length > 0) result.push({ type: 'social', notifications: groups.social })
+    if (groups.reviews && groups.reviews.length > 0) result.push({ type: 'reviews', notifications: groups.reviews })
+    if (groups.anime && groups.anime.length > 0) result.push({ type: 'anime', notifications: groups.anime })
+    if (groups.activity && groups.activity.length > 0) result.push({ type: 'activity', notifications: groups.activity })
+
+    // If no groups, return all notifications
+    if (result.length === 0) {
+      result.push({ type: 'all', notifications })
+    }
+
+    return result
+  }
+
   const NotificationsContent = () => (
     <div className="w-full sm:w-96 max-h-[600px] flex flex-col bg-gray-950">
       {/* Header */}
@@ -229,10 +273,11 @@ export function NotificationsDropdown() {
             onClick={handleMarkAllRead}
             size="sm"
             variant="ghost"
-            className="text-xs hover:bg-white/10"
+            className="text-xs hover:bg-white/10 transition-all"
+            title="Mark all notifications as read"
           >
             <CheckCheck className="h-3 w-3 mr-1" />
-            Mark all
+            Mark all read
           </Button>
         )}
       </div>
@@ -317,8 +362,19 @@ export function NotificationsDropdown() {
                 <p className="text-xs text-gray-500 mt-1 text-center">You'll see updates here</p>
               </div>
             ) : (
-              <div className="p-2 space-y-1">
-                {notifications.map((notification) => (
+              <div className="p-2">
+                {groupNotificationsByType(notifications).map((group, groupIndex) => (
+                  <div key={groupIndex} className="mb-4 last:mb-0">
+                    {group.type !== 'all' && (
+                      <h4 className="text-xs font-semibold text-gray-500 mb-2 px-2 uppercase tracking-wider">
+                        {group.type === 'social' && 'Social Activity'}
+                        {group.type === 'activity' && 'Activity Updates'}
+                        {group.type === 'reviews' && 'Review Activity'}
+                        {group.type === 'anime' && 'Anime Updates'}
+                      </h4>
+                    )}
+                    <div className="space-y-1">
+                      {group.notifications.map((notification) => (
                   <div
                     key={notification.id}
                     className={cn(
@@ -360,6 +416,9 @@ export function NotificationsDropdown() {
                           <div className="w-2 h-2 rounded-full bg-primary-500 shadow-lg shadow-primary-500/50" />
                         </div>
                       )}
+                    </div>
+                  </div>
+                  ))}
                     </div>
                   </div>
                 ))}

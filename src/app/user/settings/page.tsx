@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '../../../components/ui/button'
@@ -33,6 +35,7 @@ import {
   FileJson,
   HelpCircle,
   Info,
+  Search,
 } from 'lucide-react'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '../../../components/ui/input-otp'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../../../components/ui/tooltip'
@@ -110,6 +113,7 @@ export default function UserSettingsPage() {
   const [deletePassword, setDeletePassword] = useState('')
   const [deleteReason, setDeleteReason] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const API_URL = TRPC_URL
 
@@ -454,12 +458,20 @@ export default function UserSettingsPage() {
   }
 
   const tabs = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'security', label: 'Security', icon: Lock },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'privacy', label: 'Privacy', icon: Shield },
-    { id: 'account', label: 'Account', icon: Settings },
+    { id: 'profile', label: 'Profile', icon: User, keywords: ['profile', 'username', 'bio', 'email', 'information'] },
+    { id: 'security', label: 'Security', icon: Lock, keywords: ['security', 'password', '2fa', 'two factor', 'authentication'] },
+    { id: 'notifications', label: 'Notifications', icon: Bell, keywords: ['notification', 'email', 'push', 'alert', 'digest'] },
+    { id: 'privacy', label: 'Privacy', icon: Shield, keywords: ['privacy', 'visibility', 'profile', 'public', 'private', 'friends'] },
+    { id: 'account', label: 'Account', icon: Settings, keywords: ['account', 'delete', 'export', 'data', 'gdpr'] },
   ]
+
+  // Filter tabs based on search query
+  const filteredTabs = searchQuery
+    ? tabs.filter(tab => 
+        tab.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        tab.keywords.some(keyword => keyword.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : tabs
 
   if (isLoading) {
     return (
@@ -494,14 +506,35 @@ export default function UserSettingsPage() {
                 Back
               </Button>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 mb-6">
               <div className="w-12 h-12 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-xl flex items-center justify-center border border-primary-500/30">
                 <Settings className="h-6 w-6 text-primary-400" />
               </div>
-              <div>
+              <div className="flex-1">
                 <h1 className="text-3xl sm:text-4xl font-bold text-white">Settings</h1>
                 <p className="text-gray-400 text-sm sm:text-base">Manage your account and preferences</p>
               </div>
+            </div>
+
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search settings..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400/50 transition-all text-sm"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  aria-label="Clear search"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
             </div>
           </div>
 
@@ -524,23 +557,32 @@ export default function UserSettingsPage() {
           {/* Mobile Navigation - Horizontal Scroll */}
           <div className="lg:hidden mb-6">
             <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                  {tabs.map((tab) => {
-                    const Icon = tab.icon
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 text-sm whitespace-nowrap flex-shrink-0 ${
-                          activeTab === tab.id
-                        ? 'bg-gradient-to-r from-primary-500/20 to-secondary-500/20 border border-primary-500/40 text-white shadow-md shadow-primary-500/10'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent glass'
-                        }`}
-                      >
-                    <Icon className={`h-4 w-4 ${activeTab === tab.id ? 'text-primary-300' : ''}`} />
-                    <span className="font-medium">{tab.label}</span>
-                  </button>
-                )
-              })}
+                  {filteredTabs.length > 0 ? (
+                    filteredTabs.map((tab) => {
+                      const Icon = tab.icon
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => {
+                            setActiveTab(tab.id)
+                            setSearchQuery('') // Clear search when selecting a tab
+                          }}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 text-sm whitespace-nowrap flex-shrink-0 ${
+                            activeTab === tab.id
+                          ? 'bg-gradient-to-r from-primary-500/20 to-secondary-500/20 border border-primary-500/40 text-white shadow-md shadow-primary-500/10'
+                          : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent glass'
+                          }`}
+                        >
+                      <Icon className={`h-4 w-4 ${activeTab === tab.id ? 'text-primary-300' : ''}`} />
+                      <span className="font-medium">{tab.label}</span>
+                    </button>
+                  )
+                })
+              ) : (
+                <div className="w-full text-center py-4 text-gray-400 text-sm">
+                  No settings found matching "{searchQuery}"
+                </div>
+              )}
             </div>
           </div>
 
@@ -550,26 +592,35 @@ export default function UserSettingsPage() {
               <div className="sticky top-40 max-h-[calc(100vh-11rem)] overflow-y-auto">
                 <div className="glass rounded-xl p-3 border border-white/10 shadow-xl backdrop-blur-xl">
                   <nav className="space-y-1.5">
-                    {tabs.map((tab) => {
-                      const Icon = tab.icon
-                      return (
-                        <button
-                          key={tab.id}
-                          onClick={() => setActiveTab(tab.id)}
-                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-sm ${
-                            activeTab === tab.id
-                              ? 'bg-gradient-to-r from-primary-500/20 to-secondary-500/20 border border-primary-500/40 text-white shadow-md shadow-primary-500/10'
-                              : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
-                          }`}
-                        >
-                          <Icon className={`h-4 w-4 ${activeTab === tab.id ? 'text-primary-300' : ''}`} />
-                          <span className="font-medium">{tab.label}</span>
-                      </button>
-                    )
-                  })}
-                </nav>
+                    {filteredTabs.length > 0 ? (
+                      filteredTabs.map((tab) => {
+                        const Icon = tab.icon
+                        return (
+                          <button
+                            key={tab.id}
+                            onClick={() => {
+                              setActiveTab(tab.id)
+                              setSearchQuery('') // Clear search when selecting a tab
+                            }}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-sm ${
+                              activeTab === tab.id
+                                ? 'bg-gradient-to-r from-primary-500/20 to-secondary-500/20 border border-primary-500/40 text-white shadow-md shadow-primary-500/10'
+                                : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+                            }`}
+                          >
+                            <Icon className={`h-4 w-4 ${activeTab === tab.id ? 'text-primary-300' : ''}`} />
+                            <span className="font-medium">{tab.label}</span>
+                          </button>
+                        )
+                      })
+                    ) : (
+                      <div className="text-center py-8 text-gray-400 text-sm">
+                        No settings found matching "{searchQuery}"
+                      </div>
+                    )}
+                  </nav>
+                </div>
               </div>
-            </div>
             </aside>
 
             {/* Settings Content */}

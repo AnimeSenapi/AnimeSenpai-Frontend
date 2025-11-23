@@ -9,8 +9,8 @@
 
 'use client'
 
-import React, { Component, ReactNode, ErrorInfo } from 'react'
-import { AlertTriangle, RefreshCw, Home, ChevronDown } from 'lucide-react'
+import React, { Component, ReactNode, ErrorInfo, useState } from 'react'
+import { AlertTriangle, RefreshCw, Home, ChevronDown, Mail, Copy, Check } from 'lucide-react'
 import { Button } from './ui/button'
 import { cn } from '../app/lib/utils'
 import * as Sentry from '@sentry/nextjs'
@@ -30,6 +30,8 @@ interface ErrorBoundaryState {
   error: Error | null
   errorInfo: ErrorInfo | null
   errorId: string | null
+  showReportForm: boolean
+  reportSubmitted: boolean
 }
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
@@ -42,6 +44,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       error: null,
       errorInfo: null,
       errorId: null,
+      showReportForm: false,
+      reportSubmitted: false,
     }
   }
 
@@ -137,6 +141,54 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     window.location.href = '/'
   }
 
+  handleCopyErrorId = async () => {
+    if (this.state.errorId) {
+      try {
+        await navigator.clipboard.writeText(this.state.errorId)
+        // Show feedback (could use toast here)
+        const button = document.querySelector('[data-error-id-copy]')
+        if (button) {
+          const originalText = button.textContent
+          button.textContent = 'Copied!'
+          setTimeout(() => {
+            if (button) button.textContent = originalText
+          }, 2000)
+        }
+      } catch (err) {
+        console.error('Failed to copy error ID:', err)
+      }
+    }
+  }
+
+  handleReportError = () => {
+    this.setState({ showReportForm: true })
+  }
+
+  handleSubmitReport = () => {
+    const { error, errorId, errorInfo } = this.state
+    const reportData = {
+      errorId,
+      message: error?.message || 'Unknown error',
+      stack: error?.stack,
+      componentStack: errorInfo?.componentStack,
+      userAgent: navigator.userAgent,
+      url: window.location.href,
+      timestamp: new Date().toISOString(),
+    }
+
+    // Send to Sentry with user context
+    Sentry.captureException(error, {
+      tags: {
+        errorBoundary: true,
+        userReported: true,
+        level: this.props.level || 'component',
+      },
+      extra: reportData,
+    })
+
+    this.setState({ reportSubmitted: true, showReportForm: false })
+  }
+
   render() {
     if (this.state.hasError) {
       // Use custom fallback if provided
@@ -221,7 +273,17 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
           {/* Error ID (Production) */}
           {process.env.NODE_ENV === 'production' && errorId && (
-            <p className="text-xs text-gray-500">Error ID: {errorId}</p>
+            <div className="flex items-center gap-2 justify-center">
+              <p className="text-xs text-gray-500">Error ID: {errorId}</p>
+              <button
+                onClick={this.handleCopyErrorId}
+                data-error-id-copy
+                className="text-gray-500 hover:text-white transition-colors p-1"
+                aria-label="Copy error ID"
+              >
+                <Copy className="h-3 w-3" />
+              </button>
+            </div>
           )}
 
           {/* Action Buttons */}
@@ -252,9 +314,32 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             )}
           </div>
 
+          {/* Report Error Button */}
+          {!this.state.showReportForm && !this.state.reportSubmitted && (
+            <Button
+              onClick={this.handleReportError}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              <Mail className="h-4 w-4" />
+              Report This Error
+            </Button>
+          )}
+
+          {/* Report Submitted Confirmation */}
+          {this.state.reportSubmitted && (
+            <div className="flex items-center gap-2 text-sm text-green-400">
+              <Check className="h-4 w-4" />
+              <span>Error report submitted. Thank you!</span>
+            </div>
+          )}
+
           {/* Help Text */}
           <p className="text-xs text-gray-500 max-w-md">
-            If this problem persists, please contact support with the error ID above.
+            {this.state.reportSubmitted
+              ? 'Our team has been notified and will investigate this issue.'
+              : 'If this problem persists, please contact support with the error ID above.'}
           </p>
         </div>
       </div>
@@ -383,6 +468,91 @@ export function LayoutErrorBoundary({ children }: LayoutErrorBoundaryProps) {
         Sentry.captureException(error, {
           tags: { errorBoundary: true, level: 'layout' },
           contexts: { react: { componentStack: errorInfo.componentStack } },
+        })
+      }}
+    >
+      {children}
+    </ErrorBoundary>
+  )
+}
+
+/**
+ * Feature-specific error boundaries for better granularity
+ */
+interface FeatureErrorBoundaryProps {
+  children: ReactNode
+  featureName: string
+  fallback?: ReactNode
+}
+
+export function FeatureErrorBoundary({
+  children,
+  featureName,
+  fallback,
+}: FeatureErrorBoundaryProps) {
+  return (
+    <ErrorBoundary
+      level="section"
+      fallback={fallback}
+      onError={(error, errorInfo) => {
+        Sentry.captureException(error, {
+          tags: {
+            errorBoundary: true,
+            level: 'feature',
+            featureName,
+          },
+          contexts: {
+            react: {
+              componentStack: errorInfo.componentStack,
+            },
+          },
+        })
+      }}
+    >
+      {children}
+    </ErrorBoundary>
+  )
+}
+
+/**
+ * Data-fetching error boundary
+ */
+interface DataErrorBoundaryProps {
+  children: ReactNode
+  dataSource: string
+  fallback?: ReactNode
+}
+
+export function DataErrorBoundary({
+  children,
+  dataSource,
+  fallback,
+}: DataErrorBoundaryProps) {
+  return (
+    <ErrorBoundary
+      level="section"
+      fallback={
+        fallback || (
+          <div className="p-4 text-center">
+            <AlertTriangle className="h-8 w-8 text-warning-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-400">
+              Failed to load {dataSource}. Please try refreshing.
+            </p>
+          </div>
+        )
+      }
+      onError={(error, errorInfo) => {
+        Sentry.captureException(error, {
+          tags: {
+            errorBoundary: true,
+            level: 'data',
+            dataSource,
+          },
+          contexts: {
+            react: {
+              componentStack: errorInfo.componentStack,
+            },
+          },
         })
       }}
     >

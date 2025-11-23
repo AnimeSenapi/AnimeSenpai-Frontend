@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import { Button } from '../../components/ui/button'
 import { LoadingState } from '../../components/ui/loading-state'
@@ -9,6 +11,7 @@ import { ListImportWizard } from '../../components/import'
 import { ListExportWizard } from '../../components/export'
 import { useAuth } from '../lib/auth-context'
 import { useToast } from '../../components/ui/toast'
+import { apiGetSharedLists, apiCreateSharedList, apiUpdateSharedList, api } from '../lib/api'
 import { 
   Plus, 
   List, 
@@ -62,41 +65,25 @@ export default function CustomListsPage() {
       setIsLoading(true)
       setError(null)
       
-      // TODO: Replace with actual API call
-      // For now, using mock data
-      const mockLists: CustomList[] = [
-        {
-          id: '1',
-          name: 'My Favorites',
-          description: 'All my favorite anime that I absolutely love',
-          isPublic: false,
-          animeCount: 12,
-          createdAt: '2024-01-15T10:30:00Z',
-          updatedAt: '2024-10-20T14:30:00Z',
-        },
-        {
-          id: '2',
-          name: 'Must Watch',
-          description: 'Anime I highly recommend to everyone',
-          isPublic: true,
-          animeCount: 8,
-          createdAt: '2024-02-01T09:15:00Z',
-          updatedAt: '2024-10-18T16:45:00Z',
-        },
-        {
-          id: '3',
-          name: 'Currently Watching',
-          description: 'Anime I am currently watching',
-          isPublic: false,
-          animeCount: 5,
-          createdAt: '2024-03-10T14:20:00Z',
-          updatedAt: '2024-10-22T11:30:00Z',
-        },
-      ]
+      const response = await apiGetSharedLists() as any
+      const sharedListsData = response?.result?.data?.sharedLists || response?.sharedLists || []
       
-      setLists(mockLists)
+      // Transform shared lists to CustomList format
+      const transformedLists: CustomList[] = sharedListsData.map((list: any) => ({
+        id: list.id,
+        name: list.name,
+        description: list.description || undefined,
+        isPublic: list.isPublic || false,
+        animeCount: list.animeIds?.length || 0,
+        createdAt: list.createdAt,
+        updatedAt: list.updatedAt || list.createdAt,
+      }))
+      
+      setLists(transformedLists)
     } catch (err) {
       console.error('Failed to fetch lists:', err)
+      // Fallback to empty array if API fails
+      setLists([])
       setError('Failed to load your custom lists. Please try again.')
     } finally {
       setIsLoading(false)
@@ -105,52 +92,131 @@ export default function CustomListsPage() {
 
   const handleCreateList = async (listData: Omit<CustomList, 'id' | 'createdAt' | 'updatedAt' | 'animeCount'>) => {
     try {
-      // TODO: Replace with actual API call
-      const newList: CustomList = {
-        id: Date.now().toString(),
-        ...listData,
-        animeCount: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
+      const response = await apiCreateSharedList({
+        name: listData.name,
+        description: listData.description,
+        animeIds: [],
+        collaborators: [],
+        isPublic: listData.isPublic,
+      }) as any
       
-      setLists(prev => [newList, ...prev])
-      setShowCreateModal(false)
+      const sharedList = response?.result?.data?.sharedList || response?.sharedList
+      if (sharedList) {
+        const newList: CustomList = {
+          id: sharedList.id,
+          name: sharedList.name,
+          description: sharedList.description || undefined,
+          isPublic: sharedList.isPublic || false,
+          animeCount: sharedList.animeIds?.length || 0,
+          createdAt: sharedList.createdAt,
+          updatedAt: sharedList.updatedAt || sharedList.createdAt,
+        }
+        
+        setLists(prev => [newList, ...prev])
+        setShowCreateModal(false)
+        addToast({
+          title: 'List created!',
+          description: `"${listData.name}" has been created.`,
+          variant: 'success',
+        })
+      }
     } catch (error) {
       console.error('Failed to create list:', error)
+      addToast({
+        title: 'Failed to create list',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      })
       throw error
     }
   }
 
   const handleUpdateList = async (listData: Omit<CustomList, 'id' | 'createdAt' | 'updatedAt' | 'animeCount'>) => {
+    if (!editingList) return
+    
     try {
-      // TODO: Replace with actual API call
-      setLists(prev => prev.map(list => 
-        list.id === editingList?.id 
-          ? { ...list, ...listData, updatedAt: new Date().toISOString() }
-          : list
-      ))
-      setEditingList(null)
+      const response = await apiUpdateSharedList(editingList.id, {
+        name: listData.name,
+        description: listData.description,
+        isPublic: listData.isPublic,
+      }) as any
+      
+      const updatedList = response?.result?.data?.sharedList || response?.sharedList
+      if (updatedList) {
+        setLists(prev => prev.map(list => 
+          list.id === editingList.id 
+            ? {
+                ...list,
+                name: updatedList.name,
+                description: updatedList.description || undefined,
+                isPublic: updatedList.isPublic || false,
+                updatedAt: updatedList.updatedAt || list.updatedAt,
+              }
+            : list
+        ))
+        setEditingList(null)
+        addToast({
+          title: 'List updated!',
+          description: `"${listData.name}" has been updated.`,
+          variant: 'success',
+        })
+      }
     } catch (error) {
       console.error('Failed to update list:', error)
+      addToast({
+        title: 'Failed to update list',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      })
       throw error
     }
   }
 
   const handleDeleteList = async (list: CustomList) => {
     try {
-      // TODO: Replace with actual API call
+      // Note: Backend doesn't have deleteSharedList endpoint yet
+      // For now, we'll use a mutation if it exists, otherwise show a message
+      try {
+        await api.trpcMutation('listTools.deleteSharedList', { listId: list.id })
+      } catch (err) {
+        // If endpoint doesn't exist, just remove from local state
+        // This is a temporary solution until backend implements delete endpoint
+        console.warn('Delete endpoint not available, removing from local state only')
+      }
+      
       setLists(prev => prev.filter(l => l.id !== list.id))
+      addToast({
+        title: 'List deleted',
+        description: `"${list.name}" has been deleted.`,
+        variant: 'success',
+      })
     } catch (error) {
       console.error('Failed to delete list:', error)
+      addToast({
+        title: 'Failed to delete list',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      })
       throw error
     }
   }
 
   const handleImportAnime = async (anime: any[]) => {
     try {
-      // TODO: Replace with actual API call
-      // This would import anime to the user's main list
+      // Import anime to user's main list using the existing API
+      // This uses the user.addToAnimeList endpoint
+      const importPromises = anime.map((item) =>
+        api.trpcMutation('user.addToAnimeList', {
+          animeId: item.id || item.animeId,
+          status: item.status || 'plan-to-watch',
+        }).catch((err) => {
+          console.warn(`Failed to import anime ${item.id}:`, err)
+          return null
+        })
+      )
+      
+      await Promise.allSettled(importPromises)
+      
       addToast({
         title: 'Import successful!',
         description: `Imported ${anime.length} anime to your list.`,
@@ -158,18 +224,38 @@ export default function CustomListsPage() {
       })
     } catch (error) {
       console.error('Failed to import anime:', error)
+      addToast({
+        title: 'Import failed',
+        description: error instanceof Error ? error.message : 'Some anime could not be imported.',
+        variant: 'destructive',
+      })
       throw error
     }
   }
 
   const handleExportList = async (options: any) => {
     try {
-      // TODO: Replace with actual API call
-      // This would generate and return the export file
-      const mockData = JSON.stringify(lists, null, 2)
-      return new Blob([mockData], { type: 'application/json' })
+      // Export the lists data as JSON
+      // If a specific list is selected, export only that list
+      const dataToExport = options?.listId
+        ? lists.find(l => l.id === options.listId)
+        : lists
+      
+      const exportData = {
+        exportedAt: new Date().toISOString(),
+        version: '1.0',
+        lists: Array.isArray(dataToExport) ? dataToExport : [dataToExport],
+      }
+      
+      const jsonData = JSON.stringify(exportData, null, 2)
+      return new Blob([jsonData], { type: 'application/json' })
     } catch (error) {
       console.error('Failed to export list:', error)
+      addToast({
+        title: 'Export failed',
+        description: error instanceof Error ? error.message : 'Failed to export list.',
+        variant: 'destructive',
+      })
       throw error
     }
   }

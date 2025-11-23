@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -13,7 +15,7 @@ import { AnimeCard } from '../../../components/anime/AnimeCard'
 import { LoadingState } from '../../../components/ui/loading-state'
 import { EmptyState } from '../../../components/ui/error-state'
 import { groupAnimeIntoSeries } from '../../../lib/series-grouping'
-import { apiGetUserList, apiUpdateProfile } from '../../lib/api'
+import { apiGetUserList, apiUpdateProfile, apiGetMyActivities } from '../../lib/api'
 import { TRPC_URL as API_URL } from '../../lib/api'
 import {
   User,
@@ -46,6 +48,8 @@ import {
   Sparkles,
   Calendar,
 } from 'lucide-react'
+import { Progress } from '../../../components/ui/progress'
+import { formatDistanceToNow } from 'date-fns'
 
 interface UserStats {
   totalAnime: number
@@ -84,9 +88,11 @@ export default function ProfilePage() {
   const [leaderboardRank, setLeaderboardRank] = useState<any>(null)
   const [userPreferences, setUserPreferences] = useState<any>(null)
   const [privacySettings, setPrivacySettings] = useState<any>(null)
-  const [activeTab, setActiveTab] = useState<'recent' | 'favorites'>('recent')
+  const [activeTab, setActiveTab] = useState<'recent' | 'favorites' | 'activity'>('recent')
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [avatarError, setAvatarError] = useState<string | null>(null)
+  const [myActivities, setMyActivities] = useState<any[]>([])
+  const [loadingActivities, setLoadingActivities] = useState(false)
 
   const getAuthHeaders = (): Record<string, string> => {
     const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
@@ -326,6 +332,21 @@ export default function ProfilePage() {
           setPrivacySettings(privacyData.result.data)
         }
 
+        // Load user's own activities
+        try {
+          setLoadingActivities(true)
+          const activitiesData = await apiGetMyActivities({ limit: 10 }) as any
+          if (activitiesData?.activities) {
+            setMyActivities(activitiesData.activities)
+          } else if (Array.isArray(activitiesData)) {
+            setMyActivities(activitiesData)
+          }
+        } catch (activityErr) {
+          console.debug('Could not load activities:', activityErr)
+        } finally {
+          setLoadingActivities(false)
+        }
+
       } catch (error) {
         console.error('Failed to load profile:', error)
         addToast({
@@ -356,6 +377,119 @@ export default function ProfilePage() {
         day: 'numeric',
       })
     : 'Unknown'
+
+  // Calculate profile completion percentage
+  const calculateProfileCompletion = () => {
+    if (!user) return 0
+    let completed = 0
+    const total = 5 // avatar, bio, username, email, preferences
+
+    if (user.avatar) completed++
+    if (user.bio && user.bio.trim().length > 0) completed++
+    if (user.username) completed++
+    if (user.email) completed++
+    if (userPreferences && Object.keys(userPreferences).length > 0) completed++
+
+    return Math.round((completed / total) * 100)
+  }
+
+  const profileCompletion = calculateProfileCompletion()
+
+  // Get activity icon and text
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'rated_anime':
+        return <Star className="h-4 w-4 text-yellow-400" />
+      case 'completed_anime':
+        return <CheckCircle className="h-4 w-4 text-success-400" />
+      case 'started_watching':
+        return <Play className="h-4 w-4 text-primary-400" />
+      case 'added_to_list':
+        return <Heart className="h-4 w-4 text-error-400" />
+      case 'reviewed_anime':
+        return <MessageSquare className="h-4 w-4 text-primary-400" />
+      default:
+        return <Activity className="h-4 w-4 text-gray-400" />
+    }
+  }
+
+  const getActivityText = (activity: any) => {
+    const animeTitle = activity.anime?.titleEnglish || activity.anime?.title || 'anime'
+
+    switch (activity.activityType) {
+      case 'rated_anime':
+        const rating = activity.metadata?.score || activity.metadata?.rating
+        return (
+          <>
+            Rated{' '}
+            <Link
+              href={`/anime/${activity.anime?.slug}`}
+              className="font-medium text-primary-400 hover:text-primary-300 transition-colors"
+            >
+              {animeTitle}
+            </Link>
+            {rating && (
+              <span className="ml-2 inline-flex items-center gap-1">
+                <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                <span className="font-semibold text-white">{rating}/10</span>
+              </span>
+            )}
+          </>
+        )
+      case 'completed_anime':
+        return (
+          <>
+            Completed{' '}
+            <Link
+              href={`/anime/${activity.anime?.slug}`}
+              className="font-medium text-success-400 hover:text-success-300 transition-colors"
+            >
+              {animeTitle}
+            </Link>
+          </>
+        )
+      case 'started_watching':
+        return (
+          <>
+            Started watching{' '}
+            <Link
+              href={`/anime/${activity.anime?.slug}`}
+              className="font-medium text-primary-400 hover:text-primary-300 transition-colors"
+            >
+              {animeTitle}
+            </Link>
+          </>
+        )
+      case 'added_to_list':
+        const status = activity.metadata?.status
+        return (
+          <>
+            Added{' '}
+            <Link
+              href={`/anime/${activity.anime?.slug}`}
+              className="font-medium text-primary-400 hover:text-primary-300 transition-colors"
+            >
+              {animeTitle}
+            </Link>
+            {status && <span className="text-gray-400"> to {status.replace('-', ' ')}</span>}
+          </>
+        )
+      case 'reviewed_anime':
+        return (
+          <>
+            Reviewed{' '}
+            <Link
+              href={`/anime/${activity.anime?.slug}`}
+              className="font-medium text-primary-400 hover:text-primary-300 transition-colors"
+            >
+              {animeTitle}
+            </Link>
+          </>
+        )
+      default:
+        return <span className="text-gray-400">Unknown activity</span>
+    }
+  }
 
   return (
     <RequireAuth>
@@ -447,6 +581,23 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
+              {/* Profile Completion Progress */}
+              <div className="mt-4 pt-4 border-t border-white/10">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Target className="h-4 w-4 text-primary-400" />
+                    <span className="text-sm font-medium text-gray-300">Profile Completion</span>
+                  </div>
+                  <span className="text-sm font-semibold text-white">{profileCompletion}%</span>
+                </div>
+                <Progress value={profileCompletion} className="h-2" />
+                {profileCompletion < 100 && (
+                  <p className="text-xs text-gray-400 mt-2">
+                    Complete your profile to unlock more features
+                  </p>
+                )}
+              </div>
+
               {/* Social Stats */}
               <div className="mt-4 pt-4 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
                 <div className="flex items-center gap-6">
@@ -493,7 +644,7 @@ export default function ProfilePage() {
                             <div className="flex items-center gap-2">
                               <Activity className="h-4 w-4" />
                               Recent
-              </div>
+                            </div>
                           </button>
                           <button
                             onClick={() => setActiveTab('favorites')}
@@ -506,16 +657,37 @@ export default function ProfilePage() {
                             <div className="flex items-center gap-2">
                               <Heart className="h-4 w-4" />
                               Favorites
-              </div>
+                            </div>
                           </button>
-            </div>
+                          <button
+                            onClick={() => setActiveTab('activity')}
+                            className={`px-4 py-2 sm:px-3 sm:py-1.5 rounded-md text-sm font-medium transition-colors touch-manipulation ${
+                              activeTab === 'activity'
+                                ? 'bg-primary-500 text-white'
+                                : 'text-gray-400 hover:text-white'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <History className="h-4 w-4" />
+                              Activity
+                            </div>
+                          </button>
+                        </div>
 
-                        <Link href={activeTab === 'recent' ? '/mylist' : '/mylist?filter=favorites'} className="w-full sm:w-auto">
-                          <Button variant="outline" size="sm" className="w-full sm:w-auto border-white/20 text-white hover:bg-white/10 text-xs px-2 py-1">
-                            View All
-                </Button>
-              </Link>
-            </div>
+                        {activeTab === 'activity' ? (
+                          <Link href="/activity" className="w-full sm:w-auto">
+                            <Button variant="outline" size="sm" className="w-full sm:w-auto border-white/20 text-white hover:bg-white/10 text-xs px-2 py-1">
+                              View All Activity
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Link href={activeTab === 'recent' ? '/mylist' : '/mylist?filter=favorites'} className="w-full sm:w-auto">
+                            <Button variant="outline" size="sm" className="w-full sm:w-auto border-white/20 text-white hover:bg-white/10 text-xs px-2 py-1">
+                              View All
+                            </Button>
+                          </Link>
+                        )}
+                      </div>
 
                       {/* Tab Content */}
                       {activeTab === 'recent' ? (
@@ -539,7 +711,7 @@ export default function ProfilePage() {
                     ))}
                   </div>
                         )
-                      ) : (
+                      ) : activeTab === 'favorites' ? (
                         favoriteAnime.length === 0 ? (
                           <div className="text-center py-8">
                             <Heart className="h-8 w-8 text-gray-500 mx-auto mb-3" />
@@ -560,7 +732,37 @@ export default function ProfilePage() {
                             ))}
                           </div>
                         )
-                      )}
+                      ) : activeTab === 'activity' ? (
+                        loadingActivities ? (
+                          <div className="text-center py-8">
+                            <Loader2 className="h-8 w-8 text-gray-500 mx-auto mb-3 animate-spin" />
+                            <p className="text-gray-400 text-sm">Loading activity...</p>
+                          </div>
+                        ) : myActivities.length === 0 ? (
+                          <div className="text-center py-8">
+                            <History className="h-8 w-8 text-gray-500 mx-auto mb-3" />
+                            <p className="text-gray-400 text-sm mb-3">No recent activity</p>
+                            <p className="text-gray-500 text-xs">Start adding anime to see your activity here</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {myActivities.map((activity) => (
+                              <div
+                                key={activity.id}
+                                className="flex items-start gap-3 p-3 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all"
+                              >
+                                <div className="mt-0.5 flex-shrink-0">{getActivityIcon(activity.activityType)}</div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm text-gray-300 leading-relaxed">{getActivityText(activity)}</p>
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      ) : null}
                     </div>
 
                 </div>
@@ -568,40 +770,87 @@ export default function ProfilePage() {
               {/* Right Column - Stats & Info */}
               <div className="space-y-4 sm:space-y-6">
                 
-                    {/* Quick Stats */}
+                    {/* Quick Stats with Visualization */}
                     <div className="glass rounded-xl p-4 sm:p-6">
                       <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                         <BarChart3 className="h-5 w-5 text-blue-400" />
                         Quick Stats
                       </h3>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Play className="h-4 w-4 text-primary-400" />
-                            <span className="text-gray-300 text-sm">Watching</span>
+                      <div className="space-y-4">
+                        {/* Watching */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                              <Play className="h-4 w-4 text-primary-400" />
+                              <span className="text-gray-300 text-sm">Watching</span>
+                            </div>
+                            <span className="text-white font-semibold">{stats?.watching || 0}</span>
                           </div>
-                          <span className="text-white font-semibold">{stats?.watching || 0}</span>
+                          {stats && stats.totalAnime > 0 && (
+                            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-primary-400 rounded-full transition-all"
+                                style={{ width: `${((stats.watching || 0) / stats.totalAnime) * 100}%` }}
+                              />
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-green-400" />
-                            <span className="text-gray-300 text-sm">Completed</span>
+
+                        {/* Completed */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle className="h-4 w-4 text-green-400" />
+                              <span className="text-gray-300 text-sm">Completed</span>
+                            </div>
+                            <span className="text-white font-semibold">{stats?.completed || 0}</span>
                           </div>
-                          <span className="text-white font-semibold">{stats?.completed || 0}</span>
+                          {stats && stats.totalAnime > 0 && (
+                            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-success-400 rounded-full transition-all"
+                                style={{ width: `${((stats.completed || 0) / stats.totalAnime) * 100}%` }}
+                              />
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Heart className="h-4 w-4 text-red-400" />
-                            <span className="text-gray-300 text-sm">Favorites</span>
+
+                        {/* Favorites */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                              <Heart className="h-4 w-4 text-red-400" />
+                              <span className="text-gray-300 text-sm">Favorites</span>
+                            </div>
+                            <span className="text-white font-semibold">{stats?.favorites || 0}</span>
                           </div>
-                          <span className="text-white font-semibold">{stats?.favorites || 0}</span>
+                          {stats && stats.totalAnime > 0 && (
+                            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-error-400 rounded-full transition-all"
+                                style={{ width: `${((stats.favorites || 0) / stats.totalAnime) * 100}%` }}
+                              />
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Bookmark className="h-4 w-4 text-yellow-400" />
-                            <span className="text-gray-300 text-sm">Plan to Watch</span>
+
+                        {/* Plan to Watch */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                              <Bookmark className="h-4 w-4 text-yellow-400" />
+                              <span className="text-gray-300 text-sm">Plan to Watch</span>
+                            </div>
+                            <span className="text-white font-semibold">{stats?.planToWatch || 0}</span>
                           </div>
-                          <span className="text-white font-semibold">{stats?.planToWatch || 0}</span>
+                          {stats && stats.totalAnime > 0 && (
+                            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-warning-400 rounded-full transition-all"
+                                style={{ width: `${((stats.planToWatch || 0) / stats.totalAnime) * 100}%` }}
+                              />
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

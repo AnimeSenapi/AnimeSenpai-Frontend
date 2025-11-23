@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 
 const siteUrl = 'https://animesenpai.app'
-const brandName = 'AnimeSenpai'
+const defaultBrandName = 'AnimeSenpai'
 const defaultOg = `${siteUrl}/assets/logos/AS-logo-800x200-300-C.png`
+const defaultDescription = 'Your gateway to the anime world. Discover, track, and explore anime and manga effortlessly. Get personalized recommendations, build your watchlist, and connect with a welcoming community of fans. Where every fan feels seen — guided by passion, powered by community.'
 
 export function buildCanonical(path: string = '/'): string {
   if (!path || path === '/') return siteUrl
@@ -19,12 +20,15 @@ export function baseAlternates(path: string = '/'): Metadata['alternates'] {
   }
 }
 
-export function siteOpenGraph(overrides?: Partial<NonNullable<Metadata['openGraph']>>): NonNullable<Metadata['openGraph']> {
+export function siteOpenGraph(
+  siteName: string = defaultBrandName,
+  overrides?: Partial<NonNullable<Metadata['openGraph']>>
+): NonNullable<Metadata['openGraph']> {
   return {
     type: 'website',
     url: siteUrl,
-    siteName: brandName,
-    images: [{ url: defaultOg, width: 800, height: 200, alt: brandName }],
+    siteName,
+    images: [{ url: defaultOg, width: 1200, height: 630, alt: siteName }],
     locale: 'en_US',
     ...overrides,
   }
@@ -33,31 +37,51 @@ export function siteOpenGraph(overrides?: Partial<NonNullable<Metadata['openGrap
 export function siteTwitter(overrides?: Partial<NonNullable<Metadata['twitter']>>): NonNullable<Metadata['twitter']> {
   return {
     card: 'summary_large_image',
-    images: [defaultOg],
+    site: '@AnimeSenpai',
+    creator: '@AnimeSenpai',
+    images: overrides?.images || [defaultOg],
     ...overrides,
   }
 }
 
 // JSON-LD builders
-export function buildOrganizationJsonLd() {
+export function buildOrganizationJsonLd(
+  siteName: string = defaultBrandName,
+  siteDescription: string = defaultDescription
+) {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: brandName,
+    name: siteName,
     url: siteUrl,
     logo: defaultOg,
+    description: siteDescription,
+    sameAs: [
+      'https://www.tiktok.com/@animesenpai.app',
+    ],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'Customer Support',
+    },
   }
 }
 
-export function buildWebsiteJsonLd() {
+export function buildWebsiteJsonLd(
+  siteName: string = defaultBrandName,
+  siteDescription: string = defaultDescription
+) {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: brandName,
+    name: siteName,
     url: siteUrl,
+    description: siteDescription,
     potentialAction: {
       '@type': 'SearchAction',
-      target: `${siteUrl}/search?q={search_term_string}`,
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${siteUrl}/search?q={search_term_string}`,
+      },
       'query-input': 'required name=search_term_string',
     },
   }
@@ -120,6 +144,20 @@ export function buildPersonJsonLd(input: {
     image: input.image,
     description: input.description,
     identifier: input.username,
+  }
+}
+
+export function buildProfilePageJsonLd(input: {
+  username: string
+  name?: string
+  url: string
+  image?: string
+  description?: string
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    mainEntity: buildPersonJsonLd(input),
   }
 }
 

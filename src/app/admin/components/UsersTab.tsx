@@ -24,6 +24,8 @@ import {
   AlertCircle,
   Download,
   ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   Check,
   Users,
   KeyRound,
@@ -34,6 +36,8 @@ import {
   Filter,
   LayoutDashboard,
   RotateCcw,
+  EyeOff,
+  Settings,
 } from 'lucide-react'
 import { getRoleConfig, getRoleIcon, getRoleBadgeClasses } from '../../../lib/role-config'
 import { Button } from '../../../components/ui/button'
@@ -48,6 +52,7 @@ import {
   TooltipTrigger,
 } from '../../../components/ui/tooltip'
 import { useToast } from '../../../components/ui/toast'
+import { FocusTrap } from '../../../components/FocusTrap'
 
 interface User {
   id: string
@@ -119,6 +124,15 @@ export function UsersTab() {
   const [userToEmail, setUserToEmail] = useState<User | null>(null)
   const [userActivity, setUserActivity] = useState<UserActivity | null>(null)
   const [loadingActivity, setLoadingActivity] = useState(false)
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const [visibleColumns, setVisibleColumns] = useState({
+    email: true,
+    role: true,
+    createdAt: true,
+    lastLoginAt: true,
+  })
+  const [showColumnSettings, setShowColumnSettings] = useState(false)
 
   useEffect(() => {
     if (isSearchMode) {
@@ -450,16 +464,23 @@ export function UsersTab() {
 
   const handleBulkDelete = async () => {
     if (selectedUsers.size === 0) return
+    setShowBulkDeleteConfirm(true)
+  }
+
+  const confirmBulkDelete = async () => {
+    if (selectedUsers.size === 0) return
+    const usersToDelete = Array.from(selectedUsers)
+    setShowBulkDeleteConfirm(false)
 
     try {
-      for (const userId of selectedUsers) {
+      for (const userId of usersToDelete) {
         await apiDeleteUser(userId)
       }
       loadUsers()
       setSelectedUsers(new Set())
       addToast({
         title: 'Success',
-        description: `Deleted ${selectedUsers.size} users`,
+        description: `Deleted ${usersToDelete.length} user${usersToDelete.length > 1 ? 's' : ''}`,
         variant: 'success',
       })
     } catch (error: any) {
@@ -471,37 +492,52 @@ export function UsersTab() {
     }
   }
 
-  const exportToCSV = () => {
-    const headers = [
-      'Email',
-      'Username',
-      'Role',
-      'Email Verified',
-      'Created At',
-      'Last Login',
-    ]
-    const rows = filteredUsers.map((u) => [
-      u.email,
-      u.username || '',
-      u.role,
-      u.emailVerified ? 'Yes' : 'No',
-      new Date(u.createdAt).toLocaleString(),
-      u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : 'Never',
-    ])
+  const exportToCSV = async () => {
+    setExporting(true)
+    try {
+      // Simulate export delay for better UX
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      
+      const headers = [
+        'Email',
+        'Username',
+        'Role',
+        'Email Verified',
+        'Created At',
+        'Last Login',
+      ]
+      const rows = filteredUsers.map((u) => [
+        u.email,
+        u.username || '',
+        u.role,
+        u.emailVerified ? 'Yes' : 'No',
+        new Date(u.createdAt).toLocaleString(),
+        u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : 'Never',
+      ])
 
-    const csv = [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `animesenpai-users-${new Date().toISOString().split('T')[0]}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-    addToast({
-        title: 'Exported',
-        description: 'Users exported to CSV',
+      const csv = [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(',')).join('\n')
+      const blob = new Blob([csv], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `animesenpai-users-${new Date().toISOString().split('T')[0]}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+      
+      addToast({
+        title: 'Success',
+        description: `Exported ${filteredUsers.length} users to CSV`,
         variant: 'success',
       })
+    } catch (error: any) {
+      addToast({
+        title: 'Error',
+        description: 'Failed to export CSV',
+        variant: 'destructive',
+      })
+    } finally {
+      setExporting(false)
+    }
   }
 
   const getFilteredAndSortedUsers = () => {
@@ -662,10 +698,29 @@ export function UsersTab() {
                 onClick={exportToCSV}
                 variant="outline"
                 size="sm"
+                disabled={exporting}
                 className="border-white/20 text-white hover:bg-white/10"
               >
-                <Download className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Export CSV</span>
+                {exporting ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 sm:mr-2 animate-spin" />
+                    <span className="hidden sm:inline">Exporting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Export CSV</span>
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={() => setShowColumnSettings(!showColumnSettings)}
+                variant="outline"
+                size="sm"
+                className="border-white/20 text-white hover:bg-white/10"
+                aria-label="Column settings"
+              >
+                <Settings className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -693,7 +748,7 @@ export function UsersTab() {
               className="border-error-500/40 text-error-200 hover:bg-error-500/20"
             >
               <Trash2 className="h-4 w-4 sm:mr-2" />
-              Delete Selected
+              Delete Selected ({selectedUsers.size})
             </Button>
           </div>
         </div>
@@ -749,54 +804,89 @@ export function UsersTab() {
                         onCheckedChange={() => toggleSelectAll(filteredUsers)}
                       />
                     </th>
-                    <th
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
-                      onClick={() => {
-                        if (sortBy === 'email') {
-                          setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
-                        } else {
-                          setSortBy('email')
-                        }
-                      }}
-                    >
-                      <div className="flex items-center gap-1">
-                        User
-                        <ArrowUpDown className="h-3 w-3" />
-                      </div>
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Role
-                    </th>
-                    <th
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
-                      onClick={() => {
-                        if (sortBy === 'createdAt') {
-                          setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
-                        } else {
-                          setSortBy('createdAt')
-                        }
-                      }}
-                    >
-                      <div className="flex items-center gap-1">
-                        Joined
-                        <ArrowUpDown className="h-3 w-3" />
-                      </div>
-                    </th>
-                    <th
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
-                      onClick={() => {
-                        if (sortBy === 'lastLoginAt') {
-                          setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
-                        } else {
-                          setSortBy('lastLoginAt')
-                        }
-                      }}
-                    >
-                      <div className="flex items-center gap-1">
-                        Last Login
-                        <ArrowUpDown className="h-3 w-3" />
-                      </div>
-                    </th>
+                    {visibleColumns.email && (
+                      <th
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white transition-colors"
+                        onClick={() => {
+                          if (sortBy === 'email') {
+                            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+                          } else {
+                            setSortBy('email')
+                            setSortOrder('asc')
+                          }
+                        }}
+                      >
+                        <div className="flex items-center gap-1">
+                          User
+                          {sortBy === 'email' ? (
+                            sortOrder === 'asc' ? (
+                              <ArrowUp className="h-3 w-3 text-primary-400" />
+                            ) : (
+                              <ArrowDown className="h-3 w-3 text-primary-400" />
+                            )
+                          ) : (
+                            <ArrowUpDown className="h-3 w-3 opacity-50" />
+                          )}
+                        </div>
+                      </th>
+                    )}
+                    {visibleColumns.role && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Role
+                      </th>
+                    )}
+                    {visibleColumns.createdAt && (
+                      <th
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white transition-colors"
+                        onClick={() => {
+                          if (sortBy === 'createdAt') {
+                            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+                          } else {
+                            setSortBy('createdAt')
+                            setSortOrder('desc')
+                          }
+                        }}
+                      >
+                        <div className="flex items-center gap-1">
+                          Joined
+                          {sortBy === 'createdAt' ? (
+                            sortOrder === 'asc' ? (
+                              <ArrowUp className="h-3 w-3 text-primary-400" />
+                            ) : (
+                              <ArrowDown className="h-3 w-3 text-primary-400" />
+                            )
+                          ) : (
+                            <ArrowUpDown className="h-3 w-3 opacity-50" />
+                          )}
+                        </div>
+                      </th>
+                    )}
+                    {visibleColumns.lastLoginAt && (
+                      <th
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white transition-colors"
+                        onClick={() => {
+                          if (sortBy === 'lastLoginAt') {
+                            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+                          } else {
+                            setSortBy('lastLoginAt')
+                            setSortOrder('desc')
+                          }
+                        }}
+                      >
+                        <div className="flex items-center gap-1">
+                          Last Login
+                          {sortBy === 'lastLoginAt' ? (
+                            sortOrder === 'asc' ? (
+                              <ArrowUp className="h-3 w-3 text-primary-400" />
+                            ) : (
+                              <ArrowDown className="h-3 w-3 text-primary-400" />
+                            )
+                          ) : (
+                            <ArrowUpDown className="h-3 w-3 opacity-50" />
+                          )}
+                        </div>
+                      </th>
+                    )}
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
                       Actions
                     </th>
@@ -811,38 +901,46 @@ export function UsersTab() {
                           onCheckedChange={() => toggleUserSelection(user.id)}
                         />
                       </td>
-                      <td className="px-6 py-4">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium text-white">
-                              {user.username || user.email}
-                            </p>
-                            {user.emailVerified ? (
-                              <CheckCircle className="h-3.5 w-3.5 text-green-400" />
-                            ) : (
-                              <AlertCircle className="h-3.5 w-3.5 text-warning-400" />
-                            )}
+                      {visibleColumns.email && (
+                        <td className="px-6 py-4">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium text-white">
+                                {user.username || user.email}
+                              </p>
+                              {user.emailVerified ? (
+                                <CheckCircle className="h-3.5 w-3.5 text-green-400" />
+                              ) : (
+                                <AlertCircle className="h-3.5 w-3.5 text-warning-400" />
+                              )}
+                            </div>
+                            {user.username && <p className="text-xs text-gray-400">{user.email}</p>}
                           </div>
-                          {user.username && <p className="text-xs text-gray-400">{user.email}</p>}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className={getRoleBadgeClasses(user.role)}>
-                          {(() => {
-                            const { IconComponent, className } = getRoleIcon(user.role)
-                            return <IconComponent className={className} />
-                          })()}
-                          <span className="capitalize">{user.role}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-300">
-                        {new Date(user.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-300">
-                        {user.lastLoginAt
-                          ? new Date(user.lastLoginAt).toLocaleDateString()
-                          : 'Never'}
-                      </td>
+                        </td>
+                      )}
+                      {visibleColumns.role && (
+                        <td className="px-6 py-4">
+                          <div className={getRoleBadgeClasses(user.role)}>
+                            {(() => {
+                              const { IconComponent, className } = getRoleIcon(user.role)
+                              return <IconComponent className={className} />
+                            })()}
+                            <span className="capitalize">{user.role}</span>
+                          </div>
+                        </td>
+                      )}
+                      {visibleColumns.createdAt && (
+                        <td className="px-6 py-4 text-sm text-gray-300">
+                          {new Date(user.createdAt).toLocaleDateString()}
+                        </td>
+                      )}
+                      {visibleColumns.lastLoginAt && (
+                        <td className="px-6 py-4 text-sm text-gray-300">
+                          {user.lastLoginAt
+                            ? new Date(user.lastLoginAt).toLocaleDateString()
+                            : 'Never'}
+                        </td>
+                      )}
                       <td className="px-6 py-4 text-right">
                         <TooltipProvider>
                           <div className="flex items-center justify-end gap-1.5 flex-wrap">
@@ -850,7 +948,8 @@ export function UsersTab() {
                               <TooltipTrigger asChild>
                                 <button
                                   onClick={() => handleViewDetails(user)}
-                                  className="p-1.5 hover:bg-primary-500/20 rounded text-primary-400 hover:text-primary-300 transition-colors"
+                                  className="p-1.5 hover:bg-primary-500/20 rounded text-primary-400 hover:text-primary-300 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                                  aria-label={`View details for ${user.username || user.email}`}
                                 >
                                   <Eye className="h-4 w-4" />
                                 </button>
@@ -862,7 +961,8 @@ export function UsersTab() {
                               <TooltipTrigger asChild>
                                 <button
                                   onClick={() => handleEditUser(user)}
-                                  className="p-1.5 hover:bg-blue-500/20 rounded text-blue-400 hover:text-blue-300 transition-colors"
+                                  className="p-1.5 hover:bg-blue-500/20 rounded text-blue-400 hover:text-blue-300 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                                  aria-label={`Edit user ${user.username || user.email}`}
                                 >
                                   <Edit className="h-4 w-4" />
                                 </button>
@@ -874,7 +974,8 @@ export function UsersTab() {
                               <TooltipTrigger asChild>
                                 <button
                                   onClick={() => handleSendPasswordReset(user)}
-                                  className="p-1.5 hover:bg-orange-500/20 rounded text-orange-400 hover:text-orange-300 transition-colors"
+                                  className="p-1.5 hover:bg-orange-500/20 rounded text-orange-400 hover:text-orange-300 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                                  aria-label={`Send password reset email to ${user.email}`}
                                 >
                                   <KeyRound className="h-4 w-4" />
                                 </button>
@@ -886,7 +987,8 @@ export function UsersTab() {
                               <TooltipTrigger asChild>
                                 <button
                                   onClick={() => handleToggleEmailVerification(user)}
-                                  className={`p-1.5 rounded transition-colors ${user.emailVerified ? 'hover:bg-warning-500/20 text-warning-400 hover:text-warning-300' : 'hover:bg-success-500/20 text-success-400 hover:text-success-300'}`}
+                                  className={`p-1.5 rounded transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${user.emailVerified ? 'hover:bg-warning-500/20 text-warning-400 hover:text-warning-300' : 'hover:bg-success-500/20 text-success-400 hover:text-success-300'}`}
+                                  aria-label={user.emailVerified ? `Unverify email for ${user.email}` : `Verify email for ${user.email}`}
                                 >
                                   {user.emailVerified ? (
                                     <AlertCircle className="h-4 w-4" />
@@ -904,7 +1006,8 @@ export function UsersTab() {
                               <TooltipTrigger asChild>
                                 <button
                                   onClick={() => handleSendCustomEmail(user)}
-                                  className="p-1.5 hover:bg-purple-500/20 rounded text-purple-400 hover:text-purple-300 transition-colors"
+                                  className="p-1.5 hover:bg-purple-500/20 rounded text-purple-400 hover:text-purple-300 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                                  aria-label={`Send custom email to ${user.email}`}
                                 >
                                   <MailOpen className="h-4 w-4" />
                                 </button>
@@ -916,7 +1019,8 @@ export function UsersTab() {
                               <TooltipTrigger asChild>
                                 <button
                                   onClick={() => handleDeleteUser(user.id)}
-                                  className="p-1.5 hover:bg-error-500/20 rounded text-error-400 hover:text-error-300 transition-colors"
+                                  className="p-1.5 hover:bg-error-500/20 rounded text-error-400 hover:text-error-300 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                                  aria-label={`Delete user ${user.username || user.email}`}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </button>
@@ -988,32 +1092,32 @@ export function UsersTab() {
                 <div className="grid grid-cols-4 gap-2">
                   <button
                     onClick={() => handleViewDetails(user)}
-                    className="flex flex-col items-center gap-1 p-2 hover:bg-primary-500/20 rounded text-primary-400 hover:text-primary-300 transition-colors"
-                    title="View Details"
+                    className="flex flex-col items-center gap-1 p-2 hover:bg-primary-500/20 rounded text-primary-400 hover:text-primary-300 transition-colors min-h-[44px] touch-manipulation"
+                    aria-label={`View details for ${user.username || user.email}`}
                   >
                     <Eye className="h-4 w-4" />
                     <span className="text-[10px]">View</span>
                   </button>
                   <button
                     onClick={() => handleEditUser(user)}
-                    className="flex flex-col items-center gap-1 p-2 hover:bg-blue-500/20 rounded text-blue-400 hover:text-blue-300 transition-colors"
-                    title="Edit"
+                    className="flex flex-col items-center gap-1 p-2 hover:bg-blue-500/20 rounded text-blue-400 hover:text-blue-300 transition-colors min-h-[44px] touch-manipulation"
+                    aria-label={`Edit user ${user.username || user.email}`}
                   >
                     <Edit className="h-4 w-4" />
                     <span className="text-[10px]">Edit</span>
                   </button>
                   <button
                     onClick={() => handleSendPasswordReset(user)}
-                    className="flex flex-col items-center gap-1 p-2 hover:bg-orange-500/20 rounded text-orange-400 hover:text-orange-300 transition-colors"
-                    title="Password"
+                    className="flex flex-col items-center gap-1 p-2 hover:bg-orange-500/20 rounded text-orange-400 hover:text-orange-300 transition-colors min-h-[44px] touch-manipulation"
+                    aria-label={`Send password reset email to ${user.email}`}
                   >
                     <KeyRound className="h-4 w-4" />
                     <span className="text-[10px]">Reset</span>
                   </button>
                   <button
                     onClick={() => handleToggleEmailVerification(user)}
-                    className={`flex flex-col items-center gap-1 p-2 rounded transition-colors ${user.emailVerified ? 'hover:bg-warning-500/20 text-warning-400 hover:text-warning-300' : 'hover:bg-success-500/20 text-success-400 hover:text-success-300'}`}
-                    title={user.emailVerified ? 'Unverify' : 'Verify'}
+                    className={`flex flex-col items-center gap-1 p-2 rounded transition-colors min-h-[44px] touch-manipulation ${user.emailVerified ? 'hover:bg-warning-500/20 text-warning-400 hover:text-warning-300' : 'hover:bg-success-500/20 text-success-400 hover:text-success-300'}`}
+                    aria-label={user.emailVerified ? `Unverify email for ${user.email}` : `Verify email for ${user.email}`}
                   >
                     {user.emailVerified ? (
                       <AlertCircle className="h-4 w-4" />
@@ -1029,16 +1133,16 @@ export function UsersTab() {
                 <div className="grid grid-cols-3 gap-2 mt-2">
                   <button
                     onClick={() => handleSendCustomEmail(user)}
-                    className="flex flex-col items-center gap-1 p-2 hover:bg-purple-500/20 rounded text-purple-400 hover:text-purple-300 transition-colors"
-                    title="Email"
+                    className="flex flex-col items-center gap-1 p-2 hover:bg-purple-500/20 rounded text-purple-400 hover:text-purple-300 transition-colors min-h-[44px] touch-manipulation"
+                    aria-label={`Send custom email to ${user.email}`}
                   >
                     <MailOpen className="h-4 w-4" />
                     <span className="text-[10px]">Email</span>
                   </button>
                   <button
                     onClick={() => handleDeleteUser(user.id)}
-                    className="flex flex-col items-center gap-1 p-2 hover:bg-error-500/20 rounded text-error-400 hover:text-error-300 transition-colors"
-                    title="Delete"
+                    className="flex flex-col items-center gap-1 p-2 hover:bg-error-500/20 rounded text-error-400 hover:text-error-300 transition-colors min-h-[44px] touch-manipulation"
+                    aria-label={`Delete user ${user.username || user.email}`}
                   >
                     <Trash2 className="h-4 w-4" />
                     <span className="text-[10px]">Delete</span>
@@ -1077,23 +1181,28 @@ export function UsersTab() {
 
       {/* User Details Modal */}
       {showUserModal && selectedUser && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-          onClick={() => setShowUserModal(false)}
-        >
+        <FocusTrap active={showUserModal}>
           <div
-            className="glass rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-white/10"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            onClick={() => setShowUserModal(false)}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="user-details-title"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white">User Details & Activity</h3>
-              <button
-                onClick={() => setShowUserModal(false)}
-                className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+            <div
+              className="glass rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-white/10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 id="user-details-title" className="text-xl font-bold text-white">User Details & Activity</h3>
+                <button
+                  onClick={() => setShowUserModal(false)}
+                  className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  aria-label="Close user details modal"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
             {loadingActivity ? (
               <LoadingState variant="inline" text="Loading activity..." size="sm" />
@@ -1222,107 +1331,158 @@ export function UsersTab() {
             )}
           </div>
         </div>
+        </FocusTrap>
       )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && userToDelete && (
-        <div
-          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-          onClick={() => setShowDeleteConfirm(false)}
-        >
+        <FocusTrap active={showDeleteConfirm}>
           <div
-            className="glass rounded-2xl p-6 max-w-md w-full border border-error-500/30"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            onClick={() => setShowDeleteConfirm(false)}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-confirm-title"
+            aria-describedby="delete-confirm-description"
           >
-            <div className="flex items-start gap-4 mb-6">
-              <div className="w-12 h-12 bg-error-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                <AlertCircle className="h-6 w-6 text-error-400" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-white mb-2">Delete User?</h3>
-                <p className="text-gray-300 text-sm mb-3">
-                  Are you sure you want to delete{' '}
-                  <strong>
-                    {userToDelete.username || userToDelete.email}
-                  </strong>
-                  ?
-                </p>
-                <div className="bg-error-500/10 border border-error-500/20 rounded-lg p-3 mb-4">
-                  <p className="text-error-300 text-xs font-semibold mb-1">⚠️ Warning</p>
-                  <p className="text-error-300/80 text-xs">
-                    This action cannot be undone. All user data, including their anime list,
-                    ratings, and activity, will be permanently deleted.
+            <div
+              className="glass rounded-2xl p-6 max-w-md w-full border border-error-500/30"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start gap-4 mb-6">
+                <div className="w-12 h-12 bg-error-500/20 rounded-xl flex items-center justify-center flex-shrink-0" aria-hidden="true">
+                  <AlertCircle className="h-6 w-6 text-error-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 id="delete-confirm-title" className="text-xl font-bold text-white mb-2">Delete User?</h3>
+                  <p id="delete-confirm-description" className="text-gray-300 text-sm mb-3">
+                    Are you sure you want to delete{' '}
+                    <strong>
+                      {userToDelete.username || userToDelete.email}
+                    </strong>
+                    ?
                   </p>
+                  <div className="bg-error-500/10 border border-error-500/20 rounded-lg p-3 mb-4" role="alert">
+                    <p className="text-error-300 text-xs font-semibold mb-1">⚠️ Warning</p>
+                    <p className="text-error-300/80 text-xs">
+                      This action cannot be undone. All user data, including their anime list,
+                      ratings, and activity, will be permanently deleted.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex gap-3">
-              <Button
-                onClick={() => setShowDeleteConfirm(false)}
-                variant="outline"
-                className="flex-1 border-white/20 text-white hover:bg-white/10"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={confirmDeleteUser}
-                className="flex-1 bg-error-500 hover:bg-error-600 text-white"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete User
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  variant="outline"
+                  className="flex-1 border-white/20 text-white hover:bg-white/10 min-h-[44px]"
+                  aria-label="Cancel delete user"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={confirmDeleteUser}
+                  className="flex-1 bg-error-500 hover:bg-error-600 text-white min-h-[44px]"
+                  aria-label={`Confirm delete user ${userToDelete.username || userToDelete.email}`}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete User
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        </FocusTrap>
       )}
 
       {/* Edit User Modal */}
       {showEditModal && userToEdit && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-          onClick={() => setShowEditModal(false)}
-        >
+        <FocusTrap active={showEditModal}>
           <div
-            className="glass rounded-2xl p-6 max-w-md w-full border border-white/10"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            onClick={() => setShowEditModal(false)}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-user-title"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <Edit className="h-5 w-5 text-blue-400" />
-                Edit User Details
-              </h3>
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+            <div
+              className="glass rounded-2xl p-6 max-w-md w-full border border-white/10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 id="edit-user-title" className="text-xl font-bold text-white flex items-center gap-2">
+                  <Edit className="h-5 w-5 text-blue-400" aria-hidden="true" />
+                  Edit User Details
+                </h3>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  aria-label="Close edit user modal"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-400 mb-2">Username</label>
+                <label htmlFor="edit-username" className="block text-sm font-medium text-gray-300 mb-2">
+                  Username
+                </label>
                 <input
+                  id="edit-username"
                   type="text"
                   value={editForm.username}
-                  onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
+                  onChange={(e) => {
+                    const value = e.target.value
+                    setEditForm({ ...editForm, username: value })
+                    // Real-time validation
+                    if (value && (value.length < 3 || value.length > 30)) {
+                      // Validation handled in handleSaveEdit
+                    }
+                  }}
+                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all min-h-[44px]"
                   placeholder="Unique username"
+                  aria-invalid={editForm.username ? (editForm.username.length < 3 || editForm.username.length > 30) : false}
                 />
+                {editForm.username && (editForm.username.length < 3 || editForm.username.length > 30) && (
+                  <p className="text-xs text-red-400 mt-1.5 flex items-center gap-1.5">
+                    <AlertCircle className="h-3.5 w-3.5" />
+                    Username must be between 3 and 30 characters
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm text-gray-400 mb-2">Email</label>
+                <label htmlFor="edit-email" className="block text-sm font-medium text-gray-300 mb-2">
+                  Email
+                </label>
                 <input
+                  id="edit-email"
                   type="email"
                   value={editForm.email}
-                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
+                  onChange={(e) => {
+                    const value = e.target.value
+                    setEditForm({ ...editForm, email: value })
+                  }}
+                  onBlur={(e) => {
+                    const value = e.target.value
+                    if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                      // Validation handled in handleSaveEdit
+                    }
+                  }}
+                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all min-h-[44px]"
                   placeholder="user@example.com"
+                  aria-invalid={editForm.email ? !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.email) : false}
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  ⚠️ Changing email will mark it as unverified
+                {editForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.email) && (
+                  <p className="text-xs text-red-400 mt-1.5 flex items-center gap-1.5">
+                    <AlertCircle className="h-3.5 w-3.5" />
+                    Please enter a valid email address
+                  </p>
+                )}
+                <p className="text-xs text-yellow-400 mt-1.5 flex items-center gap-1.5">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  Changing email will mark it as unverified
                 </p>
               </div>
             </div>
@@ -1345,32 +1505,39 @@ export function UsersTab() {
             </div>
           </div>
         </div>
+        </FocusTrap>
       )}
 
       {/* Custom Email Modal */}
       {showEmailModal && userToEmail && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-          onClick={() => setShowEmailModal(false)}
-        >
+        <FocusTrap active={showEmailModal}>
           <div
-            className="glass rounded-2xl p-6 max-w-lg w-full border border-white/10"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            onClick={() => setShowEmailModal(false)}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="email-modal-title"
+            aria-describedby="email-modal-recipient"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <MailOpen className="h-5 w-5 text-purple-400" />
-                Send Custom Email
-              </h3>
-              <button
-                onClick={() => setShowEmailModal(false)}
-                className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+            <div
+              className="glass rounded-2xl p-6 max-w-lg w-full border border-white/10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 id="email-modal-title" className="text-xl font-bold text-white flex items-center gap-2">
+                  <MailOpen className="h-5 w-5 text-purple-400" aria-hidden="true" />
+                  Send Custom Email
+                </h3>
+                <button
+                  onClick={() => setShowEmailModal(false)}
+                  className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  aria-label="Close email modal"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
-            <div className="mb-4 bg-white/5 rounded-lg p-3 border border-white/10">
+            <div id="email-modal-recipient" className="mb-4 bg-white/5 rounded-lg p-3 border border-white/10">
               <p className="text-sm text-gray-400">Sending to:</p>
               <p className="text-white font-medium">
                 {userToEmail.username || userToEmail.email || 'Unknown'}
@@ -1380,27 +1547,42 @@ export function UsersTab() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-400 mb-2">Subject *</label>
+                <label htmlFor="email-subject" className="block text-sm font-medium text-gray-300 mb-2">
+                  Subject <span className="text-red-400">*</span>
+                </label>
                 <input
+                  id="email-subject"
                   type="text"
                   value={emailForm.subject}
                   onChange={(e) => setEmailForm({ ...emailForm, subject: e.target.value })}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
+                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all min-h-[44px]"
                   placeholder="Email subject"
                   maxLength={200}
+                  aria-required="true"
                 />
+                <p className="text-xs text-gray-400 mt-1.5">
+                  {emailForm.subject.length}/200 characters
+                </p>
               </div>
 
               <div>
-                <label className="block text-sm text-gray-400 mb-2">Message *</label>
+                <label htmlFor="email-message" className="block text-sm font-medium text-gray-300 mb-2">
+                  Message <span className="text-red-400">*</span>
+                </label>
                 <textarea
+                  id="email-message"
                   value={emailForm.message}
                   onChange={(e) => setEmailForm({ ...emailForm, message: e.target.value })}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50 min-h-[150px] resize-y"
+                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 transition-all min-h-[150px] resize-y"
                   placeholder="Your message to the user..."
                   maxLength={5000}
+                  aria-required="true"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className={`text-xs mt-1.5 ${
+                  emailForm.message.length > 4500 ? 'text-yellow-400' : 
+                  emailForm.message.length > 4800 ? 'text-red-400' : 
+                  'text-gray-400'
+                }`}>
                   {emailForm.message.length}/5000 characters
                 </p>
               </div>
@@ -1424,6 +1606,115 @@ export function UsersTab() {
               </Button>
             </div>
           </div>
+        </div>
+        </FocusTrap>
+      )}
+
+      {/* Column Visibility Settings */}
+      {showColumnSettings && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <FocusTrap>
+            <div className="bg-gray-900 border border-white/20 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white">Column Visibility</h3>
+                <button
+                  onClick={() => setShowColumnSettings(false)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                  aria-label="Close column settings"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="space-y-3">
+                {Object.entries(visibleColumns).map(([key, visible]) => (
+                  <label
+                    key={key}
+                    className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer"
+                  >
+                    <Checkbox
+                      checked={visible}
+                      onCheckedChange={(checked) =>
+                        setVisibleColumns((prev) => ({ ...prev, [key]: !!checked }))
+                      }
+                    />
+                    <span className="text-sm text-white capitalize">
+                      {key === 'createdAt' ? 'Joined Date' : key === 'lastLoginAt' ? 'Last Login' : key}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <div className="mt-6 flex gap-3">
+                <Button
+                  onClick={() => {
+                    setVisibleColumns({ email: true, role: true, createdAt: true, lastLoginAt: true })
+                  }}
+                  variant="outline"
+                  className="flex-1 border-white/20 text-white hover:bg-white/10"
+                >
+                  Show All
+                </Button>
+                <Button
+                  onClick={() => setShowColumnSettings(false)}
+                  className="flex-1 bg-primary-500 hover:bg-primary-600 text-white"
+                >
+                  Done
+                </Button>
+              </div>
+            </div>
+          </FocusTrap>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation Modal */}
+      {showBulkDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <FocusTrap>
+            <div className="bg-gray-900 border border-error-500/30 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-error-500/20 flex items-center justify-center">
+                  <AlertCircle className="h-6 w-6 text-error-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Delete {selectedUsers.size} Users?</h3>
+                  <p className="text-sm text-gray-400">This action cannot be undone.</p>
+                </div>
+              </div>
+              <div className="mb-6 p-4 bg-white/5 rounded-lg border border-white/10 max-h-48 overflow-y-auto">
+                <p className="text-xs text-gray-400 mb-2">Users to be deleted:</p>
+                <div className="space-y-1">
+                  {filteredUsers
+                    .filter((u) => selectedUsers.has(u.id))
+                    .slice(0, 5)
+                    .map((user) => (
+                      <div key={user.id} className="text-sm text-gray-300">
+                        • {user.username || user.email}
+                      </div>
+                    ))}
+                  {selectedUsers.size > 5 && (
+                    <div className="text-sm text-gray-400">
+                      ...and {selectedUsers.size - 5} more
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setShowBulkDeleteConfirm(false)}
+                  variant="outline"
+                  className="flex-1 border-white/20 text-white hover:bg-white/10"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={confirmBulkDelete}
+                  className="flex-1 bg-error-500 hover:bg-error-600 text-white"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete {selectedUsers.size} Users
+                </Button>
+              </div>
+            </div>
+          </FocusTrap>
         </div>
       )}
     </div>

@@ -11,6 +11,14 @@ import {
   Lock,
   Search,
   FileQuestion,
+  BookOpen,
+  Heart,
+  List,
+  Compass,
+  Sparkles,
+  TrendingUp,
+  Plus,
+  Filter,
 } from 'lucide-react'
 import { ErrorType, AppError } from '../../lib/error-handler'
 
@@ -332,8 +340,34 @@ interface EmptyStateProps {
   variant?: 'default' | 'simple'
 }
 
+// Context-specific empty state icons
+const getContextIcon = (title: string, message: string): ReactNode => {
+  const lowerTitle = title.toLowerCase()
+  const lowerMessage = message.toLowerCase()
+  
+  if (lowerTitle.includes('list') || lowerMessage.includes('list')) {
+    return <List className="h-10 w-10 text-primary-400" />
+  }
+  if (lowerTitle.includes('favorite') || lowerMessage.includes('favorite')) {
+    return <Heart className="h-10 w-10 text-red-400" />
+  }
+  if (lowerTitle.includes('search') || lowerMessage.includes('search') || lowerMessage.includes('no results')) {
+    return <Search className="h-10 w-10 text-gray-500" />
+  }
+  if (lowerTitle.includes('recommendation') || lowerMessage.includes('recommendation')) {
+    return <Sparkles className="h-10 w-10 text-primary-400" />
+  }
+  if (lowerTitle.includes('anime') || lowerMessage.includes('anime')) {
+    return <BookOpen className="h-10 w-10 text-primary-400" />
+  }
+  if (lowerTitle.includes('trending') || lowerMessage.includes('trending')) {
+    return <TrendingUp className="h-10 w-10 text-primary-400" />
+  }
+  return <Search className="h-10 w-10 text-gray-500" />
+}
+
 export function EmptyState({
-  icon = <Search className="h-10 w-10 text-gray-500" />,
+  icon,
   title,
   message,
   actionLabel,
@@ -344,6 +378,8 @@ export function EmptyState({
   className = '',
   variant = 'default',
 }: EmptyStateProps) {
+  // Use context-aware icon if not provided
+  const displayIcon = icon || getContextIcon(title, message)
   // Simple variant (compact, no suggestions)
   if (variant === 'simple') {
     return (
@@ -372,20 +408,23 @@ export function EmptyState({
   return (
     <div className={`text-center py-12 px-4 ${className}`}>
       <div className="max-w-md mx-auto">
-        <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
-          {icon}
+        <div className="w-20 h-20 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary-500/10">
+          {displayIcon}
         </div>
         <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
-        <p className="text-gray-400 mb-6">{message}</p>
+        <p className="text-gray-400 mb-6 leading-relaxed">{message}</p>
 
         {/* Helpful Suggestions */}
         {suggestions && suggestions.length > 0 && (
-          <div className="mb-6 text-left bg-white/5 rounded-lg p-4 border border-white/10">
-            <p className="text-sm font-medium text-gray-300 mb-2">💡 Try this:</p>
-            <ul className="space-y-1.5">
+          <div className="mb-6 text-left bg-gradient-to-br from-white/5 to-white/[0.02] rounded-lg p-4 border border-white/10">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="h-4 w-4 text-primary-400" />
+              <p className="text-sm font-medium text-gray-300">Quick Tips</p>
+            </div>
+            <ul className="space-y-2">
               {suggestions.map((suggestion, i) => (
                 <li key={i} className="text-sm text-gray-400 flex items-start gap-2">
-                  <span className="text-primary-400 flex-shrink-0">•</span>
+                  <span className="text-primary-400 flex-shrink-0 mt-0.5">•</span>
                   <span>{suggestion}</span>
                 </li>
               ))}

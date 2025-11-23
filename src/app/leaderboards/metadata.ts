@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: 'Explore AnimeSenpai leaderboards: top watchers, top reviewers, and most social users.',
   alternates: baseAlternates('/leaderboards'),
   robots: { index: true, follow: true },
-  openGraph: siteOpenGraph({
+  openGraph: siteOpenGraph(undefined, {
     title: 'Leaderboards',
     description: 'Explore AnimeSenpai leaderboards: top watchers, top reviewers, and most social users.',
     url: 'https://animesenpai.app/leaderboards',

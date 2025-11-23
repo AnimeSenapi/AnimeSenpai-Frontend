@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description: desc,
       alternates: baseAlternates(urlPath),
       robots: { index: true, follow: true },
-      openGraph: siteOpenGraph({
+      openGraph: siteOpenGraph(undefined, {
         type: 'video.tv_show',
         title,
         description: desc,

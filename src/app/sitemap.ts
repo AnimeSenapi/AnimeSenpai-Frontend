@@ -30,13 +30,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
 
   const staticRoutes: MetadataRoute.Sitemap = [
-    { url: baseUrl, lastModified: now, changeFrequency: 'daily', priority: 1 },
+    // High priority pages
+    { url: baseUrl, lastModified: now, changeFrequency: 'daily', priority: 1.0 },
     { url: `${baseUrl}/search`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
-    { url: `${baseUrl}/genres`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
+    { url: `${baseUrl}/calendar`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
+    
+    // Medium priority pages
+    { url: `${baseUrl}/leaderboards`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
+    { url: `${baseUrl}/genres`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    
+    // Lower priority pages
+    { url: `${baseUrl}/help`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${baseUrl}/privacy`, lastModified: now, changeFrequency: 'monthly', priority: 0.3 },
     { url: `${baseUrl}/terms`, lastModified: now, changeFrequency: 'monthly', priority: 0.3 },
-    { url: `${baseUrl}/help`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${baseUrl}/calendar`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
   ]
 
   // Try to fetch dynamic data with very aggressive timeouts
@@ -54,7 +60,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         const items = data?.anime || data?.result?.data?.anime || []
         const entries: MetadataRoute.Sitemap = []
         if (Array.isArray(items)) {
-          for (const item of items.slice(0, 25)) {
+          // Include more anime entries for better SEO coverage
+          for (const item of items.slice(0, 50)) {
             if (!item?.slug) continue
             entries.push({
               url: `${baseUrl}/anime/${item.slug}`,
@@ -81,7 +88,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         const lb = data?.leaderboard || data?.result?.data?.leaderboard || []
         const entries: MetadataRoute.Sitemap = []
         if (Array.isArray(lb)) {
-          for (const entry of lb.slice(0, 10)) {
+          // Include more top users for better SEO coverage
+          for (const entry of lb.slice(0, 20)) {
             const u = entry?.user?.username
             if (u) {
               entries.push({

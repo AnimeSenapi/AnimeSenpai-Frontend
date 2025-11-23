@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -160,6 +162,49 @@ export default function NotificationsPage() {
       default:
         return <Bell className="h-5 w-5 text-gray-400" />
     }
+  }
+
+  const getNotificationType = (type: string): 'social' | 'activity' | 'reviews' | 'anime' => {
+    if (type.includes('friend') || type.includes('follower') || type.includes('follow')) {
+      return 'social'
+    }
+    if (type.includes('review')) {
+      return 'reviews'
+    }
+    if (type.includes('anime') || type.includes('watching') || type.includes('episode')) {
+      return 'anime'
+    }
+    return 'activity'
+  }
+
+  const groupNotificationsByType = (notifications: Notification[]) => {
+    const groups: Record<string, Notification[]> = {
+      social: [],
+      activity: [],
+      reviews: [],
+      anime: [],
+    }
+
+    notifications.forEach((notification) => {
+      const groupType = getNotificationType(notification.type)
+      if (groups[groupType]) {
+        groups[groupType].push(notification)
+      }
+    })
+
+    return groups
+  }
+
+  const getTimeGroup = (date: Date): string => {
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffHours = Math.floor(diffMs / 3600000)
+    const diffDays = Math.floor(diffMs / 86400000)
+
+    if (diffHours < 24) return 'Today'
+    if (diffDays < 7) return 'This Week'
+    if (diffDays < 30) return 'This Month'
+    return 'Older'
   }
 
   if (authLoading || loading) {
@@ -323,55 +368,101 @@ export default function NotificationsPage() {
             onAction={filter === 'unread' ? () => setFilter('all') : undefined}
           />
         ) : (
-          <div className="space-y-2">
-            {notifications.map((notification) => (
-              <div
-                key={notification.id}
-                className={cn(
-                  'glass rounded-xl p-4 border transition-all hover:border-white/20 cursor-pointer',
-                  notification.isRead
-                    ? 'border-white/5 bg-white/0'
-                    : 'border-primary-500/30 bg-primary-500/5'
-                )}
-                onClick={() => {
-                  if (!notification.isRead) {
-                    handleMarkRead(notification.id)
-                  }
-                  if (notification.actionUrl) {
-                    router.push(notification.actionUrl)
-                  }
-                }}
-              >
-                <div className="flex items-start gap-3">
-                  {/* Icon */}
-                  <div className="flex-shrink-0 mt-0.5">
-                    {getNotificationIcon(notification.type)}
+          <div className="space-y-6">
+            {Object.entries(groupNotificationsByType(notifications)).map(([groupType, groupNotifications]) => {
+              if (groupNotifications.length === 0) return null
+
+              // Group by time
+              const timeGroups: Record<string, Notification[]> = {
+                Today: [],
+                'This Week': [],
+                'This Month': [],
+                Older: [],
+              }
+
+              groupNotifications.forEach((notification) => {
+                const timeGroup = getTimeGroup(new Date(notification.createdAt))
+                if (timeGroups[timeGroup]) {
+                  timeGroups[timeGroup].push(notification)
+                }
+              })
+
+              return (
+                <div key={groupType} className="space-y-4">
+                  {/* Group Header */}
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-semibold text-white capitalize">
+                      {groupType === 'social' && 'Social Activity'}
+                      {groupType === 'reviews' && 'Review Activity'}
+                      {groupType === 'anime' && 'Anime Updates'}
+                      {groupType === 'activity' && 'Activity'}
+                    </h2>
+                    <span className="text-sm text-gray-500">({groupNotifications.length})</span>
                   </div>
 
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className={cn(
-                        'text-sm mb-1',
-                        notification.isRead ? 'text-gray-400' : 'text-white font-medium'
-                      )}
-                    >
-                      {notification.message}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
-                    </p>
-                  </div>
+                  {/* Time Groups */}
+                  {Object.entries(timeGroups).map(([timeLabel, timeNotifications]) => {
+                    if (timeNotifications.length === 0) return null
 
-                  {/* Unread Indicator */}
-                  {!notification.isRead && (
-                    <div className="flex-shrink-0">
-                      <div className="w-2 h-2 rounded-full bg-primary-500" />
-                    </div>
-                  )}
+                    return (
+                      <div key={timeLabel} className="space-y-2">
+                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2">
+                          {timeLabel}
+                        </h3>
+                        {timeNotifications.map((notification) => (
+                          <div
+                            key={notification.id}
+                            className={cn(
+                              'glass rounded-xl p-4 border transition-all hover:border-white/20 cursor-pointer',
+                              notification.isRead
+                                ? 'border-white/5 bg-white/0'
+                                : 'border-primary-500/30 bg-primary-500/5'
+                            )}
+                            onClick={() => {
+                              if (!notification.isRead) {
+                                handleMarkRead(notification.id)
+                              }
+                              if (notification.actionUrl) {
+                                router.push(notification.actionUrl)
+                              }
+                            }}
+                          >
+                            <div className="flex items-start gap-3">
+                              {/* Icon */}
+                              <div className="flex-shrink-0 mt-0.5">
+                                {getNotificationIcon(notification.type)}
+                              </div>
+
+                              {/* Content */}
+                              <div className="flex-1 min-w-0">
+                                <p
+                                  className={cn(
+                                    'text-sm mb-1',
+                                    notification.isRead ? 'text-gray-400' : 'text-white font-medium'
+                                  )}
+                                >
+                                  {notification.message}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                                </p>
+                              </div>
+
+                              {/* Unread Indicator */}
+                              {!notification.isRead && (
+                                <div className="flex-shrink-0">
+                                  <div className="w-2 h-2 rounded-full bg-primary-500" />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  })}
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </main>

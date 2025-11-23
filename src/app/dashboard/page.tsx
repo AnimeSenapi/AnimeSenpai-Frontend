@@ -1,7 +1,9 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
-import dynamic from 'next/dynamic'
+import dynamicImport from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { EmailVerificationBanner } from '../../components/EmailVerificationBanner'
 import { Button } from '../../components/ui/button'
@@ -21,6 +23,12 @@ import {
   Filter,
   Crown,
   RefreshCw,
+  X,
+  ChevronUp,
+  ChevronDown,
+  ChevronRight,
+  GripVertical,
+  Settings,
 } from 'lucide-react'
 import { apiGetAllAnime, apiGetAllSeries, apiGetTrending, api } from '../lib/api'
 import { useAuth } from '../lib/auth-context'
@@ -30,7 +38,7 @@ import { logger, captureException } from '../../lib/logger'
 import { SEOMetadata } from '../../components/SEOMetadata'
 
 // Lazy load heavy components
-const RecommendationCarousel = dynamic(
+const RecommendationCarousel = dynamicImport(
   () =>
     import('../../components/recommendations/RecommendationCarousel').then((mod) => ({
       default: mod.RecommendationCarousel,
@@ -48,10 +56,126 @@ function FriendsWatching() {
   )
 }
 
-const CarouselSkeleton = dynamic(
+const CarouselSkeleton = dynamicImport(
   () => import('../../components/ui/skeleton').then((mod) => ({ default: mod.CarouselSkeleton })),
   { ssr: false }
 )
+
+// Section wrapper component for personalization
+interface SectionWrapperProps {
+  sectionId: string
+  title: string
+  isDismissed: boolean
+  isCollapsed: boolean
+  isCustomizing: boolean
+  onDismiss: () => void
+  onRestore: () => void
+  onToggleCollapse: () => void
+  onMoveUp?: () => void
+  onMoveDown?: () => void
+  canMoveUp?: boolean
+  canMoveDown?: boolean
+  children: React.ReactNode
+}
+
+function SectionWrapper({
+  sectionId,
+  title,
+  isDismissed,
+  isCollapsed,
+  isCustomizing,
+  onDismiss,
+  onRestore,
+  onToggleCollapse,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp = false,
+  canMoveDown = false,
+  children,
+}: SectionWrapperProps) {
+  if (isDismissed) {
+    return (
+      <div className="mb-4 p-4 glass rounded-xl border border-white/10 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <X className="h-5 w-5 text-gray-500" />
+          <span className="text-gray-400 text-sm">"{title}" section is hidden</span>
+        </div>
+        <Button
+          onClick={onRestore}
+          variant="outline"
+          size="sm"
+          className="border-white/20 text-white hover:bg-white/10"
+        >
+          Restore
+        </Button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative group">
+      {isCustomizing && (
+        <div className="absolute -top-2 -right-2 z-20 flex gap-1">
+          <Button
+            onClick={onToggleCollapse}
+            variant="outline"
+            size="sm"
+            className="h-7 w-7 p-0 bg-gray-900/90 border-white/20 text-white hover:bg-white/10"
+            aria-label={isCollapsed ? 'Expand section' : 'Collapse section'}
+          >
+            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+          </Button>
+          {onMoveUp && (
+            <Button
+              onClick={onMoveUp}
+              disabled={!canMoveUp}
+              variant="outline"
+              size="sm"
+              className="h-7 w-7 p-0 bg-gray-900/90 border-white/20 text-white hover:bg-white/10 disabled:opacity-30"
+              aria-label="Move section up"
+            >
+              <ChevronUp className="h-4 w-4" />
+            </Button>
+          )}
+          {onMoveDown && (
+            <Button
+              onClick={onMoveDown}
+              disabled={!canMoveDown}
+              variant="outline"
+              size="sm"
+              className="h-7 w-7 p-0 bg-gray-900/90 border-white/20 text-white hover:bg-white/10 disabled:opacity-30"
+              aria-label="Move section down"
+            >
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          )}
+          <Button
+            onClick={onDismiss}
+            variant="outline"
+            size="sm"
+            className="h-7 w-7 p-0 bg-gray-900/90 border-white/20 text-error-400 hover:bg-error-500/20"
+            aria-label="Dismiss section"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+      {isCollapsed ? (
+        <div className="mb-8 sm:mb-10 lg:mb-12 p-4 glass rounded-xl border border-white/10 cursor-pointer hover:bg-white/5 transition-all" onClick={onToggleCollapse}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <ChevronRight className="h-5 w-5 text-gray-400" />
+              <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">{title}</h2>
+            </div>
+            <span className="text-sm text-gray-400">Click to expand</span>
+          </div>
+        </div>
+      ) : (
+        children
+      )}
+    </div>
+  )
+}
 
 
 export default function DashboardPage() {
@@ -79,6 +203,96 @@ export default function DashboardPage() {
     personalized: false,
     seasonal: false,
   })
+  const [dismissedSections, setDismissedSections] = useState<Set<string>>(new Set())
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
+  const [sectionOrder, setSectionOrder] = useState<string[]>([])
+  const [isCustomizing, setIsCustomizing] = useState(false)
+
+  // Load dashboard preferences from localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    try {
+      const stored = localStorage.getItem('dashboard:sections')
+      if (stored) {
+        const data = JSON.parse(stored)
+        if (data.dismissed) setDismissedSections(new Set(data.dismissed))
+        if (data.collapsed) setCollapsedSections(new Set(data.collapsed))
+        if (data.order) setSectionOrder(data.order)
+      }
+    } catch (err) {
+      console.warn('Failed to load dashboard preferences:', err)
+    }
+  }, [])
+
+  // Save dashboard preferences to localStorage
+  const saveDashboardPreferences = () => {
+    if (typeof window === 'undefined') return
+
+    try {
+      localStorage.setItem(
+        'dashboard:sections',
+        JSON.stringify({
+          dismissed: Array.from(dismissedSections),
+          collapsed: Array.from(collapsedSections),
+          order: sectionOrder,
+        })
+      )
+    } catch (err) {
+      console.warn('Failed to save dashboard preferences:', err)
+    }
+  }
+
+  useEffect(() => {
+    saveDashboardPreferences()
+  }, [dismissedSections, collapsedSections, sectionOrder])
+
+  const handleDismissSection = (sectionId: string) => {
+    setDismissedSections((prev) => {
+      const next = new Set(prev)
+      next.add(sectionId)
+      return next
+    })
+  }
+
+  const handleRestoreSection = (sectionId: string) => {
+    setDismissedSections((prev) => {
+      const next = new Set(prev)
+      next.delete(sectionId)
+      return next
+    })
+  }
+
+  const handleToggleCollapse = (sectionId: string) => {
+    setCollapsedSections((prev) => {
+      const next = new Set(prev)
+      if (next.has(sectionId)) {
+        next.delete(sectionId)
+      } else {
+        next.add(sectionId)
+      }
+      return next
+    })
+  }
+
+  const handleMoveSection = (sectionId: string, direction: 'up' | 'down') => {
+    setSectionOrder((prev) => {
+      const currentIndex = prev.indexOf(sectionId)
+      if (currentIndex === -1) {
+        // Add to order if not present
+        return [...prev, sectionId]
+      }
+
+      const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
+      if (newIndex < 0 || newIndex >= prev.length) return prev
+
+      const newOrder = [...prev]
+      const temp = newOrder[currentIndex]
+      newOrder[currentIndex] = newOrder[newIndex]!
+      newOrder[newIndex] = temp!
+      return newOrder
+    })
+  }
 
   // Helper to map series objects into recommendation card shape
   const mapSeriesToRecs = (list: any[]) =>
@@ -554,19 +768,31 @@ export default function DashboardPage() {
                 : 'Personalized recommendations powered by your taste'}
             </p>
           </div>
-              {isAuthenticated && (
+              <div className="flex gap-2">
+                {isAuthenticated && (
+                  <Button
+                    onClick={refreshRecommendations}
+                    disabled={isRefreshing}
+                    variant="outline"
+                    className="border-white/20 text-white hover:bg-white/10 flex items-center gap-2"
+                  >
+                    <RefreshCw
+                      className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                    />
+                    <span className="hidden sm:inline">Refresh</span>
+                  </Button>
+                )}
                 <Button
-                  onClick={refreshRecommendations}
-                  disabled={isRefreshing}
+                  onClick={() => setIsCustomizing(!isCustomizing)}
                   variant="outline"
                   className="border-white/20 text-white hover:bg-white/10 flex items-center gap-2"
                 >
-                  <RefreshCw
-                    className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
-                  />
-                  <span className="hidden sm:inline">Refresh</span>
+                  <Settings className="h-4 w-4" />
+                  <span className="hidden sm:inline">
+                    {isCustomizing ? 'Done' : 'Customize'}
+                  </span>
                 </Button>
-              )}
+              </div>
                   </div>
                 </div>
 

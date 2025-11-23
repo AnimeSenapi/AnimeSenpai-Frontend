@@ -3,11 +3,11 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, memo } from 'react'
 import { cn } from '../../app/lib/utils'
 import { Anime } from '../../types/anime'
 import { getTagById } from '../../types/tags'
-import { Heart, Play, CheckCircle, Star, MoreVertical, ChevronDown, Clock } from 'lucide-react'
+import { Heart, Play, CheckCircle, Star, MoreVertical, ChevronDown, Clock, CheckSquare, Square } from 'lucide-react'
 import { Button } from '../ui/button'
 
 interface MyListAnimeCardProps {
@@ -20,15 +20,21 @@ interface MyListAnimeCardProps {
   onFavorite?: (animeId: string) => void
   isFavorited?: boolean
   onStatusChange?: (animeId: string, status: 'watching' | 'completed' | 'plan-to-watch') => void
+  isBulkMode?: boolean
+  isSelected?: boolean
+  onToggleSelection?: (animeId: string) => void
 }
 
-export function MyListAnimeCard({
+function MyListAnimeCardComponent({
   anime,
   variant = 'grid',
   className,
   onFavorite,
   isFavorited = false,
   onStatusChange,
+  isBulkMode = false,
+  isSelected = false,
+  onToggleSelection,
 }: MyListAnimeCardProps) {
   const router = useRouter()
   const [showStatusMenu, setShowStatusMenu] = useState(false)
@@ -118,11 +124,31 @@ export function MyListAnimeCard({
 
   if (variant === 'list') {
     return (
-      <Link href={`/anime/${anime.slug}`} className={cn('block group', className)}>
-        <div className="glass rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 transform hover:scale-[1.02]">
-          <div className="flex items-center gap-6">
-            {/* Image */}
-            <div className="relative flex-shrink-0">
+      <div className={cn('block group relative', className, isBulkMode && 'cursor-pointer')}>
+        {isBulkMode && (
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onToggleSelection?.(anime.id)
+            }}
+            className="absolute top-4 left-4 z-20 w-6 h-6 bg-gray-900/90 backdrop-blur-sm rounded border-2 border-white/20 flex items-center justify-center hover:bg-primary-500/90 transition-all"
+          >
+            {isSelected ? (
+              <CheckSquare className="h-4 w-4 text-white fill-white" />
+            ) : (
+              <Square className="h-4 w-4 text-white" />
+            )}
+          </button>
+        )}
+        <Link href={isBulkMode ? '#' : `/anime/${anime.slug}`} className="block" onClick={(e) => isBulkMode && e.preventDefault()}>
+          <div className={cn(
+            'glass rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 transform hover:scale-[1.02]',
+            isSelected && 'ring-2 ring-primary-500 bg-primary-500/10'
+          )}>
+            <div className="flex items-center gap-6">
+              {/* Image */}
+              <div className="relative flex-shrink-0">
               <div className="w-24 h-32 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl overflow-hidden relative">
                 {anime.coverImage || anime.imageUrl ? (
                   <Image
@@ -316,13 +342,34 @@ export function MyListAnimeCard({
           </div>
         </div>
       </Link>
+      </div>
     )
   }
 
   // Grid variant
   return (
-    <Link href={`/anime/${anime.slug}`} className={cn('block group', className)}>
-      <div className="relative transform hover:scale-105 transition-all duration-300">
+    <div className={cn('relative group', className, isBulkMode && 'cursor-pointer')}>
+      {isBulkMode && (
+        <button
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            onToggleSelection?.(anime.id)
+          }}
+          className="absolute top-2 left-2 z-20 w-6 h-6 bg-gray-900/90 backdrop-blur-sm rounded border-2 border-white/20 flex items-center justify-center hover:bg-primary-500/90 transition-all"
+        >
+          {isSelected ? (
+            <CheckSquare className="h-4 w-4 text-white fill-white" />
+          ) : (
+            <Square className="h-4 w-4 text-white" />
+          )}
+        </button>
+      )}
+      <Link href={isBulkMode ? '#' : `/anime/${anime.slug}`} className={cn('block group', className)} onClick={(e) => isBulkMode && e.preventDefault()}>
+        <div className={cn(
+          'relative transform hover:scale-105 transition-all duration-300',
+          isSelected && 'ring-2 ring-primary-500 bg-primary-500/10 rounded-xl'
+        )}>
         {/* Image Container */}
         <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl overflow-hidden">
           {anime.coverImage || anime.imageUrl ? (
@@ -532,5 +579,20 @@ export function MyListAnimeCard({
         </div>
       </div>
     </Link>
+    </div>
   )
 }
+
+export const MyListAnimeCard = memo(MyListAnimeCardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.anime.id === nextProps.anime.id &&
+    prevProps.anime.listStatus === nextProps.anime.listStatus &&
+    prevProps.variant === nextProps.variant &&
+    prevProps.isFavorited === nextProps.isFavorited &&
+    prevProps.isBulkMode === nextProps.isBulkMode &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.className === nextProps.className
+  )
+})
+
+MyListAnimeCard.displayName = 'MyListAnimeCard'

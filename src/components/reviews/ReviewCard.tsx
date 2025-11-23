@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { formatDistanceToNow } from 'date-fns'
-import { Heart, MessageCircle, Star, Trash2, Send, Loader2 } from 'lucide-react'
+import { Heart, MessageCircle, Star, Trash2, Send, Loader2, Edit, ThumbsUp, ThumbsDown } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
 import { useAuth } from '../../app/lib/auth-context'
@@ -44,7 +44,14 @@ interface ReviewCardProps {
   onLike?: (reviewId: string) => void
   onUnlike?: (reviewId: string) => void
   onDelete?: (reviewId: string) => void
+  onEdit?: (review: Review) => void
+  onHelpful?: (reviewId: string) => void
+  onNotHelpful?: (reviewId: string) => void
   isLiked?: boolean
+  isHelpful?: boolean
+  isNotHelpful?: boolean
+  helpfulCount?: number
+  notHelpfulCount?: number
   commentCount?: number
 }
 
@@ -53,7 +60,14 @@ export function ReviewCard({
   onLike,
   onUnlike,
   onDelete,
+  onEdit,
+  onHelpful,
+  onNotHelpful,
   isLiked = false,
+  isHelpful = false,
+  isNotHelpful = false,
+  helpfulCount = 0,
+  notHelpfulCount = 0,
   commentCount = 0,
 }: ReviewCardProps) {
   const { user: currentUser, isAuthenticated } = useAuth()
@@ -66,6 +80,10 @@ export function ReviewCard({
   const [submittingComment, setSubmittingComment] = useState(false)
   const [liked, setLiked] = useState(isLiked)
   const [likeCount, setLikeCount] = useState(review.likes)
+  const [helpful, setHelpful] = useState(isHelpful)
+  const [notHelpful, setNotHelpful] = useState(isNotHelpful)
+  const [helpfulCountState, setHelpfulCountState] = useState(helpfulCount)
+  const [notHelpfulCountState, setNotHelpfulCountState] = useState(notHelpfulCount)
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
@@ -199,7 +217,88 @@ export function ReviewCard({
     }
   }
 
+  const handleHelpful = async () => {
+    if (!isAuthenticated) {
+      addToast({
+        title: 'Sign In Required',
+        description: 'Please sign in to vote on reviews',
+        variant: 'default',
+      })
+      return
+    }
+
+    const newHelpfulState = !helpful
+    const wasNotHelpful = notHelpful
+    
+    setHelpful(newHelpfulState)
+    if (wasNotHelpful) {
+      setNotHelpful(false)
+      setNotHelpfulCountState((prev) => Math.max(0, prev - 1))
+    }
+    setHelpfulCountState((prev) => (helpful ? prev - 1 : prev + 1))
+
+    try {
+      if (onHelpful) {
+        await onHelpful(review.id)
+      }
+    } catch (error) {
+      // Revert optimistic update
+      setHelpful(helpful)
+      if (wasNotHelpful) {
+        setNotHelpful(true)
+        setNotHelpfulCountState((prev) => prev + 1)
+      }
+      setHelpfulCountState((prev) => (helpful ? prev + 1 : prev - 1))
+      addToast({
+        title: 'Error',
+        description: 'Failed to update vote',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleNotHelpful = async () => {
+    if (!isAuthenticated) {
+      addToast({
+        title: 'Sign In Required',
+        description: 'Please sign in to vote on reviews',
+        variant: 'default',
+      })
+      return
+    }
+
+    const newNotHelpfulState = !notHelpful
+    const wasHelpful = helpful
+    
+    setNotHelpful(newNotHelpfulState)
+    if (wasHelpful) {
+      setHelpful(false)
+      setHelpfulCountState((prev) => Math.max(0, prev - 1))
+    }
+    setNotHelpfulCountState((prev) => (notHelpful ? prev - 1 : prev + 1))
+
+    try {
+      if (onNotHelpful) {
+        await onNotHelpful(review.id)
+      }
+    } catch (error) {
+      // Revert optimistic update
+      setNotHelpful(notHelpful)
+      if (wasHelpful) {
+        setHelpful(true)
+        setHelpfulCountState((prev) => prev + 1)
+      }
+      setNotHelpfulCountState((prev) => (notHelpful ? prev + 1 : prev - 1))
+      addToast({
+        title: 'Error',
+        description: 'Failed to update vote',
+        variant: 'destructive',
+      })
+    }
+  }
+
   const isOwner = currentUser?.id === review.userId
+  const wasEdited = review.updatedAt && review.updatedAt !== review.createdAt
 
   return (
     <div className="glass rounded-xl p-6 border border-white/10 hover:border-white/20 transition-all">
@@ -233,6 +332,11 @@ export function ReviewCard({
             </Link>
             <div className="flex items-center gap-2 text-xs text-gray-400">
               <span>{formatDistanceToNow(new Date(review.createdAt), { addSuffix: true })}</span>
+              {wasEdited && (
+                <span className="text-gray-500" title={`Edited ${formatDistanceToNow(new Date(review.updatedAt), { addSuffix: true })}`}>
+                  (edited)
+                </span>
+              )}
               {review.isSpoiler && (
                 <Badge className="bg-error-500/20 text-error-400 border-error-500/30 text-[10px] px-1.5 py-0">
                   SPOILER
@@ -282,7 +386,37 @@ export function ReviewCard({
 
       {/* Actions */}
       <div className="flex items-center gap-4 pt-4 border-t border-white/10">
-        {/* Like Button */}
+        {/* Helpful/Not Helpful Buttons */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleHelpful}
+            className={cn(
+              'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all text-sm',
+              helpful
+                ? 'bg-success-500/20 text-success-400 hover:bg-success-500/30'
+                : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+            )}
+            aria-label="Mark as helpful"
+          >
+            <ThumbsUp className={cn('h-4 w-4', helpful && 'fill-current')} />
+            <span className="font-medium">{helpfulCountState}</span>
+          </button>
+          <button
+            onClick={handleNotHelpful}
+            className={cn(
+              'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all text-sm',
+              notHelpful
+                ? 'bg-error-500/20 text-error-400 hover:bg-error-500/30'
+                : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+            )}
+            aria-label="Mark as not helpful"
+          >
+            <ThumbsDown className={cn('h-4 w-4', notHelpful && 'fill-current')} />
+            <span className="font-medium">{notHelpfulCountState}</span>
+          </button>
+        </div>
+
+        {/* Like Button (Legacy support) */}
         <button
           onClick={handleLike}
           className={cn(
@@ -305,14 +439,28 @@ export function ReviewCard({
           <span className="text-sm font-medium">{commentCount || comments.length}</span>
         </button>
 
-        {/* Delete (if owner or admin) */}
-        {isOwner && onDelete && (
-          <button
-            onClick={() => onDelete(review.id)}
-            className="ml-auto flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 text-error-400 hover:bg-error-500/20 transition-all"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+        {/* Owner Actions */}
+        {isOwner && (
+          <div className="ml-auto flex items-center gap-2">
+            {onEdit && (
+              <button
+                onClick={() => onEdit(review)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 text-primary-400 hover:bg-primary-500/20 transition-all"
+                aria-label="Edit review"
+              >
+                <Edit className="h-4 w-4" />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={() => onDelete(review.id)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 text-error-400 hover:bg-error-500/20 transition-all"
+                aria-label="Delete review"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         )}
       </div>
 

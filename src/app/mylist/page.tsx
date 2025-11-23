@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -32,8 +34,16 @@ import {
   Search,
   X,
   TrendingUp,
+  Download,
+  BarChart3,
+  CheckSquare,
+  Square,
+  MoreVertical,
 } from 'lucide-react'
 import { SEOMetadata } from '../../components/SEOMetadata'
+import { ListExportWizard } from '../../components/export/ListExportWizard'
+import { Progress } from '../../components/ui/progress'
+import { useToast } from '../../components/ui/toast'
 
 // Sort options
 type SortOption = 'title' | 'rating' | 'year' | 'recent'
@@ -58,6 +68,11 @@ export default function MyListPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<SortOption>('recent')
   const [showSortMenu, setShowSortMenu] = useState(false)
+  const [selectedAnime, setSelectedAnime] = useState<Set<string>>(new Set())
+  const [isBulkMode, setIsBulkMode] = useState(false)
+  const [showExportWizard, setShowExportWizard] = useState(false)
+  const [showStats, setShowStats] = useState(false)
+  const { addToast } = useToast()
 
   // Fetch user's anime list from backend
     const fetchUserList = async () => {
@@ -130,6 +145,142 @@ export default function MyListPage() {
       // Revert optimistic update on error
       await fetchUserList()
     }
+  }
+
+  // Handle bulk status change
+  const handleBulkStatusChange = async (status: 'watching' | 'completed' | 'plan-to-watch' | 'on-hold' | 'dropped') => {
+    if (selectedAnime.size === 0) return
+
+    const animeIds = Array.from(selectedAnime)
+    let successCount = 0
+    let failCount = 0
+
+    // Optimistically update UI
+    if (userList) {
+      setUserList({
+        ...userList,
+        items: userList.items.map((item) => {
+          if (item.anime && animeIds.includes(item.anime.id)) {
+            return {
+              ...item,
+              listStatus: status as typeof item.listStatus,
+            }
+          }
+          return item
+        }),
+      })
+    }
+
+    // Update each item
+    for (const animeId of animeIds) {
+      try {
+        await apiUpdateListStatus({
+          animeId,
+          status,
+        })
+        successCount++
+      } catch (err) {
+        console.error(`Failed to update ${animeId}:`, err)
+        failCount++
+      }
+    }
+
+    // Clear selection
+    setSelectedAnime(new Set())
+    setIsBulkMode(false)
+
+    // Show toast
+    if (failCount === 0) {
+      addToast({
+        title: 'Success',
+        description: `Updated ${successCount} anime to ${status.replace('-', ' ')}`,
+        variant: 'success',
+      })
+    } else {
+      addToast({
+        title: 'Partial Success',
+        description: `Updated ${successCount} anime. ${failCount} failed.`,
+        variant: 'default',
+      })
+      // Refetch to sync state
+      await fetchUserList()
+    }
+  }
+
+  // Toggle selection
+  const toggleSelection = (animeId: string) => {
+    setSelectedAnime((prev) => {
+      const next = new Set(prev)
+      if (next.has(animeId)) {
+        next.delete(animeId)
+      } else {
+        next.add(animeId)
+      }
+      return next
+    })
+  }
+
+  // Select all visible
+  const selectAll = () => {
+    setSelectedAnime(new Set(filteredAnime.map((a) => a.id)))
+  }
+
+  // Deselect all
+  const deselectAll = () => {
+    setSelectedAnime(new Set())
+  }
+
+  // Handle export
+  const handleExport = async (options: any) => {
+    const exportData = {
+      exportedAt: new Date().toISOString(),
+      version: '1.0',
+      total: filteredAnime.length,
+      stats: stats,
+      anime: filteredAnime.map((anime) => ({
+        id: anime.id,
+        title: anime.title,
+        titleEnglish: anime.titleEnglish,
+        listStatus: anime.listStatus,
+        isFavorite: anime.isFavorite,
+        rating: anime.rating,
+        year: anime.year,
+      })),
+    }
+
+    let blob: Blob
+    if (options.format === 'json') {
+      blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+    } else if (options.format === 'csv') {
+      const headers = ['Title', 'Status', 'Favorite', 'Rating', 'Year']
+      const rows = exportData.anime.map((a) => [
+        a.titleEnglish || a.title,
+        a.listStatus,
+        a.isFavorite ? 'Yes' : 'No',
+        a.rating || '',
+        a.year || '',
+      ])
+      const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
+      blob = new Blob([csv], { type: 'text/csv' })
+    } else {
+      // XML
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<animeList>
+  <exportedAt>${exportData.exportedAt}</exportedAt>
+  <total>${exportData.total}</total>
+  ${exportData.anime.map((a) => `
+  <anime>
+    <title>${a.title}</title>
+    <status>${a.listStatus}</status>
+    <favorite>${a.isFavorite}</favorite>
+    <rating>${a.rating || ''}</rating>
+    <year>${a.year || ''}</year>
+  </anime>`).join('')}
+</animeList>`
+      blob = new Blob([xml], { type: 'application/xml' })
+    }
+
+    return blob
   }
 
   // Close sort menu when clicking outside
@@ -566,6 +717,56 @@ export default function MyListPage() {
               </div>
 
                 <div className="flex items-center gap-2">
+                  {/* Bulk Mode Toggle */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setIsBulkMode(!isBulkMode)
+                      if (isBulkMode) {
+                        setSelectedAnime(new Set())
+                      }
+                    }}
+                    className={`border-white/20 text-white hover:bg-white/10 h-10 px-3.5 transition-all duration-200 rounded-xl ${
+                      isBulkMode ? 'bg-primary-500/20 border-primary-500/40' : ''
+                    }`}
+                  >
+                    {isBulkMode ? (
+                      <>
+                        <X className="h-4 w-4 mr-2" />
+                        <span className="text-xs hidden sm:inline font-medium">Cancel</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckSquare className="h-4 w-4 mr-2" />
+                        <span className="text-xs hidden sm:inline font-medium">Select</span>
+                      </>
+                    )}
+                  </Button>
+
+                  {/* Export Button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowExportWizard(true)}
+                    className="border-white/20 text-white hover:bg-white/10 h-10 px-3.5 transition-all duration-200 rounded-xl"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    <span className="text-xs hidden sm:inline font-medium">Export</span>
+                  </Button>
+
+                  {/* Stats Toggle */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowStats(!showStats)}
+                    className={`border-white/20 text-white hover:bg-white/10 h-10 px-3.5 transition-all duration-200 rounded-xl ${
+                      showStats ? 'bg-primary-500/20 border-primary-500/40' : ''
+                    }`}
+                  >
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    <span className="text-xs hidden sm:inline font-medium">Stats</span>
+                  </Button>
                 {/* Sort Dropdown */}
                 <div className="relative">
                   <Button
@@ -638,6 +839,134 @@ export default function MyListPage() {
               </div>
             </div>
 
+            {/* Bulk Action Bar */}
+            {isBulkMode && selectedAnime.size > 0 && (
+              <div className="glass rounded-xl p-4 border border-primary-500/30 bg-primary-500/10 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <CheckSquare className="h-5 w-5 text-primary-400" />
+                  <span className="text-white font-medium">
+                    {selectedAnime.size} {selectedAnime.size === 1 ? 'anime' : 'anime'} selected
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={selectedAnime.size === filteredAnime.length ? deselectAll : selectAll}
+                    className="text-primary-400 hover:text-primary-300 text-xs"
+                  >
+                    {selectedAnime.size === filteredAnime.length ? 'Deselect All' : 'Select All'}
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm text-gray-300 mr-2">Change status to:</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBulkStatusChange('watching')}
+                    className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20"
+                  >
+                    Watching
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBulkStatusChange('completed')}
+                    className="border-green-500/30 text-green-400 hover:bg-green-500/20"
+                  >
+                    Completed
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBulkStatusChange('plan-to-watch')}
+                    className="border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
+                  >
+                    Plan to Watch
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Statistics Visualization */}
+            {showStats && (
+              <div className="glass rounded-xl p-6 border border-white/10 mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-primary-400" />
+                    List Statistics
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowStats(false)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Status Distribution */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-300 mb-3">Status Distribution</h4>
+                    <div className="space-y-3">
+                      {[
+                        { label: 'Watching', value: stats.watching, color: 'bg-blue-400', icon: Play },
+                        { label: 'Completed', value: stats.completed, color: 'bg-green-400', icon: CheckCircle },
+                        { label: 'Plan to Watch', value: stats.planToWatch, color: 'bg-amber-400', icon: Clock },
+                        { label: 'Favorites', value: stats.favorites, color: 'bg-red-400', icon: Heart },
+                      ].map(({ label, value, color, icon: Icon }) => {
+                        const total = myListAnime.length || 1
+                        const percentage = (value / total) * 100
+                        return (
+                          <div key={label}>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <div className="flex items-center gap-2">
+                                <Icon className="h-4 w-4 text-gray-400" />
+                                <span className="text-sm text-gray-300">{label}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-semibold text-white">{value}</span>
+                                <span className="text-xs text-gray-500">({Math.round(percentage)}%)</span>
+                              </div>
+                            </div>
+                            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full ${color} rounded-full transition-all`}
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Summary Stats */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-300 mb-3">Summary</h4>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                        <span className="text-sm text-gray-300">Total Anime</span>
+                        <span className="text-lg font-bold text-white">{myListAnime.length}</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                        <span className="text-sm text-gray-300">Completion Rate</span>
+                        <span className="text-lg font-bold text-green-400">
+                          {myListAnime.length > 0
+                            ? Math.round((stats.completed / myListAnime.length) * 100)
+                            : 0}
+                          %
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                        <span className="text-sm text-gray-300">Favorites</span>
+                        <span className="text-lg font-bold text-red-400">{stats.favorites}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Anime Display */}
             <div className="mt-2">
             {viewMode === 'grid' ? (
@@ -659,6 +988,9 @@ export default function MyListPage() {
                       onFavorite={toggleFavorite}
                       isFavorited={isFavorited(anime.id)}
                       onStatusChange={handleStatusChange}
+                      isBulkMode={isBulkMode}
+                      isSelected={selectedAnime.has(anime.id)}
+                      onToggleSelection={toggleSelection}
                     />
                   )}
                 />
@@ -672,6 +1004,9 @@ export default function MyListPage() {
                       onFavorite={toggleFavorite}
                       isFavorited={isFavorited(anime.id)}
                       onStatusChange={handleStatusChange}
+                      isBulkMode={isBulkMode}
+                      isSelected={selectedAnime.has(anime.id)}
+                      onToggleSelection={toggleSelection}
                     />
                   ))}
                 </div>
@@ -692,6 +1027,9 @@ export default function MyListPage() {
                     onFavorite={toggleFavorite}
                     isFavorited={isFavorited(anime.id)}
                     onStatusChange={handleStatusChange}
+                    isBulkMode={isBulkMode}
+                    isSelected={selectedAnime.has(anime.id)}
+                    onToggleSelection={toggleSelection}
                   />
                 )}
               />
@@ -705,6 +1043,9 @@ export default function MyListPage() {
                     onFavorite={toggleFavorite}
                     isFavorited={isFavorited(anime.id)}
                     onStatusChange={handleStatusChange}
+                    isBulkMode={isBulkMode}
+                    isSelected={selectedAnime.has(anime.id)}
+                    onToggleSelection={toggleSelection}
                   />
                 ))}
               </div>
@@ -716,15 +1057,15 @@ export default function MyListPage() {
               <EmptyState
                 icon={
                   selectedCategory === 'favorites' ? (
-                    <Heart className="h-12 w-12 text-gray-500" />
+                    <Heart className="h-12 w-12 text-red-400" />
                   ) : selectedCategory === 'watching' ? (
-                    <Play className="h-12 w-12 text-gray-500" />
+                    <Play className="h-12 w-12 text-blue-400" />
                   ) : selectedCategory === 'completed' ? (
-                    <CheckCircle className="h-12 w-12 text-gray-500" />
+                    <CheckCircle className="h-12 w-12 text-green-400" />
                   ) : selectedCategory === 'plan-to-watch' ? (
-                    <Clock className="h-12 w-12 text-gray-500" />
+                    <Clock className="h-12 w-12 text-amber-400" />
                   ) : (
-                    <Bookmark className="h-12 w-12 text-gray-500" />
+                    <Bookmark className="h-12 w-12 text-primary-400" />
                   )
                 }
                 title={
@@ -769,6 +1110,14 @@ export default function MyListPage() {
             </main>
           </PullToRefresh>
         </div>
+
+        {/* Export Wizard Modal */}
+        <ListExportWizard
+          isOpen={showExportWizard}
+          onClose={() => setShowExportWizard(false)}
+          onExport={handleExport}
+          onCancel={() => setShowExportWizard(false)}
+        />
       </>
     </VerificationGuard>
   )

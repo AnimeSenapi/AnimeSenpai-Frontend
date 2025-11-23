@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: 'Explore anime by genre on AnimeSenpai. Find top-rated and popular genres to discover your next show.',
   alternates: baseAlternates('/genres'),
   robots: { index: true, follow: true },
-  openGraph: siteOpenGraph({
+  openGraph: siteOpenGraph(undefined, {
     title: 'Browse Genres',
     description: 'Explore anime by genre on AnimeSenpai. Find top-rated and popular genres to discover your next show.',
     url: 'https://animesenpai.app/genres',

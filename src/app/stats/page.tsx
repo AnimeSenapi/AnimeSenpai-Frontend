@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import { RequireAuth } from '../lib/protected-route'
 import { AchievementCard, Achievement } from '@/components/gamification/AchievementCard'

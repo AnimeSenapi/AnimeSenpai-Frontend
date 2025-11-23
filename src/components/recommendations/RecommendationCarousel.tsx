@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { ChevronLeft, ChevronRight, X, Trash2 } from 'lucide-react'
 import { Button } from '../ui/button'
 import { AnimeCard } from '../anime/AnimeCard'
@@ -41,7 +41,7 @@ interface RecommendationCarouselProps {
   vertical?: boolean
 }
 
-export function RecommendationCarousel({
+function RecommendationCarouselComponent({
   title,
   icon,
   recommendations,
@@ -311,3 +311,18 @@ export function RecommendationCarousel({
     </div>
   )
 }
+
+export const RecommendationCarousel = memo(RecommendationCarouselComponent, (prevProps, nextProps) => {
+  // Compare recommendations by IDs and length
+  const prevIds = prevProps.recommendations.map(r => r.anime.id).join(',')
+  const nextIds = nextProps.recommendations.map(r => r.anime.id).join(',')
+  
+  return (
+    prevProps.title === nextProps.title &&
+    prevIds === nextIds &&
+    prevProps.showReasons === nextProps.showReasons &&
+    prevProps.vertical === nextProps.vertical
+  )
+})
+
+RecommendationCarousel.displayName = 'RecommendationCarousel'

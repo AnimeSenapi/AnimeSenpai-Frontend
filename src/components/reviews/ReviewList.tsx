@@ -13,6 +13,9 @@ import {
   Trash2,
   Flag,
   Share2,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
 import { apiLikeReview, apiUnlikeReview, apiDeleteReview } from '@/app/lib/api'
@@ -40,11 +43,14 @@ interface ReviewListProps {
   onReviewUpdate: () => void
 }
 
+type SortOption = 'newest' | 'oldest' | 'highest' | 'lowest' | 'most-helpful'
+
 export function ReviewList({ animeId: _animeId, reviews, onReviewUpdate }: ReviewListProps) {
   const { user } = useAuth()
   const { addToast } = useToast()
   const [expandedReviews, setExpandedReviews] = useState<Set<string>>(new Set())
   const [likedReviews, setLikedReviews] = useState<Set<string>>(new Set())
+  const [sortBy, setSortBy] = useState<SortOption>('newest')
 
   const toggleExpand = (reviewId: string) => {
     setExpandedReviews((prev) => {
@@ -136,6 +142,23 @@ export function ReviewList({ animeId: _animeId, reviews, onReviewUpdate }: Revie
     return date.toLocaleDateString()
   }
 
+  const sortedReviews = [...reviews].sort((a, b) => {
+    switch (sortBy) {
+      case 'newest':
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      case 'oldest':
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      case 'highest':
+        return b.rating - a.rating
+      case 'lowest':
+        return a.rating - b.rating
+      case 'most-helpful':
+        return (b.helpful || 0) - (a.helpful || 0)
+      default:
+        return 0
+    }
+  })
+
   if (reviews.length === 0) {
     return (
       <div className="glass rounded-xl p-12 text-center border border-white/10">
@@ -148,7 +171,31 @@ export function ReviewList({ animeId: _animeId, reviews, onReviewUpdate }: Revie
 
   return (
     <div className="space-y-4">
-      {reviews.map((review) => {
+      {/* Sort Options */}
+      {reviews.length > 1 && (
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-white">
+            {reviews.length} {reviews.length === 1 ? 'Review' : 'Reviews'}
+          </h3>
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="h-4 w-4 text-gray-400" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-400/50"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="highest">Highest Rated</option>
+              <option value="lowest">Lowest Rated</option>
+              <option value="most-helpful">Most Helpful</option>
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* Reviews */}
+      {sortedReviews.map((review) => {
         const isExpanded = expandedReviews.has(review.id)
         const isLongReview = review.comment.length > 300
         const displayComment =

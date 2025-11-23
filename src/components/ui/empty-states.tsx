@@ -54,10 +54,10 @@ export function EmptyState({
       {icon && (
         <div
           className={cn(
-            'mb-4 sm:mb-6 rounded-2xl flex items-center justify-center',
+            'mb-4 sm:mb-6 rounded-2xl flex items-center justify-center transition-all',
             compact
-              ? 'w-16 h-16 bg-white/5'
-              : 'w-20 h-20 sm:w-24 sm:h-24 bg-white/5 border border-white/10'
+              ? 'w-16 h-16 bg-gradient-to-br from-white/5 to-white/[0.02]'
+              : 'w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 border border-white/10 shadow-lg shadow-primary-500/10'
           )}
         >
           {icon}
@@ -128,6 +128,17 @@ export function NoSearchResults({ query, onClear }: { query: string; onClear: ()
       action={{
         label: 'Clear Search',
         onClick: onClear,
+        variant: 'primary',
+      }}
+      secondaryAction={{
+        label: 'Browse All',
+        onClick: () => {
+          onClear()
+          // Navigate to browse/search page
+          if (typeof window !== 'undefined') {
+            window.location.href = '/search'
+          }
+        },
       }}
     />
   )
@@ -136,12 +147,17 @@ export function NoSearchResults({ query, onClear }: { query: string; onClear: ()
 export function EmptyAnimeList({ onBrowse }: { onBrowse: () => void }) {
   return (
     <EmptyState
-      icon={<Bookmark className="w-12 h-12 text-gray-500" />}
+      icon={<Bookmark className="w-12 h-12 text-primary-400" />}
       title="Your list is empty"
       description="Start building your anime collection by adding shows you're watching, planning to watch, or have completed."
       action={{
         label: 'Browse Anime',
         onClick: onBrowse,
+        variant: 'primary',
+      }}
+      secondaryAction={{
+        label: 'Explore Trending',
+        onClick: () => onBrowse(),
       }}
     />
   )
@@ -150,12 +166,13 @@ export function EmptyAnimeList({ onBrowse }: { onBrowse: () => void }) {
 export function EmptyFavorites({ onExplore }: { onExplore: () => void }) {
   return (
     <EmptyState
-      icon={<Heart className="w-12 h-12 text-gray-500" />}
+      icon={<Heart className="w-12 h-12 text-red-400" />}
       title="No favorites yet"
-      description="Mark anime as favorites to quickly access your all-time favorites."
+      description="Mark anime as favorites by clicking the heart icon. Your favorites will appear here for quick access."
       action={{
         label: 'Explore Anime',
         onClick: onExplore,
+        variant: 'primary',
       }}
     />
   )

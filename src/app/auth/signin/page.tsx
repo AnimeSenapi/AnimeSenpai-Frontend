@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -39,12 +41,34 @@ export default function SignInPage() {
 
     if (!password) {
       errors.password = 'Password is required'
-    } else if (password.length < 8) {
-      errors.password = 'Password must be at least 8 characters'
     }
 
     setFormErrors(errors)
     return Object.keys(errors).length === 0
+  }
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setEmail(value)
+    if (formErrors.email) {
+      if (!value) {
+        setFormErrors({ ...formErrors, email: 'Email is required' })
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        setFormErrors({ ...formErrors, email: 'Please enter a valid email address' })
+      } else {
+        setFormErrors({ ...formErrors, email: undefined })
+      }
+    }
+    if (error) clearError()
+  }
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setPassword(value)
+    if (formErrors.password && value) {
+      setFormErrors({ ...formErrors, password: undefined })
+    }
+    if (error) clearError()
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -142,23 +166,30 @@ export default function SignInPage() {
                     id="email"
                     type="email"
                     value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value)
-                      if (formErrors.email) {
-                        setFormErrors({ ...formErrors, email: undefined })
+                    onChange={handleEmailChange}
+                    onBlur={() => {
+                      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                        setFormErrors({ ...formErrors, email: 'Please enter a valid email address' })
                       }
                     }}
                     className={`w-full pl-12 pr-4 py-3 sm:py-3.5 bg-white/5 border rounded-md rounded-input text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all text-base ${
-                      formErrors.email ? 'border-red-500/50' : 'border-white/10'
+                      formErrors.email ? 'border-red-500/50 focus:ring-red-500/50' : 'border-white/10'
                     }`}
                     placeholder="you@example.com"
                     suppressHydrationWarning
                     autoComplete="email"
                     data-testid="email-input"
+                    aria-invalid={!!formErrors.email}
+                    aria-describedby={formErrors.email ? 'email-error' : undefined}
                   />
                 </div>
                 {formErrors.email && (
-                  <p className="mt-2 text-sm text-red-400">{formErrors.email}</p>
+                  <p id="email-error" role="alert" className="mt-2 text-sm text-red-400 flex items-center gap-1.5" aria-live="polite">
+                    <svg className="h-4 w-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {formErrors.email}
+                  </p>
                 )}
               </div>
 
@@ -173,19 +204,21 @@ export default function SignInPage() {
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value)
-                      if (formErrors.password) {
-                        setFormErrors({ ...formErrors, password: undefined })
+                    onChange={handlePasswordChange}
+                    onBlur={() => {
+                      if (!password) {
+                        setFormErrors({ ...formErrors, password: 'Password is required' })
                       }
                     }}
                     className={`w-full pl-12 pr-12 py-3 sm:py-3.5 bg-white/5 border rounded-md rounded-input text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent transition-all text-base ${
-                      formErrors.password ? 'border-red-500/50' : 'border-white/10'
+                      formErrors.password ? 'border-red-500/50 focus:ring-red-500/50' : 'border-white/10'
                     }`}
                     placeholder="••••••••"
                     suppressHydrationWarning
                     autoComplete="current-password"
                     data-testid="password-input"
+                    aria-invalid={!!formErrors.password}
+                    aria-describedby={formErrors.password ? 'password-error' : undefined}
                   />
                   <button
                     type="button"
@@ -196,7 +229,12 @@ export default function SignInPage() {
                   </button>
                 </div>
                 {formErrors.password && (
-                  <p className="mt-2 text-sm text-red-400">{formErrors.password}</p>
+                  <p id="password-error" role="alert" className="mt-2 text-sm text-red-400 flex items-center gap-1.5" aria-live="polite">
+                    <svg className="h-4 w-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {formErrors.password}
+                  </p>
                 )}
               </div>
 

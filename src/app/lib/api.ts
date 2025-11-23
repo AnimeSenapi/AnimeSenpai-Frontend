@@ -2493,6 +2493,34 @@ export async function apiDeleteAnime(animeId: string) {
   return data.result.data
 }
 
+// Get Public Site Settings (for SEO)
+// Note: This function is designed to be called from server components (e.g., generateMetadata)
+// Uses Next.js fetch caching when called from server components
+export async function apiGetPublicSettings() {
+  const url = `${TRPC_URL}/systemSettings.getPublicSettings`
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    // Next.js fetch option - only works in server components
+    next: { revalidate: 3600 }, // Cache for 1 hour
+  } as RequestInit & { next?: { revalidate?: number } })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error?.error?.message || 'Failed to fetch public settings')
+  }
+
+  const data: TRPCResponse<any> = await response.json()
+  if ('error' in data) {
+    throw new Error(data.error.message)
+  }
+
+  return data.result.data
+}
+
 // Get System Settings (Admin)
 export async function apiGetSettings() {
   const url = `${TRPC_URL}/admin.getSettings`

@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ username:
       description: desc,
       alternates: baseAlternates(urlPath),
       robots: { index: true, follow: true },
-      openGraph: siteOpenGraph({
+      openGraph: siteOpenGraph(undefined, {
         title,
         description: desc,
         url: `https://animesenpai.app${urlPath}`,

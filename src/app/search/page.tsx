@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { SearchAnimeCard } from '../../components/anime/SearchAnimeCard'
@@ -23,6 +25,7 @@ import {
   TrendingUp,
   Sparkles,
   Star,
+  Clock,
 } from 'lucide-react'
 
 
@@ -84,6 +87,7 @@ export default function SearchPage() {
   const [searchSuggestions, setSearchSuggestions] = useState<string[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
+  const [recentSearches, setRecentSearches] = useState<string[]>([])
   
   // Refs
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -110,6 +114,27 @@ export default function SearchPage() {
   )
     .sort((a, b) => b - a)
     .map(String)
+
+  // Load recent searches from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('recentSearches')
+    if (saved) {
+      try {
+        setRecentSearches(JSON.parse(saved))
+      } catch {
+        setRecentSearches([])
+      }
+    }
+  }, [])
+
+  // Save search query to recent searches when searching
+  useEffect(() => {
+    if (searchQuery.trim() && hasSearched) {
+      const newRecent = [searchQuery, ...recentSearches.filter((s) => s !== searchQuery)].slice(0, 10)
+      setRecentSearches(newRecent)
+      localStorage.setItem('recentSearches', JSON.stringify(newRecent))
+    }
+  }, [searchQuery, hasSearched])
 
   // Load anime from API (use series grouping)
   useEffect(() => {
@@ -374,7 +399,16 @@ export default function SearchPage() {
     setMaxRating(10)
     setSearchQuery('')
     setSortBy('relevance')
+    setHasSearched(false)
     updateURL()
+  }
+
+  const handleSearchSubmit = (query: string) => {
+    setSearchQuery(query)
+    setHasSearched(true)
+    const newRecent = [query, ...recentSearches.filter((s) => s !== query)].slice(0, 10)
+    setRecentSearches(newRecent)
+    localStorage.setItem('recentSearches', JSON.stringify(newRecent))
   }
 
   // Update URL with current filter state for shareable links
@@ -574,6 +608,12 @@ export default function SearchPage() {
                         placeholder="Search by title, studio, genre..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            handleSearchSubmit(searchQuery)
+                          }
+                        }}
                         className="w-full bg-transparent border-none outline-none pl-11 pr-11 py-3.5 text-base text-white placeholder-gray-400 focus:placeholder-gray-500 transition-all font-medium"
                       />
                       {searchQuery && (
@@ -595,11 +635,11 @@ export default function SearchPage() {
               {/* Controls Bar - Sort and View Toggle Only */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between mb-6 gap-3 sm:gap-4">
                 {/* Mobile: Show Filter Toggle */}
-                <div className="lg:hidden">
+                <div className="lg:hidden flex items-center gap-2">
                   <Button
                     variant="outline"
                     onClick={() => setShowFilters(!showFilters)}
-                    className={`relative overflow-hidden border-2 transition-all text-sm font-medium w-full sm:w-auto min-h-[48px] backdrop-blur-xl ${
+                    className={`relative overflow-hidden border-2 transition-all text-sm font-medium flex-1 min-h-[48px] backdrop-blur-xl ${
                       showFilters
                         ? 'bg-gradient-to-r from-primary-500/20 to-secondary-500/20 border-primary-400/50 text-primary-200 shadow-lg shadow-primary-500/25'
                         : 'bg-white/5 border-white/20 text-white hover:bg-white/10'
@@ -613,6 +653,16 @@ export default function SearchPage() {
                       </span>
                     )}
                   </Button>
+                  {activeFiltersCount > 0 && (
+                    <Button
+                      variant="outline"
+                      onClick={clearFilters}
+                      className="min-h-[48px] px-3 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50"
+                      aria-label="Clear all filters"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2 sm:gap-3 ml-auto">

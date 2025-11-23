@@ -30,23 +30,31 @@ export function ReviewForm({
   const [comment, setComment] = useState(existingReview?.comment || '')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<{ rating?: string; comment?: string }>({})
+  const [touched, setTouched] = useState<{ rating: boolean; comment: boolean }>({
+    rating: false,
+    comment: false,
+  })
 
-  const validate = () => {
+  const validate = (field?: 'rating' | 'comment') => {
     const newErrors: typeof errors = {}
 
-    if (rating === 0) {
-      newErrors.rating = 'Please select a rating'
+    if (!field || field === 'rating') {
+      if (rating === 0) {
+        newErrors.rating = 'Please select a rating'
+      }
     }
 
-    if (!comment.trim()) {
-      newErrors.comment = 'Please write a review'
-    } else if (comment.trim().length < 20) {
-      newErrors.comment = 'Review must be at least 20 characters'
-    } else if (comment.trim().length > 2000) {
-      newErrors.comment = 'Review must be less than 2000 characters'
+    if (!field || field === 'comment') {
+      if (!comment.trim()) {
+        newErrors.comment = 'Please write a review'
+      } else if (comment.trim().length < 20) {
+        newErrors.comment = 'Review must be at least 20 characters'
+      } else if (comment.trim().length > 2000) {
+        newErrors.comment = 'Review must be less than 2000 characters'
+      }
     }
 
-    setErrors(newErrors)
+    setErrors((prev) => ({ ...prev, ...newErrors }))
     return Object.keys(newErrors).length === 0
   }
 
@@ -108,7 +116,11 @@ export function ReviewForm({
             <button
               key={star}
               type="button"
-              onClick={() => setRating(star)}
+              onClick={() => {
+                setRating(star)
+                setTouched((prev) => ({ ...prev, rating: true }))
+                setTimeout(() => validate('rating'), 0)
+              }}
               onMouseEnter={() => setHoverRating(star)}
               onMouseLeave={() => setHoverRating(0)}
               className="touch-manipulation transition-transform hover:scale-110 active:scale-95"
@@ -128,7 +140,14 @@ export function ReviewForm({
             {hoverRating || rating || '-'}/10
           </span>
         </div>
-        {errors.rating && <p className="text-red-400 text-sm mt-2">{errors.rating}</p>}
+        {touched.rating && errors.rating && (
+          <p role="alert" className="text-red-400 text-sm mt-2 flex items-center gap-1.5" aria-live="polite">
+            <svg className="h-4 w-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            {errors.rating}
+          </p>
+        )}
       </div>
 
       {/* Review Text */}
@@ -136,15 +155,71 @@ export function ReviewForm({
         <label className="block text-sm font-medium text-gray-300 mb-2">Your Review *</label>
         <textarea
           value={comment}
-          onChange={(e) => setComment(e.target.value)}
+          onChange={(e) => {
+            setComment(e.target.value)
+            setTouched((prev) => ({ ...prev, comment: true }))
+            if (touched.comment) {
+              setTimeout(() => validate('comment'), 0)
+            }
+          }}
+          onBlur={() => {
+            setTouched((prev) => ({ ...prev, comment: true }))
+            validate('comment')
+          }}
           placeholder="Share your thoughts about this anime... What did you like? What stood out? Would you recommend it?"
           rows={6}
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-primary-400/50 focus:ring-2 focus:ring-primary-400/20 resize-none"
+          className={`w-full bg-white/5 border rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 resize-none transition-colors ${
+            touched.comment && errors.comment
+              ? 'border-red-500/50 focus:border-red-500/50 focus:ring-red-500/20'
+              : 'border-white/10 focus:border-primary-400/50 focus:ring-primary-400/20'
+          }`}
+          aria-invalid={touched.comment && !!errors.comment}
+          aria-describedby={touched.comment && errors.comment ? 'comment-error' : undefined}
         />
         <div className="flex items-center justify-between mt-2">
-          <p className="text-xs text-gray-400">{comment.length}/2000 characters (minimum 20)</p>
-          {errors.comment && <p className="text-red-400 text-sm">{errors.comment}</p>}
+          <div className="flex items-center gap-2">
+            <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+              <div
+                className={cn(
+                  'h-full transition-all duration-300',
+                  comment.length > 2000
+                    ? 'bg-red-500'
+                    : comment.length < 20
+                      ? 'bg-yellow-500'
+                      : comment.length > 1500
+                        ? 'bg-orange-500'
+                        : 'bg-primary-500'
+                )}
+                style={{ width: `${Math.min((comment.length / 2000) * 100, 100)}%` }}
+              />
+            </div>
+            <p className={cn(
+              'text-xs font-medium min-w-[120px] text-right',
+              comment.length > 2000
+                ? 'text-red-400'
+                : comment.length < 20
+                  ? 'text-yellow-400'
+                  : comment.length > 1500
+                    ? 'text-orange-400'
+                    : 'text-gray-400'
+            )}>
+              {comment.length.toLocaleString()}/2,000
+            </p>
+          </div>
+          {touched.comment && errors.comment && (
+            <p id="comment-error" role="alert" className="text-red-400 text-sm flex items-center gap-1.5 ml-2" aria-live="polite">
+              <svg className="h-4 w-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {errors.comment}
+            </p>
+          )}
         </div>
+        {comment.length < 20 && comment.length > 0 && (
+          <p className="text-xs text-yellow-400 mt-1">
+            {20 - comment.length} more characters needed
+          </p>
+        )}
       </div>
 
       {/* Review Guidelines */}
