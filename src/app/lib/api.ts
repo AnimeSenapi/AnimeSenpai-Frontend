@@ -1046,8 +1046,27 @@ export async function apiSignin(input: { email: string; password: string; rememb
 }
 
 export async function apiMe() {
-  const result = await trpcQuery<AuthUser>('auth.me')
-  return result
+  try {
+    const result = await trpcQuery<AuthUser>('auth.me')
+    return result
+  } catch (error: any) {
+    // Silently handle expected auth errors (invalid session, etc.)
+    // These are normal when user is not logged in or session expired
+    const errorMessage = error?.message || ''
+    if (
+      errorMessage.includes('session') ||
+      errorMessage.includes('invalid') ||
+      errorMessage.includes('expired') ||
+      errorMessage.includes('UNAUTHORIZED') ||
+      errorMessage.includes('TOKEN_INVALID') ||
+      errorMessage.includes('Please sign in again')
+    ) {
+      // Return null for expected auth errors - auth context will handle it
+      return null
+    }
+    // Re-throw unexpected errors
+    throw error
+  }
 }
 
 export async function apiForgotPassword(input: { email: string }) {
@@ -1385,9 +1404,19 @@ export interface CalendarStats {
 export async function apiGetEpisodeSchedule(
   startDate: string,
   endDate: string,
-  useCache: boolean = true
+  useCache: boolean = true,
+  filters?: {
+    genres?: string[]
+    studios?: string[]
+    seasons?: string[]
+    years?: number[]
+    types?: string[]
+    statuses?: string[]
+  },
+  userId?: string
 ): Promise<Episode[]> {
-  const cacheKey = `calendar:episodes:${startDate}:${endDate}`
+  const filterKey = filters ? JSON.stringify(filters) : ''
+  const cacheKey = `calendar:episodes:${startDate}:${endDate}:${filterKey}`
 
   if (useCache) {
     const cached = clientCache.get<Episode[]>(cacheKey)
@@ -1396,8 +1425,24 @@ export async function apiGetEpisodeSchedule(
     }
   }
 
+  const input: any = { startDate, endDate }
+  
+  // Add userId if provided (needed for status filtering)
+  if (userId) {
+    input.userId = userId
+  }
+  
+  if (filters) {
+    if (filters.genres && filters.genres.length > 0) input.genres = filters.genres
+    if (filters.studios && filters.studios.length > 0) input.studios = filters.studios
+    if (filters.seasons && filters.seasons.length > 0) input.seasons = filters.seasons
+    if (filters.years && filters.years.length > 0) input.years = filters.years
+    if (filters.types && filters.types.length > 0) input.types = filters.types
+    if (filters.statuses && filters.statuses.length > 0) input.statuses = filters.statuses
+  }
+
   const url = `${TRPC_URL}/calendar.getEpisodeSchedule?input=${encodeURIComponent(
-    JSON.stringify({ startDate, endDate })
+    JSON.stringify(input)
   )}`
 
   const response = await fetch(url, {

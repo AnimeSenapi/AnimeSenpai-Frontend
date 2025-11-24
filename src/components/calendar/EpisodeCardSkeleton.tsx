@@ -26,21 +26,21 @@ export function EpisodeCardSkeleton({
   }
 
   return (
-    <div className={cn('bg-gray-800/50 rounded-xl overflow-hidden border border-gray-700', className)}>
-      <Skeleton className="aspect-video w-full" />
-      <div className="p-4 space-y-3">
+    <div className={cn('glass rounded-xl overflow-hidden border border-gray-700/50 animate-pulse', className)}>
+      <Skeleton className="aspect-video w-full bg-gray-800/50" />
+      <div className="p-4 bg-gray-900/30 space-y-3">
         <div className="space-y-2">
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-3 w-1/2" />
+          <Skeleton className="h-4 w-3/4 bg-gray-700/50" />
+          <Skeleton className="h-3 w-1/2 bg-gray-700/50" />
         </div>
         <div className="flex items-center gap-2">
-          <Skeleton className="h-5 w-20 rounded" />
-          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-5 w-20 rounded bg-gray-700/50" />
+          <Skeleton className="h-3 w-24 bg-gray-700/50" />
         </div>
         {variant === 'detailed' && (
-          <div className="flex gap-1">
-            <Skeleton className="h-4 w-12 rounded" />
-            <Skeleton className="h-4 w-16 rounded" />
+          <div className="flex gap-1.5">
+            <Skeleton className="h-4 w-12 rounded bg-gray-700/50" />
+            <Skeleton className="h-4 w-16 rounded bg-gray-700/50" />
           </div>
         )}
       </div>

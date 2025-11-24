@@ -13,7 +13,6 @@ import {
   Activity,
   MessageCircle,
   Trophy,
-  Calendar,
   Users,
 } from 'lucide-react'
 import { getRoleConfig, getRoleIcon, getRoleBadgeClasses } from '../../lib/role-config'
@@ -185,16 +184,6 @@ export function StandaloneDropdown({ user }: StandaloneDropdownProps) {
         >
           <Users className="mr-3 h-4 w-4" />
           <span className="text-sm">Friends</span>
-        </button>
-        <button
-          className="w-full text-left text-gray-300 hover:text-white hover:bg-white/10 rounded-md px-3 py-2 transition-all duration-150 flex items-center touch-manipulation min-h-[40px]"
-          onClick={() => {
-            setIsOpen(false)
-            router.push('/calendar')
-          }}
-        >
-          <Calendar className="mr-3 h-4 w-4" />
-          <span className="text-sm">Calendar</span>
         </button>
         {(user.role === 'admin' || user.role === 'owner') && (
           <>

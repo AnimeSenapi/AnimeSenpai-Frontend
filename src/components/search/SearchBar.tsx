@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { SearchAnimeCard } from '../anime/SearchAnimeCard'
+import { AnimeCard } from '../anime/AnimeCard'
 import { Search, X, ArrowRight, Filter, User } from 'lucide-react'
 import { apiSearchAnime, apiGetTrending, apiSearchUsers, apiGetUserProfile } from '../../app/lib/api'
 import { useAnalytics } from '../AnalyticsProvider'
@@ -667,7 +667,7 @@ export function SearchBar({
                         : 'hover:bg-gray-800/40'
                     }`}
                   >
-                    <SearchAnimeCard anime={anime} variant="compact" />
+                    <AnimeCard anime={anime} variant="compact" context="search" />
                   </div>
                   )
                 })}
@@ -722,7 +722,7 @@ export function SearchBar({
                     onClick={() => selectSuggestion(anime)}
                     className="hover:bg-gray-800/40 rounded-lg transition-all duration-200 cursor-pointer"
                   >
-                    <SearchAnimeCard anime={anime} variant="compact" />
+                    <AnimeCard anime={anime} variant="compact" context="search" />
                   </div>
                 ))}
               </div>

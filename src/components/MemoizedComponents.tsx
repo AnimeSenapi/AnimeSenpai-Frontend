@@ -5,8 +5,6 @@
 
 import { memo } from 'react'
 import { AnimeCard } from './anime/AnimeCard'
-import { SearchAnimeCard } from './anime/SearchAnimeCard'
-import { MyListAnimeCard } from './anime/MyListAnimeCard'
 
 /**
  * Memoized AnimeCard
@@ -26,7 +24,7 @@ MemoizedAnimeCard.displayName = 'MemoizedAnimeCard'
  * Memoized SearchAnimeCard
  * Optimized for search results rendering
  */
-export const MemoizedSearchAnimeCard = memo(SearchAnimeCard, (prevProps, nextProps) => {
+export const MemoizedSearchAnimeCard = memo((props: any) => <AnimeCard {...props} context="search" />, (prevProps, nextProps) => {
   return (
     prevProps.anime.id === nextProps.anime.id &&
     prevProps.isFavorited === nextProps.isFavorited &&
@@ -40,12 +38,14 @@ MemoizedSearchAnimeCard.displayName = 'MemoizedSearchAnimeCard'
  * Memoized MyListAnimeCard
  * Optimized for my list rendering
  */
-export const MemoizedMyListAnimeCard = memo(MyListAnimeCard, (prevProps, nextProps) => {
+export const MemoizedMyListAnimeCard = memo((props: any) => <AnimeCard {...props} context="mylist" />, (prevProps, nextProps) => {
   return (
     prevProps.anime.id === nextProps.anime.id &&
     prevProps.anime.listStatus === nextProps.anime.listStatus &&
     prevProps.isFavorited === nextProps.isFavorited &&
-    prevProps.variant === nextProps.variant
+    prevProps.variant === nextProps.variant &&
+    prevProps.isBulkMode === nextProps.isBulkMode &&
+    prevProps.isSelected === nextProps.isSelected
   )
 })
 

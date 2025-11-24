@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { SearchAnimeCard } from '../../components/anime/SearchAnimeCard'
+import { AnimeCard } from '../../components/anime/AnimeCard'
 import { Button } from '../../components/ui/button'
 import { Badge } from '../../components/ui/badge'
 import { AnimeCardSkeleton, SearchResultSkeleton } from '../../components/ui/skeleton'
@@ -822,10 +822,11 @@ export default function SearchPage() {
                 height={900}
                 className="pb-8"
                 renderItem={(anime) => (
-                  <SearchAnimeCard
+                  <AnimeCard
                     key={anime.id}
                     anime={anime}
                     variant="grid"
+                    context="search"
                     onFavorite={() => toggleFavorite(anime.id)}
                     isFavorited={isFavorited(anime.id)}
                   />
@@ -834,10 +835,11 @@ export default function SearchPage() {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
                 {filteredAnime.map((anime) => (
-                  <SearchAnimeCard
+                  <AnimeCard
                     key={anime.id}
                     anime={anime}
                     variant="grid"
+                    context="search"
                     onFavorite={() => toggleFavorite(anime.id)}
                     isFavorited={isFavorited(anime.id)}
                   />
@@ -853,10 +855,11 @@ export default function SearchPage() {
               gap={12}
               className="pb-8"
               renderItem={(anime) => (
-                <SearchAnimeCard
+                <AnimeCard
                   key={anime.id}
                   anime={anime}
                   variant="list"
+                  context="search"
                   onFavorite={() => toggleFavorite(anime.id)}
                   isFavorited={isFavorited(anime.id)}
                 />
@@ -865,10 +868,11 @@ export default function SearchPage() {
           ) : (
             <div className="space-y-3">
               {filteredAnime.map((anime) => (
-                <SearchAnimeCard
+                <AnimeCard
                   key={anime.id}
                   anime={anime}
                   variant="list"
+                  context="search"
                   onFavorite={() => toggleFavorite(anime.id)}
                   isFavorited={isFavorited(anime.id)}
                 />

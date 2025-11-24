@@ -112,12 +112,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
                     storage.setItem('refreshToken', data.refreshToken)
                     console.log('[Auth] Token refreshed successfully, retrying auth.me')
                     // Retry apiMe with new token
-                    const retryUserData = (await apiMe()) as any
-                    if (retryUserData) {
-                      console.log('[Auth] Successfully authenticated user after refresh:', retryUserData.email)
-                      setUser(retryUserData)
-                      setIsLoading(false)
-                      return
+                    try {
+                      const retryUserData = (await apiMe()) as any
+                      if (retryUserData) {
+                        console.log('[Auth] Successfully authenticated user after refresh:', retryUserData.email)
+                        setUser(retryUserData)
+                        setIsLoading(false)
+                        return
+                      }
+                    } catch (retryError: any) {
+                      // Expected error - session is still invalid
+                      console.warn('[Auth] Retry after refresh failed:', retryError.message)
                     }
                   }
                 }
@@ -141,10 +146,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
             errorMessage.includes('UNAUTHORIZED') ||
             errorMessage.includes('expired') ||
             errorMessage.includes('session') ||
-            errorMessage.includes('invalid')
+            errorMessage.includes('invalid') ||
+            errorMessage.includes('Please sign in again')
           
           if (isTokenError) {
-            console.warn('[Auth] Token error detected, attempting refresh before clearing:', errorMessage)
+            // Silently handle expected auth errors - these are normal when not logged in
+            // Only log if we have a token (meaning it's actually an error, not just no session)
+            if (accessToken) {
+              console.warn('[Auth] Token error detected, attempting refresh before clearing')
+            }
             // Try to refresh the token before clearing
             const refreshToken = localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken')
             if (refreshToken) {

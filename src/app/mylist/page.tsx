@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { MyListAnimeCard } from '../../components/anime/MyListAnimeCard'
+import { AnimeCard } from '../../components/anime/AnimeCard'
 import { Button } from '../../components/ui/button'
 import { UserListResponse } from '../../types/anime'
 import { useAuth } from '../lib/auth-context'
@@ -57,7 +57,14 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
 export default function MyListPage() {
   const searchParams = useSearchParams()
   const { isAuthenticated, isLoading: authLoading } = useAuth()
-  const { toggleFavorite, isFavorited } = useFavorites()
+  const { toggleFavorite: toggleFavoriteInternal, isFavorited } = useFavorites()
+  
+  // Wrapper to match AnimeCard's expected signature
+  const handleFavorite = (animeId?: string) => {
+    if (animeId) {
+      toggleFavoriteInternal(animeId).catch(console.error)
+    }
+  }
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [selectedCategory, setSelectedCategory] = useState<string>(
     searchParams?.get('filter') || 'all'
@@ -981,11 +988,12 @@ export default function MyListPage() {
                   height={800}
                   className="pb-8"
                   renderItem={(anime) => (
-                    <MyListAnimeCard
+                    <AnimeCard
                       key={anime.id}
                       anime={anime}
                       variant="grid"
-                      onFavorite={toggleFavorite}
+                      context="mylist"
+                      onFavorite={handleFavorite}
                       isFavorited={isFavorited(anime.id)}
                       onStatusChange={handleStatusChange}
                       isBulkMode={isBulkMode}
@@ -997,11 +1005,12 @@ export default function MyListPage() {
               ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
                   {filteredAnime.map((anime) => (
-                    <MyListAnimeCard
+                    <AnimeCard
                       key={anime.id}
                       anime={anime}
                       variant="grid"
-                      onFavorite={toggleFavorite}
+                      context="mylist"
+                      onFavorite={handleFavorite}
                       isFavorited={isFavorited(anime.id)}
                       onStatusChange={handleStatusChange}
                       isBulkMode={isBulkMode}
@@ -1020,11 +1029,12 @@ export default function MyListPage() {
                 gap={16}
                 className="pb-8"
                 renderItem={(anime) => (
-                  <MyListAnimeCard
+                  <AnimeCard
                     key={anime.id}
                     anime={anime}
                     variant="list"
-                    onFavorite={toggleFavorite}
+                    context="mylist"
+                    onFavorite={handleFavorite}
                     isFavorited={isFavorited(anime.id)}
                     onStatusChange={handleStatusChange}
                     isBulkMode={isBulkMode}
@@ -1036,11 +1046,12 @@ export default function MyListPage() {
             ) : (
                 <div className="space-y-3 sm:space-y-4">
                 {filteredAnime.map((anime) => (
-                  <MyListAnimeCard
+                  <AnimeCard
                     key={anime.id}
                     anime={anime}
                     variant="list"
-                    onFavorite={toggleFavorite}
+                    context="mylist"
+                    onFavorite={handleFavorite}
                     isFavorited={isFavorited(anime.id)}
                     onStatusChange={handleStatusChange}
                     isBulkMode={isBulkMode}

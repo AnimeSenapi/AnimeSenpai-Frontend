@@ -8,7 +8,7 @@ import { GuestAuth } from './GuestAuth'
 import { NotificationsDropdown } from './NotificationsDropdown'
 import { useAuth } from '../../app/lib/auth-context'
 import { useHapticFeedback } from '../../hooks/use-haptic-feedback'
-import { User, Settings, Shield, LogOut, Bell, ChevronRight, Activity, MessageCircle, Trophy, Calendar, Users } from 'lucide-react'
+import { User, Settings, Shield, LogOut, Bell, ChevronRight, Activity, MessageCircle, Trophy, Users } from 'lucide-react'
 import { cn } from '../../app/lib/utils'
 
 interface AuthDrawerProps {
@@ -135,18 +135,6 @@ export function AuthDrawer({ isOpen, onClose }: AuthDrawerProps) {
                   <Users className="h-5 w-5 text-gray-300 group-hover:text-white transition-colors" />
                 </div>
                 <span className="flex-1 text-white">Friends</span>
-                <ChevronRight className="h-5 w-5 text-gray-500 group-hover:text-primary-400 transition-colors" />
-              </Link>
-
-              <Link
-                href="/calendar"
-                onClick={handleLinkClick}
-                className="flex items-center gap-4 px-5 py-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-200 text-base font-medium touch-manipulation active:scale-[0.98] group"
-              >
-                <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center group-hover:bg-white/15 transition-colors">
-                  <Calendar className="h-5 w-5 text-gray-300 group-hover:text-white transition-colors" />
-                </div>
-                <span className="flex-1 text-white">Calendar</span>
                 <ChevronRight className="h-5 w-5 text-gray-500 group-hover:text-primary-400 transition-colors" />
               </Link>
 

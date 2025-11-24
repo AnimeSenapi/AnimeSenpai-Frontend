@@ -174,37 +174,97 @@ export function EpisodeCard({
   }, [episode.airDate, episode.airTime, isAired])
 
   if (variant === 'minimal') {
+    const isAired = useMemo(() => {
+      const now = new Date()
+      const airDateTime = new Date(`${episode.airDate}T${episode.airTime}`)
+      return now >= airDateTime
+    }, [episode.airDate, episode.airTime])
+
+    const isAiringSoon = useMemo(() => {
+      if (isAired) return false
+      const now = new Date()
+      const airDateTime = new Date(`${episode.airDate}T${episode.airTime}`)
+      const diff = airDateTime.getTime() - now.getTime()
+      const hoursUntilAir = diff / (1000 * 60 * 60)
+      return hoursUntilAir > 0 && hoursUntilAir <= 24
+    }, [episode.airDate, episode.airTime, isAired])
+
     return (
       <div
         className={cn(
-          'flex items-center gap-3 p-3 rounded-lg bg-gray-800/50 border border-gray-700 hover:border-violet-500/50 transition-all cursor-pointer',
+          'group glass rounded-lg overflow-hidden border transition-all duration-200 cursor-pointer',
+          'hover:scale-[1.02] hover:shadow-lg hover:shadow-primary-500/20 hover:border-primary-500/50',
+          isAiringSoon 
+            ? 'border-primary-500/60 bg-primary-500/10 shadow-md shadow-primary-500/20' 
+            : isAired 
+              ? 'border-white/10 opacity-75 hover:border-white/20 hover:opacity-90' 
+              : 'border-white/10 hover:border-primary-500/50 hover:bg-white/10',
           className
         )}
         onClick={() => onEpisodeClick?.(episode)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            onEpisodeClick?.(episode)
+          }
+        }}
       >
         {episode.animeImage && (
-          <div className="relative w-16 h-10 rounded overflow-hidden flex-shrink-0">
+          <div className="relative w-full aspect-video overflow-hidden bg-gray-900">
             <Image
               src={episode.animeImage}
               alt={episode.animeTitle}
               fill
-              className="object-cover"
+              className="object-cover group-hover:scale-110 transition-transform duration-300"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/30 to-transparent" />
+            {episode.isNewEpisode && !isAired && (
+              <div className="absolute top-2 right-2">
+                <Badge className="bg-error-500 text-white text-[10px] px-2 py-0.5 h-5 font-bold uppercase shadow-lg border border-error-600">
+                  NEW
+                </Badge>
+              </div>
+            )}
+            {episode.isWatching && (
+              <div className="absolute top-2 left-2">
+                <Badge className="bg-success-500 text-white text-[10px] px-2 py-0.5 h-5 font-bold shadow-lg border border-success-600">
+                  Watching
+                </Badge>
+              </div>
+            )}
+            {isAiringSoon && (
+              <div className="absolute bottom-2 left-2 right-2">
+                <div className="glass bg-primary-500/90 backdrop-blur-sm rounded-md px-2.5 py-1.5 border border-primary-400/50">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5 text-white" />
+                    <span className="text-white text-[10px] font-bold uppercase">
+                      {countdown || 'Airing Soon'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-white truncate">
-            {episode.animeTitle} Ep {episode.episodeNumber}
-          </p>
-          <p className="text-xs text-gray-400">
-            {formatTime(episode.airTime)}
-          </p>
+        <div className="p-3 bg-gray-900/80">
+          <h3 className="text-sm font-bold text-white mb-1.5 line-clamp-2 leading-tight">
+            {episode.animeTitle}
+          </h3>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2 text-xs">
+              <span className="font-semibold text-white glass px-2 py-0.5 rounded border border-gray-700/50">
+                Ep {episode.episodeNumber}
+              </span>
+              <span className="text-gray-600">·</span>
+              <div className="flex items-center gap-1 text-gray-400">
+                <Clock className="h-3 w-3" />
+                <span className="font-medium">{formatTime(episode.airTime)}</span>
+              </div>
+            </div>
+          </div>
         </div>
-        {countdown && (
-          <Badge variant="secondary" className="text-xs">
-            {countdown}
-          </Badge>
-        )}
       </div>
     )
   }
@@ -212,12 +272,13 @@ export function EpisodeCard({
   return (
     <div
       className={cn(
-        'group relative bg-gray-800/50 rounded-xl overflow-hidden border transition-all duration-300 hover:shadow-lg',
+        'group relative glass rounded-xl overflow-hidden border transition-all duration-300',
+        'hover:scale-[1.02] hover:shadow-xl hover:shadow-violet-500/10',
         isAiringSoon 
-          ? 'border-violet-500/50 shadow-lg shadow-violet-500/20 ring-2 ring-violet-500/30' 
+          ? 'border-violet-500/50 shadow-lg shadow-violet-500/30 ring-2 ring-violet-500/40 bg-violet-500/5' 
           : isAired 
-            ? 'border-gray-700 opacity-75 hover:border-gray-600' 
-            : 'border-gray-700 hover:border-violet-500/50 hover:shadow-violet-500/20',
+            ? 'border-gray-700/50 opacity-80 hover:border-gray-600/50 hover:opacity-90' 
+            : 'border-gray-700/50 hover:border-violet-500/50 hover:shadow-violet-500/20',
         className
       )}
       onClick={() => onEpisodeClick?.(episode)}
@@ -263,12 +324,13 @@ export function EpisodeCard({
         {countdown && (
           <div className="absolute top-3 left-3 z-10">
             <Badge className={cn(
-              'text-white text-xs font-semibold px-2 py-1 flex items-center gap-1',
+              'text-white text-xs font-semibold px-2.5 py-1.5 flex items-center gap-1.5',
+              'backdrop-blur-sm border border-white/20',
               isAiringSoon 
-                ? 'bg-violet-600 animate-pulse' 
-                : 'bg-violet-600'
+                ? 'bg-violet-600/90 animate-pulse shadow-lg shadow-violet-500/50' 
+                : 'bg-violet-600/80 hover:bg-violet-600/90 transition-colors'
             )}>
-              <Clock className="h-3 w-3" />
+              <Clock className="h-3.5 w-3.5" />
               {countdown}
             </Badge>
           </div>
@@ -298,9 +360,9 @@ export function EpisodeCard({
         </div>
 
         {/* Play Button Overlay */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="bg-black/60 backdrop-blur-sm rounded-full p-4">
-            <Play className="h-8 w-8 text-white fill-white" />
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="glass bg-black/60 backdrop-blur-md rounded-full p-5 border border-white/20 shadow-xl">
+            <Play className="h-10 w-10 text-white fill-white transition-transform group-hover:scale-110" />
           </div>
         </div>
 
@@ -361,13 +423,13 @@ export function EpisodeCard({
       </div>
 
       {/* Episode Info */}
-      <div className="p-4">
+      <div className="p-4 bg-gray-900/30 backdrop-blur-sm">
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex-1 min-w-0">
             <Link
               href={`/anime/${episode.animeSlug}`}
               onClick={handleAnimeClick}
-              className="text-sm font-semibold text-white hover:text-violet-400 transition-colors line-clamp-1"
+              className="text-sm font-semibold text-white hover:text-violet-400 transition-colors line-clamp-1 group-hover:text-violet-300"
             >
               {episode.animeTitle}
             </Link>
@@ -379,13 +441,13 @@ export function EpisodeCard({
         </div>
 
         <div className="flex items-center gap-3 text-xs text-gray-400">
-          <div className="flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            {formatTime(episode.airTime)}
+          <div className="flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5" />
+            <span className="font-medium">{formatTime(episode.airTime)}</span>
           </div>
           {episode.duration && (
             <>
-              <span>•</span>
+              <span className="text-gray-600">•</span>
               <span>{episode.duration} min</span>
             </>
           )}
@@ -393,12 +455,12 @@ export function EpisodeCard({
 
         {/* Genres */}
         {variant === 'detailed' && episode.genres && episode.genres.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
+          <div className="flex flex-wrap gap-1.5 mt-3">
             {episode.genres.slice(0, 2).map((genre) => (
               <Badge
                 key={genre}
                 variant="secondary"
-                className="text-[10px] px-1.5 py-0.5"
+                className="text-[10px] px-2 py-0.5 bg-gray-800/50 border-gray-700/50 text-gray-300"
               >
                 {genre}
               </Badge>

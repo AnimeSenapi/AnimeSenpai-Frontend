@@ -27,8 +27,6 @@ import {
   ChevronUp,
   ChevronDown,
   ChevronRight,
-  GripVertical,
-  Settings,
 } from 'lucide-react'
 import { apiGetAllAnime, apiGetAllSeries, apiGetTrending, api } from '../lib/api'
 import { useAuth } from '../lib/auth-context'
@@ -67,14 +65,9 @@ interface SectionWrapperProps {
   title: string
   isDismissed: boolean
   isCollapsed: boolean
-  isCustomizing: boolean
   onDismiss: () => void
   onRestore: () => void
   onToggleCollapse: () => void
-  onMoveUp?: () => void
-  onMoveDown?: () => void
-  canMoveUp?: boolean
-  canMoveDown?: boolean
   children: React.ReactNode
 }
 
@@ -83,14 +76,9 @@ function SectionWrapper({
   title,
   isDismissed,
   isCollapsed,
-  isCustomizing,
   onDismiss,
   onRestore,
   onToggleCollapse,
-  onMoveUp,
-  onMoveDown,
-  canMoveUp = false,
-  canMoveDown = false,
   children,
 }: SectionWrapperProps) {
   if (isDismissed) {
@@ -114,52 +102,6 @@ function SectionWrapper({
 
   return (
     <div className="relative group">
-      {isCustomizing && (
-        <div className="absolute -top-2 -right-2 z-20 flex gap-1">
-          <Button
-            onClick={onToggleCollapse}
-            variant="outline"
-            size="sm"
-            className="h-7 w-7 p-0 bg-gray-900/90 border-white/20 text-white hover:bg-white/10"
-            aria-label={isCollapsed ? 'Expand section' : 'Collapse section'}
-          >
-            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-          </Button>
-          {onMoveUp && (
-            <Button
-              onClick={onMoveUp}
-              disabled={!canMoveUp}
-              variant="outline"
-              size="sm"
-              className="h-7 w-7 p-0 bg-gray-900/90 border-white/20 text-white hover:bg-white/10 disabled:opacity-30"
-              aria-label="Move section up"
-            >
-              <ChevronUp className="h-4 w-4" />
-            </Button>
-          )}
-          {onMoveDown && (
-            <Button
-              onClick={onMoveDown}
-              disabled={!canMoveDown}
-              variant="outline"
-              size="sm"
-              className="h-7 w-7 p-0 bg-gray-900/90 border-white/20 text-white hover:bg-white/10 disabled:opacity-30"
-              aria-label="Move section down"
-            >
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          )}
-          <Button
-            onClick={onDismiss}
-            variant="outline"
-            size="sm"
-            className="h-7 w-7 p-0 bg-gray-900/90 border-white/20 text-error-400 hover:bg-error-500/20"
-            aria-label="Dismiss section"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
       {isCollapsed ? (
         <div className="mb-8 sm:mb-10 lg:mb-12 p-4 glass rounded-xl border border-white/10 cursor-pointer hover:bg-white/5 transition-all" onClick={onToggleCollapse}>
           <div className="flex items-center justify-between">
@@ -205,8 +147,6 @@ export default function DashboardPage() {
   })
   const [dismissedSections, setDismissedSections] = useState<Set<string>>(new Set())
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
-  const [sectionOrder, setSectionOrder] = useState<string[]>([])
-  const [isCustomizing, setIsCustomizing] = useState(false)
 
   // Load dashboard preferences from localStorage
   useEffect(() => {
@@ -218,7 +158,6 @@ export default function DashboardPage() {
         const data = JSON.parse(stored)
         if (data.dismissed) setDismissedSections(new Set(data.dismissed))
         if (data.collapsed) setCollapsedSections(new Set(data.collapsed))
-        if (data.order) setSectionOrder(data.order)
       }
     } catch (err) {
       console.warn('Failed to load dashboard preferences:', err)
@@ -235,7 +174,6 @@ export default function DashboardPage() {
         JSON.stringify({
           dismissed: Array.from(dismissedSections),
           collapsed: Array.from(collapsedSections),
-          order: sectionOrder,
         })
       )
     } catch (err) {
@@ -245,7 +183,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     saveDashboardPreferences()
-  }, [dismissedSections, collapsedSections, sectionOrder])
+  }, [dismissedSections, collapsedSections])
 
   const handleDismissSection = (sectionId: string) => {
     setDismissedSections((prev) => {
@@ -275,24 +213,6 @@ export default function DashboardPage() {
     })
   }
 
-  const handleMoveSection = (sectionId: string, direction: 'up' | 'down') => {
-    setSectionOrder((prev) => {
-      const currentIndex = prev.indexOf(sectionId)
-      if (currentIndex === -1) {
-        // Add to order if not present
-        return [...prev, sectionId]
-      }
-
-      const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
-      if (newIndex < 0 || newIndex >= prev.length) return prev
-
-      const newOrder = [...prev]
-      const temp = newOrder[currentIndex]
-      newOrder[currentIndex] = newOrder[newIndex]!
-      newOrder[newIndex] = temp!
-      return newOrder
-    })
-  }
 
   // Helper to map series objects into recommendation card shape
   const mapSeriesToRecs = (list: any[]) =>
@@ -782,16 +702,6 @@ export default function DashboardPage() {
                     <span className="hidden sm:inline">Refresh</span>
                   </Button>
                 )}
-                <Button
-                  onClick={() => setIsCustomizing(!isCustomizing)}
-                  variant="outline"
-                  className="border-white/20 text-white hover:bg-white/10 flex items-center gap-2"
-                >
-                  <Settings className="h-4 w-4" />
-                  <span className="hidden sm:inline">
-                    {isCustomizing ? 'Done' : 'Customize'}
-                  </span>
-                </Button>
               </div>
                   </div>
                 </div>

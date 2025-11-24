@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Search, X, Mic, MicOff, Clock, TrendingUp, Sparkles, User, ArrowRight, Filter } from 'lucide-react'
 import { MobileBottomSheet } from '../ui/MobileBottomSheet'
-import { SearchAnimeCard } from '../anime/SearchAnimeCard'
+import { AnimeCard } from '../anime/AnimeCard'
 import { apiSearchAnime, apiGetTrending, apiSearchUsers, apiGetUserProfile } from '../../app/lib/api'
 import { useAnalytics } from '../AnalyticsProvider'
 import { useHapticFeedback } from '../../hooks/use-haptic-feedback'
@@ -644,7 +644,7 @@ export function MobileSearchOverlay({
                               : ''
                           )}
                         >
-                          <SearchAnimeCard anime={anime} variant="compact" />
+                          <AnimeCard anime={anime} variant="compact" context="search" />
                         </div>
                         )
                       })}
@@ -686,7 +686,7 @@ export function MobileSearchOverlay({
                       onClick={() => selectSuggestion(anime)}
                       className="cursor-pointer touch-manipulation active:scale-[0.98]"
                     >
-                      <SearchAnimeCard anime={anime} variant="compact" />
+                      <AnimeCard anime={anime} variant="compact" context="search" />
                     </div>
                   ))}
                 </div>

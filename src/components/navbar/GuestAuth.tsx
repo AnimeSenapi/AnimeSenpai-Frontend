@@ -54,18 +54,21 @@ export function GuestAuth({ onClose, variant = 'desktop' }: GuestAuthProps) {
   // Desktop variant - original side-by-side buttons
   return (
     <div className="flex items-center gap-2">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="text-gray-300 hover:text-white hover:bg-white/10 h-9 px-4"
-        asChild
+      <Link
+        href="/auth/signin"
+        onClick={handleClick}
+        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-gray-300 hover:text-white hover:bg-white/10 h-9 px-4"
       >
-        <Link href="/auth/signin" onClick={handleClick}>Sign In</Link>
-      </Button>
+        Sign In
+      </Link>
       <Separator orientation="vertical" className="h-6 bg-white/20" />
-      <Button variant="outline" size="sm" className="btn-dark h-9 px-4" asChild>
-        <Link href="/auth/signup" onClick={handleClick}>Sign Up</Link>
-      </Button>
+      <Link
+        href="/auth/signup"
+        onClick={handleClick}
+        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 btn-dark"
+      >
+        Sign Up
+      </Link>
     </div>
   )
 }

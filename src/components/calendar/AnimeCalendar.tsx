@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Card, CardContent, CardHeader } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
@@ -21,7 +21,9 @@ import {
   Building,
   Film,
   Star as StarIcon,
-  Search
+  Search,
+  Table,
+  List
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -67,157 +69,18 @@ export function AnimeCalendar({
   className
 }: AnimeCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [filterStatus, setFilterStatus] = useState<'all' | 'watching' | 'new'>('all')
-  const [showFilters, setShowFilters] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([])
-  const [selectedStudios, setSelectedStudios] = useState<string[]>([])
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([])
-  const [expandedFilterSections, setExpandedFilterSections] = useState<Record<string, boolean>>({
-    genres: false,
-    studios: false,
-    types: false,
-  })
-  const { addToast } = useToast()
 
-  // Load filters from localStorage on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedFilters = localStorage.getItem('calendar-filters')
-      if (savedFilters) {
-        try {
-          const parsed = JSON.parse(savedFilters)
-          setSelectedGenres(parsed.genres || [])
-          setSelectedStudios(parsed.studios || [])
-          setSelectedTypes(parsed.types || [])
-          setFilterStatus(parsed.status || 'all')
-        } catch (e) {
-          // Ignore parse errors
-        }
-      }
-    }
-  }, [])
-
-  // Save filters to localStorage when they change
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('calendar-filters', JSON.stringify({
-        genres: selectedGenres,
-        studios: selectedStudios,
-        types: selectedTypes,
-        status: filterStatus,
-      }))
-    }
-  }, [selectedGenres, selectedStudios, selectedTypes, filterStatus])
-
-  // Use only real episodes data
-  const displayEpisodes = episodes
-
-  // Extract unique values for filters
-  const availableGenres = useMemo(() => {
-    const genreSet = new Set<string>()
-    episodes.forEach(ep => {
-      if (ep.genres && Array.isArray(ep.genres)) {
-        ep.genres.forEach(genre => genreSet.add(genre))
-      }
+  // Sort episodes by time
+  const sortedEpisodes = useMemo(() => {
+    return [...episodes].sort((a, b) => {
+      return new Date(a.airDate + 'T' + a.airTime).getTime() - new Date(b.airDate + 'T' + b.airTime).getTime()
     })
-    return Array.from(genreSet).sort()
   }, [episodes])
-
-  const availableStudios = useMemo(() => {
-    const studios = new Set<string>()
-    episodes.forEach(ep => {
-      if (ep.studio) {
-        studios.add(ep.studio)
-      }
-    })
-    return Array.from(studios).sort()
-  }, [episodes])
-
-  const availableTypes = useMemo(() => {
-    const types = new Set<string>()
-    episodes.forEach(ep => {
-      if (ep.type) {
-        types.add(ep.type)
-      }
-    })
-    return Array.from(types).sort()
-  }, [episodes])
-
-  const filteredEpisodes = useMemo(() => {
-    let filtered = displayEpisodes
-
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim()
-      filtered = filtered.filter(ep => 
-        ep.animeTitle.toLowerCase().includes(query) ||
-        ep.title?.toLowerCase().includes(query) ||
-        ep.animeSlug.toLowerCase().includes(query)
-      )
-    }
-
-    // Filter by status
-    if (filterStatus === 'watching') {
-      filtered = filtered.filter(ep => ep.isWatching)
-    } else if (filterStatus === 'new') {
-      filtered = filtered.filter(ep => ep.isNewEpisode)
-    }
-
-    // Filter by genres
-    if (selectedGenres.length > 0) {
-      filtered = filtered.filter(ep => 
-        ep.genres && ep.genres.some(genre => selectedGenres.includes(genre))
-      )
-    }
-
-    // Filter by studios
-    if (selectedStudios.length > 0) {
-      filtered = filtered.filter(ep => ep.studio && selectedStudios.includes(ep.studio))
-    }
-
-    // Filter by types
-    if (selectedTypes.length > 0) {
-      filtered = filtered.filter(ep => ep.type && selectedTypes.includes(ep.type))
-    }
-
-    // Sort by time
-    filtered.sort((a, b) => {
-          return new Date(a.airDate + 'T' + a.airTime).getTime() - new Date(b.airDate + 'T' + b.airTime).getTime()
-    })
-
-    return filtered
-  }, [displayEpisodes, searchQuery, filterStatus, selectedGenres, selectedStudios, selectedTypes])
-
-  const activeFiltersCount = selectedGenres.length + selectedStudios.length + selectedTypes.length + (searchQuery.trim() ? 1 : 0)
-
-  const clearFilters = () => {
-    setSelectedGenres([])
-    setSelectedStudios([])
-    setSelectedTypes([])
-    setSearchQuery('')
-  }
-
-  const toggleFilter = (type: 'genre' | 'studio' | 'type', value: string) => {
-    if (type === 'genre') {
-      setSelectedGenres(prev => 
-        prev.includes(value) ? prev.filter(g => g !== value) : [...prev, value]
-      )
-    } else if (type === 'studio') {
-      setSelectedStudios(prev => 
-        prev.includes(value) ? prev.filter(s => s !== value) : [...prev, value]
-      )
-    } else if (type === 'type') {
-      setSelectedTypes(prev => 
-        prev.includes(value) ? prev.filter(t => t !== value) : [...prev, value]
-      )
-    }
-  }
 
   const episodesByDate = useMemo(() => {
     const grouped: Record<string, Episode[]> = {}
     
-    filteredEpisodes.forEach(episode => {
+    sortedEpisodes.forEach(episode => {
       const date = episode.airDate
       if (!grouped[date]) {
         grouped[date] = []
@@ -226,7 +89,7 @@ export function AnimeCalendar({
     })
 
     return grouped
-  }, [filteredEpisodes])
+  }, [sortedEpisodes])
 
   // Get current week (Sunday to Saturday)
   const getCurrentWeek = () => {
@@ -281,6 +144,9 @@ export function AnimeCalendar({
     const newDate = new Date(currentDate)
       newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7))
     setCurrentDate(newDate)
+    
+    // Smooth scroll to top when changing weeks
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const goToToday = () => {
@@ -306,6 +172,25 @@ export function AnimeCalendar({
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false)
   const [selectedEpisode, setSelectedEpisode] = useState<Episode | null>(null)
   const [showEpisodeModal, setShowEpisodeModal] = useState(false)
+  
+  // Load view mode from localStorage
+  const [viewMode, setViewMode] = useState<'table' | 'list'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('calendar-view-mode')
+      return (saved === 'table' || saved === 'list') ? saved : 'table'
+    }
+    return 'table'
+  })
+
+  // Save view mode to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('calendar-view-mode', viewMode)
+    }
+  }, [viewMode])
+
+  // Ref for today's column (will be used after weekDates is defined)
+  const todayColumnRef = useRef<HTMLDivElement | null>(null)
 
   // Enhanced keyboard navigation
   useEffect(() => {
@@ -319,16 +204,9 @@ export function AnimeCalendar({
       }
 
       // Keyboard shortcuts
-      if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault()
-        // Focus search if available, otherwise do nothing
-        const searchInput = document.querySelector('input[type="search"], input[placeholder*="search" i]') as HTMLInputElement
-        if (searchInput) {
-          searchInput.focus()
-        }
-      } else if (e.key === 'f' && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault()
-        setShowFilters(prev => !prev)
+      // Removed filter/search shortcuts
+      if (false) {
+        // Placeholder
       } else if (e.key === 't' && !e.ctrlKey && !e.metaKey) {
         e.preventDefault()
         setCurrentDate(new Date())
@@ -350,7 +228,6 @@ export function AnimeCalendar({
         setCurrentDate(new Date())
       } else if (e.key === 'Escape') {
         setShowKeyboardHelp(false)
-        setShowFilters(false)
       }
     }
 
@@ -360,28 +237,30 @@ export function AnimeCalendar({
 
   if (isLoading) {
     return (
-      <Card className={`border-gray-700 bg-gray-800/50 backdrop-blur-sm ${className}`}>
-        <CardContent className="p-6">
-          <div className="space-y-6">
+      <div className={`space-y-6 ${className} animate-in fade-in duration-300`}>
             {/* Header Skeleton */}
             <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-12 w-12 rounded-xl glass" />
+            <div className="space-y-2">
               <Skeleton className="h-8 w-64" />
+              <Skeleton className="h-4 w-48" />
+            </div>
+          </div>
               <div className="flex gap-2">
-                <Skeleton className="h-9 w-24" />
-                <Skeleton className="h-9 w-24" />
-                <Skeleton className="h-9 w-24" />
+            <Skeleton className="h-9 w-24 glass rounded-lg" />
+            <Skeleton className="h-9 w-24 glass rounded-lg" />
+            <Skeleton className="h-9 w-24 glass rounded-lg" />
               </div>
             </div>
             
             {/* Episode Cards Skeleton */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {Array.from({ length: 8 }).map((_, i) => (
                 <EpisodeCardSkeleton key={i} variant="detailed" />
               ))}
             </div>
           </div>
-        </CardContent>
-      </Card>
     )
   }
 
@@ -390,6 +269,20 @@ export function AnimeCalendar({
   const lastDate = weekDates[6]
   const isCurrentWeek = firstDate && lastDate && firstDate.getTime() <= new Date().getTime() && lastDate.getTime() >= new Date().getTime()
   const isToday = weekDates.some(date => date.toDateString() === new Date().toDateString())
+
+  // Auto-scroll to today's column on mobile/tablet
+  useEffect(() => {
+    if (todayColumnRef.current && window.innerWidth < 1024) {
+      // Small delay to ensure layout is complete
+      setTimeout(() => {
+        todayColumnRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'nearest',
+          inline: 'center'
+        })
+      }, 100)
+    }
+  }, [weekDates])
 
   // Smooth scroll to today on mount if viewing current week
   useEffect(() => {
@@ -406,9 +299,9 @@ export function AnimeCalendar({
   return (
     <div className={`space-y-6 ${className} relative`}>
       {/* Keyboard Help Modal */}
-      {showKeyboardHelp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowKeyboardHelp(false)}>
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+        {showKeyboardHelp && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowKeyboardHelp(false)}>
+            <div className="glass border border-white/10 rounded-2xl p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-white">Keyboard Shortcuts</h3>
             <Button
@@ -428,14 +321,6 @@ export function AnimeCalendar({
               <div className="flex items-center justify-between">
                 <span className="text-gray-300">Go to today</span>
                 <kbd className="px-2 py-1 bg-gray-700 rounded text-xs text-white">T</kbd>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-300">Toggle filters</span>
-                <kbd className="px-2 py-1 bg-gray-700 rounded text-xs text-white">F</kbd>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-300">Focus search</span>
-                <kbd className="px-2 py-1 bg-gray-700 rounded text-xs text-white">/</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-300">Show shortcuts</span>
@@ -471,377 +356,280 @@ export function AnimeCalendar({
         }}
         onAnimeClick={onAnimeClick}
       />
-      {/* Breadcrumb Navigation */}
-      <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
-        <span>Calendar</span>
-        <span>/</span>
-        <span className="text-white">
-          {firstDate?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {lastDate?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-        </span>
-      </div>
 
-      {/* Header with Navigation */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-1">Episode Schedule</h2>
-          <p className="text-sm text-gray-400">
-            {filteredEpisodes.length > 0 
-              ? `${filteredEpisodes.length} episode${filteredEpisodes.length === 1 ? '' : 's'} scheduled`
-              : 'No episodes scheduled'}
-          </p>
-        </div>
-
-          <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={goToThisWeek}
-            className={isCurrentWeek ? 'bg-violet-600 border-violet-500 text-white hover:bg-violet-700' : ''}
-          >
-            This Week
-          </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleDateChange('prev')}
-            className="h-9 w-9 p-0"
-            aria-label="Previous week"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleDateChange('next')}
-            className="h-9 w-9 p-0"
-            aria-label="Next week"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+      {/* Week Calendar Layout - AnimeSenpai Style */}
+      {viewMode === 'table' ? (
+        <div className="glass rounded-2xl border border-white/10 overflow-hidden">
+          {/* Desktop Table View (lg and above) */}
+          <div className="hidden lg:block overflow-x-auto custom-scrollbar" style={{ maxHeight: 'calc(100vh - 240px)' }}>
+            <div className="min-w-full inline-block">
+              <table className="w-full border-collapse">
+                <thead className="sticky top-0 z-20 glass border-b-2 border-white/10 backdrop-blur-md">
+                  <tr>
+                    {weekDates.map((date) => {
+                      const dateStr = date.toISOString().split('T')[0] || ''
+                      const dayEpisodes = episodesByDate[dateStr] || []
+                      const isToday = date.toDateString() === new Date().toDateString()
+                      
+                      return (
+                        <th
+                          key={dateStr}
+                          className={cn(
+                            'px-4 py-4 text-left align-top w-[220px] transition-all',
+                            isToday 
+                              ? 'bg-gradient-to-b from-primary-500/20 via-primary-500/10 to-transparent border-b-2 border-primary-500/50' 
+                              : 'bg-white/5 hover:bg-white/10 transition-colors'
+                          )}
+                          data-date-today={isToday ? 'true' : undefined}
+                        >
+                          <div className={cn(
+                            'flex flex-col gap-2',
+                            isToday && 'text-white'
+                          )}>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-sm uppercase tracking-wide text-white">
+                                  {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                                </span>
+                                {isToday && (
+                                  <Badge className="bg-primary-500 text-white text-[10px] px-2 py-0.5 h-5 font-bold uppercase shadow-lg">
+                                    Today
+                                  </Badge>
+                                )}
+                              </div>
+                              {dayEpisodes.length > 0 && (
+                                <Badge variant="secondary" className="text-xs px-2 py-0.5 h-5 font-semibold bg-white/10 text-gray-200 border border-white/20">
+                                  {dayEpisodes.length}
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-xs text-gray-400 font-medium">
+                              {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </span>
+                          </div>
+                        </th>
+                      )
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    {weekDates.map((date) => {
+                      const dateStr = date.toISOString().split('T')[0] || ''
+                      const dayEpisodes = episodesByDate[dateStr] || []
+                      const isToday = date.toDateString() === new Date().toDateString()
+                      
+                      if (dayEpisodes.length === 0) {
+                        return <td key={dateStr} className="px-4 py-6 bg-white/5"></td>
+                      }
+                      
+                      return (
+                        <td
+                          key={dateStr}
+                          className={cn(
+                            'px-4 py-4 align-top border-r border-white/10 last:border-r-0',
+                            isToday ? 'bg-primary-500/5' : 'bg-white/5'
+                          )}
+                        >
+                          {dayEpisodes.length > 0 ? (
+                            <div className="space-y-2.5 overflow-y-auto custom-scrollbar pr-2" style={{ maxHeight: 'calc(100vh - 380px)' }}>
+                              {dayEpisodes.map((episode) => (
+                                <EpisodeCard
+                                  key={episode.id}
+                                  episode={episode}
+                                  onEpisodeClick={handleEpisodeClick}
+                                  onAnimeClick={(animeId) => {
+                                    const ep = dayEpisodes.find(e => e.animeId === animeId)
+                                    if (ep) {
+                                      handleAnimeClick({} as React.MouseEvent, animeId, ep.animeSlug)
+                                    }
+                                  }}
+                                  onMarkWatched={(ep) => {
+                                    handleEpisodeClick(ep)
+                                  }}
+                                  variant="minimal"
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-12">
+                              <Calendar className="h-8 w-8 mx-auto mb-3 text-gray-700 opacity-50" />
+                              <p className="text-sm text-gray-500 font-medium">No episodes</p>
+                            </div>
+                          )}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-          </div>
 
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search episodes by anime title..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              setSearchQuery('')
-            }
-          }}
-        />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery('')}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
-            aria-label="Clear search"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
-      </div>
-
-      {/* Filter Tabs & Advanced Filters */}
-      <div className="space-y-4">
-        {/* Status Tabs */}
-        <div className="flex items-center gap-2 border-b border-gray-700 pb-2 overflow-x-auto">
-          <button
-            onClick={() => setFilterStatus('all')}
-            className={`px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
-              filterStatus === 'all'
-                ? 'text-white border-b-2 border-violet-500'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            All Episodes
-          </button>
-          <button
-            onClick={() => setFilterStatus('watching')}
-            className={`px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
-              filterStatus === 'watching'
-                ? 'text-white border-b-2 border-violet-500'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            Watching
-          </button>
-          <button
-            onClick={() => setFilterStatus('new')}
-            className={`px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
-              filterStatus === 'new'
-                ? 'text-white border-b-2 border-violet-500'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            New Episodes
-          </button>
-        </div>
-
-        {/* Advanced Filters Toggle */}
-        <div className="flex items-center justify-between">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2"
-          >
-            <Filter className="h-4 w-4" />
-            Filters
-            {activeFiltersCount > 0 && (
-              <Badge className="bg-violet-600 text-white text-xs">
-                {activeFiltersCount}
-              </Badge>
-            )}
-          </Button>
-
-          {activeFiltersCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="text-gray-400 hover:text-white text-xs"
-            >
-              Clear All
-            </Button>
-          )}
-        </div>
-
-        {/* Active Filter Pills */}
-        {activeFiltersCount > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {searchQuery && (
-              <Badge
-                className="bg-orange-500/20 text-orange-300 border-orange-500/30 pr-1 cursor-pointer hover:bg-orange-500/30 transition-colors"
-                onClick={() => setSearchQuery('')}
-              >
-                Search: {searchQuery}
-                <X className="w-3 h-3 ml-1 inline" />
-              </Badge>
-            )}
-            {selectedGenres.map((genre) => (
-              <Badge
-                key={genre}
-                className="bg-purple-500/20 text-purple-300 border-purple-500/30 pr-1 cursor-pointer hover:bg-purple-500/30 transition-colors"
-                onClick={() => toggleFilter('genre', genre)}
-              >
-                {genre}
-                <X className="w-3 h-3 ml-1 inline" />
-              </Badge>
-            ))}
-            {selectedStudios.map((studio) => (
-              <Badge
-                key={studio}
-                className="bg-blue-500/20 text-blue-300 border-blue-500/30 pr-1 cursor-pointer hover:bg-blue-500/30 transition-colors"
-                onClick={() => toggleFilter('studio', studio)}
-              >
-                {studio}
-                <X className="w-3 h-3 ml-1 inline" />
-              </Badge>
-            ))}
-            {selectedTypes.map((type) => (
-              <Badge
-                key={type}
-                className="bg-green-500/20 text-green-300 border-green-500/30 pr-1 cursor-pointer hover:bg-green-500/30 transition-colors"
-                onClick={() => toggleFilter('type', type)}
-              >
-                {type}
-                <X className="w-3 h-3 ml-1 inline" />
-              </Badge>
-            ))}
-          </div>
-        )}
-
-        {/* Advanced Filters Panel */}
-        {showFilters && (
-          <div className="bg-gray-800/50 rounded-lg border border-gray-700 p-4 space-y-3">
-            {/* Genres Filter */}
-            {availableGenres.length > 0 && (
-              <div className="space-y-2">
-                <button
-                  onClick={() => setExpandedFilterSections(prev => ({ ...prev, genres: !prev.genres }))}
-                  className="w-full flex items-center justify-between text-white hover:text-violet-300 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <Tag className="w-4 h-4" />
-                    <span className="font-medium text-sm">Genres</span>
-                    {selectedGenres.length > 0 && (
-                      <Badge className="bg-violet-500 text-white text-[10px] px-1.5 py-0.5">
-                        {selectedGenres.length}
-                      </Badge>
-                    )}
-                  </div>
-                  {expandedFilterSections.genres ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
-                </button>
-
-                {expandedFilterSections.genres && (
-                  <div className="max-h-48 overflow-y-auto space-y-1.5 pl-6">
-                    {availableGenres.map((genre) => (
-                      <button
-                        key={genre}
-                        onClick={() => toggleFilter('genre', genre)}
-                        className={cn(
-                          'w-full text-left px-3 py-1.5 rounded-md text-xs transition-all',
-                          selectedGenres.includes(genre)
-                            ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
-                            : 'text-gray-300 hover:bg-white/5 border border-transparent hover:border-white/10'
+          {/* Tablet & Mobile View - Horizontal Scrolling (like Crunchyroll) */}
+          <div className="lg:hidden">
+            {/* Horizontal Scrollable Calendar */}
+            <div className="overflow-x-auto custom-scrollbar pb-2 -mx-3 sm:-mx-4 px-3 sm:px-4 calendar-horizontal-scroll" style={{ WebkitOverflowScrolling: 'touch', scrollSnapType: 'x mandatory' }}>
+              <div className="flex gap-3 sm:gap-4 min-w-max">
+                {weekDates.map((date) => {
+                  const dateStr = date.toISOString().split('T')[0] || ''
+                  const dayEpisodes = episodesByDate[dateStr] || []
+                  const isToday = date.toDateString() === new Date().toDateString()
+                  
+                  if (dayEpisodes.length === 0) {
+                    return null
+                  }
+                  
+                  return (
+                    <div 
+                      key={dateStr}
+                      ref={isToday ? todayColumnRef : null}
+                      className={cn(
+                        'flex-shrink-0 w-[85vw] sm:w-[400px] md:w-[450px] glass rounded-2xl border overflow-hidden transition-all',
+                        isToday ? 'border-primary-500/50 shadow-lg shadow-primary-500/20' : 'border-white/10'
+                      )}
+                      style={{ scrollSnapAlign: 'start' }}
+                    >
+                      {/* Day Header */}
+                      <div className={cn(
+                        'px-4 py-3 border-b backdrop-blur-sm',
+                        isToday 
+                          ? 'bg-gradient-to-r from-primary-500/20 to-primary-500/10 border-primary-500/30' 
+                          : 'bg-white/5 border-white/10'
+                      )}>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <span className={cn(
+                              'font-bold text-sm sm:text-base uppercase tracking-wide',
+                              isToday ? 'text-primary-400' : 'text-white'
+                            )}>
+                              {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                            </span>
+                            {isToday && (
+                              <Badge className="bg-primary-500 text-white text-[10px] px-2 py-0.5 h-5 font-bold uppercase">
+                                Today
+                              </Badge>
+                            )}
+                          </div>
+                          {dayEpisodes.length > 0 && (
+                            <Badge variant="secondary" className="text-xs px-2 py-0.5 h-5 font-semibold bg-white/10 text-gray-200 border border-white/20">
+                              {dayEpisodes.length}
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="text-xs text-gray-400 font-medium">
+                          {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
+                      </div>
+                      
+                      {/* Episodes List - Scrollable */}
+                      <div className="p-3 sm:p-4 space-y-2.5 max-h-[calc(100vh-280px)] sm:max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar">
+                        {dayEpisodes.length > 0 ? (
+                          dayEpisodes.map((episode) => (
+                            <EpisodeCard
+                              key={episode.id}
+                              episode={episode}
+                              onEpisodeClick={handleEpisodeClick}
+                              onAnimeClick={(animeId) => {
+                                const ep = dayEpisodes.find(e => e.animeId === animeId)
+                                if (ep) {
+                                  handleAnimeClick({} as React.MouseEvent, animeId, ep.animeSlug)
+                                }
+                              }}
+                              onMarkWatched={(ep) => {
+                                handleEpisodeClick(ep)
+                              }}
+                              variant="minimal"
+                            />
+                          ))
+                        ) : (
+                          <div className="text-center py-8 sm:py-10">
+                            <Calendar className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 sm:mb-3 text-gray-700 opacity-50" />
+                            <p className="text-xs sm:text-sm text-gray-500 font-medium">No episodes</p>
+                          </div>
                         )}
-                      >
-                        {genre}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
-            )}
-
-            {/* Studios Filter */}
-            {availableStudios.length > 0 && (
-              <div className="space-y-2">
-                <button
-                  onClick={() => setExpandedFilterSections(prev => ({ ...prev, studios: !prev.studios }))}
-                  className="w-full flex items-center justify-between text-white hover:text-violet-300 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <Building className="w-4 h-4" />
-                    <span className="font-medium text-sm">Studios</span>
-                    {selectedStudios.length > 0 && (
-                      <Badge className="bg-violet-500 text-white text-[10px] px-1.5 py-0.5">
-                        {selectedStudios.length}
-                      </Badge>
+            </div>
+            
+            {/* Scroll Indicator */}
+            <div className="mt-3 flex justify-center gap-1.5">
+              {weekDates.map((date, index) => {
+                const dateStr = date.toISOString().split('T')[0] || ''
+                const dayEpisodes = episodesByDate[dateStr] || []
+                const isToday = date.toDateString() === new Date().toDateString()
+                
+                return (
+                  <div
+                    key={dateStr}
+                    className={cn(
+                      'h-1.5 rounded-full transition-all',
+                      isToday 
+                        ? 'w-6 bg-primary-500' 
+                        : 'w-1.5 bg-white/20'
                     )}
-                  </div>
-                  {expandedFilterSections.studios ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
-                </button>
-
-                {expandedFilterSections.studios && (
-                  <div className="max-h-48 overflow-y-auto space-y-1.5 pl-6">
-                    {availableStudios.map((studio) => (
-                      <button
-                        key={studio}
-                        onClick={() => toggleFilter('studio', studio)}
-                        className={cn(
-                          'w-full text-left px-3 py-1.5 rounded-md text-xs transition-all',
-                          selectedStudios.includes(studio)
-                            ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
-                            : 'text-gray-300 hover:bg-white/5 border border-transparent hover:border-white/10'
-                        )}
-                      >
-                        {studio}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Type Filter */}
-            {availableTypes.length > 0 && (
-              <div className="space-y-2">
-                <button
-                  onClick={() => setExpandedFilterSections(prev => ({ ...prev, types: !prev.types }))}
-                  className="w-full flex items-center justify-between text-white hover:text-violet-300 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <Film className="w-4 h-4" />
-                    <span className="font-medium text-sm">Type</span>
-                    {selectedTypes.length > 0 && (
-                      <Badge className="bg-violet-500 text-white text-[10px] px-1.5 py-0.5">
-                        {selectedTypes.length}
-                      </Badge>
-                    )}
-                  </div>
-                  {expandedFilterSections.types ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
-                </button>
-
-                {expandedFilterSections.types && (
-                  <div className="max-h-48 overflow-y-auto space-y-1.5 pl-6">
-                    {availableTypes.map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => toggleFilter('type', type)}
-                        className={cn(
-                          'w-full text-left px-3 py-1.5 rounded-md text-xs transition-all',
-                          selectedTypes.includes(type)
-                            ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
-                            : 'text-gray-300 hover:bg-white/5 border border-transparent hover:border-white/10'
-                        )}
-                      >
-                        {type}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+                  />
+                )
+              })}
+            </div>
           </div>
-        )}
         </div>
-
-      {/* Week Calendar Grid */}
-      <div className="space-y-6">
-        {weekDates.map((date) => {
-              const dateStr = date.toISOString().split('T')[0] || ''
-              const dayEpisodes = episodesByDate[dateStr] || []
-              const isToday = date.toDateString() === new Date().toDateString()
-          
-          if (dayEpisodes.length === 0 && filterStatus !== 'all') {
-            return null
-          }
-              
-              return (
-            <div key={dateStr} className="space-y-4">
-              {/* Day Header */}
-              <div className="flex items-center gap-3" data-date-today={isToday ? 'true' : undefined}>
-                <div className={cn(
-                  'flex items-center gap-2 px-4 py-2 rounded-lg transition-all',
-                  isToday 
-                    ? 'bg-violet-600 text-white ring-2 ring-violet-400 shadow-lg shadow-violet-500/20' 
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                )}>
-                  <Calendar className="h-4 w-4" />
-                  <span className="font-semibold text-sm sm:text-base">
+      ) : (
+        <div className="space-y-6">
+          {weekDates.map((date, index) => {
+            const dateStr = date.toISOString().split('T')[0] || ''
+            const dayEpisodes = episodesByDate[dateStr] || []
+            const isToday = date.toDateString() === new Date().toDateString()
+            
+            return (
+              <div key={dateStr} className="space-y-4">
+                {/* Day Header */}
+                <div className="flex items-center gap-3 mb-2" data-date-today={isToday ? 'true' : undefined}>
+                  <div className={cn(
+                    'glass flex items-center gap-2 px-5 py-3 rounded-xl transition-all duration-300',
+                    isToday 
+                      ? 'bg-primary-500/20 backdrop-blur-md border-primary-500/50 text-white ring-2 ring-primary-400/50 shadow-lg shadow-primary-500/30' 
+                      : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:border-white/20 transition-all'
+                  )}>
+                    <Calendar className={cn(
+                      'h-5 w-5',
+                      isToday ? 'text-white' : 'text-gray-400'
+                    )} />
+                    <span className="font-semibold text-base sm:text-lg">
                     {date.toLocaleDateString('en-US', { weekday: 'long' })}
                   </span>
-                  <span className="text-sm sm:text-base">
+                    <span className="text-sm sm:text-base opacity-90">
                     {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           </span>
                   {isToday && (
-                    <Badge className="bg-white/20 text-white text-xs ml-2">
+                      <Badge className="bg-white/30 text-white text-xs font-semibold ml-2 px-2 py-0.5 border-white/20">
                       Today
                             </Badge>
                           )}
                 </div>
                 {dayEpisodes.length > 0 && (
                   <Badge variant="secondary" className={cn(
-                    'bg-gray-700 text-gray-300',
-                    isToday && 'bg-white/20 text-white'
+                      'glass px-3 py-1.5 text-sm font-medium',
+                      isToday 
+                        ? 'bg-white/20 text-white border-white/30' 
+                        : 'bg-white/5 text-gray-300 border-white/10'
                   )}>
                     {dayEpisodes.length} {dayEpisodes.length === 1 ? 'episode' : 'episodes'}
                   </Badge>
                 )}
                 </div>
                 
+                {/* Visual divider between days */}
+                {index < weekDates.length - 1 && (
+                  <div className="h-px bg-gradient-to-r from-transparent via-gray-700/50 to-transparent my-2" />
+                )}
+                
               {/* Episodes Grid */}
               {dayEpisodes.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                   {dayEpisodes.map((episode) => (
                     <EpisodeCard
                       key={episode.id}
@@ -854,7 +642,6 @@ export function AnimeCalendar({
                         }
                       }}
                       onMarkWatched={(ep) => {
-                        // Refresh episodes after marking as watched
                         handleEpisodeClick(ep)
                       }}
                       variant="detailed"
@@ -862,41 +649,32 @@ export function AnimeCalendar({
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <div className="relative w-16 h-16 mx-auto mb-3">
-                    <div className="absolute inset-0 bg-gray-700/20 rounded-full" />
-                    <Calendar className="h-12 w-12 mx-auto mt-2 opacity-50" />
+                  <div className="text-center py-16 glass rounded-xl border border-white/10">
+                    <div className="relative w-20 h-20 mx-auto mb-4">
+                      <div className="absolute inset-0 bg-violet-500/10 rounded-full animate-pulse" />
+                      <Calendar className="h-12 w-12 mx-auto mt-4 text-gray-500" />
               </div>
-                  <p className="text-sm">No episodes scheduled for this day</p>
+                    <p className="text-sm text-gray-400">No episodes scheduled for this day</p>
           </div>
         )}
             </div>
           )
         })}
       </div>
+      )}
 
       {/* Empty State */}
-        {filteredEpisodes.length === 0 && (
-        <div className="text-center py-16">
-          <div className="relative w-32 h-32 mx-auto mb-6">
-            <div className="absolute inset-0 bg-violet-500/10 rounded-full animate-pulse" />
-            <Calendar className="h-20 w-20 mx-auto mt-6 text-gray-600" />
-          </div>
-          <h3 className="text-xl font-semibold text-white mb-2">No episodes scheduled</h3>
-            <p className="text-gray-400 mb-4">
-              {activeFiltersCount > 0 
-                ? 'No episodes match your current filters. Try adjusting your filters.'
-                : 'No anime episodes are scheduled for this time period.'}
+        {sortedEpisodes.length === 0 && (
+          <div className="text-center py-20 glass rounded-2xl border border-white/10 p-8 animate-in fade-in duration-500">
+            <div className="relative w-40 h-40 mx-auto mb-6">
+              <div className="absolute inset-0 bg-gradient-to-br from-violet-500/20 to-purple-500/20 rounded-full animate-pulse blur-xl" />
+              <div className="absolute inset-0 bg-violet-500/10 rounded-full animate-pulse" />
+              <Calendar className="h-24 w-24 mx-auto mt-8 text-gray-500 relative z-10" />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-2">No episodes scheduled</h3>
+            <p className="text-gray-400 mb-6 max-w-md mx-auto">
+              No anime episodes are scheduled for this time period.
             </p>
-            {activeFiltersCount > 0 && (
-              <Button
-                variant="outline"
-                onClick={clearFilters}
-                className="mt-4"
-              >
-                Clear Filters
-              </Button>
-            )}
           </div>
         )}
     </div>

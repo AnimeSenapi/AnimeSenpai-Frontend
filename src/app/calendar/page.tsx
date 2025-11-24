@@ -2,41 +2,17 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect, useMemo, useRef } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
-import { Button } from '../../components/ui/button'
+import { useState, useEffect, useRef } from 'react'
 import { LoadingState } from '../../components/ui/loading-state'
 import { ErrorState } from '../../components/ui/error-state'
-import { AnimeCalendar, DateRangePicker } from '../../components/calendar'
-import { useAuth } from '../lib/auth-context'
-import { useToast } from '../../components/ui/toast'
-import { 
-  apiGetEpisodeSchedule,
-  apiGetCalendarStats,
-  apiSyncCalendarData,
-  type Episode,
-  type CalendarStats,
-} from '../lib/api'
-import { 
-  Clock, 
-  TrendingUp,
-  Star,
-  RefreshCw,
-  AlertTriangle
-} from 'lucide-react'
+import { AnimeCalendar } from '../../components/calendar'
+import { apiGetEpisodeSchedule, type Episode } from '../lib/api'
 import { logger } from '../../lib/logger'
 
 export default function CalendarPage() {
-  const { isAuthenticated, user } = useAuth()
-  const { addToast } = useToast()
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [episodes, setEpisodes] = useState<Episode[]>([])
-  const [stats, setStats] = useState<CalendarStats | null>(null)
-  const [isRefreshing, setIsRefreshing] = useState(false)
   const retryCountRef = useRef(0)
   const retryDelayRef = useRef(1000)
   
@@ -54,7 +30,7 @@ export default function CalendarPage() {
     return { start: startOfWeek, end: endOfWeek }
   }
   
-  const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>(() => getDefaultDateRange())
+  const [dateRange] = useState<{ start: Date; end: Date }>(() => getDefaultDateRange())
   
   const retryFetch = async () => {
     setError(null)
@@ -76,15 +52,9 @@ export default function CalendarPage() {
       const startStr = dateRange.start.toISOString().split('T')[0] || ''
       const endStr = dateRange.end.toISOString().split('T')[0] || ''
       
-      const [episodeData, statsData] = await Promise.all([
-        apiGetEpisodeSchedule(startStr, endStr),
-        apiGetCalendarStats(startStr, endStr).catch(() => null),
-      ])
+      const episodeData = await apiGetEpisodeSchedule(startStr, endStr)
 
       setEpisodes(episodeData)
-      if (statsData) {
-        setStats(statsData)
-      }
       retryCountRef.current = 0
       retryDelayRef.current = 1000
       setIsLoading(false)
@@ -123,145 +93,38 @@ export default function CalendarPage() {
     const nextEnd = new Date(currentEnd)
     nextEnd.setDate(nextEnd.getDate() + 7)
     
-    // Prefetch in background (don't await)
-    Promise.all([
-      apiGetEpisodeSchedule(
-        prevStart.toISOString().split('T')[0] || '',
-        prevEnd.toISOString().split('T')[0] || ''
-      ).catch(() => []),
-      apiGetEpisodeSchedule(
-        nextStart.toISOString().split('T')[0] || '',
-        nextEnd.toISOString().split('T')[0] || ''
-      ).catch(() => []),
-    ]).catch(() => {
-      // Silently fail prefetch
-    })
+      // Prefetch in background (don't await)
+      Promise.all([
+        apiGetEpisodeSchedule(
+          prevStart.toISOString().split('T')[0] || '',
+          prevEnd.toISOString().split('T')[0] || ''
+        ).catch(() => []),
+        apiGetEpisodeSchedule(
+          nextStart.toISOString().split('T')[0] || '',
+          nextEnd.toISOString().split('T')[0] || ''
+        ).catch(() => []),
+      ]).catch(() => {
+        // Silently fail prefetch
+      })
   }
   
-  const handleDateRangeChange = (start: Date, end: Date) => {
-    setDateRange({ start, end })
-    
-    // Update URL with new date range
-    const params = new URLSearchParams(searchParams.toString())
-    params.set('start', start.toISOString().split('T')[0] || '')
-    params.set('end', end.toISOString().split('T')[0] || '')
-    router.push(`/calendar?${params.toString()}`, { scroll: false })
-  }
 
-  // Sync URL params with state when URL changes (but not when we update it ourselves)
+  // Fetch calendar data on mount
   useEffect(() => {
-    const startParam = searchParams.get('start')
-    const endParam = searchParams.get('end')
-    
-    if (startParam && endParam) {
-      try {
-        const start = new Date(startParam)
-        const end = new Date(endParam)
-        
-        // Validate dates
-        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-          return
-        }
-        
-        const currentStartStr = dateRange.start.toISOString().split('T')[0] || ''
-        const currentEndStr = dateRange.end.toISOString().split('T')[0] || ''
-        
-        // Only update if URL params differ from current state
-        if (startParam !== currentStartStr || endParam !== currentEndStr) {
-          setDateRange({ start, end })
-        }
-      } catch (e) {
-        // Invalid date params, ignore
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams])
-  
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setIsLoading(false)
-      return
-    }
-
     fetchCalendarData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, dateRange.start.getTime(), dateRange.end.getTime()])
+  }, [dateRange.start.getTime(), dateRange.end.getTime()])
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true)
-    try {
-      // Trigger sync in background
-      await apiSyncCalendarData()
-      
-      // Wait a moment for sync to start, then refresh data
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Refresh calendar data
-      const startStr = dateRange.start.toISOString().split('T')[0] || ''
-      const endStr = dateRange.end.toISOString().split('T')[0] || ''
-      
-      const [episodeData, statsData] = await Promise.all([
-        apiGetEpisodeSchedule(startStr, endStr, false), // Skip cache
-        apiGetCalendarStats(startStr, endStr, false).catch(() => null),
-      ])
-
-      setEpisodes(episodeData)
-      if (statsData) {
-        setStats(statsData)
-      }
-      
-      addToast({
-        title: 'Calendar refreshed',
-        description: 'Calendar data has been updated',
-        variant: 'success',
-      })
-    } catch (err) {
-      addToast({
-        title: 'Refresh failed',
-        description: err instanceof Error ? err.message : 'Failed to refresh calendar data',
-        variant: 'destructive',
-      })
-    } finally {
-      setIsRefreshing(false)
-    }
-  }
-
-  const handleEpisodeClick = (episode: any) => {
-    // Episode clicked - handle navigation/action
-    addToast({
-        title: 'Episode clicked',
-        description: `${episode.animeTitle} Episode ${episode.episodeNumber}`,
-        variant: 'default',
-      })
+  const handleEpisodeClick = () => {
+    // Episode clicked - handled by calendar component
   }
 
   const handleAnimeClick = (animeId: string) => {
-    // Find anime slug from episodes
     const episode = episodes.find((ep) => ep.animeId === animeId)
     const slug = episode?.animeSlug
-    
     if (slug) {
       window.location.href = `/anime/${slug}`
-    } else {
-      addToast({
-        title: 'Anime clicked',
-        description: 'Redirecting to anime page...',
-        variant: 'default',
-      })
     }
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 pt-32 sm:pt-36 md:pt-40">
-        <ErrorState
-          variant="full"
-          title="Authentication Required"
-          message="Please sign in to view the anime calendar."
-          showHome={true}
-        />
-      </div>
-    )
   }
 
   if (isLoading) {
@@ -285,106 +148,31 @@ export default function CalendarPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 relative overflow-hidden">
-      {/* Background */}
+      {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '500ms' }}></div>
       </div>
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 md:pt-40 pb-8 sm:pb-16 relative z-10">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 rounded-xl flex items-center justify-center border border-primary-500/30">
-                <Clock className="h-6 w-6 text-primary-400" />
-              </div>
-              <div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-white">Anime Calendar</h1>
-                <p className="text-gray-400 text-sm">Track upcoming episodes</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <DateRangePicker
-                startDate={dateRange.start}
-                endDate={dateRange.end}
-                onDateRangeChange={handleDateRangeChange}
-              />
-              <Button
-                variant="outline"
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-                className="flex items-center gap-2"
-                aria-label="Refresh calendar data"
-              >
-                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? 'Refreshing...' : 'Refresh'}
-              </Button>
-            </div>
-          </div>
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-6 sm:pb-8 relative z-10">
+        {/* Simple Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Episode Schedule</h1>
+          <p className="text-sm text-gray-400">
+            {episodes.length > 0 
+              ? `${episodes.length} episode${episodes.length === 1 ? '' : 's'} this week`
+              : 'Loading schedule...'}
+          </p>
         </div>
 
-        {/* Error Banner (if partial data) */}
-        {error && episodes.length > 0 && (
-          <div className="mb-4 bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-4">
-            <div className="flex items-center gap-2 text-yellow-400">
-              <AlertTriangle className="h-5 w-5" />
-              <p className="text-sm">
-                {error} Showing cached data. 
-                <button
-                  onClick={retryFetch}
-                  className="ml-2 underline hover:text-yellow-300"
-                >
-                  Retry
-                </button>
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Content */}
+        {/* Calendar */}
         <AnimeCalendar
           episodes={episodes}
           onEpisodeClick={handleEpisodeClick}
           onAnimeClick={handleAnimeClick}
           isLoading={isLoading}
         />
-
-        {/* Quick Stats */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="glass rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <Clock className="h-5 w-5 text-violet-400" />
-              <h3 className="text-lg font-semibold text-white">This Week</h3>
-            </div>
-            <p className="text-2xl font-bold text-violet-400 mb-1">
-              {stats?.episodesThisWeek ?? episodes.length}
-            </p>
-            <p className="text-sm text-gray-400">Episodes airing</p>
-          </div>
-          
-          <div className="glass rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <TrendingUp className="h-5 w-5 text-green-400" />
-              <h3 className="text-lg font-semibold text-white">Trending</h3>
-            </div>
-            <p className="text-2xl font-bold text-green-400 mb-1">
-              {stats?.trendingCount ?? 0}
-            </p>
-            <p className="text-sm text-gray-400">Popular anime</p>
-          </div>
-          
-          <div className="glass rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <Star className="h-5 w-5 text-yellow-400" />
-              <h3 className="text-lg font-semibold text-white">Watching</h3>
-            </div>
-            <p className="text-2xl font-bold text-yellow-400 mb-1">
-              {stats?.watchingEpisodes ?? episodes.filter((ep) => ep.isWatching).length}
-            </p>
-            <p className="text-sm text-gray-400">Currently watching</p>
-          </div>
-        </div>
       </main>
     </div>
   )

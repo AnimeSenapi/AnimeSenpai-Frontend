@@ -48,7 +48,7 @@ export default function HomePage() {
           <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
             <span className="text-white font-bold text-2xl">AS</span>
           </div>
-          <h1 className="sr-only">AnimeSenpai - Your Ultimate Anime Companion</h1>
+          <h1 className="sr-only" suppressHydrationWarning>AnimeSenpai - Your Ultimate Anime Companion</h1>
           <p className="text-gray-400">Loading your anime journey...</p>
         </div>
       </div>

@@ -12,7 +12,7 @@ import {
   TvMinimalPlay,
   Search,
 } from 'lucide-react'
-import { SearchAnimeCard } from '../../../components/anime/SearchAnimeCard'
+import { AnimeCard } from '../../../components/anime/AnimeCard'
 import { Button } from '../../../components/ui/button'
 import { LoadingState } from '../../../components/ui/loading-state'
 import { EmptyState } from '../../../components/ui/error-state'
@@ -322,7 +322,7 @@ export default function StudioPage({ params }: { params: Promise<{ slug: string 
             )}
           >
             {filteredAnime.map((anime) => (
-              <SearchAnimeCard key={anime.id} anime={anime as any} variant={viewMode} />
+              <AnimeCard key={anime.id} anime={anime as any} variant={viewMode} context="search" />
             ))}
           </div>
         )}

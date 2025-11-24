@@ -88,6 +88,17 @@ export const PRIMARY_NAV_ITEMS: NavItemConfig[] = [
     showInBottomNav: true,
   },
   {
+    id: 'calendar',
+    name: 'Calendar',
+    label: 'Calendar',
+    href: '/calendar',
+    icon: Calendar,
+    activePatterns: ['/calendar'],
+    showInDesktop: true,
+    showInMobile: true,
+    showInBottomNav: true,
+  },
+  {
     id: 'profile',
     name: 'Profile',
     label: 'Profile',
@@ -105,16 +116,6 @@ export const PRIMARY_NAV_ITEMS: NavItemConfig[] = [
  * Quick actions - shown in mobile more menu
  */
 export const QUICK_ACTIONS: NavItemConfig[] = [
-  {
-    id: 'calendar',
-    name: 'Calendar',
-    label: 'Calendar',
-    href: '/calendar',
-    icon: Calendar,
-    activePatterns: ['/calendar'],
-    authOnly: true,
-    section: 'quick-actions',
-  },
   {
     id: 'notifications',
     name: 'Notifications',
