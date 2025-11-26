@@ -51,6 +51,9 @@ interface Episode {
   year?: number
   genres?: string[]
   type?: string
+  averageRating?: number
+  viewCount?: number
+  popularity?: number
 }
 
 interface AnimeCalendarProps {

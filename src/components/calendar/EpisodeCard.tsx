@@ -35,6 +35,10 @@ interface Episode {
   studio?: string
   genres?: string[]
   type?: string
+  year?: number
+  averageRating?: number
+  viewCount?: number
+  popularity?: number
 }
 
 interface EpisodeCardProps {

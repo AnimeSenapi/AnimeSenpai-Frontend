@@ -40,7 +40,7 @@ export default function CalendarPage() {
     await fetchCalendarData()
   }
   
-  const fetchCalendarData = async (isRetry = false) => {
+  const fetchCalendarData = async (isRetry = false, bypassCache = false) => {
     if (!isRetry) {
       setIsLoading(true)
       setError(null)
@@ -52,7 +52,8 @@ export default function CalendarPage() {
       const startStr = dateRange.start.toISOString().split('T')[0] || ''
       const endStr = dateRange.end.toISOString().split('T')[0] || ''
       
-      const episodeData = await apiGetEpisodeSchedule(startStr, endStr)
+      // Bypass cache if requested (for refresh button)
+      const episodeData = await apiGetEpisodeSchedule(startStr, endStr, !bypassCache)
 
       setEpisodes(episodeData)
       retryCountRef.current = 0
@@ -78,6 +79,10 @@ export default function CalendarPage() {
         setIsLoading(false)
       }
     }
+  }
+
+  const handleRefresh = async () => {
+    await fetchCalendarData(false, true) // Bypass cache for fresh data
   }
   
   const prefetchAdjacentWeeks = async (currentStart: string, currentEnd: string) => {
@@ -157,13 +162,32 @@ export default function CalendarPage() {
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-6 sm:pb-8 relative z-10">
         {/* Simple Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Episode Schedule</h1>
-          <p className="text-sm text-gray-400">
-            {episodes.length > 0 
-              ? `${episodes.length} episode${episodes.length === 1 ? '' : 's'} this week`
-              : 'Loading schedule...'}
-          </p>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Episode Schedule</h1>
+            <p className="text-sm text-gray-400">
+              {episodes.length > 0 
+                ? `${episodes.length} episode${episodes.length === 1 ? '' : 's'} this week`
+                : 'Loading schedule...'}
+            </p>
+          </div>
+          {/* Temporary Refresh Button */}
+          <button
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="px-4 py-2 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+            title="Refresh calendar data (bypasses cache)"
+          >
+            <svg 
+              className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {isLoading ? 'Refreshing...' : 'Refresh'}
+          </button>
         </div>
 
         {/* Calendar */}
