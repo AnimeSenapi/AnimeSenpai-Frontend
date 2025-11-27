@@ -32,13 +32,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from '@/components/ui/drawer'
+import { MobileBottomSheet } from '@/components/ui/MobileBottomSheet'
 import { Button } from '@/components/ui/button'
 
 interface Notification {
@@ -252,9 +246,9 @@ export function NotificationsDropdown() {
   }
 
   const NotificationsContent = () => (
-    <div className="w-full sm:w-96 max-h-[600px] flex flex-col bg-gray-950">
+    <div className="w-full sm:w-96 max-h-[600px] flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-900/50 to-gray-950">
+      <div className="flex items-center justify-between p-4 border-b border-gray-800/30">
         <div>
           <h3 className="text-base font-bold text-white flex items-center gap-2">
             <Bell className="h-4 w-4 text-primary-400" />
@@ -292,16 +286,16 @@ export function NotificationsDropdown() {
           <>
             {/* Friend Requests */}
             {friendRequests.length > 0 && (
-              <div className="p-4 bg-success-500/5">
+              <div className="px-4 pt-4 pb-3 border-b border-gray-800/30">
                 <h4 className="text-xs font-semibold text-success-400 mb-3 flex items-center gap-2 uppercase tracking-wider">
                   <UserPlus className="h-3.5 w-3.5" />
                   Friend Requests ({friendRequests.length})
                 </h4>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {friendRequests.map((request) => (
                     <div
                       key={request.id}
-                      className="rounded-lg p-3 bg-white/5 hover:bg-white/10 transition-colors"
+                      className="relative px-4 py-3 rounded-lg backdrop-blur-xl bg-gray-900/30 hover:bg-gray-900/40 transition-all duration-150 border-l-2 border-success-500 border border-gray-800/20"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -355,33 +349,34 @@ export function NotificationsDropdown() {
             {/* Notifications */}
             {notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 px-4">
-                <div className="w-16 h-16 rounded-full bg-gray-800/50 flex items-center justify-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-gray-900/60 border border-gray-800/40 flex items-center justify-center mb-4">
                   <Bell className="h-8 w-8 text-gray-500" />
                 </div>
-                <p className="text-sm font-medium text-gray-400">No notifications yet</p>
+                <p className="text-sm font-medium text-gray-300">No notifications yet</p>
                 <p className="text-xs text-gray-500 mt-1 text-center">You'll see updates here</p>
               </div>
             ) : (
-              <div className="p-2">
+              <div>
                 {groupNotificationsByType(notifications).map((group, groupIndex) => (
-                  <div key={groupIndex} className="mb-4 last:mb-0">
+                  <div key={groupIndex} className={cn(groupIndex > 0 && 'border-t border-gray-800/30')}>
                     {group.type !== 'all' && (
-                      <h4 className="text-xs font-semibold text-gray-500 mb-2 px-2 uppercase tracking-wider">
+                      <h4 className="text-xs font-semibold text-gray-500 mb-1.5 px-4 pt-3 uppercase tracking-wider">
                         {group.type === 'social' && 'Social Activity'}
                         {group.type === 'activity' && 'Activity Updates'}
                         {group.type === 'reviews' && 'Review Activity'}
                         {group.type === 'anime' && 'Anime Updates'}
                       </h4>
                     )}
-                    <div className="space-y-1">
+                    <div className="space-y-1.5">
                       {group.notifications.map((notification) => (
                   <div
                     key={notification.id}
                     className={cn(
-                      'rounded-lg p-3 cursor-pointer transition-all group',
+                      'relative px-4 py-3 cursor-pointer transition-all duration-150 group rounded-lg',
+                      'backdrop-blur-xl border',
                       notification.isRead
-                        ? 'hover:bg-white/5'
-                        : 'bg-primary-500/10 hover:bg-primary-500/15'
+                        ? 'bg-gray-900/20 hover:bg-gray-900/30 border-gray-800/20'
+                        : 'bg-gray-900/30 hover:bg-gray-900/40 border-primary-500/30'
                     )}
                     onClick={() => {
                       if (!notification.isRead) {
@@ -392,6 +387,9 @@ export function NotificationsDropdown() {
                       }
                     }}
                   >
+                    {!notification.isRead && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary-500 rounded-r-full" />
+                    )}
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0 mt-0.5">
                         {getNotificationIcon(notification.type)}
@@ -399,23 +397,23 @@ export function NotificationsDropdown() {
                       <div className="flex-1 min-w-0">
                         <p
                           className={cn(
-                            'text-sm leading-relaxed',
-                            notification.isRead ? 'text-gray-400' : 'text-white font-medium'
+                            'text-sm leading-snug',
+                            notification.isRead 
+                              ? 'text-gray-300' 
+                              : 'text-white'
                           )}
                         >
                           {notification.message}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1.5">
+                        <p className={cn(
+                          'text-xs mt-1',
+                          notification.isRead ? 'text-gray-500' : 'text-gray-400'
+                        )}>
                           {formatDistanceToNow(new Date(notification.createdAt), {
                             addSuffix: true,
                           })}
                         </p>
                       </div>
-                      {!notification.isRead && (
-                        <div className="flex-shrink-0 mt-1">
-                          <div className="w-2 h-2 rounded-full bg-primary-500 shadow-lg shadow-primary-500/50" />
-                        </div>
-                      )}
                     </div>
                   </div>
                   ))}
@@ -429,10 +427,10 @@ export function NotificationsDropdown() {
       </div>
 
       {/* Footer */}
-      <div className="p-3 bg-gray-900/50">
+      <div className="px-4 py-3 border-t border-gray-800/30">
         <Link
           href="/notifications"
-          className="block w-full text-center text-xs font-medium text-primary-400 hover:text-primary-300 transition-colors py-2 rounded-lg hover:bg-white/5"
+          className="block w-full text-center text-xs font-medium text-primary-400 hover:text-primary-300 transition-colors py-2 rounded-lg hover:bg-gray-900/50"
           onClick={() => {
             setDropdownOpen(false)
             setDrawerOpen(false)
@@ -474,35 +472,36 @@ export function NotificationsDropdown() {
         </DropdownMenu>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Bottom Sheet */}
       <div className="sm:hidden">
-        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-          <DrawerTrigger asChild>
-            <button
-              className={cn(
-                'relative flex items-center justify-center w-10 h-10 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200',
-                unreadCount > 0 && 'text-primary-400'
-              )}
-              aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
-            >
-              <Bell className={cn('h-5 w-5', unreadCount > 0 && 'animate-pulse')} />
+        <button
+          onClick={() => setDrawerOpen(true)}
+          className={cn(
+            'relative flex items-center justify-center w-10 h-10 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200',
+            unreadCount > 0 && 'text-primary-400'
+          )}
+          aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
+        >
+          <Bell className={cn('h-5 w-5', unreadCount > 0 && 'animate-pulse')} />
 
-              {unreadCount > 0 && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-error-500 to-error-600 rounded-full flex items-center justify-center border-2 border-gray-900 shadow-lg">
-                  <span className="text-xs font-bold text-white">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                </div>
-              )}
-            </button>
-          </DrawerTrigger>
-          <DrawerContent>
-            <DrawerHeader className="p-0">
-              <DrawerTitle className="sr-only">Notifications</DrawerTitle>
-              <NotificationsContent />
-            </DrawerHeader>
-          </DrawerContent>
-        </Drawer>
+          {unreadCount > 0 && (
+            <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-error-500 to-error-600 rounded-full flex items-center justify-center border-2 border-gray-900 shadow-lg">
+              <span className="text-xs font-bold text-white">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            </div>
+          )}
+        </button>
+        <MobileBottomSheet
+          isOpen={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          title="Notifications"
+          className="max-h-[85vh]"
+          snapPoints={['70vh', '85vh']}
+          showHeader={false}
+        >
+          <NotificationsContent />
+        </MobileBottomSheet>
       </div>
     </>
   )

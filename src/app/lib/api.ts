@@ -451,12 +451,13 @@ async function trpcQuery<TOutput>(
         message.includes('P6002') ||
         message.includes('P5000')
 
-      // auth.me and user endpoints - skip all expected auth errors
+      // auth.me, user, notifications, and social endpoints - skip all expected auth errors
       const isAuthCheck = path.includes('auth.me')
       const isUserEndpoint = path.includes('user.getFavoritedAnimeIds') || path.includes('user.')
+      const isNotificationEndpoint = path.includes('notifications.') || path.includes('social.getPendingFriendRequests')
 
       const shouldSkipLogging =
-        ((isAuthCheck || isUserEndpoint) && isExpectedAuthError) || 
+        ((isAuthCheck || isUserEndpoint || isNotificationEndpoint) && isExpectedAuthError) || 
         (optionalEndpoint && isExpectedAuthError) ||
         (isUserProfileLookup && isUserNotFoundError)
 
@@ -502,10 +503,10 @@ async function trpcQuery<TOutput>(
         }
       }
 
-      // For expected auth errors on user endpoints, return null instead of throwing
+      // For expected auth errors on user, notifications, and social endpoints, return null instead of throwing
       // This prevents UI crashes when user is not logged in
       // EXCEPT for auth.me - we need to throw so auth context can handle it properly
-      if (isExpectedAuthError && (isUserEndpoint || isAuthCheck) && !path.includes('auth.me')) {
+      if (isExpectedAuthError && (isUserEndpoint || isAuthCheck || isNotificationEndpoint) && !path.includes('auth.me')) {
         return null as TOutput
       }
 

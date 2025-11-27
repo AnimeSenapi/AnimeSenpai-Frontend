@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { MobileBottomSheet } from '../ui/MobileBottomSheet'
 import { GuestAuth } from './GuestAuth'
-import { NotificationsDropdown } from './NotificationsDropdown'
 import { useAuth } from '../../app/lib/auth-context'
 import { useHapticFeedback } from '../../hooks/use-haptic-feedback'
 import { User, Settings, Shield, LogOut, Bell, ChevronRight, Activity, MessageCircle, Trophy, Users } from 'lucide-react'
@@ -168,13 +167,6 @@ export function AuthDrawer({ isOpen, onClose }: AuthDrawerProps) {
                 <span className="flex-1 text-white">Settings</span>
                 <ChevronRight className="h-5 w-5 text-gray-500 group-hover:text-primary-400 transition-colors" />
               </Link>
-            </div>
-
-            {/* Notifications Section */}
-            <div className="pt-2 border-t border-white/10">
-              <div className="px-1">
-                <NotificationsDropdown />
-              </div>
             </div>
 
             {/* Sign Out Button */}

@@ -47,33 +47,39 @@ export const NavbarAuth = memo(function NavbarAuth({ className }: NavbarAuthProp
           />
         </div>
 
-        {/* Mobile User Avatar Button */}
-        <button
-          onClick={() => setIsAuthDrawerOpen(!isAuthDrawerOpen)}
-          className={cn(
-            'sm:hidden flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 touch-manipulation active:scale-95',
-            isAuthDrawerOpen
-              ? 'bg-primary-500/20 text-primary-400'
-              : 'text-gray-300 hover:text-white hover:bg-white/10'
-          )}
-          aria-label={isAuthDrawerOpen ? 'Close account menu' : 'Open account menu'}
-          aria-expanded={isAuthDrawerOpen}
-          aria-controls="mobile-auth-menu"
-        >
-          {user.avatar ? (
-            <img
-              src={user.avatar}
-              alt={user.username || user.email || 'User'}
-              className="w-8 h-8 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">
-                {(user.username || user.email || 'U').charAt(0).toUpperCase()}
-              </span>
-            </div>
-          )}
-        </button>
+        {/* Mobile: Notifications and User Avatar Buttons */}
+        <div className="sm:hidden flex items-center gap-1">
+          {/* Mobile Notifications Button */}
+          <NotificationsDropdown />
+          
+          {/* Mobile User Avatar Button */}
+          <button
+            onClick={() => setIsAuthDrawerOpen(!isAuthDrawerOpen)}
+            className={cn(
+              'flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 touch-manipulation active:scale-95',
+              isAuthDrawerOpen
+                ? 'bg-primary-500/20 text-primary-400'
+                : 'text-gray-300 hover:text-white hover:bg-white/10'
+            )}
+            aria-label={isAuthDrawerOpen ? 'Close account menu' : 'Open account menu'}
+            aria-expanded={isAuthDrawerOpen}
+            aria-controls="mobile-auth-menu"
+          >
+            {user.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user.username || user.email || 'User'}
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-sm">
+                  {(user.username || user.email || 'U').charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
+          </button>
+        </div>
       </div>
     )
   }
