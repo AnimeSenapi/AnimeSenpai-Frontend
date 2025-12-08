@@ -315,7 +315,7 @@ export default function SearchPage() {
     // Rating range filter
     if (minRating > 0 || maxRating < 10) {
       results = results.filter((anime) => {
-        const rating = anime.rating || 0
+        const rating = typeof anime.rating === 'number' ? anime.rating : (typeof anime.rating === 'string' ? parseFloat(anime.rating) || 0 : 0)
         return rating >= minRating && rating <= maxRating
       })
     }
@@ -323,10 +323,18 @@ export default function SearchPage() {
     // Sort results
     switch (sortBy) {
       case 'rating_desc':
-        results.sort((a, b) => (b.rating || 0) - (a.rating || 0))
+        results.sort((a, b) => {
+          const ratingA = typeof a.rating === 'number' ? a.rating : (typeof a.rating === 'string' ? parseFloat(a.rating) || 0 : 0)
+          const ratingB = typeof b.rating === 'number' ? b.rating : (typeof b.rating === 'string' ? parseFloat(b.rating) || 0 : 0)
+          return ratingB - ratingA
+        })
         break
       case 'rating_asc':
-        results.sort((a, b) => (a.rating || 0) - (b.rating || 0))
+        results.sort((a, b) => {
+          const ratingA = typeof a.rating === 'number' ? a.rating : (typeof a.rating === 'string' ? parseFloat(a.rating) || 0 : 0)
+          const ratingB = typeof b.rating === 'number' ? b.rating : (typeof b.rating === 'string' ? parseFloat(b.rating) || 0 : 0)
+          return ratingA - ratingB
+        })
         break
       case 'year_desc':
         results.sort((a, b) => (b.year || 0) - (a.year || 0))
