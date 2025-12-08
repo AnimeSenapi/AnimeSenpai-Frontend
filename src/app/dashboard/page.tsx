@@ -790,7 +790,7 @@ export default function DashboardPage() {
                       titleEnglish: item.titleEnglish || null,
                       coverImage: item.coverImage || null,
                       year: item.year,
-                      averageRating: item.rating,
+                      averageRating: typeof item.rating === 'number' ? item.rating : (typeof item.rating === 'string' ? parseFloat(item.rating) || null : null),
                       genres: item.genres || [],
                         },
                   }))}
@@ -941,7 +941,7 @@ export default function DashboardPage() {
                       titleEnglish: item.titleEnglish || null,
                       coverImage: item.coverImage || null,
                       year: item.year,
-                      averageRating: item.rating,
+                      averageRating: typeof item.rating === 'number' ? item.rating : (typeof item.rating === 'string' ? parseFloat(item.rating) || null : null),
                       genres: item.genres || [],
                     },
                   }))}

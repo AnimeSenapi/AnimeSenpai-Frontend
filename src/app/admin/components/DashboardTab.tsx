@@ -19,6 +19,7 @@ import {
   XCircle,
   AlertCircle,
   LayoutDashboard,
+  Calendar,
 } from 'lucide-react'
 import { Button } from '../../../components/ui/button'
 import { cn } from '../../../lib/utils'
@@ -37,6 +38,26 @@ interface Stats {
   }
   features: {
     flags: number
+  }
+  sync?: {
+    animeDataSync: {
+      scheduled: boolean
+      lastRun: string
+      interval: number | null
+      isRunning?: boolean
+      runningDuration?: number
+      estimatedTimeRemaining?: number
+      nextRun: string | null
+    }
+    calendarSync: {
+      scheduled: boolean
+      lastRun: string
+      interval: number | null
+      isRunning?: boolean
+      runningDuration?: number
+      estimatedTimeRemaining?: number
+      nextRun: string | null
+    }
   }
 }
 
@@ -129,6 +150,27 @@ export function DashboardTab() {
       default:
         return <Activity className="h-5 w-5 text-gray-400" />
     }
+  }
+
+  // Helper function to format duration in milliseconds to human-readable string
+  const formatDuration = (ms: number): string => {
+    if (ms < 1000) return `${ms}ms`
+    if (ms < 60000) return `${Math.round(ms / 1000)}s`
+    if (ms < 3600000) return `${Math.round(ms / 60000)}m ${Math.round((ms % 60000) / 1000)}s`
+    const hours = Math.floor(ms / 3600000)
+    const minutes = Math.round((ms % 3600000) / 60000)
+    return `${hours}h ${minutes}m`
+  }
+
+  // Helper function to format time until next sync
+  const formatTimeUntil = (nextRun: string | null): string => {
+    if (!nextRun) return 'N/A'
+    const now = new Date().getTime()
+    const next = new Date(nextRun).getTime()
+    const diff = next - now
+    
+    if (diff <= 0) return 'Due now'
+    return formatDuration(diff)
   }
 
   const showInitialLoading = loading && !stats && !loadError
@@ -410,6 +452,152 @@ export function DashboardTab() {
           </div>
         </article>
       </section>
+
+      {stats.sync && (
+        <section className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+          <header className="flex items-center gap-2 mb-4">
+            <RefreshCw className="h-5 w-5 text-primary-300" />
+            <h3 className="text-sm font-semibold text-white">Data Sync Status</h3>
+          </header>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Anime Data Sync */}
+            <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Film className="h-4 w-4 text-primary-300" />
+                  <h4 className="text-sm font-medium text-white">Anime Data Sync</h4>
+                </div>
+                {stats.sync.animeDataSync.isRunning ? (
+                  <span className="rounded-full bg-blue-500/20 px-2 py-1 text-xs text-blue-300 border border-blue-500/30 flex items-center gap-1">
+                    <RefreshCw className="h-3 w-3 animate-spin" />
+                    Running
+                  </span>
+                ) : stats.sync.animeDataSync.scheduled ? (
+                  <span className="rounded-full bg-green-500/20 px-2 py-1 text-xs text-green-300 border border-green-500/30">
+                    Active
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-gray-500/20 px-2 py-1 text-xs text-gray-400 border border-gray-500/30">
+                    Inactive
+                  </span>
+                )}
+              </div>
+              <div className="space-y-2 text-sm">
+                {stats.sync.animeDataSync.isRunning && (
+                  <>
+                    <div className="flex items-center justify-between text-gray-400">
+                      <span>Running For</span>
+                      <span className="text-blue-300 font-medium">
+                        {stats.sync.animeDataSync.runningDuration ? formatDuration(stats.sync.animeDataSync.runningDuration) : 'N/A'}
+                      </span>
+                    </div>
+                    {stats.sync.animeDataSync.estimatedTimeRemaining !== undefined && (
+                      <div className="flex items-center justify-between text-gray-400">
+                        <span>Est. Time Remaining</span>
+                        <span className="text-blue-300 font-medium">
+                          {formatDuration(stats.sync.animeDataSync.estimatedTimeRemaining)}
+                        </span>
+                      </div>
+                    )}
+                  </>
+                )}
+                <div className="flex items-center justify-between text-gray-400">
+                  <span>Last Run</span>
+                  <span className="text-white font-medium">
+                    {stats.sync.animeDataSync.lastRun !== 'N/A'
+                      ? new Date(stats.sync.animeDataSync.lastRun).toLocaleString()
+                      : 'Never'}
+                  </span>
+                </div>
+                {stats.sync.animeDataSync.nextRun && (
+                  <div className="flex items-center justify-between text-gray-400">
+                    <span>Next Run</span>
+                    <span className="text-white font-medium">
+                      {formatTimeUntil(stats.sync.animeDataSync.nextRun)}
+                    </span>
+                  </div>
+                )}
+                {stats.sync.animeDataSync.interval && (
+                  <div className="flex items-center justify-between text-gray-400">
+                    <span>Interval</span>
+                    <span className="text-white font-medium">
+                      Every {stats.sync.animeDataSync.interval} hour{stats.sync.animeDataSync.interval !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Calendar Sync */}
+            <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-secondary-300" />
+                  <h4 className="text-sm font-medium text-white">Calendar Sync</h4>
+                </div>
+                {stats.sync.calendarSync.isRunning ? (
+                  <span className="rounded-full bg-blue-500/20 px-2 py-1 text-xs text-blue-300 border border-blue-500/30 flex items-center gap-1">
+                    <RefreshCw className="h-3 w-3 animate-spin" />
+                    Running
+                  </span>
+                ) : stats.sync.calendarSync.scheduled ? (
+                  <span className="rounded-full bg-green-500/20 px-2 py-1 text-xs text-green-300 border border-green-500/30">
+                    Active
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-gray-500/20 px-2 py-1 text-xs text-gray-400 border border-gray-500/30">
+                    Inactive
+                  </span>
+                )}
+              </div>
+              <div className="space-y-2 text-sm">
+                {stats.sync.calendarSync.isRunning && (
+                  <>
+                    <div className="flex items-center justify-between text-gray-400">
+                      <span>Running For</span>
+                      <span className="text-blue-300 font-medium">
+                        {stats.sync.calendarSync.runningDuration ? formatDuration(stats.sync.calendarSync.runningDuration) : 'N/A'}
+                      </span>
+                    </div>
+                    {stats.sync.calendarSync.estimatedTimeRemaining !== undefined && (
+                      <div className="flex items-center justify-between text-gray-400">
+                        <span>Est. Time Remaining</span>
+                        <span className="text-blue-300 font-medium">
+                          {formatDuration(stats.sync.calendarSync.estimatedTimeRemaining)}
+                        </span>
+                      </div>
+                    )}
+                  </>
+                )}
+                <div className="flex items-center justify-between text-gray-400">
+                  <span>Last Run</span>
+                  <span className="text-white font-medium">
+                    {stats.sync.calendarSync.lastRun !== 'N/A'
+                      ? new Date(stats.sync.calendarSync.lastRun).toLocaleString()
+                      : 'Never'}
+                  </span>
+                </div>
+                {stats.sync.calendarSync.nextRun && (
+                  <div className="flex items-center justify-between text-gray-400">
+                    <span>Next Run</span>
+                    <span className="text-white font-medium">
+                      {formatTimeUntil(stats.sync.calendarSync.nextRun)}
+                    </span>
+                  </div>
+                )}
+                {stats.sync.calendarSync.interval && (
+                  <div className="flex items-center justify-between text-gray-400">
+                    <span>Interval</span>
+                    <span className="text-white font-medium">
+                      Every {stats.sync.calendarSync.interval} hour{stats.sync.calendarSync.interval !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <article className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">

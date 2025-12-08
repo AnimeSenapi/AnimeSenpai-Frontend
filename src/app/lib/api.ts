@@ -27,6 +27,7 @@ import { logger, captureException } from '../../lib/logger'
 import { trackAPI } from '../../lib/performance-monitor'
 import { env } from '../../lib/env'
 import * as Sentry from '@sentry/nextjs'
+import { filterAnimeList, filterEpisodesByAnime, filterSeasonalAnime } from '../../lib/filters'
 
 type TRPCErrorShape = {
   message: string
@@ -1142,7 +1143,11 @@ export async function apiGetAllAnime(useCache: boolean = true) {
   if (useCache) {
     const cached = clientCache.get<any>(cacheKey)
     if (cached !== null) {
-      return cached
+      // Apply filters to cached data as safety measure
+      return {
+        ...cached,
+        anime: filterAnimeList(cached.anime || []),
+      }
     }
   }
 
@@ -1170,10 +1175,16 @@ export async function apiGetAllAnime(useCache: boolean = true) {
     pagination: { page: 1, limit: 20, total: 0, pages: 0 },
   }
 
-  // Cache for 5 minutes
-  clientCache.set(cacheKey, result, CacheTTL.medium)
+  // Apply filters as safety measure (backend already filters, but this is extra protection)
+  const filteredResult = {
+    ...result,
+    anime: filterAnimeList(result.anime || []),
+  }
 
-  return result
+  // Cache for 5 minutes
+  clientCache.set(cacheKey, filteredResult, CacheTTL.medium)
+
+  return filteredResult
 }
 
 export async function apiGetAllSeries(useCache: boolean = true) {
@@ -1223,16 +1234,20 @@ export async function apiGetTrending(useCache: boolean = true) {
   if (useCache) {
     const cached = clientCache.get<Anime[]>(cacheKey)
     if (cached !== null) {
-      return cached
+      // Apply filters to cached data as safety measure
+      return filterAnimeList(cached)
     }
   }
 
   const result = await trpcQuery<Anime[]>('anime.getTrending')
 
-  // Cache for 15 minutes (using 'long' TTL)
-  clientCache.set(cacheKey, result, CacheTTL.long)
+  // Apply filters as safety measure (backend already filters, but this is extra protection)
+  const filteredResult = filterAnimeList(result)
 
-  return result
+  // Cache for 15 minutes (using 'long' TTL)
+  clientCache.set(cacheKey, filteredResult, CacheTTL.long)
+
+  return filteredResult
 }
 
 export async function apiGetAnimeBySlug(slug: string, useCache: boolean = true) {
@@ -1422,7 +1437,8 @@ export async function apiGetEpisodeSchedule(
   if (useCache) {
     const cached = clientCache.get<Episode[]>(cacheKey)
     if (cached !== null) {
-      return cached
+      // Apply filters to cached data as safety measure
+      return filterEpisodesByAnime(cached)
     }
   }
 
@@ -1466,7 +1482,10 @@ export async function apiGetEpisodeSchedule(
     throw new Error(getUserFriendlyError(code, message))
   }
 
-  const result = data.result.data
+  let result = data.result.data
+
+  // Apply filters as safety measure (backend already filters, but this is extra protection)
+  result = filterEpisodesByAnime(result)
 
   // Cache for 5 minutes (episode schedules change weekly)
   clientCache.set(cacheKey, result, CacheTTL.short)
@@ -1484,7 +1503,8 @@ export async function apiGetSeasonalAnime(
   if (useCache) {
     const cached = clientCache.get<SeasonalAnime[]>(cacheKey)
     if (cached !== null) {
-      return cached
+      // Apply filters to cached data as safety measure
+      return filterSeasonalAnime(cached)
     }
   }
 
@@ -1512,7 +1532,10 @@ export async function apiGetSeasonalAnime(
     throw new Error(getUserFriendlyError(code, message))
   }
 
-  const result = data.result.data
+  let result = data.result.data
+
+  // Apply filters as safety measure (backend already filters, but this is extra protection)
+  result = filterSeasonalAnime(result)
 
   // Cache for 10 minutes (seasonal data changes infrequently)
   clientCache.set(cacheKey, result, CacheTTL.medium)

@@ -18,8 +18,9 @@ export interface Anime {
   year: number | null
   season?: 'Spring' | 'Summer' | 'Fall' | 'Winter'
   type?: string // TV, Movie, OVA, ONA, Special, etc.
-  rating: number
-  averageRating?: number // Alias for rating
+  rating: number | string // Can be number (averageRating) or string (content rating like "PG-13", "Rx")
+  averageRating?: number // Average rating score (number)
+  contentRating?: string // Content rating string (e.g., "PG-13", "Rx", "Hentai")
   status: 'new' | 'hot' | 'trending' | 'classic' | 'ongoing' | 'completed' | 'upcoming'
   tags: string[] // Tag IDs
   genres?: Genre[] // API format includes genres
