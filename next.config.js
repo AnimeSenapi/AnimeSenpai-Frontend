@@ -89,6 +89,29 @@ const nextConfigBase = {
   
   outputFileTracingRoot: __dirname,
   
+  // Suppress webpack warnings for OpenTelemetry dynamic imports
+  webpack: (config, { isServer }) => {
+    // Suppress critical dependency warnings from @prisma/instrumentation/OpenTelemetry
+    config.module = config.module || {}
+    config.module.exprContextCritical = false
+    config.module.unknownContextCritical = false
+    
+    // Ignore warnings about dynamic requires in OpenTelemetry instrumentation
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      {
+        module: /@prisma\/instrumentation/,
+        message: /Critical dependency: the request of a dependency is an expression/,
+      },
+      {
+        module: /@opentelemetry\/instrumentation/,
+        message: /Critical dependency: the request of a dependency is an expression/,
+      },
+    ]
+    
+    return config
+  },
+  
   // Headers for caching and security
   async headers() {
     return [
