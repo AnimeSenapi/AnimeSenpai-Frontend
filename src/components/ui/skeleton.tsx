@@ -26,8 +26,8 @@ function ShimmerSkeleton({ className, ...props }: React.HTMLAttributes<HTMLDivEl
 function AnimeCardSkeleton() {
   return (
     <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-gray-800 to-gray-900">
-      {/* Image skeleton */}
-      <div className="aspect-[2/3] bg-white/5 relative overflow-hidden">
+      {/* Image skeleton - matches AnimeCard featured variant aspect ratio */}
+      <div className="aspect-[2/3] bg-white/5 relative overflow-hidden" style={{ aspectRatio: '2/3' }}>
         <Skeleton className="absolute inset-0" />
       </div>
 
@@ -137,17 +137,20 @@ function ListItemSkeleton() {
   )
 }
 
-// Carousel Skeleton
+// Carousel Skeleton - matches RecommendationCarousel layout
 function CarouselSkeleton({ itemCount = 5 }: { itemCount?: number }) {
   return (
-    <div className="mb-12">
-      <div className="flex items-center justify-between mb-6">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-6 w-24" />
+    <div className="mb-8 sm:mb-10 lg:mb-12">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <Skeleton className="h-6 sm:h-8 w-32 sm:w-48" />
+        <Skeleton className="h-6 w-16 sm:w-24 hidden sm:block" />
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      {/* Match horizontal scroll layout of RecommendationCarousel */}
+      <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
         {Array.from({ length: itemCount }).map((_, i) => (
-          <AnimeCardSkeleton key={i} />
+          <div key={i} className="flex-shrink-0 w-36 sm:w-44 lg:w-48">
+            <AnimeCardSkeleton />
+          </div>
         ))}
       </div>
     </div>

@@ -332,31 +332,34 @@ export default function DashboardPage() {
       setIsLoading(true)
       setError(null)
       try {
-        // Load all recommendation-based data
+        // Load critical data first (seasonal/trending) - above the fold
+        setSectionLoadingStates((prev) => ({ ...prev, seasonal: true }))
+        await Promise.all([
+          loadSeasonalAnime(),
+          loadAllRecommendations(), // Load trending/popular immediately
+        ])
+        setSectionLoadingStates((prev) => ({ ...prev, seasonal: false, secondary: false }))
+        
+        // Mark initial loading as complete to show content
         setIsLoading(false)
 
-        // Load all recommendation sections in background (non-blocking)
-        setTimeout(async () => {
-          setSectionLoadingStates((prev) => ({ ...prev, secondary: true }))
-          await loadAllRecommendations()
-          setSectionLoadingStates((prev) => ({ ...prev, secondary: false }))
-        }, 100)
-
-        // Load personalized recommendations if authenticated (also background)
+        // Load personalized recommendations in background (non-blocking)
         if (isAuthenticated) {
-          setTimeout(async () => {
+          // Use requestIdleCallback if available, otherwise setTimeout
+          const scheduleBackgroundLoad = (fn: () => void) => {
+            if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+              ;(window as any).requestIdleCallback(fn, { timeout: 1000 })
+            } else {
+              setTimeout(fn, 100)
+            }
+          }
+          
+          scheduleBackgroundLoad(async () => {
             setSectionLoadingStates((prev) => ({ ...prev, personalized: true }))
             await loadPersonalizedRecommendations()
             setSectionLoadingStates((prev) => ({ ...prev, personalized: false }))
-          }, 200)
+          })
         }
-
-        // Load seasonal content in background
-        setTimeout(async () => {
-          setSectionLoadingStates((prev) => ({ ...prev, seasonal: true }))
-          await loadSeasonalAnime()
-          setSectionLoadingStates((prev) => ({ ...prev, seasonal: false }))
-        }, 300)
       } catch (err: unknown) {
         console.error('❌ Failed to load anime:', err)
         const errorMessage = err instanceof Error ? err.message : 'Failed to load anime data'
@@ -715,6 +718,7 @@ export default function DashboardPage() {
                   icon={<Calendar className="h-5 w-5 text-blue-400" />}
                   recommendations={mapToRecommendations(seasonalSeries)}
                   showReasons={false}
+                  isFirstCarousel={true}
                 />
               ) : (
                 <div className="mb-8 sm:mb-10 lg:mb-12">

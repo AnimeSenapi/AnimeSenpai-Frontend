@@ -5,8 +5,17 @@ import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import type { Metadata } from 'next'
 import Script from 'next/script'
+import { Inter } from 'next/font/google'
 import { buildOrganizationJsonLd, buildWebsiteJsonLd } from '@/lib/seo'
 import { apiGetPublicSettings } from './lib/api'
+
+// Optimize font loading with next/font
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  preload: true,
+  variable: '--font-inter',
+})
 
 // Force dynamic rendering to prevent build timeouts
 export const dynamic = 'force-dynamic'
@@ -116,12 +125,18 @@ export default async function RootLayout({
   const { siteName, siteDescription } = await getSiteSettings()
 
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <head>
-        <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="canonical" href={siteUrl} />
+        {/* Resource hints for external CDNs */}
+        <link rel="preconnect" href="https://cdn.myanimelist.net" />
+        <link rel="dns-prefetch" href="https://cdn.myanimelist.net" />
+        <link rel="preconnect" href="https://images.unsplash.com" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        <link rel="preconnect" href="https://i.ytimg.com" />
+        <link rel="dns-prefetch" href="https://i.ytimg.com" />
       </head>
-      <body>
+      <body className={inter.className}>
         <Providers>
           {/* Skip link for keyboard users */}
           <a
