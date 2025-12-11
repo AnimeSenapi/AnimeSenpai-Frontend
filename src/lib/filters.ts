@@ -44,6 +44,21 @@ export function shouldFilterAnime(anime: Anime): boolean {
   const hasGenres = anime.genres && anime.genres.length > 0
   const hasThemes = animeAny.themes && Array.isArray(animeAny.themes) && animeAny.themes.length > 0
   const hasTags = animeAny.tags && Array.isArray(animeAny.tags) && animeAny.tags.length > 0
+  
+  // Check if we should exclude anime without genres
+  if (ANIME_FILTERS.excludeWithoutGenres !== false && !hasGenres) {
+    return true // Filter out anime with no genres
+  }
+  
+  // Check if we should exclude anime without tags/themes
+  if (ANIME_FILTERS.excludeWithoutTags !== false && !hasThemes && !hasTags) {
+    // If no themes/tags, check if we have genres as a fallback
+    if (!hasGenres) {
+      return true // Filter out anime with no themes/tags and no genres
+    }
+  }
+  
+  // Legacy check: if both filters are disabled but we want to ensure at least one exists
   if (!hasGenres && !hasThemes && !hasTags) {
     return true // Filter out anime with no genres, themes, or tags
   }

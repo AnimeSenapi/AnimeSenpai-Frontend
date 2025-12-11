@@ -233,9 +233,37 @@
     overscroll-behavior: contain;
   }
 
-  /* Optimize image loading */
+  /* Optimize image loading and prevent layout shifts */
   img {
     content-visibility: auto;
+  }
+  
+  /* Ensure image containers maintain aspect ratio */
+  [class*="aspect-"] {
+    position: relative;
+  }
+  
+  /* Prevent layout shifts from images */
+  img[fill] {
+    object-fit: cover;
+  }
+  
+  /* CSS containment for carousel sections to prevent layout shifts */
+  [class*="carousel"],
+  [id*="carousel"] {
+    contain: layout style paint;
+  }
+  
+  /* Ensure dynamic content containers have explicit dimensions */
+  .glass,
+  [class*="card"],
+  [class*="skeleton"] {
+    min-height: 1px; /* Prevent collapse */
+  }
+  
+  /* Reserve space for dynamic content */
+  [data-loading="true"] {
+    min-height: 200px; /* Reserve space for loading content */
   }
 
   /* Reduce repaints on scroll */
@@ -737,6 +765,13 @@ a:hover,
     font-size: 16px;
     line-height: 1.6;
     letter-spacing: -0.01em;
+    /* Prevent layout shifts from font loading */
+    font-display: swap;
+  }
+  
+  /* Ensure all font declarations use swap */
+  @font-face {
+    font-display: swap;
   }
 
   /* Typography Scale - Standardized Headings */

@@ -110,70 +110,85 @@ export default function DiscoverPage() {
     setIsLoading(true)
 
     try {
-      // Load all discovery sections in parallel
-      const [trending, seasonal, hiddenGems, topRated, allAnime] = await Promise.all([
-        loadTrending(),
+      // Load critical data first (trending - above the fold)
+      const trending = await loadTrending()
+      
+      // Update trending section immediately
+      setSections((prev) =>
+        prev.map((section) => {
+          if (section.id === 'trending') {
+            return { ...section, anime: trending, loading: false }
+          }
+          if (section.id === 'popular') {
+            return { ...section, anime: trending, loading: false } // Use trending for now
+          }
+          return section
+        })
+      )
+      
+      // Mark initial loading as complete to show content
+      setIsLoading(false)
+
+      // Load remaining sections in background (non-blocking)
+      Promise.all([
         loadSeasonal(),
         loadHiddenGems(),
         loadTopRated(),
         loadAllAnime(),
-      ])
+      ]).then(([seasonal, hiddenGems, topRated, allAnime]) => {
+        // Update remaining sections with data
+        setSections((prev) =>
+          prev.map((section) => {
+            switch (section.id) {
+              case 'seasonal':
+                return { ...section, anime: seasonal, loading: false }
+              case 'hidden-gems':
+                return { ...section, anime: hiddenGems, loading: false }
+              case 'top-rated':
+                return { ...section, anime: topRated, loading: false }
+              case 'award-winners':
+                return { ...section, anime: topRated.slice(0, 12), loading: false }
+              default:
+                return section
+            }
+          })
+        )
 
-      // Update sections with data
-      setSections((prev) =>
-        prev.map((section) => {
-          switch (section.id) {
-            case 'trending':
-              return { ...section, anime: trending, loading: false }
-            case 'seasonal':
-              return { ...section, anime: seasonal, loading: false }
-            case 'hidden-gems':
-              return { ...section, anime: hiddenGems, loading: false }
-            case 'top-rated':
-              return { ...section, anime: topRated, loading: false }
-            case 'popular':
-              return { ...section, anime: trending, loading: false } // Use trending for now
-            case 'award-winners':
-              return { ...section, anime: topRated.slice(0, 12), loading: false }
-            default:
-              return section
+        // Extract genre statistics
+        const genreMap = new Map<string, number>()
+        allAnime.forEach((anime: any) => {
+          anime.genres?.forEach((g: any) => {
+            const name = g.name || g.slug || g
+            genreMap.set(name, (genreMap.get(name) || 0) + 1)
+          })
+        })
+        const topGenres = Array.from(genreMap.entries())
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 20)
+        setGenres(topGenres)
+
+        // Extract season statistics
+        const seasonMap = new Map<string, number>()
+        allAnime.forEach((anime: any) => {
+          if (anime.season && anime.year) {
+            const key = `${anime.season} ${anime.year}`
+            seasonMap.set(key, (seasonMap.get(key) || 0) + 1)
           }
         })
-      )
-
-      // Extract genre statistics
-      const genreMap = new Map<string, number>()
-      allAnime.forEach((anime: any) => {
-        anime.genres?.forEach((g: any) => {
-          const name = g.name || g.slug || g
-          genreMap.set(name, (genreMap.get(name) || 0) + 1)
-        })
+        const topSeasons = Array.from(seasonMap.entries())
+          .map(([key, count]) => {
+            const [season, year] = key.split(' ')
+            return { season: season || '', year: parseInt(year || '0'), count }
+          })
+          .sort((a, b) => b.year - a.year || b.count - a.count)
+          .slice(0, 8)
+        setSeasons(topSeasons)
+      }).catch((error) => {
+        console.error('Failed to load remaining discovery data:', error)
       })
-      const topGenres = Array.from(genreMap.entries())
-        .map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 20)
-      setGenres(topGenres)
-
-      // Extract season statistics
-      const seasonMap = new Map<string, number>()
-      allAnime.forEach((anime: any) => {
-        if (anime.season && anime.year) {
-          const key = `${anime.season} ${anime.year}`
-          seasonMap.set(key, (seasonMap.get(key) || 0) + 1)
-        }
-      })
-      const topSeasons = Array.from(seasonMap.entries())
-        .map(([key, count]) => {
-          const [season, year] = key.split(' ')
-          return { season: season || '', year: parseInt(year || '0'), count }
-        })
-        .sort((a, b) => b.year - a.year || b.count - a.count)
-        .slice(0, 8)
-      setSeasons(topSeasons)
     } catch (error) {
       console.error('Failed to load discovery data:', error)
-    } finally {
       setIsLoading(false)
     }
   }
@@ -428,7 +443,11 @@ export default function DiscoverPage() {
                               animation: `fadeIn 0.3s ease-out ${index * 0.05}s backwards`,
                             }}
                           >
-                            <AnimeCard anime={anime} />
+                            <AnimeCard 
+                              anime={anime} 
+                              priority={index < 6 && section.id === 'trending'}
+                              fetchPriority={index < 6 && section.id === 'trending' ? 'high' : 'auto'}
+                            />
                           </div>
                         ))}
 

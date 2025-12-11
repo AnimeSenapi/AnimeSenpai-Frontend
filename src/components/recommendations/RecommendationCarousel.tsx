@@ -39,6 +39,7 @@ interface RecommendationCarouselProps {
   onDismiss?: (animeId: string) => void
   showReasons?: boolean
   vertical?: boolean
+  isFirstCarousel?: boolean // For priority image loading
 }
 
 function RecommendationCarouselComponent({
@@ -48,6 +49,7 @@ function RecommendationCarouselComponent({
   onDismiss,
   showReasons = false,
   vertical = false,
+  isFirstCarousel = false,
 }: RecommendationCarouselProps) {
   const [scrollPosition, setScrollPosition] = useState(0)
   const { isAuthenticated } = useAuth()
@@ -119,7 +121,7 @@ function RecommendationCarouselComponent({
           {recommendations
             .slice(0, 10)
             .filter((rec) => rec && rec.anime && rec.anime.slug)
-            .map(({ anime, reason }) => (
+            .map(({ anime, reason }, index) => (
               <div key={anime.id} className="relative group/card">
                 {/* Dismiss Button */}
                 {onDismiss && (
@@ -154,6 +156,8 @@ function RecommendationCarouselComponent({
                   variant="compact"
                   onFavorite={() => handleFavorite(anime.id, anime.titleEnglish || anime.title)}
                   isFavorited={isFavorited(anime.id)}
+                  priority={isFirstCarousel && index < 6}
+                  fetchPriority={isFirstCarousel && index < 6 ? 'high' : 'auto'}
                 />
 
                 {/* Reason text below card */}
@@ -212,7 +216,7 @@ function RecommendationCarouselComponent({
           {recommendations
             .slice(0, 20)
             .filter((rec) => rec && rec.anime && rec.anime.slug)
-            .map(({ anime, reason }) => {
+            .map(({ anime, reason }, index) => {
               const cardContent = (
                 <div className="flex-shrink-0 w-36 sm:w-44 lg:w-48 relative group/card snap-start">
                   {/* Dismiss Button - Top Left, Show on Hover (Desktop) */}
@@ -248,6 +252,8 @@ function RecommendationCarouselComponent({
                     variant="featured"
                     onFavorite={() => handleFavorite(anime.id, anime.titleEnglish || anime.title)}
                     isFavorited={isFavorited(anime.id)}
+                    priority={isFirstCarousel && index < 6}
+                    fetchPriority={isFirstCarousel && index < 6 ? 'high' : 'auto'}
                   />
 
                   {/* Reason text below card */}
@@ -321,7 +327,8 @@ export const RecommendationCarousel = memo(RecommendationCarouselComponent, (pre
     prevProps.title === nextProps.title &&
     prevIds === nextIds &&
     prevProps.showReasons === nextProps.showReasons &&
-    prevProps.vertical === nextProps.vertical
+    prevProps.vertical === nextProps.vertical &&
+    prevProps.isFirstCarousel === nextProps.isFirstCarousel
   )
 })
 

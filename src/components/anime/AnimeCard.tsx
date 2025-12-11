@@ -29,6 +29,9 @@ interface AnimeCardProps {
   isBulkMode?: boolean
   isSelected?: boolean
   onToggleSelection?: (animeId: string) => void
+  // Performance optimization props
+  priority?: boolean
+  fetchPriority?: 'high' | 'low' | 'auto'
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -117,6 +120,8 @@ export const AnimeCard = memo(function AnimeCard({
   isBulkMode = false,
   isSelected = false,
   onToggleSelection,
+  priority = false,
+  fetchPriority = 'auto',
 }: AnimeCardProps) {
   const router = useRouter()
   const analytics = useAnalytics()
@@ -229,8 +234,9 @@ export const AnimeCard = memo(function AnimeCard({
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-110"
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-              priority={false}
-              loading="lazy"
+              priority={priority}
+              fetchPriority={fetchPriority}
+              loading={priority ? undefined : 'lazy'}
             />
           ) : (
             <div className="text-gray-600 text-4xl">🎬</div>
@@ -383,6 +389,9 @@ export const AnimeCard = memo(function AnimeCard({
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                     sizes="96px"
+                    priority={priority}
+                    fetchPriority={fetchPriority}
+                    loading={priority ? undefined : 'lazy'}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -493,6 +502,9 @@ export const AnimeCard = memo(function AnimeCard({
                     fill
                     className="object-cover"
                     sizes="96px"
+                    priority={priority}
+                    fetchPriority={fetchPriority}
+                    loading={priority ? undefined : 'lazy'}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -674,7 +686,9 @@ export const AnimeCard = memo(function AnimeCard({
               height={56}
               className="object-cover"
               sizes="40px"
-              loading="lazy"
+              priority={priority}
+              fetchPriority={fetchPriority}
+              loading={priority ? undefined : 'lazy'}
             />
           ) : (
             <div className="text-xs text-gray-300 font-bold">{year || 'TBA'}</div>
@@ -738,6 +752,9 @@ export const AnimeCard = memo(function AnimeCard({
                 fill
                 className="object-cover transition-all duration-300 group-hover:blur-sm"
                 sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                priority={priority}
+                fetchPriority={fetchPriority}
+                loading={priority ? undefined : 'lazy'}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
@@ -871,6 +888,9 @@ export const AnimeCard = memo(function AnimeCard({
                 fill
                 className="object-cover group-hover:scale-110 transition-transform duration-500"
                 sizes="(max-width: 768px) 50vw, 33vw"
+                priority={priority}
+                fetchPriority={fetchPriority}
+                loading={priority ? undefined : 'lazy'}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
@@ -1067,7 +1087,9 @@ export const AnimeCard = memo(function AnimeCard({
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-110"
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-              loading="lazy"
+              priority={priority}
+              fetchPriority={fetchPriority}
+              loading={priority ? undefined : 'lazy'}
             />
           ) : (
             <div className="text-gray-600 text-2xl">🎬</div>
@@ -1137,6 +1159,9 @@ export const AnimeCard = memo(function AnimeCard({
                   fill
                   className="object-cover"
                   sizes="56px"
+                  priority={priority}
+                  fetchPriority={fetchPriority}
+                  loading={priority ? undefined : 'lazy'}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
@@ -1195,7 +1220,9 @@ export const AnimeCard = memo(function AnimeCard({
               height={40}
               className="object-cover w-full h-full"
               sizes="(max-width: 640px) 32px, 24px"
-              loading="lazy"
+              priority={priority}
+              fetchPriority={fetchPriority}
+              loading={priority ? undefined : 'lazy'}
             />
           ) : (
             <div className="text-xs sm:text-[10px] text-gray-300 font-bold">{year || 'TBA'}</div>
@@ -1275,7 +1302,9 @@ export const AnimeCard = memo(function AnimeCard({
     prevProps.variant === nextProps.variant &&
     prevProps.context === nextProps.context &&
     prevProps.isFavorited === nextProps.isFavorited &&
-    prevProps.className === nextProps.className
+    prevProps.className === nextProps.className &&
+    prevProps.priority === nextProps.priority &&
+    prevProps.fetchPriority === nextProps.fetchPriority
 
   // MyList specific comparisons
   if (prevProps.context === 'mylist' || nextProps.context === 'mylist') {
